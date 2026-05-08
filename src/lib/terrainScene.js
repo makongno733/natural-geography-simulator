@@ -517,12 +517,13 @@ export function createTerrainScene(host, options = {}) {
 
   function update(next) {
     const previousMode = state.viewMode;
+    const prevActiveType = state.activeType;
     state = { ...state, ...next };
     applyViewMode(previousMode);
     controls.autoRotate = state.viewMode === 'terrain' && !!state.autoRotate;
 
     const nextSignature = `${Math.round(state.timeline * 180)}-${Math.round(state.climate * 140)}-${state.viewMode}`;
-    if (geometrySignature !== nextSignature || !terrainGroup.children.length || state.activeType !== next.activeType) {
+    if (geometrySignature !== nextSignature || !terrainGroup.children.length || prevActiveType !== state.activeType) {
       rebuildTerrain();
     } else {
       const anchor = typeAnchors[state.activeType] ?? typeAnchors.consequent;
