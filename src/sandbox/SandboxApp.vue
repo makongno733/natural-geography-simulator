@@ -9,6 +9,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import SandboxShell from './SandboxShell.vue'
+import { createSceneEngine } from './engine/SceneEngine.js'
 
 const activeModuleId = ref('fluvial')
 const currentKnowledge = ref(null)
@@ -41,5 +42,8 @@ function onTool(tool) {
     params.viewMode = params.viewMode === 'section' ? 'terrain' : 'section'
   } else if (tool === 'autoRotate') sceneEngine.value?.setPreset360()
 }
-function onSceneReady(hostEl) { /* Scene engine wired in Task 3 */ }
+function onSceneReady(hostEl) {
+  sceneEngine.value = createSceneEngine(hostEl, {})
+  sceneEngine.value.update({ ...params })
+}
 </script>

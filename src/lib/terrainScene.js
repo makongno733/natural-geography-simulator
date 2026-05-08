@@ -594,6 +594,7 @@ export function createTerrainScene(host, options = {}) {
     resize,
     resetCamera,
     setPreset360,
+    getScene: () => scene,
     dispose() {
       cancelAnimationFrame(frameId);
       resizeObserver?.disconnect();
