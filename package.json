@@ -1,0 +1,71 @@
+{
+  "name": "atmosphere-structure-teaching-system",
+  "private": true,
+  "version": "1.0.0",
+  "description": "用于演示大气垂直结构、行星风带、季风洋流与海气耦合的交互式教学系统。",
+  "author": "kongnoma",
+  "packageManager": "pnpm@10.33.3",
+  "type": "module",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173 --config vite.config.mjs",
+    "build": "vite build --config vite.config.mjs",
+    "build:standalone": "pnpm run build && node scripts/inline-dist.mjs",
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --config vite.config.mjs",
+    "package:mac": "pnpm run build && node scripts/package-macos.mjs",
+    "electron:dev": "node scripts/electron-dev.mjs",
+    "electron:start": "pnpm run build && electron .",
+    "electron:pack:dir": "pnpm run build && electron-builder --dir",
+    "electron:dist:mac": "pnpm run build && electron-builder --mac zip dmg",
+    "electron:dist:win": "pnpm run build && electron-builder --win nsis portable"
+  },
+  "dependencies": {
+    "three": "^0.184.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
+    "vite": "^6.0.11"
+  },
+  "build": {
+    "appId": "com.kongnoma.atmosphere.electron",
+    "productName": "大气结构教学系统",
+    "directories": {
+      "output": "electron-release",
+      "buildResources": "electron/resources"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1512 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大气垂直结构研究草稿版</title>
+  <style>
+    :root {
+      --bg0: #edf5ff;
+      --bg1: #d9ebff;
+      --ink: #0e2747;
+      --muted: #3a5f83;
+      --line: #a5c8ea;
+      --card: rgba(248, 252, 255, 0.92);
+      --accent: #1f6fb8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Serif SC", "Songti SC", "STKaiti", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 22% 8%, rgba(67, 141, 220, 0.22), transparent 46%),
+        radial-gradient(ellipse at 80% 0%, rgba(133, 192, 255, 0.22), transparent 44%),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg0) 58%);
+      min-height: 100vh;
+      padding: 14px;
+    }
+
+    .shell { width: min(1380px, 96vw); margin: 0 auto; display: grid; gap: 10px; }
+
+    .top {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(245, 251, 255, 0.96), rgba(233, 246, 255, 0.92));
+      padding: 10px 12px;
+      display: grid;
+      gap: 6px;
+    }
+    .top h1 { margin: 0; font-size: clamp(1.06rem, 1.9vw, 1.55rem); }
+    .top p { display: none; }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 5px; }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.67rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.76);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2.45fr) minmax(280px, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .maincard, .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: 0 6px 16px rgba(24,77,128,0.14);
+    }
+
+    .maincard { padding: 10px; display: grid; gap: 10px; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .control-box {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255,255,255,0.73);
+      padding: 8px;
+    }
+    .control-box h3 { margin: 0 0 6px; font-size: 0.8rem; color: #1d4f81; }
+    .feature-picks {
+      margin-top: 6px;
+      display: grid;
+      gap: 6px;
+    }
+    .pick-row {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 4px;
+      align-items: center;
+    }
+    .pick-row label {
+      font-size: 0.64rem;
+      color: #2b5e8d;
+      font-weight: 600;
+    }
+    .pick-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .mini-chip {
+      border: 1px solid #a7ccee;
+      border-radius: 999px;
+      background: #f4faff;
+      color: #1b4f7e;
+      padding: 1px 7px;
+      font-size: 0.6rem;
+      cursor: pointer;
+    }
+    .mini-chip.active {
+      background: #1f6fb8;
+      color: #fff;
+      border-color: #1f6fb8;
+    }
+
+    .layer-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: #f8fbff;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 4px 5px;
+      font-size: 0.63rem;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip.active {
+      background: linear-gradient(180deg, #cfe9ff, #abd7ff);
+      color: #134975;
+      border-color: #7fb8eb;
+      font-weight: 600;
+    }
+
+    .slider { width: 100%; }
+    .slider-text { margin-top: 5px; font-size: 0.7rem; color: #265885; }
+    .view-toggle {
+      margin-top: 6px;
+      display: flex;
+      gap: 4px;
+    }
+    .view-btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbff;
+      color: var(--muted);
+      padding: 4px 7px;
+      font-size: 0.63rem;
+      cursor: pointer;
+    }
+    .view-btn.active {
+      background: linear-gradient(180deg, #cfe9ff, #abd7ff);
+      color: #134975;
+      border-color: #7fb8eb;
+      font-weight: 600;
+    }
+
+    .viz-unified {
+      border: 1px solid rgba(145, 196, 236, 0.42);
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 14% 86%, rgba(131, 196, 255, 0.25), transparent 18%),
+        radial-gradient(circle at 74% 34%, rgba(69, 132, 210, 0.22), transparent 24%),
+        linear-gradient(180deg, #03101f 0%, #08223f 42%, #0f3d72 70%, #2d79b8 100%);
+      min-height: 414px;
+      position: relative;
+      overflow: hidden;
+      padding: 6px;
+      display: grid;
+      gap: 4px;
+      box-shadow: inset 0 1px 0 rgba(210, 235, 255, 0.16), 0 8px 22px rgba(8, 33, 61, 0.18);
+    }
+
+    .viz-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mode-group,
+    .overlay-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .tool-btn {
+      border: 1px solid rgba(189, 223, 251, 0.72);
+      border-radius: 7px;
+      background: rgba(12, 40, 72, 0.46);
+      color: #e9f6ff;
+      padding: 3px 7px;
+      font-size: 0.62rem;
+      cursor: pointer;
+    }
+    .tool-btn.active {
+      background: rgba(174, 220, 255, 0.88);
+      color: #133f69;
+      border-color: #b8ddff;
+      font-weight: 600;
+    }
+
+    .l-bl { background: rgba(35, 100, 168, 0.94); }
+    .l-tropo { background: rgba(40, 114, 184, 0.9); }
+    .l-tpause { background: rgba(45, 124, 192, 0.88); }
+    .l-strato { background: rgba(42, 135, 203, 0.84); }
+    .l-spause { background: rgba(38, 146, 210, 0.8); }
+    .l-meso { background: rgba(34, 158, 219, 0.78); }
+    .l-mpause { background: rgba(31, 168, 226, 0.74); }
+    .l-thermo { background: rgba(29, 178, 232, 0.7); }
+    .l-exo { background: rgba(28, 188, 238, 0.66); }
+
+    .phenomenon {
+      margin-top: 0;
+      background: rgba(8, 32, 60, 0.44);
+      border: 1px solid rgba(204, 231, 255, 0.35);
+      border-radius: 8px;
+      padding: 7px;
+      color: #ebf6ff;
+      font-size: 0.71rem;
+      line-height: 1.45;
+    }
+
+    #atm3d {
+      width: 100%;
+      height: 392px;
+      display: block;
+      border-radius: 8px;
+      background: transparent;
+      cursor: grab;
+      touch-action: none;
+    }
+    #atm3d.dragging { cursor: grabbing; }
+
+    .canvas-tip {
+      font-size: 0.63rem;
+      color: #eaf5ff;
+      margin: 2px 6px 0;
+    }
+
+    .composition-panel {
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(195, 225, 252, 0.4);
+      background: rgba(9, 30, 52, 0.5);
+      color: #eaf4ff;
+      font-size: 0.58rem;
+      line-height: 1.35;
+    }
+    .composition-bottom {
+      position: static;
+      width: 100%;
+      margin-top: 2px;
+      background: rgba(12, 40, 72, 0.78);
+    }
+    .composition-title {
+      font-size: 0.63rem;
+      margin-bottom: 6px;
+      color: #dff1ff;
+    }
+    .composition-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 0.62rem;
+    }
+    .chem-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid rgba(188, 222, 252, 0.36);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      padding: 1px 7px;
+      color: #f3fbff;
+      white-space: nowrap;
+    }
+    .chem-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .panel { padding: 9px; display: grid; gap: 8px; align-content: start; }
+    .panel h2 { margin: 0; font-size: 0.9rem; }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .panel-toggle {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #f6fbff;
+      color: #2e608f;
+      padding: 2px 7px;
+      font-size: 0.64rem;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+    #panelBody[hidden] { display: none; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.66rem;
+      background: rgba(255,255,255,0.74);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #d0e3f8;
+      padding: 5px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #dff0ff; color: #174f82; font-weight: 600; }
+
+    .note {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 7px;
+      background: rgba(255,255,255,0.68);
+      color: var(--muted);
+      font-size: 0.64rem;
+      line-height: 1.42;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+      .layer-strip { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="top">
+      <h1>大气垂直结构与化学组成（研究草稿版）</h1>
+      <p></p>
+      <div class="badges">
+        <span class="badge">Draft v0.2</span>
+        <span class="badge">分层细化</span>
+        <span class="badge">2D + 3D 联动</span>
+        <span class="badge">蓝色科研风</span>
+        <span class="badge">海气耦合</span>
+        <span class="badge">行星风带</span>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="maincard">
+        <div class="controls">
+          <div class="control-box">
+            <h3>分层选择</h3>
+            <div class="layer-strip" id="layerStrip"></div>
+          </div>
+          <div class="control-box">
+            <h3>高度浏览（km）</h3>
+            <input id="altitude" class="slider" type="range" min="0" max="1000" step="1" value="12" />
+            <div id="altitudeText" class="slider-text">当前高度：12 km</div>
+            <div class="feature-picks">
+              <div class="pick-row">
+                <label>洋流</label>
+                <div class="pick-list" id="oceanPickList"></div>
+              </div>
+              <div class="pick-row">
+                <label>风带</label>
+                <div class="pick-list" id="beltPickList"></div>
+              </div>
+              <div class="pick-row">
+                <label>季风</label>
+                <div class="pick-list" id="monsoonPickList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="viz-unified">
+          <div class="viz-toolbar">
+            <div class="mode-group" id="modeGroup">
+              <button class="tool-btn active" data-mode="globe">3D视图</button>
+              <button class="tool-btn active" id="motionBtn">动态旋转</button>
+              <button class="tool-btn" id="scopeBtn">切到局部</button>
+              <button class="tool-btn" id="resetViewBtn">重置视角</button>
+            </div>
+            <div class="overlay-group" id="overlayGroup">
+              <button class="tool-btn active" data-overlay="grid">经纬网</button>
+              <button class="tool-btn active" data-overlay="plate">板块边界</button>
+              <button class="tool-btn active" data-overlay="flow">季风/急流</button>
+              <button class="tool-btn active" data-overlay="ocean">洋流/暖池</button>
+              <button class="tool-btn active" data-overlay="belts">风带/ITCZ</button>
+            </div>
+          </div>
+          <canvas id="atm3d" width="960" height="420"></canvas>
+          <div class="canvas-tip" id="canvasTip">3D 全球视图：球面经纬网、板块边界、季风、洋流与行星风带均附着在同一球体上，并随高度层联动。</div>
+          <div class="phenomenon" id="phenomenonBox"></div>
+        </div>
+        <div class="composition-panel composition-bottom" id="compositionPanel"></div>
+      </article>
+
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>参数与判读</h2>
+          <button class="panel-toggle" id="panelToggleBtn">展开</button>
+        </div>
+        <div id="panelBody" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th>层</th>
+              <th>高度范围</th>
+              <th>典型密度范围</th>
+              <th>主导现象</th>
+            </tr>
+          </thead>
+          <tbody id="layerTable"></tbody>
+        </table>
+
+        <div class="note" id="layerDetail"></div>
+        <div class="note" id="couplingBox"></div>
+        <div class="note" id="windBox"></div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>干空气主要成分</th>
+              <th>体积分数（近似）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>N2</td><td>78.08%</td></tr>
+            <tr><td>O2</td><td>20.95%</td></tr>
+            <tr><td>Ar</td><td>0.93%</td></tr>
+            <tr><td>CO2</td><td>约0.042%（420+ ppm量级）</td></tr>
+            <tr><td>Ne / He / CH4 / Kr / H2 等</td><td>痕量（ppm 到 ppb 量级）</td></tr>
+            <tr><td>H2O（水汽）</td><td>高度可变（近地面可达数%，高空显著降低）</td></tr>
+          </tbody>
+        </table>
+
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const layers = [
+      {
+        id: "boundary-layer",
+        name: "行星边界层",
+        en: "Planetary Boundary Layer",
+        h: "0-1.5 km",
+        d: "约1.225→1.06 kg/m3",
+        cls: "l-bl",
+        phenomenon: "地表摩擦、湍流混合、污染输送与近地层热力交换最强。",
+        detail: "昼夜稳定度反转明显，是数值天气和空气质量模式最敏感层。",
+        topKm: 1.5
+      },
+      {
+        id: "troposphere",
+        name: "对流层",
+        en: "Troposphere",
+        h: "1.5-12 km",
+        d: "约1.06→0.31 kg/m3",
+        cls: "l-tropo",
+        phenomenon: "绝大多数天气系统（云、降水、对流、锋面）发生于此。",
+        detail: "温度通常随高度递减，水汽丰度与静力稳定度共同控制深对流。",
+        topKm: 12
+      },
+      {
+        id: "tropopause",
+        name: "对流层顶",
+        en: "Tropopause",
+        h: "约8-18 km（纬度依赖）",
+        d: "约0.4→0.18 kg/m3（近似）",
+        cls: "l-tpause",
+        phenomenon: "对流层与平流层交换关键界面，急流附近常见强梯度。",
+        detail: "高度随纬度和季节变化，热带高、极地低；是跨层输送与环流耦合关键层。",
+        topKm: 18
+      },
+      {
+        id: "stratosphere",
+        name: "平流层（含臭氧层主体）",
+        en: "Stratosphere",
+        h: "18-50 km",
+        d: "约0.18→0.0010 kg/m3",
+        cls: "l-strato",
+        phenomenon: "臭氧吸收紫外导致逆温，垂直混合较弱，平流主导。",
+        detail: "研究重点包括臭氧化学、平流层突变事件及其向下影响。",
+        topKm: 50
+      },
+      {
+        id: "stratopause",
+        name: "平流层顶",
+        en: "Stratopause",
+        h: "约50 km",
+        d: "约1e-3 kg/m3量级",
+        cls: "l-spause",
+        phenomenon: "平流层到中间层过渡带，温度剖面由升转降。",
+        detail: "是辐射平衡和波动传播机制中的重要分界高度。",
+        topKm: 52
+      },
+      {
+        id: "mesosphere",
+        name: "中间层",
+        en: "Mesosphere",
+        h: "52-85 km",
+        d: "约1e-3→3e-5 kg/m3",
+        cls: "l-meso",
+        phenomenon: "流星消融、夜光云、重力波破碎与动量沉降活跃。",
+        detail: "温度再次下降，层顶接近地球系统低温极值区。",
+        topKm: 85
+      },
+      {
+        id: "mesopause",
+        name: "中间层顶",
+        en: "Mesopause",
+        h: "约85 km",
+        d: "约3e-5 kg/m3量级",
+        cls: "l-mpause",
+        phenomenon: "中高层热结构转折点，常对应低温极值。",
+        detail: "是中间层-热层耦合研究中的关键层位。",
+        topKm: 90
+      },
+      {
+        id: "thermosphere",
+        name: "热层（含电离层主区）",
+        en: "Thermosphere / Ionosphere",
+        h: "90-600 km",
+        d: "约3e-5→<1e-10 kg/m3",
+        cls: "l-thermo",
+        phenomenon: "极光、空间天气响应、卫星阻力变化、无线电传播影响显著。",
+        detail: "受太阳活动与地磁扰动强迫明显，温度和电离状态可快速变化。",
+        topKm: 600
+      },
+      {
+        id: "exosphere",
+        name: "散逸层",
+        en: "Exosphere",
+        h: "600-10000 km",
+        d: "极低（近真空）",
+        cls: "l-exo",
+        phenomenon: "大气向行星际空间过渡区，粒子自由程极长。",
+        detail: "碰撞极少，需考虑外逸与空间等离子体过程。",
+        topKm: 10000
+      }
+    ];
+
+    const layerStrip = document.getElementById("layerStrip");
+    const layerTable = document.getElementById("layerTable");
+    const layerDetail = document.getElementById("layerDetail");
+    const couplingBox = document.getElementById("couplingBox");
+    const windBox = document.getElementById("windBox");
+    const compositionPanel = document.getElementById("compositionPanel");
+    const phenomenonBox = document.getElementById("phenomenonBox");
+    const altitude = document.getElementById("altitude");
+    const altitudeText = document.getElementById("altitudeText");
+    const modeGroup = document.getElementById("modeGroup");
+    const overlayGroup = document.getElementById("overlayGroup");
+    const motionBtn = document.getElementById("motionBtn");
+    const scopeBtn = document.getElementById("scopeBtn");
+    const resetViewBtn = document.getElementById("resetViewBtn");
+    const canvasTip = document.getElementById("canvasTip");
+    const panelToggleBtn = document.getElementById("panelToggleBtn");
+    const panelBody = document.getElementById("panelBody");
+    const oceanPickList = document.getElementById("oceanPickList");
+    const beltPickList = document.getElementById("beltPickList");
+    const monsoonPickList = document.getElementById("monsoonPickList");
+    const canvas = document.getElementById("atm3d");
+    const ctx = canvas.getContext("2d");
+    const starField = Array.from({ length: 150 }, (_, i) => {
+      const t = i * 0.6180339887;
+      return {
+        x: (Math.sin(t * 12.7) * 0.5 + 0.5),
+        y: (Math.cos(t * 8.9) * 0.5 + 0.5),
+        r: 0.5 + (i % 5) * 0.24,
+        a: 0.28 + (i % 7) * 0.09
+      };
+    });
+
+    let active = 1;
+    let viewMode = "globe";
+    let animated = true;
+    let sceneTime = 0;
+    let rafId = 0;
+    let scopeMode = "global";
+    let userLonOffset = 0;
+    let userLatOffset = 0;
+    let targetLonOffset = 0;
+    let targetLatOffset = 0;
+    let zoomLevel = 1;
+    let targetZoomLevel = 1;
+    let dragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragBaseLon = 0;
+    let dragBaseLat = 0;
+    const overlays = {
+      grid: true,
+      plate: true,
+      flow: true,
+      ocean: true,
+      belts: true
+    };
+    const oceanItems = [
+      { id: "somali", name: "索马里洋流", desc: "夏季受西南季风驱动北上并上升流增强，冷暖跃层调整显著。" },
+      { id: "agulhas", name: "阿古拉斯暖流", desc: "沿非洲东岸向西南输送高温高盐水体，影响印度洋-南大洋热盐交换。" },
+      { id: "monsoon-current", name: "季风洋流", desc: "阿拉伯海与孟加拉湾随季风反转，调制海气热通量与降水中心。" },
+      { id: "kuroshio", name: "黑潮延伸", desc: "西边界暖流向东北输送热量，影响东亚下垫面能量与水汽背景。" }
+    ];
+    const beltItems = [
+      { id: "trade", name: "信风带", desc: "低层辐合触发ITCZ对流上升，是热带深对流主通道。" },
+      { id: "westerlies", name: "西风带", desc: "中纬度斜压活动活跃，锋生与急流耦合，控制温带天气系统。" },
+      { id: "polar-easterlies", name: "极地东风", desc: "高纬冷空气输出并与中纬西风交汇，形成极锋区能量转换。" }
+    ];
+    const monsoonItems = [
+      { id: "summer", name: "南亚夏季风", desc: "跨赤道气流北上，低层辐合+地形抬升触发强对流和季节性暴雨。" },
+      { id: "winter", name: "南亚冬季风", desc: "大陆冷高压外流，低层偏北风加强，海陆热力差主导干冷输送。" },
+      { id: "onset", name: "季风爆发", desc: "海温阈值、急流位相和水汽通量达到临界后，对流快速建立。" }
+    ];
+    let activeOcean = oceanItems[0].id;
+    let activeBelt = beltItems[0].id;
+    let activeMonsoon = monsoonItems[0].id;
+
+    const CONTINENT_POLYGONS = [
+      [[-168, 12], [-160, 28], [-150, 45], [-140, 58], [-125, 67], [-108, 72], [-90, 70], [-74, 56], [-82, 42], [-95, 28], [-110, 16], [-135, 8]],
+      [[-82, 12], [-76, 8], [-72, -2], [-68, -12], [-65, -24], [-66, -36], [-71, -50], [-62, -54], [-52, -44], [-46, -24], [-50, -6], [-58, 4], [-70, 10]],
+      [[-18, 36], [-8, 43], [8, 52], [24, 56], [42, 58], [62, 56], [84, 54], [108, 50], [124, 43], [138, 36], [146, 25], [134, 13], [108, 16], [92, 9], [74, 7], [58, 18], [38, 24], [20, 24], [8, 18], [-2, 14], [-8, 22], [-10, 30]],
+      [[-16, 36], [0, 36], [18, 30], [28, 20], [34, 6], [30, -12], [20, -26], [12, -35], [2, -35], [-8, -26], [-12, -8], [-10, 8], [-14, 24]],
+      [[112, -10], [122, -12], [136, -18], [148, -28], [150, -38], [136, -44], [120, -38], [114, -26], [112, -16]],
+      [[40, 30], [50, 34], [56, 30], [52, 24], [44, 24]],
+      [[-54, 59], [-46, 66], [-30, 73], [-18, 76], [-26, 60], [-42, 58]]
+    ];
+
+    const MOUNTAIN_RANGES = [
+      [[-125, 55], [-118, 49], [-112, 43], [-108, 36], [-104, 31]],
+      [[-78, -6], [-75, -16], [-72, -26], [-70, -36], [-68, -48]],
+      [[7, 45], [12, 46], [17, 45]],
+      [[68, 34], [76, 32], [84, 30], [92, 29], [99, 28]],
+      [[34, -3], [36, -10], [38, -18], [40, -28]]
+    ];
+
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      const nextWidth = Math.round(displayWidth * dpr);
+      const nextHeight = Math.round(displayHeight * dpr);
+      if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+        canvas.width = nextWidth;
+        canvas.height = nextHeight;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function layerByAltitude(km) {
+      for (let i = 0; i < layers.length; i += 1) {
+        if (km <= layers[i].topKm) return i;
+      }
+      return layers.length - 1;
+    }
+
+    function parseClassColor(cls) {
+      const map = {
+        "l-bl": [35, 100, 168],
+        "l-tropo": [40, 114, 184],
+        "l-tpause": [45, 124, 192],
+        "l-strato": [42, 135, 203],
+        "l-spause": [38, 146, 210],
+        "l-meso": [34, 158, 219],
+        "l-mpause": [31, 168, 226],
+        "l-thermo": [29, 178, 232],
+        "l-exo": [28, 188, 238]
+      };
+      return map[cls] || [60, 130, 200];
+    }
+
+    function drawSpaceBackdrop(w, h) {
+      const sky = ctx.createLinearGradient(0, 0, 0, h);
+      sky.addColorStop(0, "#01060f");
+      sky.addColorStop(0.24, "#061322");
+      sky.addColorStop(0.56, "#0a2951");
+      sky.addColorStop(0.84, "#13508a");
+      sky.addColorStop(1, "#58a2de");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = "rgba(255,255,255,0.0)";
+      starField.forEach((star, index) => {
+        const x = star.x * w;
+        const y = star.y * h * 0.54;
+        const radius = star.r;
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(235, 244, 255, ${star.a})`;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        if (index % 14 === 0) {
+          ctx.strokeStyle = `rgba(214, 233, 255, ${star.a * 0.6})`;
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(x - 3, y);
+          ctx.lineTo(x + 3, y);
+          ctx.moveTo(x, y - 3);
+          ctx.lineTo(x, y + 3);
+          ctx.stroke();
+        }
+      });
+
+      const sunGlow = ctx.createRadialGradient(-w * 0.02, h * 0.84, 10, -w * 0.02, h * 0.84, w * 0.24);
+      sunGlow.addColorStop(0, "rgba(255,255,255,0.98)");
+      sunGlow.addColorStop(0.2, "rgba(193, 227, 255, 0.72)");
+      sunGlow.addColorStop(0.46, "rgba(117, 174, 255, 0.24)");
+      sunGlow.addColorStop(1, "rgba(117, 174, 255, 0)");
+      ctx.fillStyle = sunGlow;
+      ctx.fillRect(-w * 0.12, h * 0.58, w * 0.5, h * 0.42);
+    }
+
+    function drawCloudDeck(cx, cy, baseR, timeValue = 0) {
+      const drift = Math.sin(timeValue * 0.00035) * 0.018;
+      const clouds = [
+        [0.54 + drift * 0.6, -0.03, 0.18, 0.045, -0.06, 0.62],
+        [0.66 + drift * 0.9, -0.06, 0.2, 0.05, -0.08, 0.68],
+        [0.78 + drift * 1.1, -0.11, 0.16, 0.042, -0.14, 0.58],
+        [0.86 + drift * 1.3, -0.05, 0.11, 0.032, -0.12, 0.54]
+      ];
+      clouds.forEach(([ox, oy, rx, ry, rot, alpha]) => {
+        const g = ctx.createRadialGradient(
+          cx + baseR * ox,
+          cy + baseR * oy,
+          baseR * 0.01,
+          cx + baseR * ox,
+          cy + baseR * oy,
+          baseR * rx
+        );
+        g.addColorStop(0, `rgba(255,255,255,${alpha})`);
+        g.addColorStop(0.45, `rgba(233,244,255,${alpha * 0.72})`);
+        g.addColorStop(1, "rgba(233,244,255,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(cx + baseR * ox, cy + baseR * oy, baseR * rx, baseR * ry, rot, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    const RAD = Math.PI / 180;
+
+    function geoProject(lat, lon, globe, altitudeRatio = 0) {
+      const phi = lat * RAD;
+      const lam = lon * RAD;
+      const dLam = lam - globe.lon0;
+      const sinPhi = Math.sin(phi);
+      const cosPhi = Math.cos(phi);
+      const sinPhi0 = Math.sin(globe.lat0);
+      const cosPhi0 = Math.cos(globe.lat0);
+      const cosD = Math.cos(dLam);
+      const sinD = Math.sin(dLam);
+
+      const x = cosPhi * sinD;
+      const y = cosPhi0 * sinPhi - sinPhi0 * cosPhi * cosD;
+      const z = sinPhi0 * sinPhi + cosPhi0 * cosPhi * cosD;
+
+      return {
+        x: globe.cx + x * globe.r * (1 + altitudeRatio),
+        y: globe.cy - y * globe.r * (1 + altitudeRatio),
+        z,
+        visible: z > 0
+      };
+    }
+
+    function traceGeoPath(points, globe, altitudeRatio = 0) {
+      const projected = points.map(([lon, lat]) => geoProject(lat, lon, globe, altitudeRatio)).filter((p) => p.visible);
+      if (projected.length < 2) return null;
+      ctx.beginPath();
+      projected.forEach((p, index) => {
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      return projected;
+    }
+
+    function drawGeoPolygon(points, globe, fill, stroke = "rgba(205, 232, 255, 0.12)") {
+      const projected = points.map(([lon, lat]) => geoProject(lat, lon, globe, 0)).filter((p) => p.visible);
+      if (projected.length < 3) return;
+      ctx.beginPath();
+      projected.forEach((p, index) => {
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    function drawGeoArrow(points, globe, opts = {}) {
+      const projected = points.map(([lon, lat]) => geoProject(lat, lon, globe, opts.altitudeRatio || 0)).filter((p) => p.visible);
+      if (projected.length < 2) return;
+      const glow = opts.glow || "rgba(255,255,255,0.18)";
+      ctx.strokeStyle = glow;
+      ctx.lineWidth = (opts.lineWidth || 2) + 4;
+      ctx.beginPath();
+      projected.forEach((p, index) => {
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+
+      ctx.strokeStyle = opts.color || "#dff4ff";
+      ctx.lineWidth = opts.lineWidth || 2;
+      ctx.beginPath();
+      projected.forEach((p, index) => {
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+
+      const end = projected[projected.length - 1];
+      const prev = projected[projected.length - 2];
+      const ang = Math.atan2(end.y - prev.y, end.x - prev.x);
+      const size = opts.headSize || 9;
+      ctx.fillStyle = opts.color || "#dff4ff";
+      ctx.beginPath();
+      ctx.moveTo(end.x, end.y);
+      ctx.lineTo(end.x - size * Math.cos(ang - Math.PI / 6), end.y - size * Math.sin(ang - Math.PI / 6));
+      ctx.lineTo(end.x - size * Math.cos(ang + Math.PI / 6), end.y - size * Math.sin(ang + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function layerCompositionSummary(layerId) {
+      const map = {
+        "boundary-layer": "H2O、CO2、CO、NOx、SO2、VOCs、O3（近地层光化学）；气溶胶与二次污染活跃",
+        "troposphere": "H2O、CO2、CH4、CO、NOx、O3；OH 自由基主导氧化链，云微物理与湿清除显著",
+        "tropopause": "O3 快速增加、H2O 快速降低；N2O、CH4、CO 在跨层输送中敏感",
+        "stratosphere": "O3、O2、NOx、ClOx、BrOx、HNO3；臭氧光化学与辐射加热主导",
+        "stratopause": "O3、NOx、HOx；短波吸收与化学-辐射耦合最关键",
+        "mesosphere": "O、O2、O3（低值）、HOx、NOx；光解与波动输送并存",
+        "mesopause": "O、O2、NO、OH*（夜光化学）；低温下辐射过程突出",
+        "thermosphere": "O、N2、O2、NO+、O+、e-；电离化学与空间天气驱动",
+        "exosphere": "H、He 为主，伴随少量 O；碰撞稀少、逃逸过程主导"
+      };
+      return map[layerId] || "以 N2/O2 背景气体为主，痕量化学组分随高度与辐射条件变化。";
+    }
+
+    function layerProcessType(layerId) {
+      if (layerId === "boundary-layer" || layerId === "troposphere") return "对流主导";
+      if (layerId === "tropopause") return "交换层（对流/平流耦合）";
+      if (layerId === "stratosphere" || layerId === "stratopause") return "平流主导";
+      if (layerId === "mesosphere" || layerId === "mesopause") return "波动与平流";
+      return "高层平流/扩散";
+    }
+
+    function drawLayerProcessArrows(globe, layerRadii) {
+      const baseLon = scopeMode === "global" ? -30 : 70;
+      const baseLat = scopeMode === "global" ? 22 : 24;
+      layers.forEach((layer, i) => {
+        const ringR = layerRadii[i];
+        const rel = (ringR - globe.r) / globe.r;
+        const proc = layerProcessType(layer.id);
+        const isConvection = proc.includes("对流");
+        const latShift = isConvection ? 1.4 : 0;
+        const arrowPoints = isConvection
+          ? [[baseLon + i * 1.5, baseLat - 3 + latShift], [baseLon + i * 1.7, baseLat + 0.5 + latShift], [baseLon + i * 1.9, baseLat + 4.2 + latShift]]
+          : [[baseLon - 6 + i * 0.6, baseLat + i * 0.5], [baseLon + 2 + i * 0.8, baseLat + i * 0.7], [baseLon + 10 + i * 1.0, baseLat + i * 0.6]];
+        drawGeoArrow(arrowPoints, globe, {
+          altitudeRatio: rel + 0.01,
+          color: isConvection ? "rgba(164, 236, 255, 0.82)" : "rgba(255, 236, 170, 0.82)",
+          glow: isConvection ? "rgba(164, 236, 255, 0.18)" : "rgba(255, 236, 170, 0.18)",
+          lineWidth: i === active ? 2.1 : 1.4,
+          headSize: i === active ? 8 : 6
+        });
+      });
+    }
+
+    function refreshCompositionPanel() {
+      const chems = [
+        ["N2", "#6fb0e8"], ["O2", "#8bc3f1"], ["Ar", "#aacff5"], ["H2O", "#9ee8ff"], ["CO2", "#ffd69a"],
+        ["O3", "#ffe68a"], ["CH4", "#f7beff"], ["CO", "#ffb0b0"], ["NOx", "#ff8f8f"], ["SO2", "#ffc3a7"]
+      ];
+      const line = chems.map(([name, color]) =>
+        `<span class="chem-tag"><span class="chem-dot" style="background:${color}"></span>${name}</span>`
+      ).join("");
+      compositionPanel.innerHTML = `<div class="composition-title">大气化学组分</div><div class="composition-line">${line}</div>`;
+    }
+
+    function renderPickChips(root, items, activeId, onPick) {
+      root.innerHTML = "";
+      items.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.className = `mini-chip ${item.id === activeId ? "active" : ""}`;
+        btn.textContent = item.name;
+        btn.onclick = () => onPick(item.id);
+        root.appendChild(btn);
+      });
+    }
+
+    function currentSelectionText() {
+      const ocean = oceanItems.find((x) => x.id === activeOcean);
+      const belt = beltItems.find((x) => x.id === activeBelt);
+      const monsoon = monsoonItems.find((x) => x.id === activeMonsoon);
+      return `洋流：${ocean.name}｜${ocean.desc}<br>行星风带：${belt.name}｜${belt.desc}<br>季风：${monsoon.name}｜${monsoon.desc}`;
+    }
+
+    function pseudoElevation(lat, lon) {
+      const a = Math.sin((lat + 18) * 0.11) * Math.cos((lon - 42) * 0.09);
+      const b = Math.sin((lat - 7) * 0.23 + (lon + 15) * 0.05);
+      const c = Math.cos((lat + lon) * 0.06);
+      return (a * 0.55 + b * 0.3 + c * 0.15 + 1) * 0.5;
+    }
+
+    function drawGraticule(globe) {
+      if (!overlays.grid) return;
+      ctx.save();
+      ctx.strokeStyle = "rgba(191, 225, 255, 0.2)";
+      ctx.lineWidth = 0.7;
+      const latMin = scopeMode === "global" ? -80 : -10;
+      const latMax = scopeMode === "global" ? 80 : 60;
+      const lonMin = scopeMode === "global" ? -180 : 20;
+      const lonMax = scopeMode === "global" ? 180 : 120;
+      for (let lat = latMin; lat <= latMax; lat += 10) {
+        const points = [];
+        for (let lon = lonMin; lon <= lonMax; lon += 3) points.push([lon, lat]);
+        traceGeoPath(points, globe, 0);
+        ctx.stroke();
+      }
+      for (let lon = lonMin; lon <= lonMax; lon += 10) {
+        const points = [];
+        for (let lat = latMin - 5; lat <= latMax + 5; lat += 3) points.push([lon, lat]);
+        traceGeoPath(points, globe, 0);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawReliefTexture(globe) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(globe.cx, globe.cy, globe.r, 0, Math.PI * 2);
+      ctx.clip();
+
+      const waterTint = ctx.createRadialGradient(globe.cx + globe.r * 0.22, globe.cy - globe.r * 0.3, globe.r * 0.2, globe.cx, globe.cy, globe.r * 1.15);
+      waterTint.addColorStop(0, "rgba(136, 202, 255, 0.22)");
+      waterTint.addColorStop(0.5, "rgba(53, 130, 200, 0.13)");
+      waterTint.addColorStop(1, "rgba(5, 35, 70, 0.03)");
+      ctx.fillStyle = waterTint;
+      ctx.fillRect(globe.cx - globe.r, globe.cy - globe.r, globe.r * 2, globe.r * 2);
+
+      CONTINENT_POLYGONS.forEach((poly, idx) => {
+        const green = 124 + ((idx * 17) % 26);
+        const red = 82 + ((idx * 11) % 22);
+        const blue = 64 + ((idx * 7) % 18);
+        drawGeoPolygon(poly, globe, `rgba(${red}, ${green}, ${blue}, 0.64)`, "rgba(225, 245, 255, 0.16)");
+      });
+
+      for (let i = 0; i < 160; i += 1) {
+        const lon = -180 + (i * 37 % 360);
+        const lat = -60 + (i * 53 % 120);
+        const p = geoProject(lat, lon, globe, 0);
+        if (!p.visible) continue;
+        const shade = 0.06 + ((i % 7) * 0.012);
+        ctx.fillStyle = `rgba(255, 255, 255, ${shade})`;
+        ctx.fillRect(p.x, p.y, 1.6, 1.6);
+      }
+
+      // pseudo terrain relief and slope shading for a more map-like land appearance
+      for (let lat = -58; lat <= 76; lat += 3) {
+        for (let lon = -178; lon <= 178; lon += 3) {
+          const p = geoProject(lat, lon, globe, 0);
+          if (!p.visible) continue;
+          const e0 = pseudoElevation(lat, lon);
+          if (e0 < 0.52) continue;
+          const ex = pseudoElevation(lat, lon + 1.2);
+          const ey = pseudoElevation(lat + 1.2, lon);
+          const slope = Math.max(0, (ex - e0) * 0.9 + (ey - e0) * 0.7);
+          const bright = Math.min(0.34, 0.08 + e0 * 0.22 + slope * 0.32);
+          const size = 1.2 + e0 * 1.6;
+          ctx.fillStyle = `rgba(232, 237, 208, ${bright})`;
+          ctx.fillRect(p.x - size * 0.5, p.y - size * 0.5, size, size);
+        }
+      }
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(250, 252, 255, 0.72)";
+      ctx.lineWidth = 2;
+      MOUNTAIN_RANGES.forEach((range) => {
+        traceGeoPath(range, globe, 0.002);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    function drawOceanParticles(globe, timeValue, activeIndex) {
+      if (!overlays.ocean) return;
+      const density = scopeMode === "global" ? 120 : 66;
+      const intensity = activeIndex <= 3 ? 1 : 0.55;
+      for (let i = 0; i < density; i += 1) {
+        const seed = i * 0.6180339;
+        const phase = timeValue * 0.00026 + seed * Math.PI * 2;
+        const lonBase = scopeMode === "global" ? -160 + (i * 37 % 320) : 42 + (i * 11 % 58);
+        const latBase = scopeMode === "global" ? -42 + (i * 29 % 84) : -4 + (i * 13 % 36);
+        const lon = lonBase + Math.sin(phase) * (scopeMode === "global" ? 9 : 5);
+        const lat = latBase + Math.cos(phase * 0.85) * (scopeMode === "global" ? 4 : 3);
+        const p = geoProject(lat, lon, globe, 0.008);
+        if (!p.visible) continue;
+        const r = 0.8 + ((i % 4) * 0.22);
+        const a = (0.24 + (i % 5) * 0.09) * intensity;
+        ctx.fillStyle = `rgba(150, 220, 255, ${a})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawPlateBoundary(globe) {
+      if (!overlays.plate) return;
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 186, 138, 0.88)";
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([5, 3]);
+      const boundaries = [
+        [[-130, 45], [-123, 40], [-118, 33], [-112, 26], [-106, 20]],
+        [[-80, -55], [-76, -42], [-74, -28], [-72, -12], [-70, 2], [-68, 15]],
+        [[-30, 63], [-20, 54], [-10, 44], [2, 36], [14, 30]],
+        [[40, 14], [50, 20], [60, 24], [70, 28], [80, 30], [92, 29], [104, 27]],
+        [[138, 36], [145, 30], [151, 22], [156, 14], [162, 6], [168, -4]]
+      ];
+      boundaries.forEach((b) => {
+        traceGeoPath(b, globe, 0.004);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    function drawOceanCurrents(globe, activeIndex, timeValue = 0) {
+      if (!overlays.ocean) return;
+      const pulse = 0.85 + 0.15 * Math.sin(timeValue * 0.0024);
+      const alpha = (activeIndex <= 3 ? 0.95 : 0.52) * pulse;
+
+      const arabian = geoProject(15, 63, globe, 0.01);
+      if (arabian.visible) {
+        const g = ctx.createRadialGradient(arabian.x, arabian.y, 4, arabian.x, arabian.y, 42);
+        g.addColorStop(0, `rgba(124, 211, 255, ${0.28 * alpha})`);
+        g.addColorStop(1, "rgba(124, 211, 255, 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(arabian.x, arabian.y, 42, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const bengal = geoProject(16, 90, globe, 0.01);
+      if (bengal.visible) {
+        const g = ctx.createRadialGradient(bengal.x, bengal.y, 4, bengal.x, bengal.y, 46);
+        g.addColorStop(0, `rgba(255, 207, 122, ${0.28 * alpha})`);
+        g.addColorStop(1, "rgba(255, 207, 122, 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(bengal.x, bengal.y, 46, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawGeoArrow([[49, -4], [54, 5], [59, 12], [64, 17], [70, 19]], globe, {
+        altitudeRatio: 0.01,
+        color: `rgba(145, 231, 255, ${0.88 * alpha})`,
+        glow: `rgba(145, 231, 255, ${0.22 * alpha})`,
+        lineWidth: 2.3,
+        headSize: 10
+      });
+      drawGeoArrow([[92, 6], [91, 11], [89, 16], [87, 20], [84, 22]], globe, {
+        altitudeRatio: 0.01,
+        color: `rgba(255, 220, 141, ${0.92 * alpha})`,
+        glow: `rgba(255, 220, 141, ${0.24 * alpha})`,
+        lineWidth: 2.3,
+        headSize: 10
+      });
+      drawGeoArrow([[-78, 28], [-68, 33], [-58, 40], [-48, 46], [-40, 52]], globe, {
+        altitudeRatio: 0.008,
+        color: `rgba(167, 226, 255, ${0.78 * alpha})`,
+        glow: `rgba(167, 226, 255, ${0.2 * alpha})`,
+        lineWidth: 2,
+        headSize: 9
+      });
+      drawGeoArrow([[126, 24], [134, 28], [142, 34], [150, 40], [158, 46]], globe, {
+        altitudeRatio: 0.008,
+        color: `rgba(194, 233, 255, ${0.74 * alpha})`,
+        glow: `rgba(194, 233, 255, ${0.18 * alpha})`,
+        lineWidth: 2,
+        headSize: 9
+      });
+    }
+
+    function drawWindBelts(globe, activeIndex, timeValue = 0) {
+      if (!overlays.belts) return;
+      const sway = Math.sin(timeValue * 0.0007) * 1.8;
+      drawGeoArrow([[-170, 38], [-120, 41], [-60, 40], [0, 39], [60, 40], [120, 39], [170, 37]], globe, {
+        altitudeRatio: 0.16,
+        color: activeIndex >= 2 ? "rgba(255, 242, 176, 0.82)" : "rgba(210, 231, 255, 0.52)",
+        glow: activeIndex >= 2 ? "rgba(255, 242, 176, 0.18)" : "rgba(210, 231, 255, 0.12)",
+        lineWidth: 1.8,
+        headSize: 8
+      });
+      drawGeoArrow([[-150, 10 + sway * 0.1], [-90, 12 + sway * 0.15], [-30, 11 + sway * 0.14], [30, 10 + sway * 0.12], [90, 12 + sway * 0.1], [150, 11 + sway * 0.08]], globe, {
+        altitudeRatio: 0.08,
+        color: "rgba(182, 229, 255, 0.62)",
+        glow: "rgba(182, 229, 255, 0.16)",
+        lineWidth: 1.5,
+        headSize: 7
+      });
+      ctx.save();
+      ctx.strokeStyle = "rgba(164, 223, 255, 0.34)";
+      ctx.lineWidth = 1.4;
+      traceGeoPath([[-170, 0], [-110, 0], [-50, 1], [10, 0], [70, -1], [130, 0], [170, 0]], globe, 0.045);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPlanar() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      ctx.clearRect(0, 0, w, h);
+
+      const altitudeFactor = Number(altitude.value) / 1000;
+      const cx = w * (0.50 + altitudeFactor * 0.07);
+      const baseY = h * 0.88;
+      const boxW = 176 + altitudeFactor * 20;
+      const depthX = 52 + altitudeFactor * 12;
+      const depthY = -28 - altitudeFactor * 8;
+      const totalH = 220 + altitudeFactor * 48;
+
+      const heights = [28, 36, 16, 38, 12, 36, 12, 34, 18];
+      const sum = heights.reduce((a, b) => a + b, 0);
+
+      let yCursor = baseY;
+
+      for (let i = 0; i < layers.length; i += 1) {
+        const layer = layers[i];
+        const ratio = heights[i] / sum;
+        const lh = totalH * ratio;
+        const yTop = yCursor - lh;
+
+        const [r, g, b] = parseClassColor(layer.cls);
+        const alpha = i === active ? 0.95 : 0.82;
+
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        ctx.strokeStyle = `rgba(220, 240, 255, ${i === active ? 0.95 : 0.55})`;
+        ctx.lineWidth = i === active ? 1.4 : 1;
+
+        // front
+        ctx.beginPath();
+        ctx.rect(cx - boxW / 2, yTop, boxW, lh);
+        ctx.fill();
+        ctx.stroke();
+
+        // top
+        ctx.fillStyle = `rgba(${Math.min(255, r + 35)}, ${Math.min(255, g + 35)}, ${Math.min(255, b + 35)}, ${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(cx - boxW / 2, yTop);
+        ctx.lineTo(cx + boxW / 2, yTop);
+        ctx.lineTo(cx + boxW / 2 + depthX, yTop + depthY);
+        ctx.lineTo(cx - boxW / 2 + depthX, yTop + depthY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // side
+        ctx.fillStyle = `rgba(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(cx + boxW / 2, yTop);
+        ctx.lineTo(cx + boxW / 2 + depthX, yTop + depthY);
+        ctx.lineTo(cx + boxW / 2 + depthX, yCursor + depthY);
+        ctx.lineTo(cx + boxW / 2, yCursor);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // label
+        ctx.fillStyle = i === active ? "#f9fdff" : "#e9f6ff";
+        ctx.font = i === active ? "bold 12px sans-serif" : "11px sans-serif";
+        ctx.fillText(layer.name, cx - boxW / 2 + 8, yTop + Math.min(18, lh * 0.55));
+
+        yCursor = yTop;
+      }
+
+      // shadow
+      ctx.fillStyle = "rgba(18, 40, 66, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(cx + depthX * 0.35, baseY + 8, boxW * 0.68, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawQuarterGlobe(timeValue = 0) {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      ctx.clearRect(0, 0, w, h);
+      const altitudeFactor = Number(altitude.value) / 1000;
+
+      drawSpaceBackdrop(w, h);
+
+      // Global/local scope switch: same data model, different camera framing.
+      const cx = scopeMode === "global" ? Math.round(w * 0.5) : Math.round(-w * 0.24);
+      const cy = scopeMode === "global" ? Math.round(h * 0.64) : Math.round(h * 1.28);
+      const baseR = (scopeMode === "global" ? Math.min(w, h) * 0.42 : w * 1.24) * zoomLevel;
+      const spin = animated ? Math.sin(timeValue * 0.00018) * 8 : 0;
+      const nod = animated ? Math.sin(timeValue * 0.00013) * 3.2 : 0;
+      const shellPulse = animated ? 1 + Math.sin(timeValue * 0.0016) * 0.03 : 1;
+      const globe = {
+        cx,
+        cy,
+        r: baseR,
+        lat0: (scopeMode === "global" ? 12 : -5 + nod + userLatOffset) * RAD,
+        lon0: (scopeMode === "global" ? -20 + spin + userLonOffset : 32 + spin + userLonOffset) * RAD
+      };
+
+      const earthGrad = ctx.createRadialGradient(cx + baseR * 0.32, cy - baseR * 0.82, baseR * 0.03, cx, cy, baseR * 1.06);
+      earthGrad.addColorStop(0, "#baf0ff");
+      earthGrad.addColorStop(0.24, "#59b0f1");
+      earthGrad.addColorStop(0.56, "#1761a3");
+      earthGrad.addColorStop(0.86, "#0a2745");
+      earthGrad.addColorStop(1, "#061322");
+
+      // Globe base: full disk in global mode, quarter-arc in local mode.
+      ctx.fillStyle = earthGrad;
+      ctx.beginPath();
+      if (scopeMode === "global") ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
+      else {
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, baseR, -Math.PI / 2, 0);
+        ctx.closePath();
+      }
+      ctx.fill();
+      ctx.strokeStyle = "rgba(221, 241, 255, 0.7)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      const limbGlow = ctx.createRadialGradient(cx + baseR * 0.98, cy - baseR * 0.98, baseR * 0.02, cx + baseR * 0.98, cy - baseR * 0.98, baseR * 0.24);
+      limbGlow.addColorStop(0, "rgba(220, 245, 255, 0.95)");
+      limbGlow.addColorStop(0.28, "rgba(140, 207, 255, 0.44)");
+      limbGlow.addColorStop(1, "rgba(140, 207, 255, 0)");
+      ctx.strokeStyle = limbGlow;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      if (scopeMode === "global") ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
+      else ctx.arc(cx, cy, baseR, -Math.PI / 2, 0);
+      ctx.stroke();
+
+      drawGraticule(globe);
+      drawReliefTexture(globe);
+      drawPlateBoundary(globe);
+      drawOceanCurrents(globe, active, timeValue);
+      drawOceanParticles(globe, timeValue, active);
+      drawWindBelts(globe, active, timeValue);
+      drawCloudDeck(cx, cy, baseR, timeValue);
+
+      const shellBase = baseR * 0.017;
+      const ringStep = shellBase;
+      const shellLift = baseR * 0.012;
+      const layerRadii = [];
+      layers.forEach((layer, i) => {
+        const [r, g, b] = parseClassColor(layer.cls);
+        const r0 = baseR + shellLift + i * ringStep * shellPulse;
+        const r1 = r0 + ringStep * (i === active ? 1.16 : 1);
+        layerRadii.push(r1);
+        const alpha = i === active ? 0.32 : 0.1 + altitudeFactor * 0.04;
+        const edgeAlpha = i === active ? 0.94 : 0.36;
+
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        ctx.shadowColor = i === active ? `rgba(${r}, ${g}, ${b}, 0.32)` : `rgba(${r}, ${g}, ${b}, 0.14)`;
+        ctx.shadowBlur = i === active ? 14 : 8;
+        ctx.beginPath();
+        if (scopeMode === "global") {
+          ctx.arc(cx, cy, r1, 0, Math.PI * 2);
+          ctx.arc(cx, cy, r0, 0, Math.PI * 2, true);
+        } else {
+          ctx.moveTo(cx, cy - r0);
+          ctx.arc(cx, cy, r1, -Math.PI / 2, 0);
+          ctx.lineTo(cx + r0, cy);
+          ctx.arc(cx, cy, r0, 0, -Math.PI / 2, true);
+          ctx.closePath();
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.strokeStyle = `rgba(214, 236, 255, ${edgeAlpha})`;
+        ctx.lineWidth = i === active ? 1.5 : 0.9;
+        ctx.beginPath();
+        if (scopeMode === "global") ctx.arc(cx, cy, r1, 0, Math.PI * 2);
+        else ctx.arc(cx, cy, r1, -Math.PI / 2, 0);
+        ctx.stroke();
+      });
+
+      drawLayerProcessArrows(globe, layerRadii);
+
+      const activeR = baseR + shellLift + active * ringStep + ringStep * 0.5;
+      const labelX = scopeMode === "global" ? cx - 88 : cx + activeR * 0.79;
+      const labelY = scopeMode === "global" ? cy - activeR - 24 : cy - activeR * 0.79;
+      ctx.fillStyle = "rgba(8, 25, 47, 0.74)";
+      ctx.fillRect(labelX - 8, labelY - 16, 196, 20);
+      ctx.fillStyle = "#ebf6ff";
+      ctx.font = "12px sans-serif";
+      ctx.fillText(`当前层：${layers[active].name}｜高度 ${altitude.value} km`, labelX, labelY - 2);
+
+      if (overlays.flow) {
+        drawGeoArrow([[-10, 30], [10, 34], [30, 36], [55, 34], [80, 30]], globe, {
+          altitudeRatio: 0.18 + altitudeFactor * 0.03,
+          color: "rgba(255, 233, 160, 0.84)",
+          glow: "rgba(255, 233, 160, 0.20)",
+          lineWidth: 1.8,
+          headSize: 8
+        });
+
+        if (active <= 2) {
+          drawGeoArrow([[52, -2], [60, 7], [70, 15], [79, 21], [88, 26]], globe, {
+            altitudeRatio: 0.05 + altitudeFactor * 0.02,
+            color: "rgba(151, 228, 255, 0.92)",
+            glow: "rgba(151, 228, 255, 0.22)",
+            lineWidth: 2.2,
+            headSize: 10
+          });
+        }
+      }
+
+      // region tag
+      ctx.fillStyle = "rgba(8, 25, 47, 0.72)";
+      const tagX = scopeMode === "global" ? cx - 120 : cx + baseR * 0.55;
+      const tagY = scopeMode === "global" ? cy + baseR + 10 : cy - baseR * 0.55;
+      ctx.fillRect(tagX, tagY, 240, 18);
+      ctx.fillStyle = "#ecf7ff";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(scopeMode === "global" ? "全球范围视图：地形、风带、季风与洋流耦合" : "局部范围视图：喜马拉雅邻区海气地形耦合", tagX + 8, tagY + 14);
+    }
+
+    function syncUi() {
+      layerStrip.innerHTML = "";
+      layerTable.innerHTML = "";
+
+      layers.forEach((l, i) => {
+        const chip = document.createElement("button");
+        chip.className = `chip ${i === active ? "active" : ""}`;
+        chip.textContent = l.name;
+        chip.onclick = () => {
+          active = i;
+          render();
+        };
+        layerStrip.appendChild(chip);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${l.name}</td><td>${l.h}</td><td>${l.d}</td><td>${l.phenomenon}</td>`;
+        layerTable.appendChild(tr);
+      });
+
+      layerDetail.innerHTML = `<strong>${layers[active].name}</strong>｜${layers[active].h}<br>${layers[active].detail}`;
+      couplingBox.innerHTML = `<strong>海气耦合判读</strong><br>${active <= 2 ? "低层阶段：海表增暖 + 水汽汇聚 + 地形抬升，触发深对流。": active <= 4 ? "中层阶段：潜热释放和层顶交换增强，垂直耦合加深。": "高层阶段：辐射-动力过程主导，海洋通过下边界信号间接影响。"} `;
+      windBox.innerHTML = `<strong>洋流-风带-季风（点击展示）</strong><br>${currentSelectionText()}`;
+      phenomenonBox.innerHTML = `当前层重点现象：${layers[active].phenomenon}<br>${currentSelectionText()}`;
+      renderPickChips(oceanPickList, oceanItems, activeOcean, (id) => { activeOcean = id; syncUi(); });
+      renderPickChips(beltPickList, beltItems, activeBelt, (id) => { activeBelt = id; syncUi(); });
+      renderPickChips(monsoonPickList, monsoonItems, activeMonsoon, (id) => { activeMonsoon = id; syncUi(); });
+      refreshCompositionPanel();
+    }
+
+    function drawCurrentScene() {
+      resizeCanvas();
+      drawQuarterGlobe(sceneTime);
+    }
+
+    function render() {
+      syncUi();
+      drawCurrentScene();
+    }
+
+    function animateFrame(timeValue) {
+      sceneTime = timeValue;
+      userLonOffset += (targetLonOffset - userLonOffset) * 0.16;
+      userLatOffset += (targetLatOffset - userLatOffset) * 0.16;
+      zoomLevel += (targetZoomLevel - zoomLevel) * 0.18;
+      drawCurrentScene();
+      rafId = window.requestAnimationFrame(animateFrame);
+    }
+
+    function startAnimation() {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(animateFrame);
+    }
+
+    function stopAnimation() {
+      if (!rafId) return;
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+
+    altitude.addEventListener("input", (e) => {
+      const km = Number(e.target.value);
+      altitudeText.textContent = `当前高度：${km} km`;
+      active = layerByAltitude(km);
+      render();
+    });
+
+    modeGroup.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-mode]");
+      if (!btn) return;
+      viewMode = "globe";
+      modeGroup.querySelectorAll(".tool-btn").forEach((node) => {
+        if (node.dataset.mode) node.classList.toggle("active", node.dataset.mode === viewMode);
+      });
+      canvasTip.textContent = "3D 全球视图：球面经纬网、板块边界、季风、洋流与行星风带均附着在同一球体上，并随高度层联动。";
+      drawCurrentScene();
+    });
+
+    overlayGroup.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-overlay]");
+      if (!btn) return;
+      const key = btn.dataset.overlay;
+      overlays[key] = !overlays[key];
+      btn.classList.toggle("active", overlays[key]);
+      drawCurrentScene();
+    });
+
+    motionBtn.addEventListener("click", () => {
+      animated = !animated;
+      motionBtn.classList.toggle("active", animated);
+      motionBtn.textContent = animated ? "动态旋转" : "暂停动态";
+      if (animated) startAnimation();
+      else {
+        stopAnimation();
+        drawCurrentScene();
+      }
+    });
+
+    scopeBtn.addEventListener("click", () => {
+      scopeMode = scopeMode === "global" ? "local" : "global";
+      scopeBtn.textContent = scopeMode === "global" ? "切到局部" : "切到全球";
+      targetZoomLevel = scopeMode === "global" ? 1 : 0.86;
+      canvasTip.textContent = scopeMode === "global"
+        ? "3D 全球视图：球面经纬网、板块边界、季风、洋流与行星风带均附着在同一球体上，并随高度层联动。"
+        : "3D 局部视图：聚焦喜马拉雅邻区，查看地形抬升、季风输送、洋流暖池与高空风带的耦合。";
+      drawCurrentScene();
+    });
+
+    resetViewBtn.addEventListener("click", () => {
+      targetLonOffset = 0;
+      targetLatOffset = 0;
+      targetZoomLevel = scopeMode === "global" ? 1 : 0.86;
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      canvas.classList.add("dragging");
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      dragBaseLon = targetLonOffset;
+      dragBaseLat = targetLatOffset;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      const dx = event.clientX - dragStartX;
+      const dy = event.clientY - dragStartY;
+      targetLonOffset = dragBaseLon + dx * 0.14;
+      targetLatOffset = Math.max(-38, Math.min(38, dragBaseLat + dy * 0.11));
+      drawCurrentScene();
+    });
+
+    const releaseDrag = (event) => {
+      if (!dragging) return;
+      dragging = false;
+      canvas.classList.remove("dragging");
+      try {
+        canvas.releasePointerCapture(event.pointerId);
+      } catch (err) {
+        // no-op
+      }
+    };
+    canvas.addEventListener("pointerup", releaseDrag);
+    canvas.addEventListener("pointercancel", releaseDrag);
+
+    canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const delta = event.deltaY > 0 ? -0.06 : 0.06;
+      targetZoomLevel = Math.max(0.58, Math.min(1.45, targetZoomLevel + delta));
+    }, { passive: false });
+
+    panelToggleBtn.addEventListener("click", () => {
+      const collapsed = !panelBody.hidden;
+      panelBody.hidden = collapsed;
+      panelToggleBtn.textContent = collapsed ? "展开" : "收起";
+    });
+
+    window.addEventListener("resize", drawCurrentScene);
+
+    render();
+    startAnimation();
+  </script>
+</body>
+</html>

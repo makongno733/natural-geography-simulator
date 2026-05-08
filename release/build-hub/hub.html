@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自然地理模拟系统</title>
+  <style>
+    :root{--bg:#091a2b;--card:#10263d;--line:#2f5275;--text:#e7f1ff;--muted:#a9c0da;--accent:#60a5fa}
+    *{box-sizing:border-box} body{margin:0;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 20% 10%,#1b3655 0,#091a2b 45%,#071420 100%);color:var(--text);min-height:100vh;display:grid;place-items:center}
+    .wrap{width:min(980px,92vw);padding:18px;border:1px solid var(--line);border-radius:16px;background:rgba(8,22,36,.88);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    h1{margin:0 0 8px;font-size:clamp(22px,3vw,32px)} p{margin:0 0 16px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{display:block;text-decoration:none;border:1px solid var(--line);border-radius:12px;padding:14px;background:linear-gradient(180deg,#122d49,#0f253d);color:var(--text)}
+    .card:hover{border-color:var(--accent);transform:translateY(-1px)}
+    .t{font-size:18px;font-weight:700;margin-bottom:6px}.d{font-size:13px;color:var(--muted);line-height:1.5}
+    .tips{margin-top:12px;font-size:12px;color:#86a7c9}
+    @media (max-width:740px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>自然地理模拟系统</h1>
+    <p>总入口：选择一个子系统进入</p>
+    <section class="grid">
+      <a class="card" href="./atmosphere/index.html">
+        <div class="t">大气垂直结构与化学组成</div>
+        <div class="d">3D大气分层、行星风带、季风、洋流及海气耦合可视化。</div>
+      </a>
+      <a class="card" href="./landform/index.html">
+        <div class="t">地貌演化与河流类型</div>
+        <div class="d">戴维斯河流类型、地貌演化时间轴与3D地形交互。</div>
+      </a>
+    </section>
+    <div class="tips">提示：在页面中可继续交互旋转、缩放与切换图层。</div>
+  </main>
+</body>
+</html>

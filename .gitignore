@@ -1,0 +1,9 @@
+node_modules
+dist
+electron-release
+.npm-cache
+.electron-builder-cache
+.home
+
+# Operating system noise
+.DS_Store

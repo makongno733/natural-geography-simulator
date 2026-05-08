@@ -1,0 +1,10 @@
+#!/bin/zsh
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+APP_CONTENTS="$(cd "$SCRIPT_DIR/.." && pwd)"
+SITE_PATH="$APP_CONTENTS/Resources/site/atmosphere-draft.html"
+
+if [[ -f "$SITE_PATH" ]]; then
+  open -a "Safari" "$SITE_PATH" || open -a "Google Chrome" "$SITE_PATH" || open "$SITE_PATH"
+else
+  osascript -e 'display alert "大气结构教学系统" message "未找到内置网页资源，请重新生成软件包。" as warning'
+fi
