@@ -10,10 +10,13 @@
 import { reactive, ref } from 'vue'
 import SandboxShell from './SandboxShell.vue'
 import { createSceneEngine } from './engine/SceneEngine.js'
+import { registerModule, getModule } from './modules/registry.js'
+import { fluvialModule } from './modules/fluvial/index.js'
 
 const activeModuleId = ref('fluvial')
 const currentKnowledge = ref(null)
 const sceneEngine = ref(null)
+registerModule(fluvialModule)
 
 const params = reactive({
   timeline: 0.35, climate: 0.3, uplift: 0.2,
@@ -34,7 +37,11 @@ const modules = [
   { id: 'climate', name: '气候地貌', icon: '🌍', locked: true }
 ]
 
-function onModuleSelect(id) { activeModuleId.value = id }
+function onModuleSelect(id) {
+  activeModuleId.value = id
+  const mod = getModule(id)
+  if (mod && id === 'fluvial') mod.onActivate(sceneEngine.value)
+}
 function onParamsChange(p) { Object.assign(params, p) }
 function onTool(tool) {
   if (tool === 'resetView') sceneEngine.value?.resetCamera()
