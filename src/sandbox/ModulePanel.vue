@@ -40,6 +40,14 @@
       </div>
     </div>
     <div class="panel-section">
+      <h3>河流类型</h3>
+      <div class="river-grid">
+        <button v-for="r in riverTypes" :key="r.id"
+          class="river-btn" :class="{active: activeType===r.id}"
+          @click="$emit('selectType', r.id)">{{ r.name }}</button>
+      </div>
+    </div>
+    <div class="panel-section">
       <h3>工具</h3>
       <div class="tool-grid">
         <button class="tool-btn" @click="$emit('tool','resetView')">重置视角</button>
@@ -61,8 +69,8 @@
 </template>
 
 <script setup>
-defineProps({ modules: Array, activeModuleId: String, params: Object })
-defineEmits(['select','update:params','tool'])
+defineProps({ modules: Array, activeModuleId: String, params: Object, riverTypes: Array, activeType: String })
+defineEmits(['select','update:params','tool','selectType'])
 const weatherModes = [
   { id: 'clear', label: '晴' }, { id: 'rain', label: '雨' },
   { id: 'snow', label: '雪' }, { id: 'cloud', label: '阴' }, { id: 'fog', label: '雾' }
@@ -90,4 +98,7 @@ const weatherModes = [
 .weather-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
 .weather-btn{border:1px solid #a9c6e8;border-radius:6px;padding:4px 2px;background:#f9fcff;color:#365776;font-size:.6rem;cursor:pointer;text-align:center}
 .weather-btn.active{background:#cae7ff;border-color:#7bb4e7;color:#113f6a;font-weight:600}
+.river-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.river-btn{border:1px solid #a9c6e8;border-radius:6px;padding:4px 2px;background:#f9fcff;color:#365776;font-size:.6rem;cursor:pointer;text-align:center}
+.river-btn.active{background:#cae7ff;border-color:#7bb4e7;color:#113f6a;font-weight:600}
 </style>
