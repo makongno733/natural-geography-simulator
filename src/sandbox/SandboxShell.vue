@@ -21,11 +21,3 @@ import InfoPanel from './InfoPanel.vue'
 defineProps({ modules: Array, activeModuleId: String, params: Object, currentKnowledge: Object, state: Object, riverTypes: Array, activeType: String })
 defineEmits(['select','update:params','tool','sceneReady','import','export','selectType'])
 </script>
-
-<style scoped>
-.sandbox-shell {
-  display: grid; grid-template-columns: 200px 1fr 240px; gap: 8px;
-  padding: 8px; min-height: calc(100vh - 44px);
-}
-@media (max-width:980px){.sandbox-shell{grid-template-columns:1fr}}
-</style>
