@@ -18,10 +18,10 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import AtmosphereView from './AtmosphereView.vue'
 import SandboxApp from './sandbox/SandboxApp.vue'
 
-const view = ref(window.location.hash.slice(1) || '')
+const view = ref(window.location.hash.replace(/^#\//, '') || 'atmosphere')
 
 function onHashChange() {
-  view.value = window.location.hash.slice(1) || ''
+  view.value = window.location.hash.replace(/^#\//, '') || 'atmosphere'
 }
 
 onMounted(() => window.addEventListener('hashchange', onHashChange))
