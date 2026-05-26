@@ -12,6 +12,7 @@ export function createSceneEngine(hostElement, options = {}) {
         climate: params.climate ?? 0,
         weatherMode: params.weatherMode ?? 'clear',
         activeType: params.activeType ?? 'consequent',
+        activeModule: params.activeModule ?? 'fluvial',
         viewMode: params.viewMode ?? 'terrain'
       })
     },
@@ -20,6 +21,8 @@ export function createSceneEngine(hostElement, options = {}) {
     resize() { terrainAPI.resize() },
     getScene() { return terrainAPI.getScene() },
     getTerrainAPI() { return terrainAPI },
+    computeClimateMetrics() { return terrainAPI.computeClimateMetrics() },
+    getCurrentFeatureName() { return terrainAPI.getCurrentFeatureName() },
     dispose() { terrainAPI.dispose() }
   }
 }

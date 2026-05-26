@@ -1,10 +1,17 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { createTerrainMaterial } from './shaders/terrainMaterial.js';
+import { createWaterMaterial } from './shaders/waterMaterial.js';
+import { createCloudShadowMaterial } from './shaders/cloudShadowMaterial.js';
+import { modifyHeight, getModuleColorBias, getModuleFeatureName } from './terrainModifiers.js';
 
 const TERRAIN_SIZE = 7.2;
 const TERRAIN_HEIGHT = 2.7;
 const BASE_Y = -4.6;
-const SEGMENTS = 210;
+const SEGMENTS = 260;
 const RIVER_HEIGHT_OFFSET = 0.04;
 
 const strataLayerPalette = [
@@ -16,13 +23,13 @@ const strataLayerPalette = [
 ];
 
 const riverBaseStyles = {
-  consequent: { color: '#35b0ff', radius: 0.05 },
-  subsequent: { color: '#ffd166', radius: 0.045 },
-  obsequent: { color: '#ff6f60', radius: 0.045 },
-  resequent: { color: '#8bff9c', radius: 0.044 },
-  insequent: { color: '#f4b6ff', radius: 0.042 },
-  antecedent: { color: '#9ee7ff', radius: 0.041 },
-  superimposed: { color: '#ffcf9e', radius: 0.041 }
+  consequent: { color: '#35b0ff', radius: 0.055 },
+  subsequent: { color: '#ffd166', radius: 0.05 },
+  obsequent: { color: '#ff6f60', radius: 0.05 },
+  resequent: { color: '#8bff9c', radius: 0.048 },
+  insequent: { color: '#f4b6ff', radius: 0.046 },
+  antecedent: { color: '#9ee7ff', radius: 0.045 },
+  superimposed: { color: '#ffcf9e', radius: 0.045 }
 };
 
 const typeAnchors = {
@@ -35,14 +42,8 @@ const typeAnchors = {
   superimposed: { x: 0.30, y: 0.63, color: '#ffcf9e' }
 };
 
-function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
-}
-
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
-
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
 function mix(c1, c2, t) {
   return [
     Math.round(lerp(c1[0], c2[0], t)),
@@ -60,8 +61,7 @@ function weatherErosionWeight(mode) {
 }
 
 function climateForceValue(climateRatio, weatherMode) {
-  const timeFactor = Math.pow(climateRatio, 1.15);
-  return timeFactor * weatherErosionWeight(weatherMode) * 1.6;
+  return Math.pow(climateRatio, 1.15) * weatherErosionWeight(weatherMode) * 1.6;
 }
 
 function satTerrainColor(n) {
@@ -72,7 +72,8 @@ function satTerrainColor(n) {
   return mix([132, 98, 71], [214, 213, 205], (n - 0.8) / 0.2);
 }
 
-function heightAt(xn, yn, t, climateForce = 0) {
+// --- Height function (CPU-side, used for river paths & markers) ---
+function heightAt(xn, yn, t, climateForce = 0, moduleId = 'fluvial') {
   const x = xn * 2 - 1;
   const y = yn * 2 - 1;
   let h = 1.45 - 1.08 * x;
@@ -97,6 +98,9 @@ function heightAt(xn, yn, t, climateForce = 0) {
   h -= valleyA * climateForce * 0.44;
   h -= valleyB * climateForce * 0.36;
   h -= valleyC * climateForce * 0.34;
+  if (moduleId !== 'fluvial') {
+    h = modifyHeight(moduleId, xn, yn, h, t, climateForce);
+  }
   return h;
 }
 
@@ -128,11 +132,10 @@ function riverRatios(t) {
   };
 }
 
-function createTerrainTopGeometry(segments, timeline, climateForce) {
+function createTerrainTopGeometry(segments, timeline, climateForce, moduleId = 'fluvial') {
   const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, segments, segments);
   geometry.rotateX(-Math.PI / 2);
   const position = geometry.attributes.position;
-  const colors = new Float32Array(position.count * 3);
   let minH = Infinity;
   let maxH = -Infinity;
   const samples = new Float32Array(position.count);
@@ -140,7 +143,7 @@ function createTerrainTopGeometry(segments, timeline, climateForce) {
   for (let iz = 0; iz <= segments; iz += 1) {
     for (let ix = 0; ix <= segments; ix += 1) {
       const idx = iz * (segments + 1) + ix;
-      const h = heightAt(ix / segments, iz / segments, timeline, climateForce);
+      const h = heightAt(ix / segments, iz / segments, timeline, climateForce, moduleId);
       samples[idx] = h;
       if (h < minH) minH = h;
       if (h > maxH) maxH = h;
@@ -149,22 +152,14 @@ function createTerrainTopGeometry(segments, timeline, climateForce) {
 
   const range = Math.max(0.001, maxH - minH);
   for (let i = 0; i < position.count; i += 1) {
-    const h = samples[i];
-    position.setY(i, h * TERRAIN_HEIGHT);
-    const n = (h - minH) / range;
-    const c = satTerrainColor(n);
-    colors[i * 3] = c[0] / 255;
-    colors[i * 3 + 1] = c[1] / 255;
-    colors[i * 3 + 2] = c[2] / 255;
+    position.setY(i, samples[i] * TERRAIN_HEIGHT);
   }
-
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
   return { geometry, samples, minH, maxH, range };
 }
 
-function sampleLayerColor(y, topY) {
-  const t = clamp((y - BASE_Y) / Math.max(0.001, topY - BASE_Y), 0, 0.999);
+function sampleLayerColor(y) {
+  const t = clamp((y - BASE_Y) / Math.max(0.001, TERRAIN_HEIGHT - BASE_Y), 0, 0.999);
   const index = Math.floor(t * strataLayerPalette.length);
   return strataLayerPalette[index];
 }
@@ -172,49 +167,29 @@ function sampleLayerColor(y, topY) {
 function createSkirtGeometry(samples, segments) {
   const edge = [];
   const row = segments + 1;
-  const pushIndex = (ix, iz) => edge.push(iz * row + ix);
-  for (let ix = 0; ix <= segments; ix += 1) pushIndex(ix, 0);
-  for (let iz = 1; iz <= segments; iz += 1) pushIndex(segments, iz);
-  for (let ix = segments - 1; ix >= 0; ix -= 1) pushIndex(ix, segments);
-  for (let iz = segments - 1; iz >= 1; iz -= 1) pushIndex(0, iz);
+  for (let ix = 0; ix <= segments; ix += 1) edge.push(ix);
+  for (let iz = 1; iz <= segments; iz += 1) edge.push(iz * row + segments);
+  for (let ix = segments - 1; ix >= 0; ix -= 1) edge.push(segments * row + ix);
+  for (let iz = segments - 1; iz >= 1; iz -= 1) edge.push(iz * row);
 
   const vertices = [];
   const colors = [];
+  const baseCol = strataLayerPalette[0];
   for (let i = 0; i < edge.length; i += 1) {
-    const a = edge[i];
-    const b = edge[(i + 1) % edge.length];
-
-    const aix = a % row;
-    const aiz = Math.floor(a / row);
-    const bix = b % row;
-    const biz = Math.floor(b / row);
-
-    const ax = (aix / segments - 0.5) * TERRAIN_SIZE;
-    const az = (aiz / segments - 0.5) * TERRAIN_SIZE;
-    const bx = (bix / segments - 0.5) * TERRAIN_SIZE;
-    const bz = (biz / segments - 0.5) * TERRAIN_SIZE;
-    const ay = samples[a] * TERRAIN_HEIGHT;
-    const by = samples[b] * TERRAIN_HEIGHT;
-
-    const colorA = sampleLayerColor(ay, ay);
-    const colorB = sampleLayerColor(by, by);
-    const baseColor = strataLayerPalette[0];
-
-    vertices.push(
-      ax, ay, az,
-      bx, by, bz,
-      bx, BASE_Y, bz,
-      ax, ay, az,
-      bx, BASE_Y, bz,
-      ax, BASE_Y, az
-    );
-
-    const faceColors = [colorA, colorB, baseColor, colorA, baseColor, baseColor];
-    for (const c of faceColors) {
+    const a = edge[i], b = edge[(i + 1) % edge.length];
+    const aix = a % row, aiz = Math.floor(a / row);
+    const bix = b % row, biz = Math.floor(b / row);
+    const ax = (aix / segments - 0.5) * TERRAIN_SIZE,
+          az = (aiz / segments - 0.5) * TERRAIN_SIZE;
+    const bx = (bix / segments - 0.5) * TERRAIN_SIZE,
+          bz = (biz / segments - 0.5) * TERRAIN_SIZE;
+    const ay = samples[a] * TERRAIN_HEIGHT, by = samples[b] * TERRAIN_HEIGHT;
+    const ca = sampleLayerColor(ay), cb = sampleLayerColor(by);
+    vertices.push(ax, ay, az, bx, by, bz, bx, BASE_Y, bz,
+                  ax, ay, az, bx, BASE_Y, bz, ax, BASE_Y, az);
+    for (const c of [ca, cb, baseCol, ca, baseCol, baseCol])
       colors.push(c.r, c.g, c.b);
-    }
   }
-
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
@@ -222,38 +197,29 @@ function createSkirtGeometry(samples, segments) {
   return geometry;
 }
 
-function createBottomGeometry() {
-  const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, 1, 1);
-  geometry.rotateX(-Math.PI / 2);
-  geometry.translate(0, BASE_Y, 0);
-  return geometry;
-}
-
-function samplePoint(xn, yn, timeline, climateForce, yOffset = 0) {
+function samplePoint(xn, yn, timeline, climateForce, yOffset = 0, moduleId = 'fluvial') {
   return new THREE.Vector3(
     (xn - 0.5) * TERRAIN_SIZE,
-    heightAt(xn, yn, timeline, climateForce) * TERRAIN_HEIGHT + yOffset,
+    heightAt(xn, yn, timeline, climateForce, moduleId) * TERRAIN_HEIGHT + yOffset,
     (yn - 0.5) * TERRAIN_SIZE
   );
 }
 
-function createRiverMesh(points, ratio, style, timeline, climateForce, active) {
+function createRiverMesh(points, ratio, style, timeline, climateForce, active, moduleId = 'fluvial') {
   const count = Math.max(2, Math.floor(points.length * ratio));
   const sampled = [];
-  for (let i = 0; i < count; i += 1) {
-    const pt = points[i];
-    sampled.push(samplePoint(pt.x, pt.y, timeline, climateForce, RIVER_HEIGHT_OFFSET));
-  }
+  for (let i = 0; i < count; i += 1)
+    sampled.push(samplePoint(points[i].x, points[i].y, timeline, climateForce, RIVER_HEIGHT_OFFSET, moduleId));
   if (sampled.length < 2) return null;
-
   const curve = new THREE.CatmullRomCurve3(sampled);
-  const tube = new THREE.TubeGeometry(curve, Math.max(18, sampled.length * 2), active ? style.radius * 1.38 : style.radius, 10, false);
+  const tube = new THREE.TubeGeometry(curve, Math.max(22, sampled.length * 2),
+    active ? style.radius * 1.5 : style.radius, 10, false);
   const material = new THREE.MeshStandardMaterial({
     color: style.color,
     emissive: style.color,
-    emissiveIntensity: active ? 0.62 : 0.24,
-    roughness: 0.28,
-    metalness: 0.05,
+    emissiveIntensity: active ? 0.7 : 0.28,
+    roughness: 0.22,
+    metalness: 0.08,
     transparent: true,
     opacity: active ? 1 : 0.88
   });
@@ -262,13 +228,14 @@ function createRiverMesh(points, ratio, style, timeline, climateForce, active) {
 
 function createCloudGroup() {
   const group = new THREE.Group();
-  for (let i = 0; i < 7; i += 1) {
+  for (let i = 0; i < 8; i += 1) {
+    const s = 0.34 + Math.random() * 0.16;
     const puff = new THREE.Mesh(
-      new THREE.SphereGeometry(0.34 + Math.random() * 0.16, 18, 18),
-      new THREE.MeshStandardMaterial({ color: '#eef3f6', transparent: true, opacity: 0.62, roughness: 1 })
+      new THREE.SphereGeometry(s, 18, 18),
+      new THREE.MeshStandardMaterial({ color: '#eef3f6', transparent: true, opacity: 0.58, roughness: 1 })
     );
-    puff.position.set(-3.5 + i * 1.1, 3.3 + (i % 2) * 0.18, -1.8 + (i % 3) * 0.65);
-    puff.scale.set(1.6, 0.72, 1.1);
+    puff.position.set(-3.8 + i * 1.1, 3.5 + (i % 2) * 0.18, -2.0 + (i % 3) * 0.65);
+    puff.scale.set(1.8, 0.68, 1.2);
     group.add(puff);
   }
   return group;
@@ -277,9 +244,9 @@ function createCloudGroup() {
 function createPointWeather(count, color, size) {
   const positions = new Float32Array(count * 3);
   for (let i = 0; i < count; i += 1) {
-    positions[i * 3] = (Math.random() - 0.5) * 10;
+    positions[i * 3] = (Math.random() - 0.5) * 11;
     positions[i * 3 + 1] = 0.8 + Math.random() * 5.2;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 11;
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -301,19 +268,44 @@ function createMarker() {
   return group;
 }
 
+// --- Climate metrics for UI ---
+function computeClimateMetrics(timeline, climateRatio, weatherMode) {
+  const years = Math.round(climateRatio * 3000);
+  const erosionWeight = weatherErosionWeight(weatherMode);
+  const cumulativeErosion = (timeline * 0.32 + climateRatio * 0.54) * 100;
+  const divideRetreat = (climateRatio * 68).toFixed(1);
+  return { years, erosionWeight, cumulativeErosion: cumulativeErosion.toFixed(1), divideRetreat };
+}
+
 export function createTerrainScene(host, options = {}) {
   const scene = new THREE.Scene();
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.1));
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance'
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(host.clientWidth, host.clientHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.localClippingEnabled = true;
-  renderer.shadowMap.enabled = false;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
   host.innerHTML = '';
   host.appendChild(renderer.domElement);
 
   const camera = new THREE.PerspectiveCamera(42, Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight), 0.1, 100);
   camera.position.set(5.2, 4.0, 5.6);
+
+  // --- Post-processing ---
+  const composer = new EffectComposer(renderer);
+  const renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(host.clientWidth, host.clientHeight),
+    0.25, 0.15, 0.08
+  );
+  composer.addPass(bloomPass);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -327,24 +319,21 @@ export function createTerrainScene(host, options = {}) {
   controls.minPolarAngle = 0.12;
   controls.maxPolarAngle = Math.PI - 0.02;
   controls.target.set(0, 0.5, 0);
-  controls.mouseButtons = {
-    LEFT: THREE.MOUSE.ROTATE,
-    MIDDLE: THREE.MOUSE.DOLLY,
-    RIGHT: THREE.MOUSE.PAN
-  };
-  controls.touches = {
-    ONE: THREE.TOUCH.ROTATE,
-    TWO: THREE.TOUCH.DOLLY_PAN
-  };
+  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+  controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
   controls.update();
 
-  const hemi = new THREE.HemisphereLight('#d6f0ff', '#5a4b35', 1.6);
-  const sun = new THREE.DirectionalLight('#fff1c9', 2.4);
+  // --- Lighting ---
+  const hemi = new THREE.HemisphereLight('#c8e4ff', '#5a4b35', 1.4);
+  const sun = new THREE.DirectionalLight('#ffeac2', 2.2);
   sun.position.set(5.5, 8.5, 4.2);
-  const rim = new THREE.DirectionalLight('#88c8ff', 0.7);
-  rim.position.set(-4.5, 3.8, -5.8);
-  scene.add(hemi, sun, rim);
+  const fill = new THREE.DirectionalLight('#88c8ff', 0.65);
+  fill.position.set(-4.5, 3.8, -5.8);
+  const rim = new THREE.DirectionalLight('#b0d8ff', 0.35);
+  rim.position.set(0, -2, 6);
+  scene.add(hemi, sun, fill, rim);
 
+  // --- Scene groups ---
   const world = new THREE.Group();
   scene.add(world);
 
@@ -353,22 +342,40 @@ export function createTerrainScene(host, options = {}) {
   const riverGroup = new THREE.Group();
   const weatherGroup = new THREE.Group();
   const cloudGroup = createCloudGroup();
-  const rainPoints = createPointWeather(900, '#7ec8ff', 0.045);
-  const snowPoints = createPointWeather(520, '#ffffff', 0.055);
+  const rainPoints = createPointWeather(1200, '#7ec8ff', 0.045);
+  const snowPoints = createPointWeather(700, '#ffffff', 0.055);
   const activeMarker = createMarker();
+
+  // --- Water surface ---
+  const waterMat = createWaterMaterial();
+  const waterGeo = new THREE.PlaneGeometry(TERRAIN_SIZE * 1.1, TERRAIN_SIZE * 1.1);
+  waterGeo.rotateX(-Math.PI / 2);
+  const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+  waterMesh.position.y = 0.15;
+
+  // --- Cloud shadow overlay ---
+  const shadowMat = createCloudShadowMaterial();
+  const shadowGeo = new THREE.PlaneGeometry(TERRAIN_SIZE * 1.6, TERRAIN_SIZE * 1.6);
+  shadowGeo.rotateX(-Math.PI / 2);
+  const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+  shadowMesh.position.y = 3.8;
+  shadowMesh.renderOrder = 1;
+
   weatherGroup.add(cloudGroup, rainPoints, snowPoints);
-  world.add(terrainGroup, riverGroup, weatherGroup, activeMarker);
+  world.add(waterMesh, terrainGroup, riverGroup, weatherGroup, shadowMesh, activeMarker);
 
   const riverPaths = generateRiverPaths();
   let frameId = 0;
   let resizeObserver;
   let lastWeatherTick = 0;
   let geometrySignature = '';
+  let clock = new THREE.Clock();
   let state = {
     timeline: 0,
     climate: 0,
     weatherMode: 'clear',
     activeType: 'consequent',
+    activeModule: 'fluvial',
     viewMode: 'terrain',
     autoRotate: false
   };
@@ -377,98 +384,125 @@ export function createTerrainScene(host, options = {}) {
     while (group.children.length) {
       const child = group.children.pop();
       if (child.geometry) child.geometry.dispose();
-      if (Array.isArray(child.material)) child.material.forEach((item) => item.dispose?.());
+      if (Array.isArray(child.material)) child.material.forEach(m => m.dispose?.());
       else child.material?.dispose?.();
       child.removeFromParent();
     }
-  }
-
-  function terrainMaterials() {
-    const clippingPlanes = state.viewMode === 'section' ? [clippingPlane] : [];
-    return {
-      top: new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.98,
-        metalness: 0.02,
-        clippingPlanes
-      }),
-      side: new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 1,
-        metalness: 0,
-        clippingPlanes
-      }),
-      bottom: new THREE.MeshStandardMaterial({
-        color: '#5d4936',
-        roughness: 1,
-        metalness: 0,
-        clippingPlanes
-      })
-    };
   }
 
   function rebuildTerrain() {
     clearGroup(terrainGroup);
     clearGroup(riverGroup);
 
+    const modId = state.activeModule || 'fluvial';
     const climateForce = climateForceValue(state.climate, state.weatherMode);
-    const { geometry, samples } = createTerrainTopGeometry(SEGMENTS, state.timeline, climateForce);
+    const { geometry, samples, minH, maxH } = createTerrainTopGeometry(SEGMENTS, state.timeline, climateForce, modId);
     const skirtGeometry = createSkirtGeometry(samples, SEGMENTS);
-    const bottomGeometry = createBottomGeometry();
-    const materials = terrainMaterials();
 
-    const topMesh = new THREE.Mesh(geometry, materials.top);
-    const skirtMesh = new THREE.Mesh(skirtGeometry, materials.side);
-    const bottomMesh = new THREE.Mesh(bottomGeometry, materials.bottom);
+    const isSection = state.viewMode === 'section';
+    const cp = isSection ? [clippingPlane] : [];
+
+    const bias = getModuleColorBias(modId);
+    const topMat = createTerrainMaterial({
+      minHeight: minH * TERRAIN_HEIGHT,
+      maxHeight: maxH * TERRAIN_HEIGHT,
+      weatherFactor: climateForceValue(state.climate, state.weatherMode) * 0.15,
+      sunDirection: new THREE.Vector3(0.5, 0.8, 0.3),
+      biomeBias: new THREE.Vector3(bias[0], bias[1], bias[2]),
+      clippingPlanes: cp
+    });
+    const topMesh = new THREE.Mesh(geometry, topMat);
+
+    const sideMat = new THREE.MeshStandardMaterial({
+      vertexColors: true, roughness: 1, metalness: 0, clippingPlanes: cp
+    });
+    const skirtMesh = new THREE.Mesh(skirtGeometry, sideMat);
+
+    const bottomMat = new THREE.MeshStandardMaterial({
+      color: '#5d4936', roughness: 1, metalness: 0, clippingPlanes: cp
+    });
+    const bottomMesh = new THREE.Mesh(createBottomGeometry(), bottomMat);
 
     terrainGroup.add(topMesh, skirtMesh, bottomMesh);
 
+    // Rivers
     const ratios = riverRatios(state.timeline);
     for (const [type, points] of Object.entries(riverPaths)) {
       const ratio = ratios[type] ?? 0;
       if (ratio <= 0) continue;
-      const river = createRiverMesh(points, ratio, riverBaseStyles[type], state.timeline, climateForce, type === state.activeType);
-      if (river) riverGroup.add(river);
+      const river = createRiverMesh(points, ratio, riverBaseStyles[type],
+        state.timeline, climateForce, type === state.activeType, modId);
+      if (river) {
+        if (isSection) {
+          if (Array.isArray(river.material)) river.material.forEach(m => m.clippingPlanes = [clippingPlane]);
+          else river.material.clippingPlanes = [clippingPlane];
+        }
+        riverGroup.add(river);
+      }
     }
 
+    // Marker
     const anchor = typeAnchors[state.activeType] ?? typeAnchors.consequent;
-    const markerPos = samplePoint(anchor.x, anchor.y, state.timeline, climateForce, 0.18);
+    const markerPos = samplePoint(anchor.x, anchor.y, state.timeline, climateForce, 0.18, state.activeModule || 'fluvial');
     activeMarker.position.copy(markerPos);
     activeMarker.children[0].material.color.set(anchor.color);
     activeMarker.children[1].material.color.set(anchor.color);
-    geometrySignature = `${Math.round(state.timeline * 180)}-${Math.round(state.climate * 140)}-${state.viewMode}`;
+
+    // Water position
+    waterMesh.position.y = BASE_Y + 0.1 + climateForce * 0.02;
+
+    geometrySignature = `${Math.round(state.timeline * 180)}-${Math.round(state.climate * 140)}-${state.viewMode}-${state.activeModule || 'fluvial'}`;
+
+  }
+
+  function createBottomGeometry() {
+    const g = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, 1, 1);
+    g.rotateX(-Math.PI / 2);
+    g.translate(0, BASE_Y, 0);
+    return g;
   }
 
   function updateWeatherVisibility() {
     cloudGroup.visible = state.weatherMode === 'cloud';
     rainPoints.visible = state.weatherMode === 'rain';
     snowPoints.visible = state.weatherMode === 'snow';
+    waterMesh.visible = true;
+    waterMat.uniforms.uTime.value = clock.getElapsedTime();
+
     if (state.weatherMode === 'fog') {
-      scene.fog = new THREE.FogExp2('#dce5ea', 0.085);
+      scene.fog = new THREE.FogExp2('#c8d4dc', 0.065);
+    } else if (state.weatherMode === 'rain') {
+      scene.fog = new THREE.FogExp2('#9cafbc', 0.04);
     } else {
-      scene.fog = null;
+      scene.fog = new THREE.FogExp2('#d9e2e8', 0.018);
     }
 
-    if (state.weatherMode === 'rain') scene.background = new THREE.Color('#9cafbc');
-    else if (state.weatherMode === 'fog') scene.background = new THREE.Color('#ccd7dc');
-    else scene.background = new THREE.Color('#d9e2e8');
+    const bgColors = {
+      clear: '#c8dce8',
+      cloud: '#bcc8d4',
+      rain: '#9cafbc',
+      snow: '#d4dce4',
+      fog: '#ccd7dc'
+    };
+    scene.background = new THREE.Color(bgColors[state.weatherMode] || '#d9e2e8');
   }
 
   function applyViewMode(previousMode) {
     const isSection = state.viewMode === 'section';
-    for (const group of [terrainGroup, riverGroup]) {
-      for (const child of group.children) {
-        if (Array.isArray(child.material)) {
-          child.material.forEach((material) => {
-            material.clippingPlanes = isSection ? [clippingPlane] : [];
-            material.needsUpdate = true;
-          });
-        } else if (child.material) {
-          child.material.clippingPlanes = isSection ? [clippingPlane] : [];
-          child.material.needsUpdate = true;
-        }
+    const cp = isSection ? [clippingPlane] : [];
+    const allMeshes = [...terrainGroup.children, ...riverGroup.children];
+    for (const mesh of allMeshes) {
+      if (Array.isArray(mesh.material))
+        mesh.material.forEach(m => { m.clippingPlanes = cp; m.needsUpdate = true; });
+      else if (mesh.material) {
+        mesh.material.clippingPlanes = cp;
+        mesh.material.needsUpdate = true;
       }
     }
+    // Update water visibility in section mode
+    waterMesh.visible = !isSection;
+    shadowMesh.visible = !isSection;
+    cloudGroup.visible = !isSection && state.weatherMode === 'cloud';
 
     if (previousMode !== state.viewMode) {
       if (isSection) {
@@ -518,70 +552,101 @@ export function createTerrainScene(host, options = {}) {
   function update(next) {
     const previousMode = state.viewMode;
     const prevActiveType = state.activeType;
+    const prevModule = state.activeModule;
     state = { ...state, ...next };
     applyViewMode(previousMode);
     controls.autoRotate = state.viewMode === 'terrain' && !!state.autoRotate;
 
-    const nextSignature = `${Math.round(state.timeline * 180)}-${Math.round(state.climate * 140)}-${state.viewMode}`;
-    if (geometrySignature !== nextSignature || !terrainGroup.children.length || prevActiveType !== state.activeType) {
+    const sig = `${Math.round(state.timeline * 180)}-${Math.round(state.climate * 140)}-${state.viewMode}-${state.activeModule || 'fluvial'}`;
+    const needsRebuild = geometrySignature !== sig || !terrainGroup.children.length || prevActiveType !== state.activeType || prevModule !== state.activeModule;
+    if (needsRebuild) {
       rebuildTerrain();
-    } else {
+    } else if (terrainGroup.children.length) {
+      const climateForce = climateForceValue(state.climate, state.weatherMode);
       const anchor = typeAnchors[state.activeType] ?? typeAnchors.consequent;
-      const markerPos = samplePoint(anchor.x, anchor.y, state.timeline, climateForceValue(state.climate, state.weatherMode), 0.18);
+      const markerPos = samplePoint(anchor.x, anchor.y, state.timeline, climateForce, 0.18, state.activeModule || 'fluvial');
       activeMarker.position.copy(markerPos);
       activeMarker.children[0].material.color.set(anchor.color);
       activeMarker.children[1].material.color.set(anchor.color);
     }
-
     updateWeatherVisibility();
+
+    // Update terrain shader uniforms
+    const climateForce = climateForceValue(state.climate, state.weatherMode);
+    const topMesh = terrainGroup.children[0];
+    if (topMesh?.material?.uniforms) {
+      topMesh.material.uniforms.uWeatherFactor.value = climateForce * 0.15;
+      topMesh.material.uniforms.uSunDirection.value = new THREE.Vector3(0.5, 0.8, 0.3);
+    }
   }
 
   function resize() {
     const width = Math.max(1, host.clientWidth);
     const height = Math.max(1, host.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.1));
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height, false);
+    composer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   }
 
   function tick(timeMs) {
     frameId = requestAnimationFrame(tick);
-    const delta = Math.min(0.05, (timeMs - lastWeatherTick || 16) / 1000);
+    const dt = Math.min(0.05, (timeMs - lastWeatherTick || 16) / 1000);
     lastWeatherTick = timeMs;
 
+    const elapsed = clock.getElapsedTime();
+
+    // Update shader uniforms
+    shadowMat.uniforms.uTime.value = elapsed;
+    waterMat.uniforms.uTime.value = elapsed;
+
+    // Cloud drift
     if (cloudGroup.visible) {
-      cloudGroup.position.x = Math.sin(timeMs * 0.00012) * 0.9;
+      cloudGroup.position.x = Math.sin(elapsed * 0.00012) * 0.9;
     }
 
+    // Weather particles
     if (rainPoints.visible || snowPoints.visible) {
-      const points = rainPoints.visible ? rainPoints : snowPoints;
-      const position = points.geometry.attributes.position;
+      const pts = rainPoints.visible ? rainPoints : snowPoints;
+      const pos = pts.geometry.attributes.position;
       const drift = rainPoints.visible ? -0.01 : 0.0024;
       const fall = rainPoints.visible ? 0.22 : 0.07;
-      for (let i = 0; i < position.count; i += 1) {
-        let x = position.getX(i);
-        let y = position.getY(i);
-        let z = position.getZ(i);
+      for (let i = 0; i < pos.count; i += 1) {
+        let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
         x += drift;
-        y -= fall * delta * 8;
-        z += Math.sin(timeMs * 0.0008 + i) * 0.0008;
+        y -= fall * dt * 8;
+        z += Math.sin(elapsed * 0.0008 + i) * 0.0008;
         if (y < -0.3) {
-          x = (Math.random() - 0.5) * 10;
+          x = (Math.random() - 0.5) * 11;
           y = 4.8 + Math.random() * 1.2;
-          z = (Math.random() - 0.5) * 10;
+          z = (Math.random() - 0.5) * 11;
         }
         if (x < -5.5) x = 5.5;
         if (x > 5.5) x = -5.5;
-        position.setXYZ(i, x, y, z);
+        pos.setXYZ(i, x, y, z);
       }
-      position.needsUpdate = true;
+      pos.needsUpdate = true;
     }
 
-    const pulse = 1 + Math.sin(timeMs * 0.004) * 0.12;
+    // Marker pulse
+    const pulse = 1 + Math.sin(elapsed * 4) * 0.12;
     activeMarker.scale.setScalar(pulse);
+
+    // Update terrain top material time
+    const topMesh = terrainGroup.children[0];
+    if (topMesh?.material?.uniforms) {
+      topMesh.material.uniforms.uTime.value = elapsed;
+    }
+
+    // Update bloom intensity based on weather
+    const bloomIntensity = state.weatherMode === 'fog' ? 0.3 :
+      state.weatherMode === 'rain' ? 0.4 : 0.25;
+    bloomPass.strength = bloomIntensity;
+
     controls.update();
-    renderer.render(scene, camera);
+    composer.render();
   }
 
   resize();
@@ -596,6 +661,8 @@ export function createTerrainScene(host, options = {}) {
     resetCamera,
     setPreset360,
     getScene: () => scene,
+    computeClimateMetrics: () => computeClimateMetrics(state.timeline, state.climate, state.weatherMode),
+    getCurrentFeatureName: () => getModuleFeatureName(state.activeModule || 'fluvial', state.timeline),
     dispose() {
       cancelAnimationFrame(frameId);
       resizeObserver?.disconnect();
@@ -606,10 +673,11 @@ export function createTerrainScene(host, options = {}) {
       rainPoints.material.dispose();
       snowPoints.geometry.dispose();
       snowPoints.material.dispose();
-      cloudGroup.traverse((child) => {
-        child.geometry?.dispose?.();
-        child.material?.dispose?.();
-      });
+      waterGeo.dispose();
+      waterMat.dispose();
+      shadowGeo.dispose();
+      shadowMat.dispose();
+      cloudGroup.traverse(c => { c.geometry?.dispose?.(); c.material?.dispose?.(); });
       renderer.dispose();
       renderer.domElement.remove();
     }

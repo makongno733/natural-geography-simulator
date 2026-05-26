@@ -6,6 +6,8 @@
   --line: #a9c6e8;
   --card: rgba(247, 252, 255, 0.9);
   --warn: #1b4f85;
+  --accent: #3688cf;
+  --accent-light: #6ab0e8;
 }
 
 * { box-sizing: border-box; }
@@ -255,6 +257,11 @@ th {
 .src-tail {
   margin-top: 4px;
 }
+
+/* Global scrollbar styling */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #a9c6e8; border-radius: 3px; }
 
 @media (max-width: 980px) {
   .layout { grid-template-columns: 1fr; }

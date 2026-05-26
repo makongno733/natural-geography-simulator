@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自然地理模拟系统（总网页）</title>
+  <style>
+    :root{
+      --bg:#071522;--card:#0f2438;--line:#2f516f;--text:#eaf4ff;--muted:#9ab4ce;--accent:#65a8ff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 10% 0,#17314d 0,#071522 52%,#05111b 100%);color:var(--text)}
+    .shell{width:min(1600px,96vw);margin:10px auto;display:grid;gap:8px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:12px;background:rgba(10,24,38,.9);padding:9px 10px}
+    .title{font-size:16px;font-weight:700;letter-spacing:.5px}
+    .ctrl{display:flex;flex-wrap:wrap;gap:6px}
+    .btn{border:1px solid var(--line);background:#13304a;color:var(--text);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
+    .btn.active{background:var(--accent);color:#06203a;border-color:#8cbcfb;font-weight:700}
+    .layout{border:1px solid var(--line);border-radius:12px;background:rgba(10,24,38,.9);padding:8px;display:grid;gap:8px}
+    .pane{border:1px solid #345b7b;border-radius:10px;overflow:hidden;background:#0a1d2e;min-height:78vh}
+    iframe{display:block;width:100%;height:78vh;border:0;background:#fff}
+    .single .pane.b{display:none}
+    .single .pane.a iframe{height:80vh}
+    .split{grid-template-columns:1fr 1fr}
+    .single{grid-template-columns:1fr}
+    .hint{font-size:12px;color:var(--muted);padding:0 2px 4px}
+    @media (max-width:1000px){.split{grid-template-columns:1fr}.pane iframe{height:62vh}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div class="title">自然地理模拟系统（地貌 + 大气）</div>
+      <div class="ctrl">
+        <button class="btn active" data-mode="atmosphere">仅大气</button>
+        <button class="btn" data-mode="landform">仅地貌</button>
+        <button class="btn" data-mode="split">双栏联动</button>
+        <button class="btn" id="refreshBtn">刷新子页</button>
+      </div>
+    </header>
+
+    <section id="layout" class="layout single">
+      <div class="hint" id="hint">当前：大气子页</div>
+      <article class="pane a">
+        <iframe id="frameA" title="大气子页" src="./atmosphere-draft.html"></iframe>
+      </article>
+      <article class="pane b">
+        <iframe id="frameB" title="地貌子页" src="./dist/index.html"></iframe>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const layout = document.getElementById('layout');
+    const hint = document.getElementById('hint');
+    const buttons = Array.from(document.querySelectorAll('.btn[data-mode]'));
+    const frameA = document.getElementById('frameA');
+    const frameB = document.getElementById('frameB');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    function setMode(mode){
+      buttons.forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+      if(mode==='split'){
+        layout.className='layout split';
+        hint.textContent='当前：双栏联动（左：大气，右：地貌）';
+      } else if(mode==='landform'){
+        layout.className='layout single';
+        frameA.src='./dist/index.html';
+        hint.textContent='当前：地貌子页';
+      } else {
+        layout.className='layout single';
+        frameA.src='./atmosphere-draft.html';
+        hint.textContent='当前：大气子页';
+      }
+      if(mode==='split'){
+        frameA.src='./atmosphere-draft.html';
+        frameB.src='./dist/index.html';
+      }
+    }
+
+    buttons.forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
+    refreshBtn.addEventListener('click',()=>{
+      frameA.src = frameA.src;
+      frameB.src = frameB.src;
+    });
+  </script>
+</body>
+</html>

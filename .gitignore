@@ -7,3 +7,19 @@ electron-release
 
 # Operating system noise
 .DS_Store
+
+# Brainstorming visual companion artifacts
+.superpowers
+
+# Claude local user permissions
+.claude/settings.local.json
+
+# Editor temporary files
+*.swp
+*.swo
+
+# Local assistant settings
+.claude/
+*.swp
+*.swo
+.claude/
