@@ -3,85 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>自然地理模拟系统（总网页）</title>
+  <title>自然地理模拟系统</title>
   <style>
-    :root{
-      --bg:#071522;--card:#0f2438;--line:#2f516f;--text:#eaf4ff;--muted:#9ab4ce;--accent:#65a8ff;
-    }
+    :root{--bg:#091a2b;--card:#10263d;--line:#2f5275;--text:#e7f1ff;--muted:#a9c0da;--accent:#60a5fa}
     *{box-sizing:border-box}
-    body{margin:0;font-family:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 10% 0,#17314d 0,#071522 52%,#05111b 100%);color:var(--text)}
-    .shell{width:min(1600px,96vw);margin:10px auto;display:grid;gap:8px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:12px;background:rgba(10,24,38,.9);padding:9px 10px}
-    .title{font-size:16px;font-weight:700;letter-spacing:.5px}
-    .ctrl{display:flex;flex-wrap:wrap;gap:6px}
-    .btn{border:1px solid var(--line);background:#13304a;color:var(--text);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
-    .btn.active{background:var(--accent);color:#06203a;border-color:#8cbcfb;font-weight:700}
-    .layout{border:1px solid var(--line);border-radius:12px;background:rgba(10,24,38,.9);padding:8px;display:grid;gap:8px}
-    .pane{border:1px solid #345b7b;border-radius:10px;overflow:hidden;background:#0a1d2e;min-height:78vh}
-    iframe{display:block;width:100%;height:78vh;border:0;background:#fff}
-    .single .pane.b{display:none}
-    .single .pane.a iframe{height:80vh}
-    .split{grid-template-columns:1fr 1fr}
-    .single{grid-template-columns:1fr}
-    .hint{font-size:12px;color:var(--muted);padding:0 2px 4px}
-    @media (max-width:1000px){.split{grid-template-columns:1fr}.pane iframe{height:62vh}}
+    body{margin:0;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 20% 10%,#1b3655 0,#091a2b 45%,#071420 100%);color:var(--text);min-height:100vh}
+    .shell{width:min(1400px,94vw);margin:12px auto}
+    .home{display:grid;place-items:center;min-height:92vh}
+    .wrap{width:min(980px,92vw);padding:18px;border:1px solid var(--line);border-radius:16px;background:rgba(8,22,36,.88);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    h1{margin:0 0 8px;font-size:clamp(22px,3vw,32px)}
+    p{margin:0 0 16px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{display:block;text-decoration:none;border:1px solid var(--line);border-radius:12px;padding:14px;background:linear-gradient(180deg,#122d49,#0f253d);color:var(--text);cursor:pointer}
+    .card:hover{border-color:var(--accent);transform:translateY(-1px)}
+    .t{font-size:18px;font-weight:700;margin-bottom:6px}
+    .d{font-size:13px;color:var(--muted);line-height:1.5}
+    .tips{margin-top:12px;font-size:12px;color:#86a7c9}
+    .viewer{display:none;border:1px solid var(--line);border-radius:12px;background:rgba(8,22,36,.88);overflow:hidden}
+    .viewer-head{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #2b4b6a}
+    .back{border:1px solid var(--line);background:#13304a;color:#eaf4ff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
+    .name{font-size:14px;color:#dcecff}
+    iframe{display:block;width:100%;height:84vh;border:0;background:#fff}
+    @media (max-width:740px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <main class="shell">
-    <header class="top">
-      <div class="title">自然地理模拟系统（地貌 + 大气）</div>
-      <div class="ctrl">
-        <button class="btn active" data-mode="atmosphere">仅大气</button>
-        <button class="btn" data-mode="landform">仅地貌</button>
-        <button class="btn" data-mode="split">双栏联动</button>
-        <button class="btn" id="refreshBtn">刷新子页</button>
+    <section id="home" class="home">
+      <div class="wrap">
+        <h1>自然地理模拟系统</h1>
+        <p>总入口：选择一个子系统进入</p>
+        <section class="grid">
+          <article class="card" data-target="atmosphere">
+            <div class="t">大气垂直结构与化学组成</div>
+            <div class="d">3D大气分层、行星风带、季风、洋流及海气耦合可视化。</div>
+          </article>
+          <article class="card" data-target="landform">
+            <div class="t">地貌演化与河流类型</div>
+            <div class="d">戴维斯河流类型、地貌演化时间轴与3D地形交互。</div>
+          </article>
+        </section>
+        <div class="tips">提示：点击卡片进入子页面，和 App 版一致。</div>
       </div>
-    </header>
-
-    <section id="layout" class="layout single">
-      <div class="hint" id="hint">当前：大气子页</div>
-      <article class="pane a">
-        <iframe id="frameA" title="大气子页" src="./atmosphere-draft.html"></iframe>
-      </article>
-      <article class="pane b">
-        <iframe id="frameB" title="地貌子页" src="./dist/index.html"></iframe>
-      </article>
+    </section>
+    <section id="viewer" class="viewer">
+      <div class="viewer-head">
+        <button class="back" id="backBtn">返回总入口</button>
+        <div class="name" id="viewerName"></div>
+      </div>
+      <iframe id="viewerFrame" title="子页面"></iframe>
     </section>
   </main>
 
   <script>
-    const layout = document.getElementById('layout');
-    const hint = document.getElementById('hint');
-    const buttons = Array.from(document.querySelectorAll('.btn[data-mode]'));
-    const frameA = document.getElementById('frameA');
-    const frameB = document.getElementById('frameB');
-    const refreshBtn = document.getElementById('refreshBtn');
+    const home = document.getElementById('home');
+    const viewer = document.getElementById('viewer');
+    const viewerFrame = document.getElementById('viewerFrame');
+    const viewerName = document.getElementById('viewerName');
+    const backBtn = document.getElementById('backBtn');
 
-    function setMode(mode){
-      buttons.forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
-      if(mode==='split'){
-        layout.className='layout split';
-        hint.textContent='当前：双栏联动（左：大气，右：地貌）';
-      } else if(mode==='landform'){
-        layout.className='layout single';
-        frameA.src='./dist/index.html';
-        hint.textContent='当前：地貌子页';
-      } else {
-        layout.className='layout single';
-        frameA.src='./atmosphere-draft.html';
-        hint.textContent='当前：大气子页';
-      }
-      if(mode==='split'){
-        frameA.src='./atmosphere-draft.html';
-        frameB.src='./dist/index.html';
-      }
-    }
+    const pages = {
+      atmosphere: { name: '大气垂直结构与化学组成', src: './atmosphere-draft.html' },
+      landform: { name: '地貌演化与河流类型', src: './dist/index.html' }
+    };
 
-    buttons.forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
-    refreshBtn.addEventListener('click',()=>{
-      frameA.src = frameA.src;
-      frameB.src = frameB.src;
+    document.querySelectorAll('.card[data-target]').forEach((card) => {
+      card.addEventListener('click', () => {
+        const key = card.dataset.target;
+        const page = pages[key];
+        viewerName.textContent = page.name;
+        viewerFrame.src = page.src;
+        home.style.display = 'none';
+        viewer.style.display = 'block';
+      });
+    });
+
+    backBtn.addEventListener('click', () => {
+      viewerFrame.src = '';
+      viewer.style.display = 'none';
+      home.style.display = 'grid';
     });
   </script>
 </body>
