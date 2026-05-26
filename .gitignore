@@ -23,3 +23,5 @@ electron-release
 *.swp
 *.swo
 .claude/
+*.swo
+.claude/
