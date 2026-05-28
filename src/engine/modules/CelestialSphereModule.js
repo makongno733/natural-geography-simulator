@@ -214,6 +214,75 @@ export function CelestialSphereModule(scene, params, services) {
   Object.values(coordGroups).forEach(g => group.add(g))
   coordGroups.horizontal.visible = true
 
+  // Selection arcs — drawn when user clicks a celestial object
+  const arcMeshes = { horizontal: null, equatorial: null, ecliptic: null, galactic: null }
+
+  function getCoordPole(system) {
+    switch (system) {
+      case 'horizontal': return new THREE.Vector3(0, 1, 0)
+      case 'equatorial': return new THREE.Vector3(0, 1, 0)
+      case 'ecliptic': return eclipticPole.clone().normalize()
+      case 'galactic': return galacticPole.clone().normalize()
+      default: return new THREE.Vector3(0, 1, 0)
+    }
+  }
+
+  function clearArc(system) {
+    if (arcMeshes[system]) {
+      coordGroups[system].remove(arcMeshes[system])
+      arcMeshes[system].traverse(c => {
+        if (c.geometry) c.geometry.dispose()
+        if (c.material) c.material.dispose()
+      })
+      arcMeshes[system] = null
+    }
+  }
+
+  function drawSelectionArc(system, targetObj) {
+    clearArc(system)
+    if (!targetObj) return
+
+    const pole = getCoordPole(system)
+    const targetDir = targetObj.clone().normalize()
+    const colorMap = { horizontal: 0xffaa33, equatorial: 0x60a5fa, ecliptic: 0x44ff88, galactic: 0xcc66ff }
+    const color = colorMap[system] || 0xffffff
+
+    const arcGroup = new THREE.Group()
+    const arcPts = []
+    const steps = 60
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      const pt = new THREE.Vector3().copy(pole).multiplyScalar(Math.sin((1 - t) * Math.PI / 2))
+        .add(targetDir.clone().multiplyScalar(Math.sin(t * Math.PI / 2)))
+      pt.normalize().multiplyScalar(CS_RADIUS)
+      arcPts.push(pt)
+    }
+    arcGroup.add(GeometryFactory.lineFromPoints(arcPts, color, 0.8))
+
+    // Arrow at target end
+    const endPt = targetDir.clone().normalize().multiplyScalar(CS_RADIUS)
+    const endDir = targetDir.clone().normalize()
+    const endArrow = new THREE.ArrowHelper(endDir, endPt, 0.3, color, 0.15, 0.08)
+    arcGroup.add(endArrow)
+
+    // Small highlight ring at object position
+    const hlGeo = GeometryFactory.ring(CS_RADIUS - 0.05, CS_RADIUS + 0.02, 32)
+    const hl = new THREE.Mesh(hlGeo, new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    }))
+    hl.lookAt(targetDir)
+    hl.position.copy(endPt)
+    arcGroup.add(hl)
+
+    coordGroups[system].add(arcGroup)
+    arcMeshes[system] = arcGroup
+  }
+
   const api = {
     getObjectMeshes() { return objectMeshes },
     setMode(m) { mode = m },
@@ -223,6 +292,14 @@ export function CelestialSphereModule(scene, params, services) {
         Object.keys(coordGroups).forEach(key => {
           coordGroups[key].visible = (key === p.coordSystem)
         })
+
+        // Draw selection arc for active system
+        if (p.selectedObj && objectMeshes[p.selectedObj]) {
+          const objPos = objectMeshes[p.selectedObj].position.clone()
+          drawSelectionArc(p.coordSystem, objPos)
+        } else {
+          clearArc(p.coordSystem)
+        }
       }
     },
     update(dt, elapsed) {

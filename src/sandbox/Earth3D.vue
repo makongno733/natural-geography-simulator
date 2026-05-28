@@ -139,12 +139,15 @@ function switchCoord(id) {
   coordDesc.value = descs[id] || ''
   currentCoords.value = objCoords[id] || ''
   if (engine) {
-    engine.setParams({ coordSystem: id })
+    engine.setParams({ coordSystem: id, selectedObj: selectedObj.value })
   }
 }
 
 function selectObj(id) {
   selectedObj.value = id
+  if (engine) {
+    engine.setParams({ selectedObj: id, coordSystem: activeCoord.value })
+  }
 }
 
 onMounted(async () => {
