@@ -30,10 +30,10 @@
       <main class="content">
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
 
-        <div v-if="collegeContent?.keyPoints?.length || sectionData.content.keyPoints.length" class="key-points">
+        <div v-if="extraContent?.keyPoints?.length || sectionData.content.keyPoints.length" class="key-points">
           <h3 class="block-title">核心知识点</h3>
           <ul>
-            <li v-for="(pt, i) in (collegeContent?.keyPoints || sectionData.content.keyPoints)" :key="i">{{ pt }}</li>
+            <li v-for="(pt, i) in (extraContent?.keyPoints || sectionData.content.keyPoints)" :key="i">{{ pt }}</li>
           </ul>
         </div>
 
@@ -54,7 +54,8 @@
         </div>
 
         <div class="body-text">
-          <template v-if="collegeContent?.body">{{ collegeContent.body }}</template>
+          <template v-if="extraContent?.body">{{ extraContent.body }}</template>
+          <template v-else-if="extraContent?.fullText"><pre class="chapter-text">{{ extraContent.fullText }}</pre></template>
           <p v-else>{{ sectionData.content.body }}</p>
         </div>
 
@@ -110,20 +111,21 @@ const collegeRef = computed(() =>
 const loadedContent = ref(null)
 const contentReady = ref(false)
 
-const collegeContent = computed(() => {
-  if (gradeId.value === '大学' && loadedContent.value) {
+const extraContent = computed(() => {
+  if (!loadedContent.value) return null
+  if (gradeId.value === '大学') {
+    // Section-level content: has body, keyPoints
     return loadedContent.value
   }
-  return null
+  // Chapter-level content: has fullText, keyPoints
+  return loadedContent.value
 })
 
 watch([gradeId, bookId, chapterId, sectionId], async () => {
   contentReady.value = false
   loadedContent.value = null
-  if (gradeId.value === '大学') {
-    const content = await loadSectionContent(gradeId.value, bookId.value, chapterId.value, sectionId.value)
-    loadedContent.value = content
-  }
+  const content = await loadSectionContent(gradeId.value, bookId.value, chapterId.value, sectionId.value)
+  loadedContent.value = content
   contentReady.value = true
 }, { immediate: true })
 
@@ -240,6 +242,15 @@ const nextSection = computed(() => {
   line-height: 1.8;
   color: #444;
   margin-bottom: 16px;
+}
+.chapter-text {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  color: #444;
 }
 .reserved-slot {
   border: 2px dashed #e2c9b4;

@@ -128,17 +128,18 @@ export const grades = [
             id: '第一章',
             title: '地球',
             sections: [
-              { id: '第一节', title: '地球的形状和大小', content: { keyPoints: ['地球是一个两极稍扁、赤道略鼓的不规则球体'], body: '详细内容待填充…', interactive: null, ppt: null } },
-              { id: '第二节', title: '地球仪和经纬网', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
-              { id: '第三节', title: '地图的阅读', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+              { id: '第一节', title: '地球的宇宙环境', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+              { id: '第二节', title: '地球与地球仪', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+              { id: '第三节', title: '地球的运动', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
             ]
           },
           {
             id: '第二章',
-            title: '地图的运用',
+            title: '地图',
             sections: [
               { id: '第一节', title: '地图的阅读', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
               { id: '第二节', title: '地形图的判读', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+              { id: '第三节', title: '地图的选择和应用', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
             ]
           },
           {
@@ -146,7 +147,8 @@ export const grades = [
             title: '陆地和海洋',
             sections: [
               { id: '第一节', title: '大洲和大洋', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
-              { id: '第二节', title: '海陆的变迁', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+              { id: '第二节', title: '世界的地形', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+              { id: '第三节', title: '海陆的变迁', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
             ]
           },
         ]
@@ -154,13 +156,16 @@ export const grades = [
       {
         id: '七年级下册',
         chapters: [
-          { id: '第六章', title: '我们生活的大洲——亚洲', sections: [
+          { id: '第七章', title: '我们生活的大洲——亚洲', sections: [
             { id: '第一节', title: '位置和范围', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
             { id: '第二节', title: '自然环境', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
           ]},
-          { id: '第七章', title: '我们邻近的地区和国家', sections: [
+          { id: '第八章', title: '我们邻近的地区和国家', sections: [
             { id: '第一节', title: '日本', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
             { id: '第二节', title: '东南亚', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
+          ]},
+          { id: '第九章', title: '东半球其他的地区和国家', sections: [
+            { id: '第一节', title: '中东', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
           ]},
         ]
       },
@@ -187,11 +192,11 @@ export const grades = [
       {
         id: '八年级下册',
         chapters: [
-          { id: '第五章', title: '中国的地理差异', sections: [
+          { id: '第六章', title: '中国的地理差异', sections: [
             { id: '第一节', title: '四大地理区域的划分', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
             { id: '第二节', title: '北方地区和南方地区', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
           ]},
-          { id: '第六章', title: '北方地区', sections: [
+          { id: '第七章', title: '南方地区', sections: [
             { id: '第一节', title: '自然特征与农业', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null } },
           ]},
         ]
