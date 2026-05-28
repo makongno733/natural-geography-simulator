@@ -225,9 +225,164 @@ export default class AtmosphereScene {
     })
   }
 
-  _showComposition() { /* Task 5 */ }
-  _showRadiation() { /* Task 6 */ }
-  _showCirculation() { /* Task 6 */ }
+  _showComposition() {
+    this._setCamPosition(0, 0, 4.5)
+
+    const particles = this.mode === 'simple'
+      ? [
+          { name: 'N₂', color: 0x4488ff, count: 4000, heightRange: [0, 12] },
+          { name: 'O₂', color: 0x44cc44, count: 2000, heightRange: [0, 12] },
+          { name: 'CO₂', color: 0x888888, count: 500, heightRange: [0, 20] },
+          { name: 'H₂O', color: 0xffffff, count: 1000, heightRange: [0, 3] },
+        ]
+      : [
+          { name: 'N₂', color: 0x4488ff, count: 6000, heightRange: [0, 85] },
+          { name: 'O₂', color: 0x44cc44, count: 3000, heightRange: [0, 85] },
+          { name: 'CO₂', color: 0x888888, count: 800, heightRange: [0, 20] },
+          { name: 'H₂O', color: 0xffffff, count: 1500, heightRange: [0, 3] },
+          { name: 'O₃', color: 0xaa66ff, count: 600, heightRange: [15, 35] },
+          { name: '尘埃', color: 0x886644, count: 400, heightRange: [0, 2] },
+          { name: 'Ar', color: 0xffdd88, count: 400, heightRange: [0, 85] },
+        ]
+
+    const earthRadius = 1.8
+    const scale = 6 / 1000
+
+    particles.forEach((p) => {
+      const positions = new Float32Array(p.count * 3)
+      const colors = new Float32Array(p.count * 3)
+      const col = new THREE.Color(p.color)
+
+      for (let i = 0; i < p.count; i++) {
+        const theta = Math.random() * Math.PI * 2
+        const phi = Math.acos(2 * Math.random() - 1)
+        const height = (p.heightRange[0] + Math.random() * (p.heightRange[1] - p.heightRange[0])) * scale
+        const r = earthRadius + height
+
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+        positions[i * 3 + 1] = r * Math.cos(phi)
+        positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
+
+        colors[i * 3] = col.r
+        colors[i * 3 + 1] = col.g
+        colors[i * 3 + 2] = col.b
+      }
+
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.04,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+
+      const points = new THREE.Points(geo, mat)
+      points.userData = { type: 'composition', name: p.name }
+      this.scene.add(points)
+      this.particleSystems.push(points)
+    })
+  }
+
+  _showRadiation() {
+    this._setCamPosition(5, 2, 8)
+
+    const sunPos = new THREE.Vector3(8, 5, 6)
+
+    const paths = this.mode === 'simple'
+      ? [
+          { label: '太阳短波辐射', pts: [sunPos, new THREE.Vector3(0, 0.5, 0)], color: 0xffee44, count: 40 },
+          { label: '地面长波辐射', pts: [new THREE.Vector3(0, 0.5, 0), new THREE.Vector3(0, 2, 0)], color: 0xff4444, count: 30 },
+          { label: '大气逆辐射', pts: [new THREE.Vector3(0, 2, 0), new THREE.Vector3(0, 0.3, 0)], color: 0xff8800, count: 30 },
+        ]
+      : [
+          { label: '太阳短波辐射', pts: [sunPos, new THREE.Vector3(0, 0.5, 0)], color: 0xffee44, count: 60 },
+          { label: '大气散射', pts: [sunPos, new THREE.Vector3(0, 3, 0)], color: 0xaaccff, count: 20 },
+          { label: '地面长波辐射', pts: [new THREE.Vector3(0, 0.5, 0), new THREE.Vector3(0, 2, 0)], color: 0xff4444, count: 40 },
+          { label: '大气逆辐射', pts: [new THREE.Vector3(0, 2, 0), new THREE.Vector3(0, 0.3, 0)], color: 0xff8800, count: 40 },
+          { label: '云层反射', pts: [new THREE.Vector3(2, 1, 0), sunPos], color: 0xcccccc, count: 15 },
+        ]
+
+    paths.forEach((path) => {
+      const curve = new THREE.CatmullRomCurve3(path.pts)
+      const positions = new Float32Array(path.count * 3)
+      for (let i = 0; i < path.count; i++) {
+        const t = i / path.count
+        const pt = curve.getPoint(t)
+        positions[i * 3] = pt.x
+        positions[i * 3 + 1] = pt.y
+        positions[i * 3 + 2] = pt.z
+      }
+
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.08,
+        color: path.color,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+
+      const points = new THREE.Points(geo, mat)
+      points.userData = { type: 'radiation', label: path.label }
+      this.scene.add(points)
+      this.radiationPaths.push(points)
+    })
+  }
+
+  _showCirculation() {
+    this._setCamPosition(0, 2, 12)
+
+    const cells = [
+      { name: 'Hadley', color: 0xff6644, latitudes: [[-30, 0], [0, 30]], count: 800 },
+      { name: 'Ferrel', color: 0x44dd88, latitudes: [[-60, -30], [30, 60]], count: 600 },
+      { name: 'Polar', color: 0x4488ff, latitudes: [[-90, -60], [60, 90]], count: 400 },
+    ]
+
+    const earthRadius = 1.8
+
+    cells.forEach((cell) => {
+      cell.latitudes.forEach((latRange) => {
+        const positions = new Float32Array(cell.count * 3)
+        for (let i = 0; i < cell.count; i++) {
+          const t = i / cell.count
+          const lat = latRange[0] + (latRange[1] - latRange[0]) * t
+          const lon = t * Math.PI * 4
+          const heightOffset = Math.sin(t * Math.PI) * 0.8
+          const latRad = (lat * Math.PI) / 180
+          const r = earthRadius + 0.1 + heightOffset
+
+          positions[i * 3] = r * Math.cos(latRad) * Math.cos(lon)
+          positions[i * 3 + 1] = r * Math.sin(latRad)
+          positions[i * 3 + 2] = r * Math.cos(latRad) * Math.sin(lon)
+        }
+
+        const geo = new THREE.BufferGeometry()
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+
+        const mat = new THREE.PointsMaterial({
+          size: 0.05,
+          color: cell.color,
+          transparent: true,
+          opacity: 0.7,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        })
+
+        const points = new THREE.Points(geo, mat)
+        points.userData = { type: 'circulation', name: cell.name }
+        this.scene.add(points)
+        this.circulationParticles.push(points)
+      })
+    })
+  }
 
   resize() {
     const container = this.renderer.domElement.parentElement
