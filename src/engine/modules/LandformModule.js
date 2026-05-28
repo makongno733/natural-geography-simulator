@@ -37,6 +37,18 @@ const SECONDARY_LABELS = {
     { text: '海滩', pos: [0.2, -0.02, 0.6] },
     { text: '三角洲', pos: [0.7, 0.02, -0.3] },
   ],
+  structural: [
+    { text: '断层崖', pos: [-0.4, 0.35, -0.2] },
+    { text: '褶皱山', pos: [0.55, 0.3, 0.35] },
+  ],
+  glacial: [
+    { text: '冰斗', pos: [-0.55, 0.28, -0.45] },
+    { text: 'U形谷', pos: [0.25, 0.08, 0.2] },
+  ],
+  volcanic: [
+    { text: '火山锥', pos: [0, 0.58, 0] },
+    { text: '熔岩流', pos: [0.55, 0.08, -0.35] },
+  ],
 }
 
 function noise2D(x, y) {
@@ -101,6 +113,12 @@ function modifyHeight(moduleId, xn, zn, baseH, timeline, climate) {
       return h + n1 * 0.15 + Math.sin(xn * 8 + zn * 3) * 0.08 + n2 * 0.05
     case 'coastal':
       return h + n1 * 0.12 + (xn < 0.3 ? -0.1 : 0) * (1 - timeline) + n2 * 0.06
+    case 'structural':
+      return h + Math.abs(Math.sin((xn + zn) * 5.2)) * 0.18 + (xn > 0.52 ? 0.18 : -0.05) + n2 * 0.06
+    case 'glacial':
+      return h + n1 * 0.18 - Math.exp(-((xn - 0.52) ** 2) * 20) * 0.22 + Math.max(0, zn - 0.55) * 0.28
+    case 'volcanic':
+      return h + Math.exp(-(((xn - 0.5) ** 2 + (zn - 0.5) ** 2) * 18)) * 0.75 - Math.exp(-(((xn - 0.5) ** 2 + (zn - 0.5) ** 2) * 80)) * 0.28 + n2 * 0.05
     default:
       return h + n1 * 0.18 + n2 * 0.08
   }
@@ -115,9 +133,124 @@ function getModuleColor(moduleId, h) {
     case 'karst': col.setHSL(0.12, 0.3, 0.3 + base * 0.35); break
     case 'aeolian': col.setHSL(0.11 + base * 0.05, 0.5, 0.35 + base * 0.25); break
     case 'coastal': col.setHSL(0.13, 0.3, 0.28 + base * 0.3); break
+    case 'structural': col.setHSL(0.08, 0.28, 0.26 + base * 0.32); break
+    case 'glacial': col.setHSL(0.55, 0.26, 0.48 + base * 0.28); break
+    case 'volcanic': col.setHSL(0.04, 0.45, 0.22 + base * 0.22); break
     default: col.setHSL(0.12, 0.35, 0.3 + base * 0.3)
   }
   return [col.r * 255, col.g * 255, col.b * 255]
+}
+
+function addFeatureTube(group, points, color, radius = 0.025, opacity = 0.85) {
+  const curve = new THREE.CatmullRomCurve3(points)
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(curve, 96, radius, 8, false),
+    new THREE.MeshStandardMaterial({
+      color,
+      roughness: 0.18,
+      metalness: 0.18,
+      transparent: true,
+      opacity,
+    }),
+  )
+  group.add(tube)
+  return tube
+}
+
+function addLandformOverlays(group, moduleId) {
+  if (moduleId === 'fluvial') {
+    addFeatureTube(group, [
+      new THREE.Vector3(-1.7, 0.22, -1.1),
+      new THREE.Vector3(-1.05, 0.04, -0.45),
+      new THREE.Vector3(-0.4, -0.02, 0.25),
+      new THREE.Vector3(0.28, -0.04, 0.75),
+      new THREE.Vector3(1.5, -0.08, 1.25),
+    ], 0x1f7ed8, 0.035, 0.78)
+    for (let i = 0; i < 5; i++) {
+      const fan = new THREE.Mesh(
+        new THREE.CircleGeometry(0.18 + i * 0.025, 32, Math.PI * 0.1, Math.PI * 0.55),
+        new THREE.MeshBasicMaterial({ color: 0xd6b47a, transparent: true, opacity: 0.16, side: THREE.DoubleSide }),
+      )
+      fan.rotation.x = -Math.PI / 2
+      fan.rotation.z = -0.7
+      fan.position.set(0.65 + i * 0.03, 0.01, -0.75 + i * 0.025)
+      group.add(fan)
+    }
+  }
+
+  if (moduleId === 'karst') {
+    for (let i = 0; i < 9; i++) {
+      const sink = new THREE.Mesh(
+        GeometryFactory.ring(0.045, 0.12 + (i % 3) * 0.02, 36),
+        new THREE.MeshBasicMaterial({ color: 0x26302a, transparent: true, opacity: 0.45, side: THREE.DoubleSide }),
+      )
+      sink.rotation.x = -Math.PI / 2
+      sink.position.set(-1 + (i % 3) * 0.75, 0.05, -0.9 + Math.floor(i / 3) * 0.65)
+      group.add(sink)
+    }
+  }
+
+  if (moduleId === 'aeolian') {
+    for (let i = 0; i < 10; i++) {
+      const dune = new THREE.Mesh(
+        new THREE.TorusGeometry(0.25 + (i % 3) * 0.04, 0.012, 6, 64, Math.PI),
+        new THREE.MeshBasicMaterial({ color: 0xf3c46d, transparent: true, opacity: 0.5 }),
+      )
+      dune.rotation.x = -Math.PI / 2
+      dune.rotation.z = 0.4 + (i % 4) * 0.08
+      dune.position.set(-1.8 + (i % 5) * 0.8, 0.12, -0.9 + Math.floor(i / 5) * 1.1)
+      group.add(dune)
+    }
+  }
+
+  if (moduleId === 'coastal') {
+    addFeatureTube(group, [
+      new THREE.Vector3(-1.9, 0.03, -1.25),
+      new THREE.Vector3(-1.0, 0.08, -0.55),
+      new THREE.Vector3(-0.55, 0.02, 0.2),
+      new THREE.Vector3(-1.05, 0.04, 1.25),
+    ], 0xe8d4a6, 0.04, 0.82)
+  }
+
+  if (moduleId === 'structural') {
+    addFeatureTube(group, [
+      new THREE.Vector3(-1.75, 0.2, -1.4),
+      new THREE.Vector3(-0.65, 0.16, -0.45),
+      new THREE.Vector3(0.3, 0.15, 0.35),
+      new THREE.Vector3(1.65, 0.2, 1.4),
+    ], 0xff5a3d, 0.018, 0.78)
+    for (let i = 0; i < 5; i++) {
+      addFeatureTube(group, [
+        new THREE.Vector3(-1.6, 0.14 + i * 0.02, -1 + i * 0.35),
+        new THREE.Vector3(-0.3, 0.22, -0.65 + i * 0.35),
+        new THREE.Vector3(1.3, 0.16, -0.35 + i * 0.35),
+      ], 0x8d6040, 0.012, 0.45)
+    }
+  }
+
+  if (moduleId === 'glacial') {
+    addFeatureTube(group, [
+      new THREE.Vector3(-0.85, 0.32, -1.55),
+      new THREE.Vector3(-0.25, 0.12, -0.8),
+      new THREE.Vector3(0.15, 0.05, 0.05),
+      new THREE.Vector3(0.35, -0.02, 1.35),
+    ], 0xcfeeff, 0.09, 0.55)
+  }
+
+  if (moduleId === 'volcanic') {
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.45, 0.75, 48, 8, true),
+      new THREE.MeshStandardMaterial({ color: 0x5d3b2e, roughness: 0.72, transparent: true, opacity: 0.72, side: THREE.DoubleSide }),
+    )
+    cone.position.y = 0.42
+    group.add(cone)
+    addFeatureTube(group, [
+      new THREE.Vector3(0.08, 0.78, 0),
+      new THREE.Vector3(0.42, 0.32, -0.28),
+      new THREE.Vector3(0.9, 0.08, -0.65),
+      new THREE.Vector3(1.55, -0.02, -1.05),
+    ], 0xff5a24, 0.035, 0.78)
+  }
 }
 
 export function LandformModule(scene, params, services) {
@@ -180,6 +313,8 @@ export function LandformModule(scene, params, services) {
     water.receiveShadow = true
     group.add(water)
   }
+
+  addLandformOverlays(group, modId)
 
   if (labelSystem && mode === 'professional') {
     const labels = SECONDARY_LABELS[activeModule] || []

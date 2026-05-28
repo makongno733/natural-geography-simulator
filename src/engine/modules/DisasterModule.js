@@ -99,6 +99,47 @@ function buildTyphoon(subGroup) {
   refs.updraft.position.y = 0.5
   subGroup.add(refs.updraft)
 
+  refs.feederBands = []
+  for (let b = 0; b < 5; b++) {
+    const points = []
+    const phase = b * Math.PI * 0.42
+    for (let i = 0; i <= 90; i++) {
+      const t = i / 90
+      const r = 0.62 + t * 2.65
+      const a = phase + t * Math.PI * 1.8
+      points.push(new THREE.Vector3(Math.cos(a) * r, 0.16 + t * 0.16, Math.sin(a) * r))
+    }
+    const curve = new THREE.CatmullRomCurve3(points)
+    const band = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 120, 0.028, 8, false),
+      new THREE.MeshBasicMaterial({
+        color: 0xddeeff,
+        transparent: true,
+        opacity: 0.28,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    )
+    subGroup.add(band)
+    refs.feederBands.push(band)
+  }
+
+  refs.rainShafts = []
+  const shaftMat = new THREE.LineBasicMaterial({ color: 0x8ec5ff, transparent: true, opacity: 0.25 })
+  for (let i = 0; i < 90; i++) {
+    const a = Math.random() * Math.PI * 2
+    const r = 0.45 + Math.random() * 2.7
+    const x = Math.cos(a) * r
+    const z = Math.sin(a) * r
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, 0.35 + Math.random() * 0.5, z),
+      new THREE.Vector3(x + 0.06, -0.42, z + 0.02),
+    ])
+    const line = new THREE.Line(geo, shaftMat)
+    subGroup.add(line)
+    refs.rainShafts.push(line)
+  }
+
   const lightningGeo = GeometryFactory.sphere(2.5, 8)
   const lightningMat = new THREE.MeshBasicMaterial({
     color: 0xffffff, transparent: true, opacity: 0, depthWrite: false,
@@ -129,6 +170,17 @@ function buildEarthquake(subGroup) {
   subGroup.add(refs.ground)
   refs.groundBase = geo.attributes.position.array.slice()
 
+  const roadMat = new THREE.MeshStandardMaterial({ color: 0x373331, roughness: 0.8 })
+  ;[
+    { pos: [0, 0.025, -0.75], scale: [4.6, 0.018, 0.08], rot: 0.08 },
+    { pos: [-0.45, 0.03, 0.35], scale: [0.08, 0.018, 3.7], rot: -0.18 },
+  ].forEach(r => {
+    const road = new THREE.Mesh(GeometryFactory.box(r.scale[0], r.scale[1], r.scale[2]), roadMat)
+    road.position.set(...r.pos)
+    road.rotation.y = r.rot
+    subGroup.add(road)
+  })
+
   const gridHelper = new THREE.PolarGridHelper(3, 24, 16, 256, 0x5a4a3a, 0x5a4a3a)
   gridHelper.position.y = 0.005
   subGroup.add(gridHelper)
@@ -140,6 +192,16 @@ function buildEarthquake(subGroup) {
   }
   const faultGeo = new THREE.BufferGeometry().setFromPoints(fp)
   subGroup.add(new THREE.Line(faultGeo, new THREE.LineBasicMaterial({ color: 0xff3333 })))
+
+  const scarpMat = new THREE.MeshStandardMaterial({ color: 0x6f4c38, roughness: 0.82 })
+  for (let i = 0; i < 12; i++) {
+    const t = i / 11
+    const block = new THREE.Mesh(GeometryFactory.box(0.28, 0.05 + (i % 2) * 0.035, 0.12), scarpMat)
+    block.position.set(-1.7 + t * 3.4, 0.04 + (i % 2) * 0.025, Math.sin(t * Math.PI * 2) * 0.3)
+    block.rotation.y = 0.35 + Math.sin(i) * 0.2
+    block.castShadow = true
+    subGroup.add(block)
+  }
 
   refs.buildings = []
   const bldgDefs = [
@@ -243,6 +305,12 @@ export function DisasterModule(scene, params, services) {
         if (refs.lightning) {
           const shouldFlash = Math.random() < 0.008
           refs.lightning.material.opacity = shouldFlash ? 0.15 : Math.max(0, refs.lightning.material.opacity - 0.02)
+        }
+        if (refs.feederBands) {
+          refs.feederBands.forEach((band, i) => {
+            band.rotation.y += dt * (0.04 + i * 0.006)
+            band.material.opacity = 0.22 + Math.sin(elapsed * 1.2 + i) * 0.06
+          })
         }
       }
       if (activeModule === 'earthquake' && refs.seismicRings) {

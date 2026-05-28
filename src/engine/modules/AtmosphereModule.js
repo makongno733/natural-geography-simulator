@@ -36,11 +36,90 @@ const COMPOSITION_PARTICLES = {
   ],
 }
 
+function addPlanetSurface(group, radius) {
+  const oceanGlow = new THREE.Mesh(
+    GeometryFactory.sphere(radius * 1.003, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0x1c6aa8,
+      roughness: 0.5,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0.28,
+    }),
+  )
+  group.add(oceanGlow)
+
+  const landMat = new THREE.MeshStandardMaterial({
+    color: 0x7ab86a,
+    roughness: 0.86,
+    metalness: 0.02,
+    transparent: true,
+    opacity: 0.78,
+  })
+  const highlandMat = new THREE.MeshStandardMaterial({
+    color: 0xe0d0a8,
+    roughness: 0.9,
+    metalness: 0.01,
+    transparent: true,
+    opacity: 0.84,
+  })
+
+  const patches = [
+    [-0.7, 0.38, 0.45, 1.3, 0.55, 0.28],
+    [0.3, 0.2, -0.75, 1.0, 0.42, -0.35],
+    [0.82, -0.28, 0.32, 0.75, 0.36, 0.2],
+    [-0.2, -0.45, -0.62, 0.9, 0.3, -0.1],
+    [0.18, 0.62, 0.2, 0.72, 0.22, 0.55],
+  ]
+
+  patches.forEach(([x, y, z, sx, sy, rot], i) => {
+    const mat = i === 4 ? highlandMat : landMat
+    const patch = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.32, 36), mat)
+    patch.position.set(x, y, z).normalize().multiplyScalar(radius * 1.012)
+    patch.lookAt(0, 0, 0)
+    patch.rotateZ(rot)
+    patch.scale.set(sx, sy, 1)
+    group.add(patch)
+  })
+
+  for (let i = 0; i < 7; i++) {
+    const lat = (-50 + i * 16) * Math.PI / 180
+    const ring = new THREE.Mesh(
+      GeometryFactory.torus(Math.cos(lat) * radius * 1.018, 0.006, 6, 160),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: i % 2 ? 0.12 : 0.2,
+        depthWrite: false,
+      }),
+    )
+    ring.position.y = Math.sin(lat) * radius * 1.018
+    ring.rotation.x = Math.PI / 2
+    group.add(ring)
+  }
+}
+
+function addRibbon(group, points, color, radius = 0.01, opacity = 0.55) {
+  const curve = new THREE.CatmullRomCurve3(points)
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(curve, 96, radius, 8, false),
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  )
+  group.add(tube)
+  return tube
+}
+
 export function AtmosphereModule(scene, params, services) {
   const { labelSystem } = services
   const group = new THREE.Group()
   const mode = params.mode || 'simple'
-  const theme = params.theme || 0
+  let currentTheme = params.theme || 0
   const EARTH_RADIUS = 1.8
   const SCALE = 6 / 1000
 
@@ -55,10 +134,16 @@ export function AtmosphereModule(scene, params, services) {
   const earth = new THREE.Mesh(earthGeo, earthMat)
   earth.rotation.x = 0.3
   group.add(earth)
+  addPlanetSurface(group, EARTH_RADIUS)
 
   try {
     const skyMaterial = new SkyMaterial()
-    skyMaterial.setSunDirection(new THREE.Vector3(1, 0.3, 0.5).normalize())
+    const sunDirection = new THREE.Vector3(1, 0.3, 0.5).normalize()
+    if (typeof skyMaterial.setSunDirection === 'function') {
+      skyMaterial.setSunDirection(sunDirection)
+    } else if (skyMaterial.uniforms?.sunDirection) {
+      skyMaterial.uniforms.sunDirection.value.copy(sunDirection)
+    }
     const skyGeo = GeometryFactory.sphere(800, 32)
     const skyMesh = new THREE.Mesh(skyGeo, skyMaterial)
     skyMesh.scale.set(-1, 1, 1)
@@ -111,6 +196,24 @@ export function AtmosphereModule(scene, params, services) {
       themeObjects.push(mesh)
     })
 
+    const ozone = new THREE.Mesh(
+      GeometryFactory.torus(EARTH_RADIUS + 25 * SCALE, 0.018, 8, 192),
+      new THREE.MeshBasicMaterial({
+        color: 0xb388ff,
+        transparent: true,
+        opacity: 0.42,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    )
+    ozone.rotation.x = Math.PI / 2
+    group.add(ozone)
+    themeObjects.push(ozone)
+
+    const auroraNorth = addRibbon(group, GeometryFactory.arcPoints(0, Math.PI * 2, EARTH_RADIUS + 0.7, 1.45, 128), 0x66ffcc, 0.008, 0.32)
+    const auroraSouth = addRibbon(group, GeometryFactory.arcPoints(0, Math.PI * 2, EARTH_RADIUS + 0.62, -1.45, 128), 0x88bbff, 0.008, 0.26)
+    themeObjects.push(auroraNorth, auroraSouth)
+
     if (labelSystem) {
       LAYER_LABELS.forEach(l => {
         const r = EARTH_RADIUS + l.height * SCALE
@@ -154,7 +257,7 @@ export function AtmosphereModule(scene, params, services) {
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
       const mat = new THREE.PointsMaterial({
-        size: 0.04,
+        size: mode === 'professional' ? 0.034 : 0.04,
         vertexColors: true,
         transparent: true,
         opacity: 0.8,
@@ -202,6 +305,23 @@ export function AtmosphereModule(scene, params, services) {
       const points = new THREE.Points(geo, mat)
       group.add(points)
       themeObjects.push(points)
+
+      const tip = curve.getPoint(0.9)
+      const next = curve.getPoint(0.98)
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(0.08, 0.22, 16),
+        new THREE.MeshBasicMaterial({
+          color: path.color,
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending,
+        }),
+      )
+      cone.position.copy(tip)
+      cone.lookAt(next)
+      cone.rotateX(Math.PI / 2)
+      group.add(cone)
+      themeObjects.push(cone)
     })
   }
 
@@ -225,6 +345,26 @@ export function AtmosphereModule(scene, params, services) {
         const tube = new THREE.Mesh(tubeGeo, tubeMat)
         group.add(tube)
         themeObjects.push(tube)
+
+        for (let i = 0; i < 5; i++) {
+          const marker = new THREE.Mesh(
+            GeometryFactory.sphere(0.035, 16),
+            new THREE.MeshBasicMaterial({
+              color: cell.color,
+              transparent: true,
+              opacity: 0.9,
+              blending: THREE.AdditiveBlending,
+            }),
+          )
+          marker.userData.circulation = {
+            latStart: range[0],
+            latEnd: range[1],
+            phase: i / 5,
+            speed: range[0] < 0 ? -0.07 : 0.07,
+          }
+          group.add(marker)
+          themeObjects.push(marker)
+        }
       })
     })
   }
@@ -239,22 +379,37 @@ export function AtmosphereModule(scene, params, services) {
     }
   }
 
-  switchTheme(theme)
+  switchTheme(currentTheme)
 
   const api = {
     setMode(m) {
       group.mode = m
       clearTheme()
-      switchTheme(theme)
+      switchTheme(currentTheme)
     },
     setParams(p) {
       if (p.theme !== undefined) {
+        currentTheme = p.theme
         clearTheme()
-        switchTheme(p.theme)
+        switchTheme(currentTheme)
       }
     },
     update(dt, elapsed) {
       earth.rotation.y += 0.15 * dt
+      themeObjects.forEach(obj => {
+        if (!obj.userData?.circulation) return
+        const data = obj.userData.circulation
+        data.phase = (data.phase + dt * data.speed + 1) % 1
+        const lat = data.latStart + (data.latEnd - data.latStart) * data.phase
+        const lon = data.phase * Math.PI * 4 + elapsed * 0.18
+        const latRad = (lat * Math.PI) / 180
+        const r = EARTH_RADIUS + 0.8 * Math.sin(data.phase * Math.PI)
+        obj.position.set(
+          r * Math.cos(latRad) * Math.cos(lon),
+          r * Math.sin(latRad),
+          r * Math.cos(latRad) * Math.sin(lon),
+        )
+      })
     },
     dispose() {
       clearTheme()

@@ -44,7 +44,7 @@ export class MaterialLibrary {
     })
   }
 
-  static particle({ color, size = 0.05, blending = THREE.NormalBlending, depthWrite = false, vertexColors = false }) {
+  static particle({ color = 0xffffff, size = 0.05, blending = THREE.NormalBlending, depthWrite = false, vertexColors = false }) {
     return new THREE.PointsMaterial({
       color,
       size,

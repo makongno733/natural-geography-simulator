@@ -164,8 +164,6 @@ export function createTerrainMaterial({ minHeight, maxHeight, weatherFactor = 0,
     vertexShader,
     fragmentShader,
     clippingPlanes,
-    side: THREE.DoubleSide,
-    roughness: 0.9,
-    metalness: 0.02
+    side: THREE.DoubleSide
   });
 }
