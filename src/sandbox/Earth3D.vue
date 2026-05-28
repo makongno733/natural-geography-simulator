@@ -72,6 +72,16 @@
             • 第二宇宙速度 <span class="coord-tag">11.2 km/s</span> 逃离地球<br/>
             • 转移速度 <span class="coord-tag">~11.6 km/s</span> 飞往火星</p>
             <p><strong>转移时间：</strong>约 <span class="coord-tag">259 天</span></p>
+            <div class="timeline-section">
+              <h3>🕐 任务时间轴</h3>
+              <div class="timeline-bar">
+                <input type="range" min="0" max="259" :value="transferDay" @input="setTransferDay($event.target.value)" class="timeline-slider" />
+              </div>
+              <div class="timeline-info">
+                <span>第 <strong>{{ transferDay }}</strong> 天</span>
+                <button class="play-btn" @click="toggleAutoPlay">{{ autoPlay ? '⏸ 暂停' : '▶ 自动飞行' }}</button>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
@@ -93,6 +103,9 @@ const activeCoord = ref('horizontal')
 const selectedObj = ref('sirius_a')
 const coordDesc = ref('')
 const currentCoords = ref({})
+const transferDay = ref(0)
+const autoPlay = ref(false)
+let autoPlayTimer = null
 let engine = null
 let postFx = null
 
@@ -179,8 +192,35 @@ function switchMode(m) {
   if (m !== 'deepspace') postFx?.disableBloom()
 }
 
+function setTransferDay(val) {
+  transferDay.value = parseInt(val)
+  if (engine) {
+    engine.setParams({ transferProgress: val / 259 })
+  }
+}
+
+function toggleAutoPlay() {
+  autoPlay.value = !autoPlay.value
+  if (autoPlay.value) {
+    autoPlayTimer = setInterval(() => {
+      if (transferDay.value >= 259) {
+        transferDay.value = 0
+      } else {
+        transferDay.value++
+      }
+      if (engine) {
+        engine.setParams({ transferProgress: transferDay.value / 259 })
+      }
+    }, 80)
+  } else {
+    clearInterval(autoPlayTimer)
+    autoPlayTimer = null
+  }
+}
+
 onBeforeUnmount(() => {
   engine?.dispose()
+  if (autoPlayTimer) clearInterval(autoPlayTimer)
 })
 </script>
 
@@ -246,6 +286,17 @@ onBeforeUnmount(() => {
 .pt-header, .pt-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2px; padding: 3px 0; border-bottom: 1px solid #1a1a1a; }
 .pt-header { color: #666; }
 .pt-row { color: #999; }
+/* Timeline */
+.timeline-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid #333; }
+.timeline-section h3 { font-size: 0.85rem; margin: 0 0 8px; color: #44ff88; }
+.timeline-slider { width: 100%; accent-color: #44ff88; height: 4px; cursor: pointer; }
+.timeline-info { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.8rem; }
+.timeline-info strong { color: #44ff88; font-size: 1rem; }
+.play-btn {
+  padding: 4px 12px; border: 1px solid #44ff88; border-radius: 4px;
+  background: rgba(68,255,136,0.1); color: #44ff88; font-size: 0.75rem; cursor: pointer;
+}
+.play-btn:hover { background: rgba(68,255,136,0.2); }
 /* Info tooltip */
 .info-term { position: relative; cursor: help; border-bottom: 1px dashed #555; display: inline; }
 .info-term .info-popup {

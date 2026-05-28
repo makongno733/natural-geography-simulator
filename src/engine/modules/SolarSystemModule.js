@@ -243,6 +243,35 @@ export function SolarSystemModule(scene, params, services) {
     group.add(arrow)
   }
 
+  // Rocket marker on transfer orbit
+  let transferProgress = 0
+  const rocketGeo = GeometryFactory.sphere(0.04, 12)
+  const rocketMat = new THREE.MeshStandardMaterial({
+    color: 0x44ff88,
+    emissive: 0x44ff88,
+    emissiveIntensity: 0.8,
+    roughness: 0.2,
+  })
+  const rocket = new THREE.Mesh(rocketGeo, rocketMat)
+  // Initial position at Earth end
+  rocket.position.set(cX + aT * Math.cos(0), 0.05, sB * Math.sin(0))
+  group.add(rocket)
+
+  // Rocket trail glow
+  const trailGeo = GeometryFactory.ring(0.03, 0.08, 24)
+  const trailMat = new THREE.MeshBasicMaterial({
+    color: 0x44ff88,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  })
+  const trail = new THREE.Mesh(trailGeo, trailMat)
+  trail.rotation.x = -Math.PI / 2
+  trail.userData._managed = true
+  group.add(trail)
+
   if (labelSystem) {
     labelSystem.addToGroup(group, '地球 (出发)', new THREE.Vector3(earthR, -0.25, 0),
       { color: '#60a5fa', fontSize: '11px', fontWeight: '700' })
@@ -279,8 +308,21 @@ export function SolarSystemModule(scene, params, services) {
           Math.sin(angle) * p.radius,
         )
       })
+      // Update rocket position on transfer orbit
+      const t = transferProgress * Math.PI
+      rocket.position.set(
+        cX + aT * Math.cos(t),
+        0.05,
+        sB * Math.sin(t),
+      )
+      trail.position.copy(rocket.position)
     },
     setMode(m) { mode = m },
+    setParams(p) {
+      if (p.transferProgress !== undefined) {
+        transferProgress = Math.max(0, Math.min(1, p.transferProgress))
+      }
+    },
     dispose() {},
   }
   group.userData = { api }
