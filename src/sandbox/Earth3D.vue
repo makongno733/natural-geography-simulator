@@ -329,9 +329,9 @@ function initProfessionalOnSwitch() {
   if (proMode) return
   proMode = true
   celestialGroup.children.forEach(c => celestialGroup.remove(c))
-  // Earth at center
-  const earth = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 24), new THREE.MeshPhysicalMaterial({ color: 0x2d5a87, roughness: 0.5 }))
-  celestialGroup.add(earth)
+  // Coordinate origin
+  const origin = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshBasicMaterial({ color: 0x888888 }))
+  celestialGroup.add(origin)
   buildCelestialScene()
 }
 
