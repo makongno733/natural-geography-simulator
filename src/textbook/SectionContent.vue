@@ -141,6 +141,7 @@ import { getSection, getChapter, getCollegeRef } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
 import { matchPptResources } from './data/pptResources.js'
 import { usePptFolderStore } from './data/pptFolderStore.js'
+import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -223,11 +224,11 @@ const estimatedReadMinutes = computed(() => {
 })
 
 function toReadableMarkdown(text) {
-  const raw = String(text || '')
+  const raw = normalizeEscapedNewlines(text)
   if (/^\\s*#{1,3}\\s+/m.test(raw) || /^\\s*[-*]\\s+/m.test(raw) || /^\\s*\\d+\\.\\s+/m.test(raw)) {
-    return raw
+    return normalizeLectureSection(raw)
   }
-  return buildMarkdown(cleanOcrLines(raw))
+  return normalizeLectureSection(buildMarkdown(cleanOcrLines(raw)))
 }
 
 function cleanOcrLines(text) {
@@ -389,6 +390,7 @@ function shouldJoin(prev, next) {
   if (/^(图|表)\d|^第[一二三四五六七八九十\d]+[章节]/.test(next)) return false
   return true
 }
+
 
 watch([gradeId, bookId, chapterId, sectionId], async () => {
   contentReady.value = false

@@ -18,7 +18,9 @@
     "electron:start": "pnpm run build && electron .",
     "electron:pack:dir": "pnpm run build && electron-builder --dir",
     "electron:dist:mac": "pnpm run build && electron-builder --mac zip dmg",
-    "electron:dist:win": "pnpm run build && electron-builder --win nsis portable"
+    "electron:dist:win": "pnpm run build && electron-builder --win nsis portable",
+    "qa:textbook": "node scripts/audit-textbook-quality.mjs",
+    "fix:textbook:pass1": "node scripts/fix-textbook-quality-pass1.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
