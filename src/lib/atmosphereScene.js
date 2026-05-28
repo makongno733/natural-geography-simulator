@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { SkyMaterial, SunDirectionalLight } from '@takram/three-atmosphere'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 const LAYER_COLORS = {
   对流层: 0x4a9eff,
@@ -48,6 +49,13 @@ export default class AtmosphereScene {
 
     this.composer = new EffectComposer(this.renderer)
     this.composer.addPass(new RenderPass(this.scene, this.camera))
+
+    this.labelRenderer = new CSS2DRenderer()
+    this.labelRenderer.setSize(container.clientWidth, container.clientHeight)
+    this.labelRenderer.domElement.style.position = 'absolute'
+    this.labelRenderer.domElement.style.top = '0'
+    this.labelRenderer.domElement.style.pointerEvents = 'none'
+    container.appendChild(this.labelRenderer.domElement)
   }
 
   _initScene() {
@@ -223,6 +231,50 @@ export default class AtmosphereScene {
       this.scene.add(mesh)
       this.layers.push(mesh)
     })
+
+    this._createLayerLabels()
+  }
+
+  _createLayerLabels() {
+    const earthRadius = 1.8
+    const scale = 6 / 1000
+    const layers = [
+      { name: '对流层', height: 6, profExtra: '天气现象 · 每百米降0.65℃' },
+      { name: '平流层', height: 30, profExtra: '臭氧层 20-25km · 适合飞行' },
+      { name: '中间层', height: 65, profExtra: '流星在此燃烧' },
+      { name: '热层', height: 200, profExtra: '电离层 85-500km · 极光' },
+      { name: '散逸层', height: 600, profExtra: '卡门线 100km · 逃逸层' },
+    ]
+
+    layers.forEach((layer) => {
+      const r = earthRadius + layer.height * scale
+      const div = document.createElement('div')
+      div.textContent = this.mode === 'simple'
+        ? `${this._heightStr(layer.height)} ${layer.name}`
+        : `${this._heightStr(layer.height)} ${layer.name}\n${layer.profExtra}`
+      div.style.color = '#fff'
+      div.style.fontSize = this.mode === 'simple' ? '13px' : '11px'
+      div.style.fontWeight = this.mode === 'simple' ? '600' : '400'
+      div.style.fontFamily = '"Noto Serif SC", "Songti SC", serif'
+      div.style.textShadow = '0 0 8px rgba(0,0,0,0.8), 0 0 3px rgba(0,0,0,0.5)'
+      div.style.whiteSpace = 'pre-line'
+      div.style.textAlign = 'center'
+      div.style.lineHeight = '1.4'
+      div.style.padding = '2px 6px'
+      div.style.background = 'rgba(0,0,0,0.3)'
+      div.style.borderRadius = '4px'
+      div.style.backdropFilter = 'blur(2px)'
+
+      const label = new CSS2DObject(div)
+      label.position.set(r, 0, 0)
+      this.scene.add(label)
+      this.layers.push(label)
+    })
+  }
+
+  _heightStr(km) {
+    if (km >= 100) return `${km}km`
+    return `${km}km`
   }
 
   _showComposition() {
@@ -391,12 +443,14 @@ export default class AtmosphereScene {
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h)
     this.composer.setSize(w, h)
+    if (this.labelRenderer) this.labelRenderer.setSize(w, h)
   }
 
   render(time) {
     this._updateOrbit()
     if (this.earth) this.earth.rotation.y += 0.001
     this.composer.render()
+    if (this.labelRenderer) this.labelRenderer.render(this.scene, this.camera)
   }
 
   dispose() {
@@ -408,6 +462,10 @@ export default class AtmosphereScene {
     if (this.skyMesh) { this.scene.remove(this.skyMesh); this.skyMesh.geometry.dispose(); this.skyMesh.material.dispose() }
     if (this.stars) { this.scene.remove(this.stars); this.stars.geometry.dispose(); this.stars.material.dispose() }
     this._clearTheme()
+    if (this.labelRenderer) {
+      this.labelRenderer.domElement.remove()
+      this.labelRenderer = null
+    }
     this.renderer.dispose()
     el.remove()
   }
