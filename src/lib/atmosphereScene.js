@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { Atmosphere, Sky, AerialPerspective } from '@takram/three-atmosphere'
+import { SkyMaterial, SunDirectionalLight } from '@takram/three-atmosphere'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 
@@ -53,6 +53,20 @@ export default class AtmosphereScene {
   _initScene() {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x0a0e27)
+    this._initStars()
+  }
+
+  _initStars() {
+    const starsGeo = new THREE.BufferGeometry()
+    const starCount = 2000
+    const pos = new Float32Array(starCount * 3)
+    for (let i = 0; i < starCount * 3; i++) {
+      pos[i] = (Math.random() - 0.5) * 400
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.3, transparent: true, opacity: 0.8 })
+    this.stars = new THREE.Points(starsGeo, starsMat)
+    this.scene.add(this.stars)
   }
 
   _initCamera(container) {
@@ -86,12 +100,15 @@ export default class AtmosphereScene {
 
   _initAtmoScattering() {
     try {
-      const atmo = new Atmosphere({ date: new Date() })
-      const sky = new Sky({ atmosphere: atmo })
-      this.scene.add(sky)
-      this.atmo = atmo
+      this.skyMaterial = new SkyMaterial()
+      this.skyMaterial.setSunDirection(new THREE.Vector3(1, 0.3, 0.5).normalize())
+      const skyGeo = new THREE.SphereGeometry(800, 32, 15)
+      const skyMesh = new THREE.Mesh(skyGeo, this.skyMaterial)
+      skyMesh.scale.set(-1, 1, 1) // Render from inside
+      this.scene.add(skyMesh)
+      this.skyMesh = skyMesh
     } catch (e) {
-      console.warn('@takram/three-atmosphere not available, falling back', e)
+      console.warn('@takram/three-atmosphere SkyMaterial not available, using fallback', e)
     }
   }
 
@@ -233,6 +250,9 @@ export default class AtmosphereScene {
     window.removeEventListener('mousemove', this._onMouseMove)
     window.removeEventListener('mouseup', this._onMouseUp)
     el.removeEventListener('wheel', this._onWheel)
+    if (this.skyMesh) { this.scene.remove(this.skyMesh); this.skyMesh.geometry.dispose(); this.skyMesh.material.dispose() }
+    if (this.stars) { this.scene.remove(this.stars); this.stars.geometry.dispose(); this.stars.material.dispose() }
+    this._clearTheme()
     this.renderer.dispose()
     el.remove()
   }

@@ -56,9 +56,11 @@
 
         <div class="body-text markdown-body" v-html="renderedBody"></div>
 
-        <div class="reserved-slot" v-if="!sectionData.content.interactive">
-          <span class="slot-label">3D 互动预留位</span>
-        </div>
+        <AtmosphereViewer
+          v-if="showAtmosphereViewer"
+          :mode="atmosphereMode"
+          :defaultTab="atmosphereDefaultTab"
+        />
 
         <section class="ppt-panel">
           <div class="ppt-head">
@@ -142,6 +144,7 @@ import { loadSectionContent } from './data/contentLoader.js'
 import { matchPptResources } from './data/pptResources.js'
 import { usePptFolderStore } from './data/pptFolderStore.js'
 import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
+import AtmosphereViewer from './components/AtmosphereViewer.vue'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -221,6 +224,19 @@ const estimatedReadMinutes = computed(() => {
   if (!plain) return 0
   // 约240中文字符/分钟，贴近课堂精读节奏
   return Math.max(1, Math.round(plain.length / 240))
+})
+
+const showAtmosphereViewer = computed(() => {
+  const isHighSchool = gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第二章'
+  const isUniversity = gradeId.value === '大学' && bookId.value === '自然地理学' && chapterId.value === '第三章'
+  return isHighSchool || isUniversity
+})
+
+const atmosphereMode = computed(() => gradeId.value === '大学' ? 'professional' : 'simple')
+
+const atmosphereDefaultTab = computed(() => {
+  if (gradeId.value !== '高中' || bookId.value !== '必修第一册') return 0
+  return sectionId.value === '第二节' ? 2 : 0
 })
 
 function toReadableMarkdown(text) {
