@@ -30,10 +30,10 @@
       <main class="content">
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
 
-        <div v-if="sectionData.content.keyPoints.length" class="key-points">
+        <div v-if="collegeContent?.keyPoints?.length || sectionData.content.keyPoints.length" class="key-points">
           <h3 class="block-title">核心知识点</h3>
           <ul>
-            <li v-for="(pt, i) in sectionData.content.keyPoints" :key="i">{{ pt }}</li>
+            <li v-for="(pt, i) in (collegeContent?.keyPoints || sectionData.content.keyPoints)" :key="i">{{ pt }}</li>
           </ul>
         </div>
 
@@ -54,7 +54,8 @@
         </div>
 
         <div class="body-text">
-          <p>{{ sectionData.content.body }}</p>
+          <template v-if="collegeContent?.body">{{ collegeContent.body }}</template>
+          <p v-else>{{ sectionData.content.body }}</p>
         </div>
 
         <div class="reserved-slot" v-if="!sectionData.content.interactive">
@@ -87,9 +88,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { grades, findSection, findChapter, findCollegeRef } from './data/index.js'
+import { loadSectionContent } from './data/contentLoader.js'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -104,6 +106,26 @@ const collegeRef = computed(() =>
     ? findCollegeRef(gradeId.value, bookId.value, chapterId.value, sectionId.value)
     : null
 )
+
+const loadedContent = ref(null)
+const contentReady = ref(false)
+
+const collegeContent = computed(() => {
+  if (gradeId.value === '大学' && loadedContent.value) {
+    return loadedContent.value
+  }
+  return null
+})
+
+watch([gradeId, bookId, chapterId, sectionId], async () => {
+  contentReady.value = false
+  loadedContent.value = null
+  if (gradeId.value === '大学') {
+    const content = await loadSectionContent(gradeId.value, bookId.value, chapterId.value, sectionId.value)
+    loadedContent.value = content
+  }
+  contentReady.value = true
+}, { immediate: true })
 
 const prevSection = computed(() => {
   if (!chapterData.value) return null
