@@ -219,6 +219,34 @@ export function SolarSystemModule(scene, params, services) {
     }
   }
 
+  // Asteroid belt between Mars (2.4) and Jupiter (3.3)
+  const asteroidCount = 800
+  const astPositions = new Float32Array(asteroidCount * 3)
+  const astSizes = new Float32Array(asteroidCount)
+  for (let i = 0; i < asteroidCount; i++) {
+    const r = 2.55 + Math.random() * 0.6
+    const angle = Math.random() * Math.PI * 2
+    const y = (Math.random() - 0.5) * 0.08
+    astPositions[i * 3] = Math.cos(angle) * r
+    astPositions[i * 3 + 1] = y
+    astPositions[i * 3 + 2] = Math.sin(angle) * r
+    astSizes[i] = 0.005 + Math.random() * 0.015
+  }
+  const astGeo = new THREE.BufferGeometry()
+  astGeo.setAttribute('position', new THREE.BufferAttribute(astPositions, 3))
+  astGeo.setAttribute('size', new THREE.BufferAttribute(astSizes, 1))
+  const astMat = new THREE.PointsMaterial({
+    color: 0x999999,
+    size: 0.02,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const asteroidBelt = new THREE.Points(astGeo, astMat)
+  asteroidBelt.userData._managed = true
+  group.add(asteroidBelt)
+
   // Hohmann transfer trajectory - visible ellipse
   const aT = (earthR + marsR) / 2
   const cX = earthR + (aT - earthR)
@@ -250,21 +278,37 @@ export function SolarSystemModule(scene, params, services) {
     group.add(arrow)
   }
 
-  // Rocket marker on transfer orbit
+  // 3D Rocket model
   let transferProgress = 0
   let currentPhase = 0
   let prevPhase = 0
-  // Smooth camera transition state
-  let camTarget = null  // { pos: Vector3, target: Vector3 }
+  let camTarget = null
   const CAM_LERP = 0.04
-  const rocketGeo = GeometryFactory.sphere(0.04, 12)
-  const rocketMat = new THREE.MeshStandardMaterial({
-    color: 0x44ff88,
-    emissive: 0x44ff88,
-    emissiveIntensity: 0.8,
-    roughness: 0.2,
-  })
-  const rocket = new THREE.Mesh(rocketGeo, rocketMat)
+
+  const rocket = new THREE.Group()
+  // Nose cone
+  const noseGeo = new THREE.ConeGeometry(0.025, 0.07, 8)
+  const noseMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4, emissive: 0xef4444, emissiveIntensity: 0.2 })
+  const nose = new THREE.Mesh(noseGeo, noseMat)
+  nose.position.y = 0.06
+  rocket.add(nose)
+  // Body
+  const bodyGeo = new THREE.CylinderGeometry(0.02, 0.025, 0.08, 8)
+  const bodyMesh = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.5 }))
+  bodyMesh.position.y = 0.01
+  rocket.add(bodyMesh)
+  // Nozzle
+  const nozzleGeo = new THREE.CylinderGeometry(0.015, 0.022, 0.03, 8)
+  rocket.add(new THREE.Mesh(nozzleGeo, new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 })))
+  // Fins
+  for (let i = 0; i < 3; i++) {
+    const ang = (i / 3) * Math.PI * 2
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.04, 0.025), noseMat)
+    fin.position.set(Math.cos(ang) * 0.025, -0.03, Math.sin(ang) * 0.025)
+    fin.rotation.y = ang
+    rocket.add(fin)
+  }
+  rocket.scale.setScalar(0.9)
   rocket.position.set(earthR, 0.05, 0)
   group.add(rocket)
 
@@ -343,7 +387,7 @@ export function SolarSystemModule(scene, params, services) {
             earthPos.y + 0.03,
             earthPos.z + Math.sin(ang) * 0.15,
           )
-          rocketMat.color.set(0x60a5fa)
+(0x60a5fa)
         } else if (rp < 0.2) {
           // Phase 2: Escape Earth → transfer insertion
           currentPhase = 2
@@ -360,7 +404,7 @@ export function SolarSystemModule(scene, params, services) {
             0.05,
             insetZ + (earthStartZ - insetZ) * phase2,
           )
-          rocketMat.color.set(0xfacc15)
+(0xfacc15)
         } else if (rp < 0.82) {
           // Phase 3: Hohmann transfer
           currentPhase = 3
@@ -371,7 +415,7 @@ export function SolarSystemModule(scene, params, services) {
             0.05,
             sB * Math.sin(t),
           )
-          rocketMat.color.set(0x44ff88)
+(0x44ff88)
         } else {
           // Phase 4: Mars approach and orbit insertion
           currentPhase = 4
@@ -383,10 +427,12 @@ export function SolarSystemModule(scene, params, services) {
             marsPos.y + 0.03,
             marsPos.z + Math.sin(ang) * marsApproachR,
           )
-          rocketMat.color.set(0xef4444)
+(0xef4444)
         }
-        rocketMat.emissive.copy(rocketMat.color)
       }
+      // Slow asteroid belt rotation
+      asteroidBelt.rotation.y += dt * 0.02
+
       trail.position.copy(rocket.position)
 
       // Camera phase transition — set target for smooth lerp

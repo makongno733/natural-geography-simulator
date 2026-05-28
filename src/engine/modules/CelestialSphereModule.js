@@ -68,6 +68,17 @@ export function CelestialSphereModule(scene, params, services) {
   stars.userData._managed = true
   group.add(stars)
 
+  // Semi-transparent celestial dome
+  const domeGeo = GeometryFactory.sphere(CS_RADIUS - 0.02, 48)
+  const domeMat = new THREE.MeshBasicMaterial({
+    color: 0x112244,
+    transparent: true,
+    opacity: 0.08,
+    side: THREE.BackSide,
+    depthWrite: false,
+  })
+  group.add(new THREE.Mesh(domeGeo, domeMat))
+
   const objectMeshes = {}
   CELESTIAL_OBJECTS.forEach(obj => {
     const pos = new THREE.Vector3(...obj.pos)

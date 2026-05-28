@@ -128,6 +128,28 @@ function addInteriorDynamics(group) {
     }
     group.add(makeCurveTube(points, 0x66d9ff, 0.005, 0.22))
   }
+
+  // Mantle convection cells — rising at core, sinking at crust
+  for (let cell = 0; cell < 5; cell++) {
+    const baseAngle = (cell / 5) * Math.PI * 2
+    const baseY = 0
+    for (let loop = 0; loop < 3; loop++) {
+      const pts = []
+      const loopR = 0.65 + loop * 0.08  // radial position in mantle
+      const loopH = 0.35  // height range
+      const startY = -loopH + (loop % 2) * loopH * 0.5
+      for (let j = 0; j <= 48; j++) {
+        const t = j / 48
+        const a = t * Math.PI * 2
+        const x = Math.cos(a) * 0.12 * (1 - Math.abs(t - 0.5) * 2)
+        const y = baseY + Math.sin(a) * loopH * 0.4 + (loop - 1) * 0.1
+        const z = Math.cos(a) * 0.08
+        // Rotate around Y to distribute cells
+        pts.push(new THREE.Vector3(x, y, z + loopR).applyAxisAngle(new THREE.Vector3(0, 1, 0), baseAngle))
+      }
+      group.add(makeCurveTube(pts, 0xff6633, 0.006, 0.35))
+    }
+  }
 }
 
 export function EarthInteriorModule(scene, params, services) {
