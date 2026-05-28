@@ -36,7 +36,19 @@
       >🌍 3D 地球探索</button>
     </div>
 
-    <template v-if="!showSandbox && !showEarth3D">
+    <!-- 3D 土壤剖面切换（第五章植被与土壤专用） -->
+    <div v-if="isSoilChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showSoilProfile }]"
+        @click="showSoilProfile = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showSoilProfile }]"
+        @click="showSoilProfile = true"
+      >🧪 3D 土壤剖面</button>
+    </div>
+
+    <template v-if="!showSandbox && !showEarth3D && !showSoilProfile">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -139,6 +151,9 @@
   <!-- 3D 地球视图 -->
   <Earth3D v-else-if="showEarth3D" />
 
+  <!-- 3D 土壤剖面 -->
+  <SoilProfileModal v-else-if="showSoilProfile" @close="showSoilProfile = false" />
+
   </div>
 
   <div v-if="pptPreview.open" class="ppt-preview-mask" @click.self="closePreview">
@@ -177,6 +192,7 @@ import { usePptFolderStore } from './data/pptFolderStore.js'
 import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
 import SandboxApp from '../sandbox/SandboxApp.vue'
 import Earth3D from '../sandbox/Earth3D.vue'
+import SoilProfileModal from '../soil-profile/SoilProfileModal.vue'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -186,11 +202,15 @@ const sectionId = computed(() => route.params.section)
 
 const showSandbox = ref(false)
 const showEarth3D = ref(false)
+const showSoilProfile = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
 )
 const isEarthChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第一章'
+)
+const isSoilChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第五章'
 )
 
 const chapterData = ref(null)
