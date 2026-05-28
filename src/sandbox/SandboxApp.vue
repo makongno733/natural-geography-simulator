@@ -116,7 +116,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { SceneEngine } from './engine/SceneEngine.js'
+import { BaseScene } from '../engine/core/BaseScene.js'
+import { LandformModule } from '../engine/modules/LandformModule.js'
 import { landformModules } from './modules/landformModules.js'
 import { glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
@@ -152,15 +153,23 @@ const currentModule = computed(() =>
 
 function selectModule(id) {
   activeModule.value = id
-  if (engine) engine.setModule(id)
+  if (engine) {
+    engine.setParams({ activeModule: id })
+    engine.loadModule(LandformModule, {
+      mode: mode.value,
+      activeModule: id,
+      timeline: timeline.value,
+      climateFactor: climateFactor.value,
+    })
+  }
 }
 
 function onTimelineChange() {
-  if (engine) engine.setTimeline(timeline.value)
+  if (engine) engine.setParams({ timeline: timeline.value })
 }
 
 function onClimateChange() {
-  if (engine) engine.setClimateFactor(climateFactor.value)
+  if (engine) engine.setParams({ climateFactor: climateFactor.value })
 }
 
 function toggleAutoRotate() {
@@ -169,21 +178,30 @@ function toggleAutoRotate() {
 }
 
 function resetCamera() {
-  if (engine) {
-    engine.camera.position.set(5, 4, 6)
-    engine.controls.target.set(0, 0, 0)
-    engine.controls.update()
-  }
+  if (engine) engine.resetCamera('orbit')
 }
 
 watch(mode, (val) => {
-  if (engine) engine.setMode(val)
+  if (engine) {
+    engine.setMode(val)
+    engine.loadModule(LandformModule, {
+      mode: val,
+      activeModule: activeModule.value,
+      timeline: timeline.value,
+      climateFactor: climateFactor.value,
+    })
+  }
 })
 
 onMounted(() => {
   if (!viewportRef.value) return
-  engine = new SceneEngine(viewportRef.value)
-  engine.setModule(activeModule.value)
+  engine = new BaseScene(viewportRef.value, { bg: 0xf5efe8, mode: 'simple', lightPreset: 'studio' })
+  engine.loadModule(LandformModule, {
+    mode: 'simple',
+    activeModule: activeModule.value,
+    timeline: timeline.value,
+    climateFactor: climateFactor.value,
+  })
   window.addEventListener('resize', onResize)
 })
 

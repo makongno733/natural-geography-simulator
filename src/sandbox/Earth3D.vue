@@ -81,9 +81,11 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
+import { BaseScene } from '../engine/core/BaseScene.js'
+import { EarthInteriorModule } from '../engine/modules/EarthInteriorModule.js'
+import { CelestialSphereModule } from '../engine/modules/CelestialSphereModule.js'
+import { SolarSystemModule } from '../engine/modules/SolarSystemModule.js'
+import { PostProcessing } from '../engine/effects/PostProcessing.js'
 
 const containerRef = ref(null)
 const mode = ref('simple')
@@ -91,6 +93,8 @@ const activeCoord = ref('horizontal')
 const selectedObj = ref('sirius_a')
 const coordDesc = ref('')
 const currentCoords = ref({})
+let engine = null
+let postFx = null
 
 const coordSystems = [
   { id: 'horizontal', label: '地平坐标系' },
@@ -130,286 +134,45 @@ const objCoords = {
   galactic: { sirius_a:'b=-33° l=227°', betelgeuse:'b=-14° l=210°', sirius_b:'b=-33° l=227°', cygnus_x1:'b=+4° l=72°', crab_pulsar:'b=-2° l=184°' },
 }
 
-// ---- Three.js setup ----
-let scene, camera, renderer, labelRenderer, controls
-let earthGroup, celestialGroup, spaceGroup
-let proMode = null
-let spaceAnim = null
-let raycaster, mouse, clickableMeshes = []
-
-function makeLabel(text, color, fontSize = '13px', pos) {
-  const d = document.createElement('div')
-  d.textContent = text
-  d.style.cssText = `color:${color};font-size:${fontSize};font-weight:600;text-shadow:0 0 8px rgba(0,0,0,0.8);background:rgba(0,0,0,0.5);padding:2px 8px;border-radius:4px;border:1px solid ${color};white-space:nowrap;pointer-events:none`
-  const l = new CSS2DObject(d)
-  l.position.copy(pos)
-  return l
-}
-
-function makeLine(pts, color = 0xffffff, opacity = 0.5) {
-  const g = new THREE.BufferGeometry().setFromPoints(pts)
-  return new THREE.Line(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity }))
-}
-
-function makeRing(radius, color, opacity = 0.3) {
-  const pts = []
-  for (let i = 0; i <= 64; i++) {
-    const t = (i / 64) * Math.PI * 2
-    pts.push(new THREE.Vector3(Math.cos(t) * radius, 0, Math.sin(t) * radius))
-  }
-  return makeLine(pts, color, opacity)
-}
-
-function buildSimple() {
-  earthGroup.children.forEach(c => earthGroup.remove(c))
-  const RC=1.0, RM=0.85, ROC=0.55, RIC=0.3
-  const R = { crust:RC, mantle:RM, outerCore:ROC, innerCore:RIC }
-  const clip = new THREE.Plane(new THREE.Vector3(-1, 0.3, 0.5), 0.1)
-  const opts = { clippingPlanes: [clip], clipShadows: true }
-
-  const addSphere = (r, color, emissive = 0, extra = {}) => {
-    const m = new THREE.Mesh(
-      new THREE.SphereGeometry(r, 48, 48),
-      new THREE.MeshPhysicalMaterial({ color, emissive, metalness:0.3, roughness:0.5, transparent:true, opacity:0.8, ...opts, ...extra })
-    )
-    earthGroup.add(m)
-  }
-  addSphere(RIC, 0xf1c40f, 0xf1c40f, { emissiveIntensity:0.3, metalness:0.7, roughness:0.3 })
-  addSphere(ROC, 0xf39c12, 0xf39c12, { emissiveIntensity:0.15, side:THREE.DoubleSide })
-  addSphere(RM, 0xe67e22, 0xe67e22, { emissiveIntensity:0.08, side:THREE.DoubleSide })
-  addSphere(RC, 0x4a90d9, 0, { side:THREE.DoubleSide })
-
-  // Enhanced property labels
-  const layers = [
-    { name:'地壳', color:'#4a90d9', pos:[RC*1.4,0.5,0], props:['厚度 5-70km','温度 地表~1000°C','组成 花岗岩/玄武岩','状态 固态'] },
-    { name:'地幔', color:'#e67e22', pos:[RM*1.3,-0.6,0.8], props:['厚度 ~2900km','温度 1000-3700°C','密度 3.3-5.7 g/cm³','组成 橄榄岩'] },
-    { name:'外核', color:'#f39c12', pos:[ROC*1.5,0.6,-0.4], props:['厚度 ~2210km','温度 3700-4500°C','组成 Fe+Ni','状态 液态🧲'] },
-    { name:'内核', color:'#f1c40f', pos:[RIC*1.5,-0.3,-0.5], props:['半径 ~1220km','温度 ~5500°C','密度 ~13 g/cm³','状态 固态🔥'] },
-  ]
-  layers.forEach(l => {
-    const p = new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2])
-    earthGroup.add(makeLabel(l.name, l.color, '14px', p))
-    l.props.forEach((prop, i) => {
-      earthGroup.add(makeLabel(prop, '#aaa', '10px', new THREE.Vector3(p.x, p.y - 0.2 - i*0.17, p.z)))
-    })
-  })
-  earthGroup.add(makeLabel('莫霍界面', '#6688aa', '11px', new THREE.Vector3(0, -RC*1.2, RC*1.2)))
-  earthGroup.add(makeLabel('古登堡界面', '#6688aa', '11px', new THREE.Vector3(0, RM*1.2, -RM*1.2)))
-}
-
-onMounted(async () => {
-  await nextTick()
-  const container = containerRef.value
-  if (!container) return
-
-  scene = new THREE.Scene()
-  camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000)
-  camera.position.set(3, 1.5, 4)
-
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setSize(container.clientWidth, container.clientHeight)
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-  container.appendChild(renderer.domElement)
-
-  labelRenderer = new CSS2DRenderer()
-  labelRenderer.setSize(container.clientWidth, container.clientHeight)
-  labelRenderer.domElement.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none'
-  container.appendChild(labelRenderer.domElement)
-
-  controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-  controls.dampingFactor = 0.08
-  controls.minDistance = 1.5
-  controls.maxDistance = 12
-
-  scene.add(new THREE.AmbientLight(0x404060, 0.6))
-  const dl = new THREE.DirectionalLight(0xffffff, 1.5)
-  dl.position.set(5, 10, 7)
-  scene.add(dl)
-
-  earthGroup = new THREE.Group()
-  scene.add(earthGroup)
-  celestialGroup = new THREE.Group()
-  celestialGroup.visible = false
-  scene.add(celestialGroup)
-  spaceGroup = new THREE.Group()
-  spaceGroup.visible = false
-  scene.add(spaceGroup)
-
-  // Stars
-  const sg = new THREE.BufferGeometry()
-  const sp = new Float32Array(3000 * 3)
-  for (let i = 0; i < 3000*3; i++) sp[i] = (Math.random() - 0.5) * 200
-  sg.setAttribute('position', new THREE.BufferAttribute(sp, 3))
-  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 }))
-  scene.add(stars)
-
-  buildSimple()
-
-  raycaster = new THREE.Raycaster()
-  mouse = new THREE.Vector2()
-  renderer.domElement.addEventListener('click', (e) => {
-    if (mode.value !== 'professional' || !celestialGroup.visible || !proMode) return
-    const rect = renderer.domElement.getBoundingClientRect()
-    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
-    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
-    raycaster.setFromCamera(mouse, camera)
-    const hits = raycaster.intersectObjects(clickableMeshes)
-    for (const h of hits) {
-      const id = h.object.userData.objectId
-      if (id && celestialObjects.some(o => o.id === id)) {
-        selectObj(id)
-        break
-      }
-    }
-  })
-
-  animate()
-})
-
-function animate() {
-  requestAnimationFrame(animate)
-  controls.update()
-  renderer.render(scene, camera)
-  labelRenderer.render(scene, camera)
+function switchCoord(id) {
+  activeCoord.value = id
+  coordDesc.value = descs[id] || ''
+  currentCoords.value = objCoords[id] || ''
 }
 
 function selectObj(id) {
   selectedObj.value = id
 }
 
-function switchCoord(id) {
-  activeCoord.value = id
-  coordDesc.value = descs[id] || ''
-  currentCoords.value = objCoords[id] || {}
-}
-
-function buildCelestialScene() {
-  const csRadius = 2.5
-  // Grid
-  for (let lat = -80; lat <= 80; lat += 20) {
-    const phi = lat * Math.PI / 180
-    const r = Math.cos(phi) * csRadius, y = Math.sin(phi) * csRadius
-    const pts = []
-    for (let i = 0; i <= 36; i++) {
-      const theta = (i / 36) * Math.PI * 2
-      pts.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r))
-    }
-    celestialGroup.add(makeLine(pts, 0x446688, 0.15))
-  }
-  for (let lon = 0; lon < 360; lon += 30) {
-    const theta = lon * Math.PI / 180, pts = []
-    for (let i = 0; i <= 36; i++) {
-      const phi = (i / 36) * Math.PI
-      pts.push(new THREE.Vector3(Math.cos(theta)*Math.sin(phi)*csRadius, Math.cos(phi)*csRadius, Math.sin(theta)*Math.sin(phi)*csRadius))
-    }
-    celestialGroup.add(makeLine(pts, 0x446688, 0.1))
-  }
-  // Objects
-  celestialObjects.forEach(obj => {
-    const pos = new THREE.Vector3(obj.pos[0], obj.pos[1], obj.pos[2])
-    const mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(obj.size, 16, 16),
-      new THREE.MeshBasicMaterial({ color: obj.color })
-    )
-    mesh.position.copy(pos)
-    celestialGroup.add(mesh)
-    celestialGroup.add(makeLabel(obj.name, obj.labelColor, '11px', pos.clone().add(new THREE.Vector3(0, 0.2, 0))))
-  })
-  // Labels for coordinate systems
-  const sysLabels = [
-    { text: '天顶', pos: [0, csRadius+0.2, 0] },
-    { text: 'N', pos: [0, 0.1, -csRadius-0.3] },
-    { text: '天赤道', pos: [csRadius*0.7, 0.1, 0] },
-  ]
-  sysLabels.forEach(l => celestialGroup.add(makeLabel(l.text, '#888', '12px', new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2]))))
-}
-// Also add celestial grid lines as coordinate reference
-function initProfessionalOnSwitch() {
-  if (proMode) return
-  proMode = true
-  celestialGroup.children.forEach(c => celestialGroup.remove(c))
-  // Coordinate origin
-  const origin = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshBasicMaterial({ color: 0x888888 }))
-  celestialGroup.add(origin)
-  buildCelestialScene()
-}
-
-function buildSolarSystem() {
-  const PLANETS = [
-    { name:'水星', r:0.9, s:0.03, c:0xaaaaaa, sp:0.24 },
-    { name:'金星', r:1.3, s:0.05, c:0xe8cda0, sp:0.62 },
-    { name:'地球', r:1.8, s:0.06, c:0x4a90d9, sp:1.0 },
-    { name:'火星', r:2.4, s:0.04, c:0xcd5c5c, sp:1.88 },
-    { name:'木星', r:3.3, s:0.12, c:0xd4a574, sp:11.86 },
-    { name:'土星', r:4.2, s:0.10, c:0xead6b8, sp:29.46 },
-  ]
-  // Sun
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 24), new THREE.MeshBasicMaterial({ color: 0xffaa33 }))
-  spaceGroup.add(sun)
-  spaceGroup.add(makeLabel('☀️ 太阳', '#ffaa33', '14px', new THREE.Vector3(0, -0.5, 0)))
-  // Planets
-  PLANETS.forEach((p, i) => {
-    const ring = makeRing(p.r, p.c, 0.2)
-    spaceGroup.add(ring)
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.s, 16, 16), new THREE.MeshPhysicalMaterial({ color: p.c, roughness: 0.6 }))
-    const angle = (i / PLANETS.length) * Math.PI * 2
-    mesh.position.set(Math.cos(angle) * p.r, 0, Math.sin(angle) * p.r)
-    spaceGroup.add(mesh)
-    spaceGroup.add(makeLabel(p.name, '#ccc', '10px', new THREE.Vector3(0, p.s + 0.15, 0).add(mesh.position)))
-  })
-  // Highlight Earth & Mars orbits
-  const hlEarth = makeRing(rE, 0x60a5fa, 0.4)
-  const hlMars = makeRing(rM, 0xef4444, 0.4)
-  spaceGroup.add(hlEarth)
-  spaceGroup.add(hlMars)
-  // Direction arrows
-  const arrowR = 0.12
-  for (let r of [rE, rM]) {
-    for (let ang of [0, Math.PI/2, Math.PI, 3*Math.PI/2]) {
-      const p = new THREE.Vector3(Math.cos(ang)*r, 0.02, Math.sin(ang)*r)
-      const dir = new THREE.Vector3(-Math.sin(ang)*r, 0, Math.cos(ang)*r).normalize()
-      spaceGroup.add(new THREE.ArrowHelper(dir, p, arrowR, r===rE ? 0x60a5fa : 0xef4444, 0.1, 0.06))
-    }
-  }
-  // Transfer orbit with process labels
-  const aT = (rE + rM) / 2
-  const cX = rE + (aT - rE)
-  const sB = Math.sqrt(rE * rM)
-  const tPts = []
-  for (let i = 0; i <= 60; i++) {
-    const t = (i / 60) * Math.PI
-    tPts.push(new THREE.Vector3(cX + aT * Math.cos(t), 0.03, sB * Math.sin(t)))
-  }
-  spaceGroup.add(makeLine(tPts, 0x44ff88, 0.6))
-  spaceGroup.add(makeLabel('① 🚀 出发 (29.8→11.6 km/s)', '#60a5fa', '10px', new THREE.Vector3(rE, -0.3, 0)))
-  spaceGroup.add(makeLabel('④ 🏁 到达 (火星)', '#ef4444', '10px', new THREE.Vector3(rM*Math.cos(Math.PI*1.35), 0.3, rM*Math.sin(Math.PI*1.35))))
-  spaceGroup.add(makeLabel('② 加速 ③ 椭圆飞行 259天', '#44ff88', '10px', new THREE.Vector3(2.0, 0.5, 0.8)))
-}
-
-function initDeepSpaceOnSwitch() {
-  if (spaceGroup.children.length > 0) return
-  buildSolarSystem()
-}
+onMounted(async () => {
+  await nextTick()
+  if (!containerRef.value) return
+  engine = new BaseScene(containerRef.value, { bg: 0x0a0a1a, mode: 'simple' })
+  postFx = new PostProcessing(engine.renderManager)
+  engine.loadModule(EarthInteriorModule, { mode: 'simple' })
+  window.addEventListener('resize', () => engine.resize())
+})
 
 function switchMode(m) {
   mode.value = m
-  earthGroup.visible = m === 'simple'
-  celestialGroup.visible = m === 'professional'
-  spaceGroup.visible = m === 'deepspace'
-  controls.autoRotate = m === 'simple'
-  if (m === 'professional') {
+  if (m === 'simple') {
+    engine.loadModule(EarthInteriorModule, { mode: 'simple' })
+    engine.setAutoRotate(true)
+  } else if (m === 'professional') {
+    engine.loadModule(CelestialSphereModule)
+    engine.setAutoRotate(false)
     coordDesc.value = descs.horizontal
     currentCoords.value = objCoords.horizontal
-    initProfessionalOnSwitch()
+  } else if (m === 'deepspace') {
+    engine.loadModule(SolarSystemModule)
+    engine.setAutoRotate(false)
+    postFx?.enableBloom({ threshold: 0.1, strength: 0.6, radius: 0.5 })
   }
-  if (m === 'deepspace') {
-    initDeepSpaceOnSwitch()
-  }
+  if (m !== 'deepspace') postFx?.disableBloom()
 }
 
 onBeforeUnmount(() => {
-  renderer?.dispose()
+  engine?.dispose()
 })
 </script>
 

@@ -29,7 +29,8 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import AtmosphereScene from '../../lib/atmosphereScene.js'
+import { BaseScene } from '../../engine/core/BaseScene.js'
+import { AtmosphereModule } from '../../engine/modules/AtmosphereModule.js'
 
 const props = defineProps({
   mode: { type: String, default: 'simple' },
@@ -40,41 +41,30 @@ const tabs = ['垂直分层', '大气组成', '受热过程', '三圈环流']
 const activeTab = ref(props.defaultTab || 0)
 const currentMode = ref(props.mode)
 const sceneContainer = ref(null)
-let scene = null
-let running = true
+let engine = null
 
 function setMode(m) {
   currentMode.value = m
-  if (scene) scene.setMode(m)
+  if (engine) engine.setMode(m)
 }
 
 watch(activeTab, (val) => {
-  if (scene) scene.setTheme(val)
+  if (engine) engine.setParams({ theme: val })
 })
 
-function handleResize() {
-  if (scene) scene.resize()
-}
-
 onMounted(() => {
-  scene = new AtmosphereScene(sceneContainer.value, currentMode.value)
-  scene.setTheme(activeTab.value)
-  running = true
-
-  function loop() {
-    if (!running) return
-    scene.render()
-    requestAnimationFrame(loop)
-  }
-  loop()
-
-  window.addEventListener('resize', handleResize)
+  engine = new BaseScene(sceneContainer.value, {
+    bg: 0x0a0e27,
+    mode: currentMode.value,
+    lightPreset: 'sunlit',
+  })
+  engine.loadModule(AtmosphereModule, { mode: currentMode.value, theme: activeTab.value })
+  window.addEventListener('resize', () => engine.resize())
 })
 
 onBeforeUnmount(() => {
-  running = false
-  window.removeEventListener('resize', handleResize)
-  if (scene) scene.dispose()
+  window.removeEventListener('resize', () => {})
+  if (engine) engine.dispose()
 })
 </script>
 

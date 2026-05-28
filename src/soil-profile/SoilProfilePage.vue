@@ -70,8 +70,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { SoilProfileScene } from './soilScene.js'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { BaseScene } from '../engine/core/BaseScene.js'
+import { SoilProfileModule } from '../engine/modules/SoilProfileModule.js'
 import { SOIL_LAYERS } from './soilData.js'
 import InfoPopup from './InfoPopup.vue'
 
@@ -83,31 +84,36 @@ const infoMode = ref('simple')
 const simpleLayers = SOIL_LAYERS.simple
 const profLayers = SOIL_LAYERS.professional
 
-let scene = null
+let engine = null
 
 function selectLayer(layer, m) {
   infoMode.value = m
   selectedLayer.value = layer
 }
 
+watch(mode, (val) => {
+  if (engine) {
+    engine.setMode(val)
+    engine.loadModule(SoilProfileModule, { mode: val })
+  }
+})
+
 onMounted(async () => {
   await nextTick()
   if (!containerRef.value) return
 
-  scene = new SoilProfileScene(containerRef.value)
-  scene.setOnLayerClick((layer, m) => {
-    selectLayer(layer, m)
-  })
+  engine = new BaseScene(containerRef.value, { bg: 0xf5efe8, mode: 'simple' })
+  engine.loadModule(SoilProfileModule, { mode: 'simple' })
 
   const ro = new ResizeObserver(() => {
-    if (scene) scene.resize()
+    if (engine) engine.resize()
   })
   ro.observe(containerRef.value)
 })
 
 onUnmounted(() => {
-  if (scene) scene.dispose()
-  scene = null
+  if (engine) engine.dispose()
+  engine = null
 })
 </script>
 

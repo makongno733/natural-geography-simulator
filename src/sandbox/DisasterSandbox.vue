@@ -88,7 +88,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { DisasterEngine } from './engine/DisasterEngine.js'
+import { BaseScene } from '../engine/core/BaseScene.js'
+import { DisasterModule } from '../engine/modules/DisasterModule.js'
 import { disasterModules } from './modules/disasterModules.js'
 import { disasterGlossary as glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
@@ -112,11 +113,11 @@ const currentModule = computed(() =>
 function selectModule(id) {
   activeModule.value = id
   timeline.value = 0
-  if (engine) { engine.setModule(id); engine.setTimeline(0) }
+  if (engine) { engine.setParams({ activeModule: id, timeline: 0 }) }
 }
 
 function onTimelineChange() {
-  if (engine) engine.setTimeline(timeline.value)
+  if (engine) engine.setParams({ timeline: timeline.value })
 }
 
 function toggleAutoRotate() {
@@ -125,11 +126,7 @@ function toggleAutoRotate() {
 }
 
 function resetCamera() {
-  if (engine) {
-    engine.camera.position.set(5, 4, 6)
-    engine.controls.target.set(0, 0, 0)
-    engine.controls.update()
-  }
+  if (engine) engine.resetCamera('orbit')
 }
 
 function openGlossary(term, event) {
@@ -144,8 +141,8 @@ onMounted(async () => {
   await nextTick()
   if (!viewportRef.value) { initError.value = '容器未找到'; loading.value = false; return }
   try {
-    engine = new DisasterEngine(viewportRef.value)
-    engine.setModule(activeModule.value)
+    engine = new BaseScene(viewportRef.value, { bg: 0x1a1a2e, mode: 'simple', lightPreset: 'dramatic' })
+    engine.loadModule(DisasterModule, { mode: 'simple', activeModule: activeModule.value })
     loading.value = false
   } catch (e) {
     initError.value = e.message || '3D 引擎初始化失败'
