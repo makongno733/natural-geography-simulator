@@ -5,8 +5,8 @@ import { GeometryFactory } from '../utils/GeometryFactory.js'
 const PLANETS = [
   { name: '水星', radius: 0.9, size: 0.03, color: 0xaaaaaa, period: 0.24 },
   { name: '金星', radius: 1.3, size: 0.05, color: 0xe8cda0, period: 0.62 },
-  { name: '地球', radius: 1.8, size: 0.06, color: 0x4a90d9, period: 1.0 },
-  { name: '火星', radius: 2.4, size: 0.04, color: 0xcd5c5c, period: 1.88 },
+  { name: '地球', radius: 1.8, size: 0.07, color: 0x4a90d9, period: 1.0, isEarth: true },
+  { name: '火星', radius: 2.4, size: 0.05, color: 0xcd5c5c, period: 1.88, isMars: true },
   { name: '木星', radius: 3.3, size: 0.12, color: 0xd4a574, period: 11.86 },
   { name: '土星', radius: 4.2, size: 0.10, color: 0xead6b8, period: 29.46 },
 ]
@@ -141,49 +141,115 @@ export function SolarSystemModule(scene, params, services) {
       planetMeshes.push({ mesh: sRing, radius: p.radius, period: p.period, initialAngle, isRing: true })
     }
 
+    // Earth atmosphere glow
+    if (p.isEarth) {
+      const atmoGeo = GeometryFactory.ring(p.size * 1.2, p.size * 1.8, 32)
+      const atmoMat = new THREE.MeshBasicMaterial({
+        color: 0x60a5fa,
+        transparent: true,
+        opacity: 0.25,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })
+      const atmo = new THREE.Mesh(atmoGeo, atmoMat)
+      atmo.position.copy(mesh.position)
+      group.add(atmo)
+      planetMeshes.push({ mesh: atmo, radius: p.radius, period: p.period, initialAngle, isRing: true })
+
+      // Moon
+      const moonGeo = GeometryFactory.sphere(0.015, 16)
+      const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.8 })
+      const moon = new THREE.Mesh(moonGeo, moonMat)
+      moon.position.copy(mesh.position)
+      moon.position.x += 0.1
+      group.add(moon)
+      planetMeshes.push({ mesh: moon, radius: p.radius, period: p.period, initialAngle, isMoon: true, parentMesh: mesh })
+    }
+
+    // Mars highlight
+    if (p.isMars) {
+      const marsGlowGeo = GeometryFactory.ring(p.size * 1.2, p.size * 1.6, 24)
+      const marsGlowMat = new THREE.MeshBasicMaterial({
+        color: 0xef4444,
+        transparent: true,
+        opacity: 0.2,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })
+      const marsGlow = new THREE.Mesh(marsGlowGeo, marsGlowMat)
+      marsGlow.position.copy(mesh.position)
+      group.add(marsGlow)
+      planetMeshes.push({ mesh: marsGlow, radius: p.radius, period: p.period, initialAngle, isRing: true })
+    }
+
     if (labelSystem) {
+      const isKey = p.isEarth || p.isMars
       labelSystem.addToGroup(group, p.name,
-        new THREE.Vector3(0, p.size + 0.15, 0).add(mesh.position),
-        { color: '#ccc', fontSize: '10px' })
+        new THREE.Vector3(0, p.size + 0.18, 0).add(mesh.position),
+        { color: isKey ? '#' + p.color.toString(16).padStart(6, '0') : '#aaa', fontSize: isKey ? '12px' : '10px', fontWeight: isKey ? '700' : '400' })
     }
   })
 
   const earthR = 1.8, marsR = 2.4
-  const earthOrbit = GeometryFactory.ring(earthR, earthR + 0.01, ringSegs)
+  // Earth orbit ring - highlighted
+  const earthOrbit = GeometryFactory.ring(earthR - 0.02, earthR + 0.02, ringSegs)
   earthOrbit.rotateX(-Math.PI / 2)
   group.add(new THREE.Mesh(earthOrbit,
-    new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.35, side: THREE.DoubleSide })))
-  const marsOrbit = GeometryFactory.ring(marsR, marsR + 0.01, ringSegs)
+    new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.5, side: THREE.DoubleSide })))
+  // Mars orbit ring - highlighted
+  const marsOrbit = GeometryFactory.ring(marsR - 0.02, marsR + 0.02, ringSegs)
   marsOrbit.rotateX(-Math.PI / 2)
   group.add(new THREE.Mesh(marsOrbit,
-    new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.35, side: THREE.DoubleSide })))
+    new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.5, side: THREE.DoubleSide })))
 
   for (const r of [earthR, marsR]) {
     for (const ang of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
       const arrowP = new THREE.Vector3(Math.cos(ang) * r, 0.02, Math.sin(ang) * r)
       const dir = new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang)).normalize()
-      group.add(new THREE.ArrowHelper(dir, arrowP, 0.12, r === earthR ? 0x60a5fa : 0xef4444, 0.1, 0.06))
+      group.add(new THREE.ArrowHelper(dir, arrowP, 0.15, r === earthR ? 0x60a5fa : 0xef4444, 0.12, 0.08))
     }
   }
 
+  // Hohmann transfer trajectory - visible ellipse
   const aT = (earthR + marsR) / 2
   const cX = earthR + (aT - earthR)
   const sB = Math.sqrt(earthR * marsR)
   const tPts = []
-  for (let i = 0; i <= 60; i++) {
-    const t = (i / 60) * Math.PI
+  for (let i = 0; i <= 80; i++) {
+    const t = (i / 80) * Math.PI
     tPts.push(new THREE.Vector3(cX + aT * Math.cos(t), 0.03, sB * Math.sin(t)))
   }
-  const transferLine = GeometryFactory.lineFromPoints(tPts, 0x44ff88, 0.6)
-  group.add(transferLine)
+  // Thicker transfer line
+  const transferCurve = new THREE.CatmullRomCurve3(tPts)
+  const transferGeo = new THREE.TubeGeometry(transferCurve, 80, 0.01, 8, false)
+  const transferMat = new THREE.MeshBasicMaterial({
+    color: 0x44ff88,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  group.add(new THREE.Mesh(transferGeo, transferMat))
+
+  // Transfer direction arrows at 1/4 and 3/4 of the path
+  for (const frac of [0.25, 0.75]) {
+    const t = frac * Math.PI
+    const aP = new THREE.Vector3(cX + aT * Math.cos(t), 0.06, sB * Math.sin(t))
+    const aD = new THREE.Vector3(-aT * Math.sin(t), 0, sB * Math.cos(t)).normalize()
+    const arrow = new THREE.ArrowHelper(aD, aP, 0.18, 0x44ff88, 0.12, 0.08)
+    arrow.userData._managed = true
+    group.add(arrow)
+  }
 
   if (labelSystem) {
-    labelSystem.addToGroup(group, '出发 (29.8→11.6 km/s)', new THREE.Vector3(earthR, -0.3, 0),
-      { color: '#60a5fa', fontSize: '10px' })
-    labelSystem.addToGroup(group, '到达 (火星)', new THREE.Vector3(marsR * Math.cos(Math.PI * 1.35), 0.3, marsR * Math.sin(Math.PI * 1.35)),
-      { color: '#ef4444', fontSize: '10px' })
-    labelSystem.addToGroup(group, '加速 椭圆飞行 259天', new THREE.Vector3(2.0, 0.5, 0.8),
-      { color: '#44ff88', fontSize: '10px' })
+    labelSystem.addToGroup(group, '地球 (出发)', new THREE.Vector3(earthR, -0.25, 0),
+      { color: '#60a5fa', fontSize: '11px', fontWeight: '700' })
+    labelSystem.addToGroup(group, '火星 (到达)', new THREE.Vector3(marsR * Math.cos(Math.PI * 1.35), 0.25, marsR * Math.sin(Math.PI * 1.35)),
+      { color: '#ef4444', fontSize: '11px', fontWeight: '700' })
+    labelSystem.addToGroup(group, '霍曼转移轨道\n加速 椭圆飞行 ~259天', new THREE.Vector3(2.0, 0.5, 0.8),
+      { color: '#44ff88', fontSize: '11px', fontWeight: '600' })
   }
 
   const api = {
@@ -196,6 +262,16 @@ export function SolarSystemModule(scene, params, services) {
       // Planet orbital motion
       const secPerYear = 365.25 * 86400 / 10
       planetMeshes.forEach(p => {
+        if (p.isMoon && p.parentMesh) {
+          // Moon orbits parent planet (Earth)
+          const moonAngle = p.initialAngle + elapsed * 2.0
+          p.mesh.position.set(
+            p.parentMesh.position.x + Math.cos(moonAngle) * 0.1,
+            p.parentMesh.position.y,
+            p.parentMesh.position.z + Math.sin(moonAngle) * 0.1,
+          )
+          return
+        }
         const angle = p.initialAngle + (elapsed / secPerYear) * (2 * Math.PI) / p.period
         p.mesh.position.set(
           Math.cos(angle) * p.radius,

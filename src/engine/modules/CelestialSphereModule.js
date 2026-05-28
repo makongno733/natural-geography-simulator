@@ -132,13 +132,26 @@ export function CelestialSphereModule(scene, params, services) {
   const coordGroups = {}
   const C_RING = CS_RADIUS * 0.85
 
-  function buildCoordSystem(name, axisColor, axisDir, tiltAngle, labels) {
+  function buildCoordSystem(name, axisColor, axisDir, tiltAngle, labels, bidirectional) {
     const g = new THREE.Group()
-
-    // Axis arrow
     const dir = axisDir.clone().normalize()
-    const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), CS_RADIUS * 0.9, axisColor, 0.25, 0.12)
-    g.add(arrow)
+
+    // Origin marker
+    const originGeo = GeometryFactory.sphere(0.06, 16)
+    const originMarker = new THREE.Mesh(originGeo, new THREE.MeshBasicMaterial({ color: axisColor }))
+    g.add(originMarker)
+
+    // Main axis arrow (origin → pole)
+    const arrowLen = CS_RADIUS * 0.85
+    const mainArrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), arrowLen, axisColor, 0.35, 0.18)
+    g.add(mainArrow)
+
+    // Bi-directional: add opposite arrow from origin
+    if (bidirectional) {
+      const oppDir = dir.clone().negate()
+      const oppArrow = new THREE.ArrowHelper(oppDir, new THREE.Vector3(0, 0, 0), arrowLen, axisColor, 0.35, 0.18)
+      g.add(oppArrow)
+    }
 
     // Reference plane ring (tilted)
     const ringPts = []
@@ -149,13 +162,13 @@ export function CelestialSphereModule(scene, params, services) {
       if (q) p.applyQuaternion(q)
       ringPts.push(p)
     }
-    g.add(GeometryFactory.lineFromPoints(ringPts, axisColor, 0.3))
+    g.add(GeometryFactory.lineFromPoints(ringPts, axisColor, 0.4))
 
     // Labels
     if (labelSystem) {
       labels.forEach(l => {
         const pos = typeof l.pos === 'function' ? l.pos() : new THREE.Vector3(...l.pos)
-        labelSystem.addToGroup(g, l.text, pos, { color: l.color || '#' + axisColor.toString(16).padStart(6, '0'), fontSize: '11px', fontWeight: '600' })
+        labelSystem.addToGroup(g, l.text, pos, { color: l.color || '#' + axisColor.toString(16).padStart(6, '0'), fontSize: '12px', fontWeight: '700' })
       })
     }
 
@@ -173,13 +186,13 @@ export function CelestialSphereModule(scene, params, services) {
     { text: 'W', pos: [-CS_RADIUS * 0.92, 0, 0] },
   ])
 
-  // 赤道坐标系 — celestial pole axis, equator ring
+  // 赤道坐标系 — bidirectional celestial pole axis, equator ring
   coordGroups.equatorial = buildCoordSystem('赤道', 0x60a5fa,
     new THREE.Vector3(0, 1, 0), null, [
     { text: '天北极', pos: [0, CS_RADIUS * 0.95, 0] },
     { text: '天南极', pos: [0, -CS_RADIUS * 0.95, 0] },
     { text: '春分点 →', pos: [CS_RADIUS * 0.92, 0.05, 0] },
-  ])
+  ], true)
 
   // 黄道坐标系 — ecliptic pole (tilted 23.44°)
   const eclipticTilt = 23.44 * Math.PI / 180
