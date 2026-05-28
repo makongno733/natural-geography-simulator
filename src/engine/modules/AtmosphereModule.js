@@ -1,168 +1,124 @@
 import * as THREE from 'three'
-import { SkyMaterial } from '@takram/three-atmosphere'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 
-const LAYER_HEIGHTS = {
-  对流层: { min: 0, max: 12, color: 0x4a9eff },
-  平流层: { min: 12, max: 50, color: 0xffaa44 },
-  中间层: { min: 50, max: 85, color: 0x9966ff },
-  热层: { min: 85, max: 500, color: 0xff4466 },
-  散逸层: { min: 500, max: 1000, color: 0xffffff },
-}
+/* ── Data ── */
 
-const LAYER_LABELS = [
-  { name: '对流层 0-12km', height: 6, profExtra: '-0.65°C/100m · 天气现象' },
-  { name: '平流层 12-50km', height: 30, profExtra: '臭氧层20-25km · 适合飞行' },
-  { name: '中间层 50-85km', height: 65, profExtra: '流星燃烧 · 最低-90°C' },
-  { name: '热层 85-500km', height: 200, profExtra: '电离层 · 极光 · 1000°C+' },
-  { name: '散逸层 >500km', height: 600, profExtra: '卡门线100km · 逃逸层' },
+const LAYER_DATA = [
+  { name: '对流层', alt: [0, 12], color: 0x4a9eff, simple: '天气现象 · 每百米降0.65°C', pro: '大气质量75% · 温度递减率6.5°C/km · 对流旺盛' },
+  { name: '平流层', alt: [12, 50], color: 0xffaa44, simple: '臭氧层 · 适合飞行', pro: '臭氧浓度峰值20-25km · 逆温层 · 平流运动为主' },
+  { name: '中间层', alt: [50, 85], color: 0x9966ff, simple: '流星燃烧', pro: '温度最低-90°C · 夜光云 · 流星体消融区' },
+  { name: '热层', alt: [85, 500], color: 0xff4466, simple: '电离层 · 极光', pro: '温度可达1000°C+ · 电离层D/E/F层 · 无线电波反射' },
+  { name: '散逸层', alt: [500, 1000], color: 0xffffff, simple: '逃逸层 · 卡门线100km', pro: '大气粒子逃逸进入太空 · 氢氦为主 · 外大气圈' },
 ]
 
-const COMPOSITION_PARTICLES = {
-  simple: [
-    { name: 'N₂ 78%', color: 0x4488ff, count: 4000, heightRange: [0, 12] },
-    { name: 'O₂ 21%', color: 0x44cc44, count: 2000, heightRange: [0, 12] },
-    { name: 'CO₂ 0.04%', color: 0x888888, count: 500, heightRange: [0, 20] },
-    { name: 'H₂O', color: 0xffffff, count: 1000, heightRange: [0, 3] },
-  ],
-  professional: [
-    { name: 'N₂ 78%', color: 0x4488ff, count: 6000, heightRange: [0, 85] },
-    { name: 'O₂ 21%', color: 0x44cc44, count: 3000, heightRange: [0, 85] },
-    { name: 'CO₂ 0.04%', color: 0x888888, count: 800, heightRange: [0, 20] },
-    { name: 'H₂O', color: 0xffffff, count: 1500, heightRange: [0, 3] },
-    { name: 'O₃ 微量', color: 0xaa66ff, count: 600, heightRange: [15, 35] },
-    { name: '尘埃', color: 0x886644, count: 400, heightRange: [0, 2] },
-    { name: 'Ar 0.93%', color: 0xffdd88, count: 400, heightRange: [0, 85] },
-  ],
-}
-
-// Temperature profile data points [altitude km, temperature °C]
 const TEMP_PROFILE = [
-  [0, 15], [6, -24], [12, -56],   // Troposphere: decreasing
-  [20, -56], [30, -2], [50, -2],   // Stratosphere: increasing (ozone)
-  [60, -60], [85, -90],            // Mesosphere: decreasing
-  [100, -50], [200, 500], [500, 1200], // Thermosphere: increasing
+  [0, 15], [6, -24], [12, -56],
+  [20, -56], [30, -2], [50, -2],
+  [60, -60], [85, -90],
+  [100, -50], [200, 500], [500, 1200],
+]
+
+const COMP_DATA = [
+  { name: 'N₂', pct: 78, color: 0x4488ff, role: '氮循环基础', proRole: '固氮作用 · 蛋白质/核酸组成元素' },
+  { name: 'O₂', pct: 21, color: 0x44cc44, role: '生命必需', proRole: '呼吸作用 · 氧化反应 · 臭氧前体' },
+  { name: 'Ar', pct: 0.93, color: 0xffdd88, role: '惰性气体', proRole: '放射性定年(⁴⁰Ar/³⁹Ar) · 示踪气体' },
+  { name: 'CO₂', pct: 0.04, color: 0x888888, role: '光合作用 · 温室气体', proRole: '碳循环关键 · 长波辐射强吸收 · 浓度持续上升' },
+  { name: 'O₃', pct: '微量', color: 0xaa66ff, role: '吸收紫外线', proRole: '平流层臭氧层 · 光化学反应 · Chapman循环' },
+  { name: 'H₂O', pct: '变化', color: 0xffffff, role: '云雨形成', proRole: '相变潜热 · 温室效应最强 · 时空分布不均' },
 ]
 
 const PRESSURE_BELTS = [
-  { lat: 0, name: '赤道低压带', color: '#ff6644' },
-  { lat: 30, name: '副热带高压带', color: '#ffaa44' },
-  { lat: 60, name: '副极地低压带', color: '#4488ff' },
-  { lat: -30, name: '副热带高压带', color: '#ffaa44' },
-  { lat: -60, name: '副极地低压带', color: '#4488ff' },
-  { lat: 90, name: '极地高压带', color: '#aaaaff' },
-  { lat: -90, name: '极地高压带', color: '#aaaaff' },
+  { lat: 0, name: '赤道低压带', color: '#ff6644', cause: '热力原因' },
+  { lat: 30, name: '副热带高压带', color: '#ffaa44', cause: '动力原因' },
+  { lat: 60, name: '副极地低压带', color: '#4488ff', cause: '动力原因' },
+  { lat: -30, name: '副热带高压带', color: '#ffaa44', cause: '动力原因' },
+  { lat: -60, name: '副极地低压带', color: '#4488ff', cause: '动力原因' },
+  { lat: 90, name: '极地高压带', color: '#aaaaff', cause: '热力原因' },
+  { lat: -90, name: '极地高压带', color: '#aaaaff', cause: '热力原因' },
 ]
 
-const WIND_BELTS = [
-  { lat: 15, name: '东北信风', color: '#ffaa44', dir: 'SW' },
-  { lat: -15, name: '东南信风', color: '#ffaa44', dir: 'NW' },
-  { lat: 45, name: '盛行西风', color: '#44cc88', dir: 'NE' },
-  { lat: -45, name: '盛行西风', color: '#44cc88', dir: 'SE' },
-  { lat: 75, name: '极地东风', color: '#aaaaff', dir: 'SW' },
-  { lat: -75, name: '极地东风', color: '#aaaaff', dir: 'NW' },
-]
+const LOCAL_CIRCULATIONS = ['海陆风', '山谷风', '城市热岛']
 
-function addPlanetSurface(group, radius) {
-  const oceanGlow = new THREE.Mesh(
-    GeometryFactory.sphere(radius * 1.003, 64),
-    new THREE.MeshStandardMaterial({
-      color: 0x1c6aa8, roughness: 0.5, metalness: 0.08,
-      transparent: true, opacity: 0.28,
-    }),
-  )
-  group.add(oceanGlow)
-
-  const landMat = new THREE.MeshStandardMaterial({
-    color: 0x7ab86a, roughness: 0.86, metalness: 0.02,
-    transparent: true, opacity: 0.78,
-  })
-  const highlandMat = new THREE.MeshStandardMaterial({
-    color: 0xe0d0a8, roughness: 0.9, metalness: 0.01,
-    transparent: true, opacity: 0.84,
-  })
-
-  const patches = [
-    [-0.7, 0.38, 0.45, 1.3, 0.55, 0.28],
-    [0.3, 0.2, -0.75, 1.0, 0.42, -0.35],
-    [0.82, -0.28, 0.32, 0.75, 0.36, 0.2],
-    [-0.2, -0.45, -0.62, 0.9, 0.3, -0.1],
-    [0.18, 0.62, 0.2, 0.72, 0.22, 0.55],
-  ]
-
-  patches.forEach(([x, y, z, sx, sy, rot], i) => {
-    const mat = i === 4 ? highlandMat : landMat
-    const patch = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.32, 36), mat)
-    patch.position.set(x, y, z).normalize().multiplyScalar(radius * 1.012)
-    patch.lookAt(0, 0, 0)
-    patch.rotateZ(rot)
-    patch.scale.set(sx, sy, 1)
-    group.add(patch)
-  })
-
-  for (let i = 0; i < 7; i++) {
-    const lat = (-50 + i * 16) * Math.PI / 180
-    const ring = new THREE.Mesh(
-      GeometryFactory.torus(Math.cos(lat) * radius * 1.018, 0.006, 6, 160),
-      new THREE.MeshBasicMaterial({
-        color: 0xffffff, transparent: true,
-        opacity: i % 2 ? 0.12 : 0.2, depthWrite: false,
-      }),
-    )
-    ring.position.y = Math.sin(lat) * radius * 1.018
-    ring.rotation.x = Math.PI / 2
-    group.add(ring)
-  }
-}
+/* ── Helpers ── */
 
 function addRibbon(group, points, color, radius = 0.01, opacity = 0.55) {
-  const curve = new THREE.CatmullRomCurve3(points)
   const tube = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, 96, radius, 8, false),
-    new THREE.MeshBasicMaterial({
-      color, transparent: true, opacity,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    }),
+    new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 96, radius, 8, false),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }),
   )
   group.add(tube)
   return tube
 }
 
+function makeParticleField(count, rangeFn, size, color, opacity = 0.6, additive = true) {
+  const pos = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) {
+    const p = rangeFn(i, count)
+    pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+  return new THREE.Points(geo, new THREE.PointsMaterial({
+    size, color, transparent: true, opacity, depthWrite: false,
+    blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+  }))
+}
+
+/* ── Planet Surface ── */
+
+function addPlanetSurface(group, radius) {
+  group.add(new THREE.Mesh(
+    GeometryFactory.sphere(radius * 1.003, 64),
+    new THREE.MeshStandardMaterial({ color: 0x1c6aa8, roughness: 0.5, metalness: 0.08, transparent: true, opacity: 0.28 }),
+  ))
+  const landMat = new THREE.MeshStandardMaterial({ color: 0x7ab86a, roughness: 0.86, metalness: 0.02, transparent: true, opacity: 0.78 })
+  const highlandMat = new THREE.MeshStandardMaterial({ color: 0xe0d0a8, roughness: 0.9, metalness: 0.01, transparent: true, opacity: 0.84 })
+  const patches = [[-0.7, 0.38, 0.45, 1.3, 0.55, 0.28], [0.3, 0.2, -0.75, 1.0, 0.42, -0.35], [0.82, -0.28, 0.32, 0.75, 0.36, 0.2], [-0.2, -0.45, -0.62, 0.9, 0.3, -0.1], [0.18, 0.62, 0.2, 0.72, 0.22, 0.55]]
+  patches.forEach(([x, y, z, sx, sy, rot], i) => {
+    const patch = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.32, 36), i === 4 ? highlandMat : landMat)
+    patch.position.set(x, y, z).normalize().multiplyScalar(radius * 1.012)
+    patch.lookAt(0, 0, 0); patch.rotateZ(rot); patch.scale.set(sx, sy, 1)
+    group.add(patch)
+  })
+  for (let i = 0; i < 7; i++) {
+    const lat = (-50 + i * 16) * Math.PI / 180
+    const ring = new THREE.Mesh(GeometryFactory.torus(Math.cos(lat) * radius * 1.018, 0.006, 6, 160),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: i % 2 ? 0.12 : 0.2, depthWrite: false }))
+    ring.position.y = Math.sin(lat) * radius * 1.018; ring.rotation.x = Math.PI / 2
+    group.add(ring)
+  }
+}
+
+/* ── Module ── */
+
 export function AtmosphereModule(scene, params, services) {
   const { labelSystem } = services
   const group = new THREE.Group()
   const mode = params.mode || 'simple'
-  const isProfessional = mode === 'professional'
+  const isPro = mode === 'professional'
   let currentTheme = params.theme || 0
-  const EARTH_RADIUS = 1.8
-  const SCALE = 6 / 1000
+  const R = 1.8
+  const S = 6 / 1000
 
-  group.add(GeometryFactory.starField(2000, 1000))
+  group.add(GeometryFactory.starField(1500, 500))
 
-  const earthGeo = GeometryFactory.sphere(EARTH_RADIUS, 64)
-  const earthMat = new THREE.MeshStandardMaterial({
-    color: 0x4a90d9, roughness: 0.6, metalness: 0.1,
-  })
-  const earth = new THREE.Mesh(earthGeo, earthMat)
+  const earth = new THREE.Mesh(
+    GeometryFactory.sphere(R, 64),
+    new THREE.MeshStandardMaterial({ color: 0x4a90d9, roughness: 0.6, metalness: 0.1 }),
+  )
   earth.rotation.x = 0.3
   group.add(earth)
-  addPlanetSurface(group, EARTH_RADIUS)
+  addPlanetSurface(group, R)
 
-  try {
-    const skyMaterial = new SkyMaterial()
-    const sunDirection = new THREE.Vector3(1, 0.3, 0.5).normalize()
-    if (typeof skyMaterial.setSunDirection === 'function') {
-      skyMaterial.setSunDirection(sunDirection)
-    } else if (skyMaterial.uniforms?.sunDirection) {
-      skyMaterial.uniforms.sunDirection.value.copy(sunDirection)
-    }
-    const skyGeo = GeometryFactory.sphere(800, 32)
-    const skyMesh = new THREE.Mesh(skyGeo, skyMaterial)
+  // Sky dome (optional, may fail silently)
+  import('@takram/three-atmosphere').then(({ SkyMaterial }) => {
+    const sky = new SkyMaterial()
+    const sunDir = new THREE.Vector3(1, 0.3, 0.5).normalize()
+    sky.uniforms?.sunDirection ? sky.uniforms.sunDirection.value.copy(sunDir) : sky.setSunDirection?.(sunDir)
+    const skyMesh = new THREE.Mesh(GeometryFactory.sphere(800, 32), sky)
     skyMesh.scale.set(-1, 1, 1)
     group.add(skyMesh)
-  } catch (e) {
-    console.warn('SkyMaterial not available', e)
-  }
+  }).catch(() => {})
 
   let themeObjects = []
   let animData = {}
@@ -177,511 +133,377 @@ export function AtmosphereModule(scene, params, services) {
     animData = {}
   }
 
-  // ── Theme 0: 大气垂直分层 ──
-  function showVerticalLayers() {
-    // Transparent atmospheric shells
-    const layerNames = Object.keys(LAYER_HEIGHTS)
-    layerNames.forEach((name, idx) => {
-      const h = LAYER_HEIGHTS[name]
-      const outerR = EARTH_RADIUS + (h.max / 1000) * 6
-      const innerR = EARTH_RADIUS + (h.min / 1000) * 6
-      const r = (outerR + innerR) / 2
-      const thickness = outerR - innerR
+  /* ── Theme 0: 垂直分层 ── */
 
-      // Transparent shell using sphere geometry
-      const geo = GeometryFactory.sphere(r, 64)
-      const mat = new THREE.MeshBasicMaterial({
-        color: h.color,
-        transparent: true,
-        opacity: 0.08 + idx * 0.005,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      })
-      const mesh = new THREE.Mesh(geo, mat)
-      group.add(mesh)
-      themeObjects.push(mesh)
+  function showLayers() {
+    LAYER_DATA.forEach((d, idx) => {
+      const rOuter = R + (d.alt[1] / 1000) * 6
+      const rInner = R + (d.alt[0] / 1000) * 6
+      const rMid = (rOuter + rInner) / 2
 
-      // Layer name label placed on the right side of each shell
+      // Transparent shell
+      const shell = new THREE.Mesh(
+        GeometryFactory.sphere(rMid, isPro ? 64 : 48),
+        new THREE.MeshBasicMaterial({
+          color: d.color, transparent: true,
+          opacity: isPro ? 0.06 : 0.1,
+          side: THREE.DoubleSide, depthWrite: false,
+        }),
+      )
+      group.add(shell); themeObjects.push(shell)
+
+      // Label
       if (labelSystem) {
-        const labelR = r + 0.02
-        const angle = (idx - 2) * 0.25
-        const labelPos = new THREE.Vector3(labelR, angle * 0.3, 0)
-        labelSystem.addToGroup(group, name, labelPos, {
-          color: '#' + h.color.toString(16).padStart(6, '0'),
-          fontSize: '13px',
+        const text = isPro ? `${d.name} ${d.alt[0]}-${d.alt[1]}km\n${d.pro}` : `${d.name} · ${d.simple}`
+        labelSystem.addToGroup(group, text, new THREE.Vector3(rMid + 0.03, (idx - 2) * 0.3, 0), {
+          color: '#' + d.color.toString(16).padStart(6, '0'),
+          fontSize: isPro ? '10px' : '13px',
           fontWeight: '700',
+          whiteSpace: 'pre-line',
+          lineHeight: '1.3',
+          background: 'rgba(0,0,0,0.45)',
+        })
+      }
+    })
+
+    // Temperature curve (always shown, more detailed in pro)
+    const tempPts = TEMP_PROFILE.map(([alt, temp]) =>
+      new THREE.Vector3(temp * 0.25, R + alt * S, 0))
+    const curve = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(tempPts),
+      new THREE.LineBasicMaterial({ color: 0xff6644, transparent: true, opacity: 0.8 }),
+    )
+    group.add(curve); themeObjects.push(curve)
+
+    if (labelSystem) {
+      labelSystem.addToGroup(group, isPro ? '温度(°C)\n-100 ─ 1200' : '温度曲线', new THREE.Vector3(-0.4, R + 0.5, 0),
+        { color: '#ff6644', fontSize: '9px' })
+    }
+
+    // Cloud particles in troposphere
+    const clouds = makeParticleField(80, () => {
+      const phi = Math.acos(2 * Math.random() - 1)
+      const theta = Math.random() * Math.PI * 2
+      const alt = (0.5 + Math.random() * 8) * S
+      return new THREE.Vector3(
+        (R + alt) * Math.sin(phi) * Math.cos(theta),
+        (R + alt) * Math.cos(phi),
+        (R + alt) * Math.sin(phi) * Math.sin(theta),
+      )
+    }, 0.04, 0xffffff, 0.7)
+    group.add(clouds); themeObjects.push(clouds)
+    animData.clouds = clouds
+
+    // Ozone ring
+    const ozone = new THREE.Mesh(
+      GeometryFactory.torus(R + 22 * S, 0.018, 8, 192),
+      new THREE.MeshBasicMaterial({ color: 0xb388ff, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false }),
+    )
+    ozone.rotation.x = Math.PI / 2
+    group.add(ozone); themeObjects.push(ozone)
+  }
+
+  /* ── Theme 1: 大气组成 ── */
+
+  function showComposition() {
+    COMP_DATA.forEach((d, idx) => {
+      const count = isPro ? 800 + idx * 200 : 400 + idx * 100
+      const particles = makeParticleField(count, () => {
+        const phi = Math.acos(2 * Math.random() - 1)
+        const theta = Math.random() * Math.PI * 2
+        const h = (0.3 + Math.random() * 15) * S
+        return new THREE.Vector3(
+          (R + h) * Math.sin(phi) * Math.cos(theta),
+          (R + h) * Math.cos(phi),
+          (R + h) * Math.sin(phi) * Math.sin(theta),
+        )
+      }, isPro ? 0.03 : 0.05, d.color)
+      group.add(particles); themeObjects.push(particles)
+
+      if (labelSystem) {
+        const a = (idx / COMP_DATA.length) * Math.PI * 2
+        const lr = R + 0.7
+        const text = isPro ? `${d.name} ${d.pct}%\n${d.proRole}` : `${d.name} ${d.pct}% · ${d.role}`
+        labelSystem.addToGroup(group, text, new THREE.Vector3(Math.cos(a) * lr, Math.sin(a) * 0.5, Math.sin(a) * lr * 0.5), {
+          color: '#' + d.color.toString(16).padStart(6, '0'),
+          fontSize: isPro ? '9px' : '11px',
+          fontWeight: '600',
+          whiteSpace: 'pre-line',
+          lineHeight: '1.3',
           background: 'rgba(0,0,0,0.4)',
         })
       }
     })
-
-    // Temperature curve
-    const tempPts = []
-    const tempYScale = 6 / 1000
-    const tempXScale = 0.25
-    TEMP_PROFILE.forEach(([alt, temp]) => {
-      const y = EARTH_RADIUS + alt * tempYScale
-      const x = temp * tempXScale
-      tempPts.push(new THREE.Vector3(x, y, 0))
-    })
-    const curveGeo = new THREE.BufferGeometry().setFromPoints(tempPts)
-    const curve = new THREE.Line(curveGeo, new THREE.LineBasicMaterial({
-      color: 0xff6644, linewidth: 1, transparent: true, opacity: 0.8,
-    }))
-    group.add(curve)
-    themeObjects.push(curve)
-
-    // Temp axis labels
-    if (labelSystem) {
-      labelSystem.addToGroup(group, '温度\n-100°C ── +1000°C', new THREE.Vector3(-0.4, EARTH_RADIUS + 0.5, 0),
-        { color: '#ff6644', fontSize: '9px' })
-    }
-
-    // Troposphere weather particles
-    const cloudCount = 80
-    const cloudPos = new Float32Array(cloudCount * 3)
-    for (let i = 0; i < cloudCount; i++) {
-      const phi = Math.acos(2 * Math.random() - 1)
-      const theta = Math.random() * Math.PI * 2
-      const alt = (0.5 + Math.random() * 8) * SCALE
-      const r = EARTH_RADIUS + alt
-      cloudPos[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      cloudPos[i * 3 + 1] = r * Math.cos(phi)
-      cloudPos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
-    }
-    const cloudGeo = new THREE.BufferGeometry()
-    cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3))
-    const cloudPts = new THREE.Points(cloudGeo, new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.04, transparent: true, opacity: 0.7,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    }))
-    group.add(cloudPts)
-    themeObjects.push(cloudPts)
-    animData.cloudPts = cloudPts
-
-    // Ozone ring
-    const ozone = new THREE.Mesh(
-      GeometryFactory.torus(EARTH_RADIUS + 25 * SCALE, 0.018, 8, 192),
-      new THREE.MeshBasicMaterial({
-        color: 0xb388ff, transparent: true, opacity: 0.42,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      }),
-    )
-    ozone.rotation.x = Math.PI / 2
-    group.add(ozone)
-    themeObjects.push(ozone)
-
-    // Aurora
-    const auroraNorth = addRibbon(group, GeometryFactory.arcPoints(0, Math.PI * 2, EARTH_RADIUS + 0.7, 1.45, 128), 0x66ffcc, 0.008, 0.32)
-    const auroraSouth = addRibbon(group, GeometryFactory.arcPoints(0, Math.PI * 2, EARTH_RADIUS + 0.62, -1.45, 128), 0x88bbff, 0.008, 0.26)
-    themeObjects.push(auroraNorth, auroraSouth)
-
-    // Layer labels now attached directly to each shell above
   }
 
-  // ── Theme 1: 大气组成 ──
-  function showComposition() {
-    const particles = COMPOSITION_PARTICLES[mode] || COMPOSITION_PARTICLES.simple
+  /* ── Theme 2: 受热过程 ── */
 
-    particles.forEach(p => {
-      const positions = new Float32Array(p.count * 3)
-      const colors = new Float32Array(p.count * 3)
-      const col = new THREE.Color(p.color)
-
-      for (let i = 0; i < p.count; i++) {
-        const theta = Math.random() * Math.PI * 2
-        const phi = Math.acos(2 * Math.random() - 1)
-        const height = (p.heightRange[0] + Math.random() * (p.heightRange[1] - p.heightRange[0])) * SCALE
-        const r = EARTH_RADIUS + height
-        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-        positions[i * 3 + 1] = r * Math.cos(phi)
-        positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
-        colors[i * 3] = col.r
-        colors[i * 3 + 1] = col.g
-        colors[i * 3 + 2] = col.b
-      }
-
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-
-      const mat = new THREE.PointsMaterial({
-        size: isProfessional ? 0.034 : 0.04,
-        vertexColors: true, transparent: true, opacity: 0.8,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      })
-
-      const points = new THREE.Points(geo, mat)
-      group.add(points)
-      themeObjects.push(points)
-    })
-
-    // Ozone UV absorption animation ring
-    const ozoneRing = new THREE.Mesh(
-      GeometryFactory.torus(EARTH_RADIUS + 22 * SCALE, 0.025, 8, 192),
-      new THREE.MeshBasicMaterial({
-        color: 0xaa66ff, transparent: true, opacity: 0.6,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      }),
-    )
-    ozoneRing.rotation.x = Math.PI / 2
-    group.add(ozoneRing)
-    themeObjects.push(ozoneRing)
-    animData.ozoneRing = ozoneRing
-
-    // Sun UV rays toward ozone layer
-    const uvCount = 50
-    const uvPos = new Float32Array(uvCount * 3)
-    for (let i = 0; i < uvCount; i++) {
-      uvPos[i * 3] = 6 + Math.random() * 2
-      uvPos[i * 3 + 1] = (EARTH_RADIUS + 20 * SCALE) + (Math.random() - 0.5) * 0.3
-      uvPos[i * 3 + 2] = (Math.random() - 0.5) * 3
-    }
-    const uvGeo = new THREE.BufferGeometry()
-    uvGeo.setAttribute('position', new THREE.BufferAttribute(uvPos, 3))
-    const uvPts = new THREE.Points(uvGeo, new THREE.PointsMaterial({
-      color: 0xffcc00, size: 0.06, transparent: true, opacity: 0.5,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    }))
-    group.add(uvPts)
-    themeObjects.push(uvPts)
-    animData.uvPts = uvPts
-
-    if (labelSystem) {
-      labelSystem.addToGroup(group, '臭氧层吸收紫外线', new THREE.Vector3(EARTH_RADIUS + 22 * SCALE, 0.2, 0),
-        { color: '#b388ff', fontSize: '11px', fontWeight: '600' })
-    }
-  }
-
-  // ── Theme 2: 大气受热过程 ──
   function showRadiation() {
     const sunPos = new THREE.Vector3(8, 5, 6)
-    const groundPt = new THREE.Vector3(0, EARTH_RADIUS, 0)
-    const lowAtm = new THREE.Vector3(0, EARTH_RADIUS + 0.5, 0)
-    const midAtm = new THREE.Vector3(0, EARTH_RADIUS + 1.2, 0)
+    const ground = new THREE.Vector3(0, R, 0)
+    const lowAtm = new THREE.Vector3(0, R + 0.5, 0)
+    const midAtm = new THREE.Vector3(0, R + 1.2, 0)
 
-    // Stage markers for three-step flow
-    const stages = [
-      { from: sunPos, to: groundPt, color: 0xffee44, label: '①太阳短波辐射', desc: '太阳暖大地' },
-      { from: groundPt, to: lowAtm, color: 0xff4444, label: '②地面长波辐射', desc: '大地暖大气' },
-      { from: midAtm, to: groundPt, color: 0xff8800, label: '③大气逆辐射', desc: '大气还大地' },
-    ]
-
-    stages.forEach((s, idx) => {
-      const curve = new THREE.LineCurve3(s.from, s.to)
-      const count = 50 + idx * 10
-      const positions = new Float32Array(count * 3)
-      for (let i = 0; i < count; i++) {
-        const pt = curve.getPoint(i / count)
-        positions[i * 3] = pt.x
-        positions[i * 3 + 1] = pt.y
-        positions[i * 3 + 2] = pt.z
-      }
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      const pts = new THREE.Points(geo, new THREE.PointsMaterial({
-        size: 0.08, color: s.color, transparent: true, opacity: 0.9,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      }))
-      group.add(pts)
-      themeObjects.push(pts)
-
-      // Arrow at 90% of path
-      const tip = curve.getPoint(0.88)
-      const next = curve.getPoint(0.95)
-      const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(0.08, 0.22, 16),
-        new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }),
-      )
-      cone.position.copy(tip)
-      cone.lookAt(next)
-      cone.rotateX(Math.PI / 2)
-      group.add(cone)
-      themeObjects.push(cone)
-
-      if (labelSystem) {
-        const mid = curve.getPoint(0.5)
-        labelSystem.addToGroup(group, `${s.label}\n${s.desc}`,
-          mid.clone().add(new THREE.Vector3(0.8, 0.6 * (idx - 1), 0)),
-          { color: '#' + s.color.toString(16).padStart(6, '0'), fontSize: '10px', fontWeight: '700', whiteSpace: 'pre-line' })
-      }
-    })
-
-    // Cloud reflection (some solar radiation reflected)
-    const reflPos = new Float32Array(30 * 3)
-    for (let i = 0; i < 30; i++) {
-      const pt = new THREE.Vector3(8 - Math.random() * 3, EARTH_RADIUS + 0.8 + Math.random() * 0.4, (Math.random() - 0.5) * 2)
-      reflPos[i * 3] = pt.x; reflPos[i * 3 + 1] = pt.y; reflPos[i * 3 + 2] = pt.z
-    }
-    const reflGeo = new THREE.BufferGeometry()
-    reflGeo.setAttribute('position', new THREE.BufferAttribute(reflPos, 3))
-    const reflPts = new THREE.Points(reflGeo, new THREE.PointsMaterial({
-      color: 0xcccccc, size: 0.06, transparent: true, opacity: 0.5,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    }))
-    group.add(reflPts)
-    themeObjects.push(reflPts)
-    if (labelSystem && isProfessional) {
-      labelSystem.addToGroup(group, '云层反射', new THREE.Vector3(4.5, EARTH_RADIUS + 1.2, 0),
-        { color: '#ccc', fontSize: '9px' })
+    if (isPro) {
+      // University: full energy budget diagram
+      const stages = [
+        { from: sunPos, to: ground, color: 0xffee44, label: '太阳短波辐射\n(0.15-4μm)', sub: '100单位 → 大气吸收19 + 散射/反射30 = 到达地面51' },
+        { from: ground, to: lowAtm, color: 0xff4444, label: '地面长波辐射\n(4-120μm)', sub: '地面辐射147单位 → 大气吸收144' },
+        { from: midAtm, to: ground, color: 0xff8800, label: '大气逆辐射\n(长波)', sub: '大气逆辐射106单位 → 地面净得热' },
+        { from: new THREE.Vector3(-4, R + 1.5, 0), to: new THREE.Vector3(-6, 6, 0), color: 0xaaaaaa, label: '射出长波辐射\n(OLR)', sub: '大气顶出射70单位' },
+      ]
+      stages.forEach(s => {
+        const curve = new THREE.LineCurve3(s.from, s.to)
+        const pts = makeParticleField(60, (i) => curve.getPoint(i / 60), 0.07, s.color, 0.8)
+        group.add(pts); themeObjects.push(pts)
+        if (labelSystem) {
+          const mid = curve.getPoint(0.5)
+          labelSystem.addToGroup(group, `${s.label}\n${s.sub}`, mid.clone().add(new THREE.Vector3(1, 0.5, 0)), {
+            color: '#' + s.color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600',
+            whiteSpace: 'pre-line', lineHeight: '1.3', background: 'rgba(0,0,0,0.5)',
+          })
+        }
+      })
+    } else {
+      // High school: "三步口诀" - three clear arrows
+      const stages = [
+        { from: sunPos, to: ground, color: 0xffee44, label: '① 太阳暖大地', desc: '太阳短波辐射加热地面' },
+        { from: ground, to: lowAtm, color: 0xff4444, label: '② 大地暖大气', desc: '地面长波辐射加热大气' },
+        { from: midAtm, to: ground, color: 0xff8800, label: '③ 大气还大地', desc: '大气逆辐射保温地面' },
+      ]
+      stages.forEach((s, idx) => {
+        const curve = new THREE.LineCurve3(s.from, s.to)
+        const pts = makeParticleField(50, (i) => curve.getPoint(i / 60), 0.09, s.color, 0.9)
+        group.add(pts); themeObjects.push(pts)
+        // Direction cone
+        const tip = curve.getPoint(0.88)
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 16),
+          new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }))
+        cone.position.copy(tip); cone.lookAt(curve.getPoint(0.95)); cone.rotateX(Math.PI / 2)
+        group.add(cone); themeObjects.push(cone)
+        if (labelSystem) {
+          const mid = curve.getPoint(0.5)
+          labelSystem.addToGroup(group, `${s.label}\n${s.desc}`, mid.clone().add(new THREE.Vector3(1, idx * 0.8 - 0.8, 0)), {
+            color: '#' + s.color.toString(16).padStart(6, '0'), fontSize: '12px', fontWeight: '700',
+            whiteSpace: 'pre-line', background: 'rgba(0,0,0,0.5)',
+          })
+        }
+      })
     }
   }
 
-  // ── Theme 3: 大气环流 + 气压带风带 ──
+  /* ── Theme 3: 大气环流 ── */
+
   function showCirculation() {
     const cells = [
-      { latRanges: [[-30, 0], [0, 30]], color: 0xff6644, tubeRadius: 0.02, name: '哈得来环流' },
-      { latRanges: [[-60, -30], [30, 60]], color: 0x44dd88, tubeRadius: 0.02, name: '费雷尔环流' },
-      { latRanges: [[-90, -60], [60, 90]], color: 0x4488ff, tubeRadius: 0.02, name: '极地环流' },
+      { lats: [[-30, 0], [0, 30]], color: 0xff6644, name: '哈得来环流' },
+      { lats: [[-60, -30], [30, 60]], color: 0x44dd88, name: '费雷尔环流' },
+      { lats: [[-90, -60], [60, 90]], color: 0x4488ff, name: '极地环流' },
     ]
 
     cells.forEach(cell => {
-      cell.latRanges.forEach(range => {
-        const tubeGeo = GeometryFactory.spiralTube(range[0], range[1], EARTH_RADIUS, 0.8, cell.color, cell.tubeRadius, 200)
-        const tubeMat = new THREE.MeshStandardMaterial({
-          color: cell.color, roughness: 0.3, metalness: 0.2,
-          transparent: true, opacity: 0.6,
-        })
-        const tube = new THREE.Mesh(tubeGeo, tubeMat)
-        group.add(tube)
-        themeObjects.push(tube)
+      cell.lats.forEach(range => {
+        const tube = new THREE.Mesh(
+          GeometryFactory.spiralTube(range[0], range[1], R, 0.8, cell.color, 0.02, 200),
+          new THREE.MeshStandardMaterial({ color: cell.color, roughness: 0.3, metalness: 0.2, transparent: true, opacity: 0.6 }),
+        )
+        group.add(tube); themeObjects.push(tube)
 
         for (let i = 0; i < 5; i++) {
-          const marker = new THREE.Mesh(
-            GeometryFactory.sphere(0.035, 16),
-            new THREE.MeshBasicMaterial({
-              color: cell.color, transparent: true, opacity: 0.9,
-              blending: THREE.AdditiveBlending,
-            }),
-          )
-          marker.userData.circulation = {
-            latStart: range[0], latEnd: range[1],
-            phase: i / 5,
-            speed: range[0] < 0 ? -0.07 : 0.07,
-          }
-          group.add(marker)
-          themeObjects.push(marker)
+          const m = new THREE.Mesh(GeometryFactory.sphere(0.035, 16),
+            new THREE.MeshBasicMaterial({ color: cell.color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }))
+          m.userData.circulation = { latStart: range[0], latEnd: range[1], phase: i / 5, speed: range[0] < 0 ? -0.07 : 0.07 }
+          group.add(m); themeObjects.push(m)
         }
       })
+
+      if (labelSystem && isPro) {
+        const lat = (cell.lats[0][0] + cell.lats[0][1]) / 2
+        const lr = R + 1.4
+        const rad = lat * Math.PI / 180
+        labelSystem.addToGroup(group, cell.name, new THREE.Vector3(lr * Math.cos(rad), lr * Math.sin(rad), 0), {
+          color: '#' + cell.color.toString(16).padStart(6, '0'), fontSize: '11px', fontWeight: '700',
+        })
+      }
     })
 
-    // Pressure belt labels
+    // Pressure belts & wind labels
     if (labelSystem) {
       PRESSURE_BELTS.forEach(b => {
-        const latRad = (b.lat * Math.PI) / 180
-        const r = EARTH_RADIUS + 1.1
-        const pos = new THREE.Vector3(
-          r * Math.cos(latRad),
-          r * Math.sin(latRad),
-          0,
-        )
-        labelSystem.addToGroup(group, b.name, pos, {
-          color: b.color, fontSize: '10px', fontWeight: '700',
+        const rad = b.lat * Math.PI / 180
+        const lr = R + 1.1
+        const text = isPro ? `${b.name}\n[${b.cause}]` : b.name
+        labelSystem.addToGroup(group, text, new THREE.Vector3(lr * Math.cos(rad), lr * Math.sin(rad), 0), {
+          color: b.color, fontSize: isPro ? '9px' : '11px', fontWeight: isPro ? '600' : '700',
+          whiteSpace: 'pre-line', background: 'rgba(0,0,0,0.4)',
         })
       })
 
-      // Wind belt arrows
-      WIND_BELTS.forEach(w => {
-        const latRad = (w.lat * Math.PI) / 180
-        const r = EARTH_RADIUS + 1.3
-        const pos = new THREE.Vector3(
-          r * Math.cos(latRad),
-          r * Math.sin(latRad),
-          0,
-        )
-        labelSystem.addToGroup(group, w.name, pos, {
-          color: w.color, fontSize: '9px', fontWeight: '600',
+      const winds = isPro
+        ? [{ lat: 15, t: 'NE信风' }, { lat: -15, t: 'SE信风' }, { lat: 45, t: 'SW西风' }, { lat: -45, t: 'NW西风' }, { lat: 75, t: 'NE东风' }, { lat: -75, t: 'SE东风' }]
+        : [{ lat: 15, t: '东北信风' }, { lat: -15, t: '东南信风' }, { lat: 45, t: '盛行西风' }, { lat: -45, t: '盛行西风' }, { lat: 75, t: '极地东风' }, { lat: -75, t: '极地东风' }]
+      winds.forEach(w => {
+        const rad = w.lat * Math.PI / 180
+        const lr = R + 1.3
+        labelSystem.addToGroup(group, w.t, new THREE.Vector3(lr * Math.cos(rad), lr * Math.sin(rad), 0), {
+          color: '#ffcc88', fontSize: '9px', fontWeight: '500',
         })
       })
     }
   }
 
-  // ── Theme 4: 热力环流 (海陆风/山谷风/城市热岛) ──
+  /* ── Theme 4: 热力环流 ── */
+
   function showLocalCirculation() {
-    animData.localMode = 0 // 0=sea breeze, 1=valley wind, 2=urban heat island
-
-    // Ground plane
-    const groundGeo = GeometryFactory.plane(3, 2, 1, 1)
-    const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({
-      color: 0x7ab86a, roughness: 0.8,
-    }))
-    ground.rotation.x = -Math.PI / 2
-    ground.position.set(0, -EARTH_RADIUS + 0.1, 0)
-    group.add(ground)
-    themeObjects.push(ground)
-
-    // Sun/sky indicator
-    const sun = new THREE.Mesh(
-      GeometryFactory.sphere(0.12, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffaa33 }),
-    )
-    sun.position.set(1, 0.5, 0)
-    group.add(sun)
-    themeObjects.push(sun)
-
-    // Flow arrows showing circulation loop
-    const flowPts = [
-      [new THREE.Vector3(-1, 0.05, 0), new THREE.Vector3(-0.5, 0.5, 0)],
-      [new THREE.Vector3(-0.5, 0.5, 0), new THREE.Vector3(0.5, 0.5, 0)],
-      [new THREE.Vector3(0.5, 0.5, 0), new THREE.Vector3(1, 0.05, 0)],
-      [new THREE.Vector3(1, 0.05, 0), new THREE.Vector3(-1, 0.05, 0)],
+    // Pick circulation type - show all three with labels
+    const circTypes = [
+      { name: '海陆风 (白天海风)', flow: [[-1, 0.05, 0], [-0.5, 0.5, 0], [0.5, 0.5, 0], [1, 0.05, 0], [-1, 0.05, 0]], hot: [1, '热\n↑', '#ff6644'], cold: [-1, '冷\n↓', '#4488ff'] },
     ]
 
-    flowPts.forEach(pts => {
-      const tube = addRibbon(group, pts, 0xff6644, 0.015, 0.6)
-      themeObjects.push(tube)
-    })
+    // Ground strip
+    const ground = new THREE.Mesh(
+      GeometryFactory.plane(3, 2), new THREE.MeshStandardMaterial({ color: 0x7ab86a, roughness: 0.8 }),
+    )
+    ground.rotation.x = -Math.PI / 2
+    ground.position.set(0, -R, 0)
+    group.add(ground); themeObjects.push(ground)
+
+    // Flow loop
+    const pts = [new THREE.Vector3(-1, 0.05, 0), new THREE.Vector3(-0.5, 0.5, 0), new THREE.Vector3(0.5, 0.5, 0), new THREE.Vector3(1, 0.05, 0)]
+    const curve = new THREE.CatmullRomCurve3([...pts, pts[0]], true)
+    const tube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 80, 0.015, 8, true),
+      new THREE.MeshBasicMaterial({ color: 0xff6644, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }),
+    )
+    group.add(tube); themeObjects.push(tube)
 
     if (labelSystem) {
-      labelSystem.addToGroup(group, '热\n↑', new THREE.Vector3(1.2, 0.3, 0), { color: '#ff6644', fontSize: '14px', fontWeight: '700' })
-      labelSystem.addToGroup(group, '冷\n↓', new THREE.Vector3(-1.2, 0.3, 0), { color: '#4488ff', fontSize: '14px', fontWeight: '700' })
-      labelSystem.addToGroup(group, '海陆风示意\n(白天：海风)', new THREE.Vector3(0, 0.8, 0), { color: '#ffaa44', fontSize: '12px', fontWeight: '700' })
+      labelSystem.addToGroup(group, isPro ? '热力环流\n地面冷热不均 → 空气垂直运动 → 水平气压差 → 风' : '热力环流\n地面冷热不均 → 大气运动', new THREE.Vector3(0, 0.8, 0), {
+        color: '#ffaa44', fontSize: isPro ? '11px' : '13px', fontWeight: '700', whiteSpace: 'pre-line', background: 'rgba(0,0,0,0.5)',
+      })
+      labelSystem.addToGroup(group, '海陆风\n白天：海风', new THREE.Vector3(0, 0.35, 0), {
+        color: '#ffaa44', fontSize: '12px', fontWeight: '700', whiteSpace: 'pre-line',
+      })
+      labelSystem.addToGroup(group, isPro ? '热低压 ↑' : '热 ↑', new THREE.Vector3(1.2, 0.2, 0), { color: '#ff6644', fontSize: '14px', fontWeight: '700' })
+      labelSystem.addToGroup(group, isPro ? '冷高压 ↓' : '冷 ↓', new THREE.Vector3(-1.2, 0.2, 0), { color: '#4488ff', fontSize: '14px', fontWeight: '700' })
     }
   }
 
-  // ── Theme 5: 温室效应 ──
+  /* ── Theme 5: 温室效应 ── */
+
   function showGreenhouse() {
-    const groundPt = new THREE.Vector3(0, -EARTH_RADIUS + 0.1, 0)
-    const skyTop = new THREE.Vector3(0, 3, 0)
+    // Surface
+    const groundStrip = new THREE.Mesh(
+      GeometryFactory.plane(4, 1), new THREE.MeshStandardMaterial({ color: 0x8B7355 }),
+    )
+    groundStrip.rotation.x = -Math.PI / 2
+    groundStrip.position.set(0, -R, 0)
+    group.add(groundStrip); themeObjects.push(groundStrip)
 
-    // Earth surface emitting long-wave
-    const emitCount = 200
-    const emitPos = new Float32Array(emitCount * 3)
-    for (let i = 0; i < emitCount; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const r = Math.random() * 1.5
-      emitPos[i * 3] = Math.cos(theta) * r
-      emitPos[i * 3 + 1] = -EARTH_RADIUS + 0.05 + Math.random() * 2.5
-      emitPos[i * 3 + 2] = Math.sin(theta) * r
-    }
-    const emitGeo = new THREE.BufferGeometry()
-    emitGeo.setAttribute('position', new THREE.BufferAttribute(emitPos, 3))
-    const emitPts = new THREE.Points(emitGeo, new THREE.PointsMaterial({
-      color: 0xff4444, size: 0.06, transparent: true, opacity: 0.5,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    }))
-    group.add(emitPts)
-    themeObjects.push(emitPts)
+    if (isPro) {
+      // University: detailed radiation balance with CO₂ absorption bands
+      const groundUp = makeParticleField(200, (i) => {
+        const x = (Math.random() - 0.5) * 4
+        const y = -R + 0.05 + Math.random() * 2.5
+        return new THREE.Vector3(x, y, (Math.random() - 0.5) * 2)
+      }, 0.05, 0xff4444, 0.5)
+      group.add(groundUp); themeObjects.push(groundUp)
 
-    // CO2 molecules trapping radiation
-    const co2Count = 40
-    const co2Pos = new Float32Array(co2Count * 3)
-    for (let i = 0; i < co2Count; i++) {
-      co2Pos[i * 3] = (Math.random() - 0.5) * 3
-      co2Pos[i * 3 + 1] = 0.3 + Math.random() * 1.5
-      co2Pos[i * 3 + 2] = (Math.random() - 0.5) * 3
-    }
-    const co2Geo = new THREE.BufferGeometry()
-    co2Geo.setAttribute('position', new THREE.BufferAttribute(co2Pos, 3))
-    const co2Pts = new THREE.Points(co2Geo, new THREE.PointsMaterial({
-      color: 0x888888, size: 0.08, transparent: true, opacity: 0.7,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    }))
-    group.add(co2Pts)
-    themeObjects.push(co2Pts)
-    animData.co2Pts = co2Pts
+      // CO₂ layer
+      const co2 = makeParticleField(60, (i) => {
+        return new THREE.Vector3((Math.random() - 0.5) * 4, -R + 0.8 + Math.random() * 1.5, (Math.random() - 0.5) * 3)
+      }, 0.07, 0x888888, 0.7)
+      group.add(co2); themeObjects.push(co2)
+      animData.co2 = co2
 
-    // Back radiation arrows
-    for (let i = 0; i < 5; i++) {
-      const x = (i - 2) * 0.6
-      const from = new THREE.Vector3(x, 0.8, 0)
-      const to = new THREE.Vector3(x, -EARTH_RADIUS + 0.1, 0)
-      const curve = new THREE.LineCurve3(from, to)
-      const count = 20
-      const positions = new Float32Array(count * 3)
-      for (let j = 0; j < count; j++) {
-        const pt = curve.getPoint(j / count)
-        positions[j * 3] = pt.x; positions[j * 3 + 1] = pt.y; positions[j * 3 + 2] = pt.z
+      // Back radiation
+      for (let i = 0; i < 5; i++) {
+        const x = (i - 2) * 0.7
+        const pts = makeParticleField(20, (j) => new THREE.Vector3(x, -R + 0.1 + (0.8 * (1 - j / 20)), 0), 0.06, 0xff8800, 0.6)
+        group.add(pts); themeObjects.push(pts)
       }
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      const pts = new THREE.Points(geo, new THREE.PointsMaterial({
-        size: 0.07, color: 0xff8800, transparent: true, opacity: 0.7,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      }))
-      group.add(pts)
-      themeObjects.push(pts)
-    }
 
-    if (labelSystem) {
-      labelSystem.addToGroup(group, '地面长波辐射 ↑', new THREE.Vector3(0, -EARTH_RADIUS + 0.4, 1.5),
-        { color: '#ff4444', fontSize: '12px', fontWeight: '700' })
-      labelSystem.addToGroup(group, 'CO₂ 吸收长波\n→ 大气逆辐射 ↓', new THREE.Vector3(0, 1.2, 1.5),
-        { color: '#ff8800', fontSize: '12px', fontWeight: '700', whiteSpace: 'pre-line' })
+      if (labelSystem) {
+        labelSystem.addToGroup(group, 'OLR\n70 W/m²', new THREE.Vector3(0, -R + 2.5, 0),
+          { color: '#aaa', fontSize: '10px', fontWeight: '600' })
+        labelSystem.addToGroup(group, '大气逆辐射\n106 W/m² ↓', new THREE.Vector3(0, -R + 0.5, 1.5),
+          { color: '#ff8800', fontSize: '10px', fontWeight: '700' })
+        labelSystem.addToGroup(group, 'CO₂ · H₂O · CH₄\n吸收长波辐射', new THREE.Vector3(0, -R + 1.3, 1.5),
+          { color: '#888', fontSize: '11px', fontWeight: '600', whiteSpace: 'pre-line', background: 'rgba(0,0,0,0.5)' })
+      }
+    } else {
+      // High school: simple visualization with real-life examples
+      const groundUp = makeParticleField(150, (i) => {
+        const x = (Math.random() - 0.5) * 4
+        const y = -R + 0.05 + Math.random() * 2
+        return new THREE.Vector3(x, y, (Math.random() - 0.5) * 2)
+      }, 0.06, 0xff4444, 0.5)
+      group.add(groundUp); themeObjects.push(groundUp)
+
+      const co2 = makeParticleField(40, (i) => {
+        return new THREE.Vector3((Math.random() - 0.5) * 4, -R + 0.5 + Math.random() * 1.5, (Math.random() - 0.5) * 3)
+      }, 0.08, 0x888888, 0.7)
+      group.add(co2); themeObjects.push(co2)
+      animData.co2 = co2
+
+      // Simple back-radiation arrows
+      for (let i = 0; i < 4; i++) {
+        const pts = makeParticleField(15, (j) => new THREE.Vector3((i - 1.5) * 0.8, -R + 0.05 + 0.8 * (1 - j / 15), 0), 0.07, 0xff8800, 0.6)
+        group.add(pts); themeObjects.push(pts)
+      }
+
+      if (labelSystem) {
+        labelSystem.addToGroup(group, '大气逆辐射 ↓\n(保温作用)', new THREE.Vector3(0, -R + 0.3, 1.5),
+          { color: '#ff8800', fontSize: '12px', fontWeight: '700', whiteSpace: 'pre-line' })
+        labelSystem.addToGroup(group, 'CO₂ 温室气体', new THREE.Vector3(0, -R + 1.2, 1.5),
+          { color: '#888', fontSize: '11px', fontWeight: '600', background: 'rgba(0,0,0,0.5)' })
+        labelSystem.addToGroup(group, '应用：温室大棚\n地膜覆盖 · 熏烟防霜', new THREE.Vector3(2.5, -R + 1.5, 0),
+          { color: '#ccc', fontSize: '10px', whiteSpace: 'pre-line', background: 'rgba(0,0,0,0.4)' })
+      }
     }
   }
+
+  /* ── Theme switch ── */
 
   function switchTheme(idx) {
     clearTheme()
     switch (idx) {
-      case 0: showVerticalLayers(); break
+      case 0: showLayers(); break
       case 1: showComposition(); break
       case 2: showRadiation(); break
       case 3: showCirculation(); break
       case 4: showLocalCirculation(); break
       case 5: showGreenhouse(); break
-      default: showVerticalLayers()
     }
   }
 
   switchTheme(currentTheme)
 
   const api = {
-    setMode(m) {
-      clearTheme()
-      switchTheme(currentTheme)
-    },
+    setMode(m) { clearTheme(); switchTheme(currentTheme) },
     setParams(p) {
-      if (p.theme !== undefined) {
-        currentTheme = p.theme
-        clearTheme()
-        switchTheme(currentTheme)
-      }
+      if (p.theme !== undefined) { currentTheme = p.theme; clearTheme(); switchTheme(currentTheme) }
     },
     update(dt, elapsed) {
       earth.rotation.y += 0.15 * dt
-
-      // Animate circulation markers
+      // Circulation markers
       themeObjects.forEach(obj => {
         if (!obj.userData?.circulation) return
-        const data = obj.userData.circulation
-        data.phase = (data.phase + dt * data.speed + 1) % 1
-        const lat = data.latStart + (data.latEnd - data.latStart) * data.phase
-        const lon = data.phase * Math.PI * 4 + elapsed * 0.18
-        const latRad = (lat * Math.PI) / 180
-        const r = EARTH_RADIUS + 0.8 * Math.sin(data.phase * Math.PI)
-        obj.position.set(
-          r * Math.cos(latRad) * Math.cos(lon),
-          r * Math.sin(latRad),
-          r * Math.cos(latRad) * Math.sin(lon),
-        )
+        const d = obj.userData.circulation
+        d.phase = (d.phase + dt * d.speed + 1) % 1
+        const lat = d.latStart + (d.latEnd - d.latStart) * d.phase
+        const lon = d.phase * Math.PI * 4 + elapsed * 0.18
+        const rad = lat * Math.PI / 180
+        const r = R + 0.8 * Math.sin(d.phase * Math.PI)
+        obj.position.set(r * Math.cos(rad) * Math.cos(lon), r * Math.sin(rad), r * Math.cos(rad) * Math.sin(lon))
       })
-
-      // Animate cloud particles in troposphere
-      if (animData.cloudPts) {
-        animData.cloudPts.rotation.y += dt * 0.1
-      }
-
-      // Pulse ozone ring
-      if (animData.ozoneRing) {
-        animData.ozoneRing.material.opacity = 0.4 + Math.sin(elapsed * 1.5) * 0.2
-      }
-
-      // Move UV particles
-      if (animData.uvPts) {
-        animData.uvPts.position.x = 6 - elapsed * 0.5 % 8
-      }
-
-      // Pulse CO2 particles
-      if (animData.co2Pts) {
-        animData.co2Pts.material.opacity = 0.5 + Math.sin(elapsed * 0.8) * 0.2
-      }
+      // Cloud rotation
+      if (animData.clouds) animData.clouds.rotation.y += dt * 0.1
+      // CO₂ pulse
+      if (animData.co2) animData.co2.material.opacity = 0.5 + Math.sin(elapsed * 0.8) * 0.2
     },
-    dispose() {
-      clearTheme()
-    },
+    dispose() { clearTheme() },
   }
   group.userData = { api }
-
   return group
 }
