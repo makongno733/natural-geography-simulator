@@ -25,9 +25,9 @@
             <li><span class="dot" style="background:#f1c40f"></span><strong>内核</strong><span>固态铁镍球，半径 1220km</span></li>
           </ul>
           <h3>知识点</h3>
-          <p>• <info-term def="莫霍洛维奇不连续面，1909年发现，地壳与地幔的分界面，地震波在此速度突变。">莫霍界面</info-term>：地壳与地幔的分界面<br/>
-          • <info-term def="古登堡不连续面，1914年发现，地下2900km处，横波消失，证明外核为液态。">古登堡界面</info-term>：地幔与地核的分界面<br/>
-          • <info-term def="岩石圈 = 地壳 + 上地幔顶部固态岩石，厚约100-150km。软流层位于上地幔上部，部分熔融状态。">岩石圈</info-term> = 地壳 + 上地幔顶部</p>
+          <p>• <span class="info-term"><span class="info-icon">ⓘ</span><span class="info-popup"><b>莫霍洛维奇不连续面</b>，1909年发现，地壳与地幔的分界面，深度约33km，地震波在此速度突变。</span>莫霍界面</span>：地壳与地幔的分界面<br/>
+          • <span class="info-term"><span class="info-icon">ⓘ</span><span class="info-popup"><b>古登堡不连续面</b>，1914年发现，地下2900km处，横波消失，证明外核为液态。</span>古登堡界面</span>：地幔与地核的分界面<br/>
+          • <span class="info-term"><span class="info-icon">ⓘ</span><span class="info-popup"><b>岩石圈</b> = 地壳 + 上地幔顶部固态岩石，厚约100-150km。软流层位于上地幔上部，部分熔融状态。</span>岩石圈</span> = 地壳 + 上地幔顶部</p>
         </div>
         <!-- Professional mode -->
         <div v-show="mode === 'professional'" class="info-content">
@@ -266,14 +266,102 @@ function animate() {
 
 function selectObj(id) {
   selectedObj.value = id
-  // Update indicators would need to rebuild Three.js objects
-  // Simplified for integration
 }
 
 function switchCoord(id) {
   activeCoord.value = id
   coordDesc.value = descs[id] || ''
   currentCoords.value = objCoords[id] || {}
+}
+
+function buildCelestialScene() {
+  const csRadius = 2.5
+  // Grid
+  for (let lat = -80; lat <= 80; lat += 20) {
+    const phi = lat * Math.PI / 180
+    const r = Math.cos(phi) * csRadius, y = Math.sin(phi) * csRadius
+    const pts = []
+    for (let i = 0; i <= 36; i++) {
+      const theta = (i / 36) * Math.PI * 2
+      pts.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r))
+    }
+    celestialGroup.add(makeLine(pts, 0x446688, 0.15))
+  }
+  for (let lon = 0; lon < 360; lon += 30) {
+    const theta = lon * Math.PI / 180, pts = []
+    for (let i = 0; i <= 36; i++) {
+      const phi = (i / 36) * Math.PI
+      pts.push(new THREE.Vector3(Math.cos(theta)*Math.sin(phi)*csRadius, Math.cos(phi)*csRadius, Math.sin(theta)*Math.sin(phi)*csRadius))
+    }
+    celestialGroup.add(makeLine(pts, 0x446688, 0.1))
+  }
+  // Objects
+  celestialObjects.forEach(obj => {
+    const pos = new THREE.Vector3(obj.pos[0], obj.pos[1], obj.pos[2])
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(obj.size, 16, 16),
+      new THREE.MeshBasicMaterial({ color: obj.color })
+    )
+    mesh.position.copy(pos)
+    celestialGroup.add(mesh)
+    celestialGroup.add(makeLabel(obj.name, obj.labelColor, '11px', pos.clone().add(new THREE.Vector3(0, 0.2, 0))))
+  })
+  // Labels for coordinate systems
+  const sysLabels = [
+    { text: '天顶', pos: [0, csRadius+0.2, 0] },
+    { text: 'N', pos: [0, 0.1, -csRadius-0.3] },
+    { text: '天赤道', pos: [csRadius*0.7, 0.1, 0] },
+  ]
+  sysLabels.forEach(l => celestialGroup.add(makeLabel(l.text, '#888', '12px', new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2]))))
+}
+// Also add celestial grid lines as coordinate reference
+function initProfessionalOnSwitch() {
+  if (proMode) return
+  proMode = true
+  celestialGroup.children.forEach(c => celestialGroup.remove(c))
+  // Earth at center
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 24), new THREE.MeshPhysicalMaterial({ color: 0x2d5a87, roughness: 0.5 }))
+  celestialGroup.add(earth)
+  buildCelestialScene()
+}
+
+function buildSolarSystem() {
+  const PLANETS = [
+    { name:'水星', r:0.9, s:0.03, c:0xaaaaaa, sp:0.24 },
+    { name:'金星', r:1.3, s:0.05, c:0xe8cda0, sp:0.62 },
+    { name:'地球', r:1.8, s:0.06, c:0x4a90d9, sp:1.0 },
+    { name:'火星', r:2.4, s:0.04, c:0xcd5c5c, sp:1.88 },
+    { name:'木星', r:3.3, s:0.12, c:0xd4a574, sp:11.86 },
+    { name:'土星', r:4.2, s:0.10, c:0xead6b8, sp:29.46 },
+  ]
+  // Sun
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 24), new THREE.MeshBasicMaterial({ color: 0xffaa33 }))
+  spaceGroup.add(sun)
+  spaceGroup.add(makeLabel('☀️ 太阳', '#ffaa33', '14px', new THREE.Vector3(0, -0.5, 0)))
+  // Planets
+  PLANETS.forEach((p, i) => {
+    const ring = makeRing(p.r, p.c, 0.2)
+    spaceGroup.add(ring)
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.s, 16, 16), new THREE.MeshPhysicalMaterial({ color: p.c, roughness: 0.6 }))
+    const angle = (i / PLANETS.length) * Math.PI * 2
+    mesh.position.set(Math.cos(angle) * p.r, 0, Math.sin(angle) * p.r)
+    spaceGroup.add(mesh)
+    spaceGroup.add(makeLabel(p.name, '#ccc', '10px', new THREE.Vector3(0, p.s + 0.15, 0).add(mesh.position)))
+  })
+  // Transfer orbit
+  const rE = 1.8, rM = 2.4, a = (rE + rM) / 2
+  const pts = []
+  for (let i = 0; i <= 48; i++) {
+    const t = (i / 48) * Math.PI
+    pts.push(new THREE.Vector3(rE + (a - rE) + a * Math.cos(t), 0.03, Math.sqrt(rE * rM) * Math.sin(t)))
+  }
+  spaceGroup.add(makeLine(pts, 0x44ff88, 0.5))
+  spaceGroup.add(makeLabel('🚀 地火转移轨道', '#44ff88', '11px', new THREE.Vector3(2.3, 0.4, 0)))
+}
+
+function initDeepSpaceOnSwitch() {
+  if (spaceGroup.children.length > 0) return
+  buildSolarSystem()
 }
 
 function switchMode(m) {
@@ -285,12 +373,10 @@ function switchMode(m) {
   if (m === 'professional') {
     coordDesc.value = descs.horizontal
     currentCoords.value = objCoords.horizontal
-    if (!proMode) {
-      // Simplified - build pro mode on first switch
-      proMode = true
-      clickableMeshes.length = 0
-      // Would need full build here
-    }
+    initProfessionalOnSwitch()
+  }
+  if (m === 'deepspace') {
+    initDeepSpaceOnSwitch()
   }
 }
 
@@ -361,6 +447,22 @@ onBeforeUnmount(() => {
 .pt-header, .pt-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2px; padding: 3px 0; border-bottom: 1px solid #1a1a1a; }
 .pt-header { color: #666; }
 .pt-row { color: #999; }
+/* Info tooltip */
+.info-term { position: relative; cursor: help; border-bottom: 1px dashed #555; display: inline; }
+.info-term .info-popup {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  background: #1a1a2e; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 14px;
+  width: 260px; font-size: 0.78rem; color: #ccc; line-height: 1.6; z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7); white-space: normal; font-weight: 400; pointer-events: none;
+}
+.info-term .info-popup::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #3b82f6; }
+.info-term:hover .info-popup { display: block; }
+.info-term .info-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px;
+  border-radius: 50%; background: #333; color: #888; font-size: 10px; font-style: normal;
+  margin-left: 2px; cursor: help; vertical-align: super; line-height: 1;
+}
+.info-term:hover .info-icon { background: #3b82f6; color: #fff; }
 @media (max-width: 768px) {
   #main { flex-direction: column; }
   #info-panel { width: 100%; height: 35vh; border-left: none; border-top: 1px solid #333; }
