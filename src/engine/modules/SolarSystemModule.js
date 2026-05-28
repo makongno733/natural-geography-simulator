@@ -417,7 +417,6 @@ export function SolarSystemModule(scene, params, services) {
             earthPos.y + 0.03,
             earthPos.z + Math.sin(ang) * 0.15,
           )
-(0x60a5fa)
         } else if (rp < 0.2) {
           // Phase 2: Escape Earth → transfer insertion
           currentPhase = 2
@@ -434,7 +433,6 @@ export function SolarSystemModule(scene, params, services) {
             0.05,
             insetZ + (earthStartZ - insetZ) * phase2,
           )
-(0xfacc15)
         } else if (rp < 0.82) {
           // Phase 3: Hohmann transfer
           currentPhase = 3
@@ -445,7 +443,6 @@ export function SolarSystemModule(scene, params, services) {
             0.05,
             sB * Math.sin(t),
           )
-(0x44ff88)
         } else {
           // Phase 4: Mars approach and orbit insertion
           currentPhase = 4
@@ -457,7 +454,6 @@ export function SolarSystemModule(scene, params, services) {
             marsPos.y + 0.03,
             marsPos.z + Math.sin(ang) * marsApproachR,
           )
-(0xef4444)
         }
       }
       // Slow asteroid belt rotation
