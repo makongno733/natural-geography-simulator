@@ -29,13 +29,18 @@
 }
 .app-title {
   font-family: "Ma Shan Zheng", "STXingkai", "Kaiti SC", serif;
-  font-size: 96px;
+  font-size: clamp(44px, 9vw, 96px);
   color: var(--red);
   text-shadow: 0 8px 22px rgba(173, 20, 25, 0.18);
   line-height: 1;
   letter-spacing: 0;
   text-decoration: none;
   display: block;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 6px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .app-subtitle {
   margin: 4px 0 0;
@@ -49,8 +54,8 @@
     padding: 22px 14px 12px;
   }
   .app-title {
-    font-size: 54px;
-    white-space: nowrap;
+    font-size: clamp(32px, 11vw, 54px);
+    line-height: 1.04;
   }
 }
 </style>
