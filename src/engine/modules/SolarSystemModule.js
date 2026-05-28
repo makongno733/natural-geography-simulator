@@ -254,6 +254,9 @@ export function SolarSystemModule(scene, params, services) {
   let transferProgress = 0
   let currentPhase = 0
   let prevPhase = 0
+  // Smooth camera transition state
+  let camTarget = null  // { pos: Vector3, target: Vector3 }
+  const CAM_LERP = 0.04
   const rocketGeo = GeometryFactory.sphere(0.04, 12)
   const rocketMat = new THREE.MeshStandardMaterial({
     color: 0x44ff88,
@@ -386,29 +389,41 @@ export function SolarSystemModule(scene, params, services) {
       }
       trail.position.copy(rocket.position)
 
-      // Camera transitions between phases
+      // Camera phase transition — set target for smooth lerp
       if (cameraRig && currentPhase !== prevPhase && earthMesh && marsMesh) {
         prevPhase = currentPhase
-        const ct = cameraRig.controls.target
-        const cp = cameraRig.camera.position
         switch (currentPhase) {
           case 1: // Focus on Earth
-            ct.copy(earthMesh.position)
-            cp.set(earthMesh.position.x + 2, earthMesh.position.y + 1.5, earthMesh.position.z + 2)
+            camTarget = {
+              pos: new THREE.Vector3(earthMesh.position.x + 2.5, earthMesh.position.y + 2, earthMesh.position.z + 3),
+              target: earthMesh.position.clone(),
+            }
             break
-          case 2: // Transitioning: pull back
-            ct.set(1.5, 0, 0.5)
-            cp.set(3, 2.5, 3)
+          case 2: // Pull back for escape
+            camTarget = {
+              pos: new THREE.Vector3(3, 3, 4),
+              target: new THREE.Vector3(1.5, 0, 0.5),
+            }
             break
-          case 3: // Wide view of transfer
-            ct.set(2.0, 0, 0.5)
-            cp.set(0, 6, 8)
+          case 3: // Wide top-down of transfer
+            camTarget = {
+              pos: new THREE.Vector3(1, 7, 9),
+              target: new THREE.Vector3(2.0, 0, 0.5),
+            }
             break
           case 4: // Focus on Mars
-            ct.copy(marsMesh.position)
-            cp.set(marsMesh.position.x + 2, marsMesh.position.y + 1.5, marsMesh.position.z + 2)
+            camTarget = {
+              pos: new THREE.Vector3(marsMesh.position.x + 2.5, marsMesh.position.y + 2, marsMesh.position.z + 3),
+              target: marsMesh.position.clone(),
+            }
             break
         }
+      }
+
+      // Smooth camera lerp toward target
+      if (cameraRig && camTarget) {
+        cameraRig.camera.position.lerp(camTarget.pos, CAM_LERP)
+        cameraRig.controls.target.lerp(camTarget.target, CAM_LERP)
         cameraRig.controls.update()
       }
     },
