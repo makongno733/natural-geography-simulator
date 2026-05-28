@@ -4,25 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>自然地理模拟系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#091a2b;--card:#10263d;--line:#2f5275;--text:#e7f1ff;--muted:#a9c0da;--accent:#60a5fa}
+    :root{--bg:#fffdf8;--card:#fffefa;--line:#e2c9b4;--text:#b01217;--muted:#b85a4d;--accent:#d12a2f}
     *{box-sizing:border-box}
-    body{margin:0;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 20% 10%,#1b3655 0,#091a2b 45%,#071420 100%);color:var(--text);min-height:100vh}
+    body{margin:0;font-family:"禹卫书法行书","STXingkai","Kaiti SC","KaiTi","DFKai-SB",serif;background:radial-gradient(circle at 15% 10%,rgba(255,243,214,.75) 0,rgba(255,252,244,.95) 42%,#fffef9 100%);background-color:var(--bg);background-image:repeating-linear-gradient(45deg,rgba(225,198,149,.08) 0 2px,transparent 2px 12px),repeating-linear-gradient(-45deg,rgba(225,198,149,.05) 0 1px,transparent 1px 10px);color:var(--text);min-height:100vh}
     .shell{width:min(1400px,94vw);margin:12px auto}
     .home{display:grid;place-items:center;min-height:92vh}
-    .wrap{width:min(980px,92vw);padding:18px;border:1px solid var(--line);border-radius:16px;background:rgba(8,22,36,.88);box-shadow:0 12px 30px rgba(0,0,0,.35)}
-    h1{margin:0 0 8px;font-size:clamp(22px,3vw,32px)}
+    .wrap{width:min(1200px,96vw);padding:28px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.94);box-shadow:0 10px 26px rgba(183,55,44,.16)}
+    h1{margin:0 0 16px;font-size:clamp(56px,9vw,180px);line-height:0.95;letter-spacing:2px;text-align:center;text-shadow:0 10px 28px rgba(0,0,0,.32);white-space:nowrap;font-family:"Ma Shan Zheng","Zhi Mang Xing","禹卫书法行书","STXingkai","Kaiti SC","KaiTi",serif}
     p{margin:0 0 16px;color:var(--muted)}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .card{display:block;text-decoration:none;border:1px solid var(--line);border-radius:12px;padding:14px;background:linear-gradient(180deg,#122d49,#0f253d);color:var(--text);cursor:pointer}
+    .card{display:block;text-decoration:none;border:1px solid var(--line);border-radius:12px;padding:14px;background:linear-gradient(180deg,#fffefe,#fff8f2);color:var(--text);cursor:pointer}
     .card:hover{border-color:var(--accent);transform:translateY(-1px)}
     .t{font-size:18px;font-weight:700;margin-bottom:6px}
     .d{font-size:13px;color:var(--muted);line-height:1.5}
-    .tips{margin-top:12px;font-size:12px;color:#86a7c9}
-    .viewer{display:none;border:1px solid var(--line);border-radius:12px;background:rgba(8,22,36,.88);overflow:hidden}
-    .viewer-head{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #2b4b6a}
-    .back{border:1px solid var(--line);background:#13304a;color:#eaf4ff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
-    .name{font-size:14px;color:#dcecff}
+    .tips{margin-top:12px;font-size:12px;color:#b85a4d}
+    .viewer{display:none;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.95);overflow:hidden}
+    .viewer-head{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #e7d2c2}
+    .back{border:1px solid var(--line);background:#fff6ef;color:#b01217;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
+    .name{font-size:14px;color:#b01217}
     iframe{display:block;width:100%;height:84vh;border:0;background:#fff}
     @media (max-width:740px){.grid{grid-template-columns:1fr}}
   </style>
@@ -31,7 +34,7 @@
   <main class="shell">
     <section id="home" class="home">
       <div class="wrap">
-        <h1>自然地理模拟系统</h1>
+        <h1>中学地理教学系统</h1>
         <p>总入口：选择一个子系统进入</p>
         <section class="grid">
           <article class="card" data-target="atmosphere">
