@@ -12,6 +12,19 @@
       <span>{{ sectionId }}</span>
     </div>
 
+    <!-- 3D 大气模型切换（第二章地球上的大气专用） -->
+    <div v-if="isAtmoChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showAtmo }]"
+        @click="showAtmo = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showAtmo }]"
+        @click="showAtmo = true"
+      >🌍 3D 大气模型</button>
+    </div>
+
+    <template v-if="!showAtmo">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -55,12 +68,6 @@
         </div>
 
         <div class="body-text markdown-body" v-html="renderedBody"></div>
-
-        <AtmosphereViewer
-          v-if="showAtmosphereViewer"
-          :mode="atmosphereMode"
-          :defaultTab="atmosphereDefaultTab"
-        />
 
         <section class="ppt-panel">
           <div class="ppt-head">
@@ -108,6 +115,10 @@
         </div>
       </main>
     </div>
+  </template>
+
+  <!-- 3D 大气模型视图 -->
+  <AtmosphereViewer v-else-if="showAtmo" />
   </div>
 
   <div v-if="pptPreview.open" class="ppt-preview-mask" @click.self="closePreview">
@@ -226,18 +237,10 @@ const estimatedReadMinutes = computed(() => {
   return Math.max(1, Math.round(plain.length / 240))
 })
 
-const showAtmosphereViewer = computed(() => {
-  const isHighSchool = gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第二章'
-  const isUniversity = gradeId.value === '大学' && bookId.value === '自然地理学' && chapterId.value === '第三章'
-  return isHighSchool || isUniversity
-})
-
-const atmosphereMode = computed(() => gradeId.value === '大学' ? 'professional' : 'simple')
-
-const atmosphereDefaultTab = computed(() => {
-  if (gradeId.value !== '高中' || bookId.value !== '必修第一册') return 0
-  return sectionId.value === '第二节' ? 2 : 0
-})
+const showAtmo = ref(false)
+const isAtmoChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第二章'
+)
 
 function toReadableMarkdown(text) {
   const raw = normalizeEscapedNewlines(text)
@@ -912,6 +915,34 @@ const nextSection = computed(() => {
 }
 .not-found { text-align: center; padding: 60px 20px; }
 .not-found a { color: #b01217; }
+
+.sandbox-toggle-bar {
+  max-width: 1100px;
+  margin: 0 auto 10px;
+  display: flex;
+  gap: 2px;
+}
+.sandbox-toggle {
+  border: 1px solid var(--brown);
+  border-radius: 6px 6px 0 0;
+  padding: 6px 16px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.7);
+  color: #6b3b32;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+}
+.sandbox-toggle.active {
+  background: rgba(255,255,255,0.97);
+  border-bottom-color: rgba(255,255,255,0.97);
+  color: var(--red);
+  font-weight: 600;
+}
+.sandbox-toggle:hover:not(.active) {
+  background: rgba(183,55,44,0.05);
+}
 
 @media (max-width: 960px) {
   .content-layout { grid-template-columns: 180px 1fr; gap: 14px; }
