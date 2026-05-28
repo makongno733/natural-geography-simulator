@@ -358,15 +358,33 @@ function buildSolarSystem() {
     spaceGroup.add(mesh)
     spaceGroup.add(makeLabel(p.name, '#ccc', '10px', new THREE.Vector3(0, p.s + 0.15, 0).add(mesh.position)))
   })
-  // Transfer orbit
-  const rE = 1.8, rM = 2.4, a = (rE + rM) / 2
-  const pts = []
-  for (let i = 0; i <= 48; i++) {
-    const t = (i / 48) * Math.PI
-    pts.push(new THREE.Vector3(rE + (a - rE) + a * Math.cos(t), 0.03, Math.sqrt(rE * rM) * Math.sin(t)))
+  // Highlight Earth & Mars orbits
+  const hlEarth = makeRing(rE, 0x60a5fa, 0.4)
+  const hlMars = makeRing(rM, 0xef4444, 0.4)
+  spaceGroup.add(hlEarth)
+  spaceGroup.add(hlMars)
+  // Direction arrows
+  const arrowR = 0.12
+  for (let r of [rE, rM]) {
+    for (let ang of [0, Math.PI/2, Math.PI, 3*Math.PI/2]) {
+      const p = new THREE.Vector3(Math.cos(ang)*r, 0.02, Math.sin(ang)*r)
+      const dir = new THREE.Vector3(-Math.sin(ang)*r, 0, Math.cos(ang)*r).normalize()
+      spaceGroup.add(new THREE.ArrowHelper(dir, p, arrowR, r===rE ? 0x60a5fa : 0xef4444, 0.1, 0.06))
+    }
   }
-  spaceGroup.add(makeLine(pts, 0x44ff88, 0.5))
-  spaceGroup.add(makeLabel('🚀 地火转移轨道', '#44ff88', '11px', new THREE.Vector3(2.3, 0.4, 0)))
+  // Transfer orbit with process labels
+  const aT = (rE + rM) / 2
+  const cX = rE + (aT - rE)
+  const sB = Math.sqrt(rE * rM)
+  const tPts = []
+  for (let i = 0; i <= 60; i++) {
+    const t = (i / 60) * Math.PI
+    tPts.push(new THREE.Vector3(cX + aT * Math.cos(t), 0.03, sB * Math.sin(t)))
+  }
+  spaceGroup.add(makeLine(tPts, 0x44ff88, 0.6))
+  spaceGroup.add(makeLabel('① 🚀 出发 (29.8→11.6 km/s)', '#60a5fa', '10px', new THREE.Vector3(rE, -0.3, 0)))
+  spaceGroup.add(makeLabel('④ 🏁 到达 (火星)', '#ef4444', '10px', new THREE.Vector3(rM*Math.cos(Math.PI*1.35), 0.3, rM*Math.sin(Math.PI*1.35))))
+  spaceGroup.add(makeLabel('② 加速 ③ 椭圆飞行 259天', '#44ff88', '10px', new THREE.Vector3(2.0, 0.5, 0.8)))
 }
 
 function initDeepSpaceOnSwitch() {
