@@ -1,7 +1,7 @@
 <template>
   <div class="sandbox-root">
     <div class="sandbox-topbar">
-      <button class="back-link" @click="$emit('close')">← 返回课文</button>
+      <router-link to="/高中/必修第一册/第六章/第一节" class="back-link">← 返回课文</router-link>
       <div class="mode-tabs">
         <button :class="['mode-btn', { active: mode === 'simple' }]" @click="mode = 'simple'">🔰 简单模式</button>
         <button :class="['mode-btn', { active: mode === 'professional' }]" @click="mode = 'professional'">🎓 专业模式</button>
@@ -88,8 +88,6 @@ import { disasterModules } from './modules/disasterModules.js'
 import { disasterGlossary as glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
 
-defineEmits(['close'])
-
 const viewportRef = ref(null)
 const mode = ref('simple')
 const activeModule = ref('typhoon')
@@ -153,7 +151,7 @@ function onResize() { if (engine) engine.resize() }
 <style scoped>
 .sandbox-root {
   display: flex; flex-direction: column;
-  height: calc(100vh - 160px);
+  height: calc(100vh - 96px);
   background: var(--cream);
 }
 .sandbox-topbar {

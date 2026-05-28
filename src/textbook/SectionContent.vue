@@ -38,17 +38,11 @@
 
     <!-- 3D 灾害模拟（第六章自然灾害专用） -->
     <div v-if="isDisasterChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showDisaster }]"
-        @click="showDisaster = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showDisaster }]"
-        @click="showDisaster = true"
-      >🌀 3D 灾害模拟</button>
+      <button class="sandbox-toggle active">📖 课文</button>
+      <router-link to="/disasters" class="sandbox-toggle">🌀 3D 灾害模拟</router-link>
     </div>
 
-    <template v-if="!showSandbox && !showDisaster && !showEarth3D">
+    <template v-if="!showSandbox && !showEarth3D">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -148,9 +142,6 @@
   <!-- 3D 沙盘视图 -->
   <SandboxApp v-else-if="showSandbox" embedded @close="showSandbox = false" />
 
-  <!-- 3D 灾害模拟视图 -->
-  <DisasterSandbox v-else-if="showDisaster" @close="showDisaster = false" />
-
   <!-- 3D 地球视图 -->
   <Earth3D v-else-if="showEarth3D" />
 
@@ -191,7 +182,6 @@ import { matchPptResources } from './data/pptResources.js'
 import { usePptFolderStore } from './data/pptFolderStore.js'
 import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
 import SandboxApp from '../sandbox/SandboxApp.vue'
-import DisasterSandbox from '../sandbox/DisasterSandbox.vue'
 import Earth3D from '../sandbox/Earth3D.vue'
 
 const route = useRoute()
@@ -201,7 +191,6 @@ const chapterId = computed(() => route.params.chapter)
 const sectionId = computed(() => route.params.section)
 
 const showSandbox = ref(false)
-const showDisaster = ref(false)
 const showEarth3D = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
@@ -988,6 +977,11 @@ const nextSection = computed(() => {
 }
 .sandbox-toggle:hover:not(.active) {
   background: rgba(183,55,44,0.05);
+}
+.sandbox-toggle:not(button) {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 @media (max-width: 960px) {
