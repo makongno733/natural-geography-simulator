@@ -23,6 +23,7 @@
     "fix:textbook:pass1": "node scripts/fix-textbook-quality-pass1.mjs"
   },
   "dependencies": {
+    "@takram/three-atmosphere": "^0.19.1",
     "chart.js": "^4.5.1",
     "jszip": "^3.10.1",
     "markdown-it": "^14.2.0",
