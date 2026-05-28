@@ -49,6 +49,49 @@ function mixColors(c1, c2, t) {
   ]
 }
 
+// ===== Fluvial Module =====
+const fluvialModifier = {
+  modifyHeight(x, y, baseH, t, climateF) {
+    // River incision: V-shaped valleys with meanders
+    // Drainage network using multiple sine wave combinations
+    const drainage = Math.sin(x * 8 + y * 5) * 0.5 + Math.sin(x * 3 - y * 7) * 0.3
+    const valley = Math.sin(x * 12 + y * 3 + 0.8) * 0.08 * (0.3 + t * 0.7)
+    const vCut = -Math.abs(drainage) * 0.12 * (0.2 + t * 0.8)
+
+    // Meander belt
+    const meanderX = Math.sin(y * 6 + x * 2 + t * 2) * 0.15
+    const meander = -Math.exp(-Math.pow((x - 0.5 + meanderX) / 0.04, 2)) * 0.1 * (0.3 + t * 0.5)
+
+    // Alluvial fan at mountain exit
+    const fanX = 0.75, fanY = 0.2
+    const dFan = Math.pow((x - fanX) / 0.1, 2) + Math.pow((y - fanY) / 0.08, 2)
+    const fan = Math.exp(-dFan * 2) * 0.12 * (0.2 + t * 0.6)
+
+    // Terrace remnants
+    const terrace = Math.sin(x * 15 + y * 10) * 0.02 * (1 - Math.exp(-t * 3))
+
+    // Base terrain shaped by climate
+    const climateMod = 0.6 + climateF * 0.4  // wetter = more dissection
+    const dissection = Math.sin(x * 14 + y * 12) * 0.03 * climateMod
+
+    return baseH + valley + vCut * climateMod + meander + fan + terrace + dissection
+  },
+  getColor(elevation, slope) {
+    const e = clamp(elevation, 0, 1)
+    if (e < 0.05) return mixColors([30, 55, 70], [40, 75, 85], e / 0.05)      // deep water
+    if (e < 0.12) return mixColors([40, 75, 85], [60, 110, 80], (e - 0.05) / 0.07) // river
+    if (e < 0.3) return mixColors([60, 110, 80], [80, 140, 70], (e - 0.12) / 0.18) // floodplain
+    if (e < 0.5) return mixColors([80, 140, 70], [95, 145, 60], (e - 0.3) / 0.2) // valley sides
+    if (e < 0.7) return mixColors([95, 145, 60], [130, 120, 65], (e - 0.5) / 0.2) // upland
+    return mixColors([130, 120, 65], [180, 170, 150], (e - 0.7) / 0.3)         // hilltop
+  },
+  getFeatureName(t) {
+    const features = ['V形谷', '冲积扇', '河曲', '牛轭湖', '三角洲', '阶地']
+    return features[Math.min(features.length - 1, Math.floor(t * features.length))]
+  },
+  getColorBias() { return [-0.1, 0.02, 0.04] } // greener, wetter
+}
+
 // ===== Structural Module =====
 const structuralModifier = {
   modifyHeight(x, y, baseH, t, climateF) {
@@ -286,6 +329,7 @@ const climateModifier = {
 
 // ===== Registry =====
 const terrainModules = {
+  fluvial: fluvialModifier,
   structural: structuralModifier,
   glacial: glacialModifier,
   coastal: coastalModifier,
