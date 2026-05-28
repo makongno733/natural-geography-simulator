@@ -8,25 +8,22 @@
 
 ### 入口整合
 
-`App.vue` 改造为总入口，替换 `natural-geo-system.html` 的角色。
+`App.vue` 改造为应用唯一入口，替换 `natural-geo-system.html` 的角色。
 
 - 保留大标题「中学地理教学系统」白底红字 Ma Shan Zheng 行书风格
-- 顶部 Tab 切换：「📖 课本」|「🔧 其他」
-- 「课本」为主入口，显示学段选择卡片（初中/高中）
-- 「其他」收纳原大气结构、地貌沙箱模块，以灰色卡片弱化展示
+- 首页直接显示学段选择卡片（初中/高中），无 Tab 切换
+- 删除原大气结构模块（`AtmosphereView.vue`、`atmosphereScene.js`）及地貌沙箱模块（`src/sandbox/`、`terrainScene.js`）
 - 大标题 UI 后续再推送上线，初期聚焦内容框架
 
 ### Hash 路由
 
 ```
-#/                                              首页（课本 Tab 默认）
+#/                                              首页（学段选择）
 #/textbook                                      学段选择页
 #/textbook/:grade                               显示该学段的教材列表
 #/textbook/:grade/:book                         显示该册的章列表
 #/textbook/:grade/:book/:chapter                显示该章的节列表
 #/textbook/:grade/:book/:chapter/:section       节内容页
-#/atmosphere                                    大气结构
-#/sandbox                                       地貌沙箱
 ```
 
 ## 导航设计
@@ -107,13 +104,17 @@
 
 第一版仅搭建完整目录框架，节内容以占位文字填充。后续从 PDF 提取文字逐步填充。
 
-## 现有模块处理
+## 旧模块清理
 
-「其他」Tab 下展示两个入口卡片（灰色弱化）：
-- **大气垂直结构与化学组成** — `#/atmosphere`
-- **地貌演化与河流类型** — `#/sandbox`
+删除原有模块相关文件：
 
-功能与现有实现完全一致，不进行改造。
+- `src/AtmosphereView.vue`
+- `src/lib/atmosphereScene.js`
+- `src/lib/terrainScene.js`
+- `src/sandbox/` 整个目录
+- `natural-geo-system.html`
+
+`src/main.js` 和 `src/style.css` 保留，清理对旧组件的引用。
 
 ## 3D 预留
 
@@ -121,17 +122,20 @@
 
 ## 文件结构变更
 
+删除旧模块，新增教材组件：
+
 ```
 src/
-  App.vue                    ← 改造为主入口
-  TextbookView.vue           ← 新增：教材模块根组件
+  App.vue                    ← 改造为教材系统主入口
+  style.css                  ← 保留，微调色调
+  main.js                    ← 保留，清理旧引用
   textbook/
-    TextbookHome.vue         ← 学段选择（初中/高中）
-    BookSelect.vue           ← 教材册选择
-    ChapterList.vue          ← 章列表
-    SectionContent.vue       ← 节内容页
+    TextbookHome.vue         ← 新增：学段选择（初中/高中）
+    BookSelect.vue           ← 新增：教材册选择
+    ChapterList.vue          ← 新增：章列表
+    SectionContent.vue       ← 新增：节内容页
     data/
-      index.js               ← 教材目录索引
+      index.js               ← 新增：教材目录索引
      初中/
        七年级上册.json
        七年级下册.json
