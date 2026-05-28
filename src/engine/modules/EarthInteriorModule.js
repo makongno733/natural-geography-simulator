@@ -27,7 +27,7 @@ function makeCurveTube(points, color, radius = 0.01, opacity = 0.7) {
   return new THREE.Mesh(geo, mat)
 }
 
-function addCutFace(group) {
+function addCutFace(group, clipPlane) {
   // Flat colored disks on the cut face showing each layer
   const layers = [
     { inner: 0, outer: 0.3, color: 0xf1c40f, label: '内核' },
@@ -139,9 +139,13 @@ export function EarthInteriorModule(scene, params, services) {
   const clipPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0.0)
 
   const innerCoreGeo = GeometryFactory.sphere(0.3, 48)
-  const innerCoreMat = MaterialLibrary.emissive({ color: 0xf1c40f, intensity: 0.5 })
-  innerCoreMat.roughness = 0.3
-  innerCoreMat.metalness = 0.7
+  const innerCoreMat = MaterialLibrary.clipPBR({
+    color: 0xf1c40f,
+    clippingPlanes: [clipPlane],
+    emissive: 0xf1c40f,
+    emissiveIntensity: 0.5,
+    metalness: 0.7,
+  })
   const innerCore = new THREE.Mesh(innerCoreGeo, innerCoreMat)
   group.add(innerCore)
 
@@ -175,7 +179,7 @@ export function EarthInteriorModule(scene, params, services) {
   const crust = new THREE.Mesh(crustGeo, crustMat)
   group.add(crust)
 
-  addCutFace(group)
+  addCutFace(group, clipPlane)
   addLithosphereDetail(group, clipPlane)
   addInteriorDynamics(group)
 
