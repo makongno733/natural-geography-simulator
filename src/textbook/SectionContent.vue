@@ -66,7 +66,19 @@
       >🌍 3D 大气模型</button>
     </div>
 
-    <template v-if="!showSandbox && !showEarth3D && !showSoilProfile && !showAtmo">
+    <!-- 3D 水循环切换（第三章地球上的水专用） -->
+    <div v-if="isWaterChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showWater }]"
+        @click="showWater = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showWater }]"
+        @click="showWater = true"
+      >💧 3D 水循环</button>
+    </div>
+
+    <template v-if="!showSandbox && !showEarth3D && !showSoilProfile && !showAtmo && !showWater">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -175,6 +187,9 @@
   <!-- 3D 大气模型视图 -->
   <AtmosphereViewer v-else-if="showAtmo" />
 
+  <!-- 3D 水循环视图 -->
+  <WaterCycleView v-else-if="showWater" @close="showWater = false" />
+
   </div>
 
   <div v-if="pptPreview.open" class="ppt-preview-mask" @click.self="closePreview">
@@ -215,6 +230,7 @@ import SandboxApp from '../sandbox/SandboxApp.vue'
 import Earth3D from '../sandbox/Earth3D.vue'
 import SoilProfilePage from '../soil-profile/SoilProfilePage.vue'
 import AtmosphereViewer from './components/AtmosphereViewer.vue'
+import WaterCycleView from '../engine/WaterCycleView.vue'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -226,6 +242,7 @@ const showSandbox = ref(false)
 const showEarth3D = ref(false)
 const showSoilProfile = ref(false)
 const showAtmo = ref(false)
+const showWater = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
 )
@@ -240,6 +257,9 @@ const isAtmoChapter = computed(() =>
 )
 const isSoilChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第五章'
+)
+const isWaterChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第三章'
 )
 
 const chapterData = ref(null)
