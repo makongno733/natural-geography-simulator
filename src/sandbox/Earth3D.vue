@@ -138,6 +138,9 @@ function switchCoord(id) {
   activeCoord.value = id
   coordDesc.value = descs[id] || ''
   currentCoords.value = objCoords[id] || ''
+  if (engine) {
+    engine.setParams({ coordSystem: id })
+  }
 }
 
 function selectObj(id) {
@@ -150,6 +153,8 @@ onMounted(async () => {
   engine = new BaseScene(containerRef.value, { bg: 0x0a0a1a, mode: 'simple' })
   postFx = new PostProcessing(engine.renderManager)
   engine.loadModule(EarthInteriorModule, { mode: 'simple' })
+  // Pass the engine reference to window for debug access
+  window.__engine = engine
   window.addEventListener('resize', () => engine.resize())
 })
 
@@ -159,12 +164,12 @@ function switchMode(m) {
     engine.loadModule(EarthInteriorModule, { mode: 'simple' })
     engine.setAutoRotate(true)
   } else if (m === 'professional') {
-    engine.loadModule(CelestialSphereModule)
+    engine.loadModule(CelestialSphereModule, { mode: 'professional' })
     engine.setAutoRotate(false)
     coordDesc.value = descs.horizontal
     currentCoords.value = objCoords.horizontal
   } else if (m === 'deepspace') {
-    engine.loadModule(SolarSystemModule)
+    engine.loadModule(SolarSystemModule, { mode: 'deepspace' })
     engine.setAutoRotate(false)
     postFx?.enableBloom({ threshold: 0.1, strength: 0.6, radius: 0.5 })
   }
