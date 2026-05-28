@@ -1,5 +1,124 @@
 export const grades = [
   {
+    id: '大学',
+    books: [
+      {
+        id: '自然地理学',
+        chapters: [
+          {
+            id: '绪论',
+            title: '绪论',
+            sections: [
+              { id: '一', title: '自然地理学的研究对象和分科', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '二', title: '自然地理学的任务', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '三', title: '自然地理学与其他学科的关系', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '四', title: '本书的内容和结构', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第一章',
+            title: '地球',
+            sections: [
+              { id: '第一节', title: '地球在宇宙中的位置', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第一章', section: '第一节' } },
+              { id: '第二节', title: '地球的形状和大小', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '初中', book: '七年级上册', chapter: '第一章', section: '第一节' } },
+              { id: '第三节', title: '地球的运动', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '选择性必修1', chapter: '第一章', section: '第一节' } },
+              { id: '第四节', title: '地理坐标', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '初中', book: '七年级上册', chapter: '第一章', section: '第二节' } },
+              { id: '第五节', title: '地球的圈层构造', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第一章', section: '第四节' } },
+              { id: '第六节', title: '地球表面的基本形态和特征', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第二章',
+            title: '地壳',
+            sections: [
+              { id: '第一节', title: '地壳的组成物质', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第二节', title: '构造运动与地质构造', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '大地构造学说', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第四节', title: '火山与地震', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '地壳的演变', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第一章', section: '第三节' } },
+            ]
+          },
+          {
+            id: '第三章',
+            title: '大气圈与气候系统',
+            sections: [
+              { id: '第一节', title: '大气的组成和热能', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第二章', section: '第一节' } },
+              { id: '第二节', title: '大气水分和降水', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '大气运动和天气系统', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第二章', section: '第二节' } },
+              { id: '第四节', title: '气候的形成', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '气候变化', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第四章',
+            title: '海洋和陆地水',
+            sections: [
+              { id: '第一节', title: '地球水循环与水量平衡', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第三章', section: '第一节' } },
+              { id: '第二节', title: '海洋起源与海水的物理化学性质', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '海水的运动', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第四节', title: '海平面变化', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '海洋资源和海洋环境保护', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第六节', title: '河流', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第七节', title: '湖泊与沼泽', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第八节', title: '地下水', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第九节', title: '冰川', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第五章',
+            title: '地貌',
+            sections: [
+              { id: '第一节', title: '地貌成因与地貌类型', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: { grade: '高中', book: '必修第一册', chapter: '第四章', section: '第一节' } },
+              { id: '第二节', title: '风化作用与块体运动', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '流水地貌', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第四节', title: '喀斯特地貌', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '冰川与冰缘地貌', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第六节', title: '风沙地貌与黄土地貌', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第七节', title: '海岸与海底地貌', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第八节', title: '火山地貌', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第六章',
+            title: '土壤圈',
+            sections: [
+              { id: '第一节', title: '土壤圈的物质组成及特性', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第二节', title: '土壤形成与地理环境间的关系', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '土壤分类及空间分布规律', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第四节', title: '土壤类型特征', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '中国土壤系统分类体系之间的参比', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第六节', title: '土壤资源的合理利用和保护', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第七章',
+            title: '生物群落与生态系统',
+            sections: [
+              { id: '第一节', title: '地球的生物界', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第二节', title: '生物与环境', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '生物种群和生物群落', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第四节', title: '生态系统', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '陆地和水域生态系统', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第六节', title: '社会-经济-自然复合生态系统', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第七节', title: '生物多样性及其保护', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+          {
+            id: '第八章',
+            title: '自然地理综合研究',
+            sections: [
+              { id: '第一节', title: '自然地理环境的整体性', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第二节', title: '自然地理环境的地域分异', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第三节', title: '自然区划', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第四节', title: '土地类型研究', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+              { id: '第五节', title: '人地关系研究', content: { keyPoints: [], body: '详细内容待填充…', interactive: null, ppt: null }, sourceRef: null },
+            ]
+          },
+        ]
+      }
+    ]
+  },
+  {
     id: '初中',
     books: [
       {
@@ -175,4 +294,24 @@ export function findChapter(gradeId, bookId, chapterId) {
   const book = grade.books.find(b => b.id === bookId)
   if (!book) return null
   return book.chapters.find(c => c.id === chapterId) || null
+}
+
+// Find college-level reference for a given middle/high school section
+export function findCollegeRef(gradeId, bookId, chapterId, sectionId) {
+  const collegeGrade = grades.find(g => g.id === '大学')
+  if (!collegeGrade) return null
+  for (const book of collegeGrade.books) {
+    for (const ch of book.chapters) {
+      for (const sec of ch.sections) {
+        if (sec.sourceRef &&
+            sec.sourceRef.grade === gradeId &&
+            sec.sourceRef.book === bookId &&
+            sec.sourceRef.chapter === chapterId &&
+            sec.sourceRef.section === sectionId) {
+          return { grade: '大学', book: book.id, chapter: ch.id, section: sec.id, sectionTitle: sec.title, chapterTitle: ch.title }
+        }
+      }
+    }
+  }
+  return null
 }

@@ -37,6 +37,22 @@
           </ul>
         </div>
 
+        <!-- 大学深度参考（中学章节→大学对应内容） -->
+        <div v-if="collegeRef" class="college-link">
+          <span class="college-icon">📖</span>
+          <router-link :to="'/' + collegeRef.grade + '/' + collegeRef.book + '/' + collegeRef.chapter + '/' + collegeRef.section">
+            大学深度参考：{{ collegeRef.chapter }} {{ collegeRef.chapterTitle }} · {{ collegeRef.section }} {{ collegeRef.sectionTitle }}
+          </router-link>
+        </div>
+
+        <!-- 中学关联（大学章节→中学对应内容） -->
+        <div v-if="sectionData.sourceRef" class="college-link">
+          <span class="college-icon">📘</span>
+          <router-link :to="'/' + sectionData.sourceRef.grade + '/' + sectionData.sourceRef.book + '/' + sectionData.sourceRef.chapter + '/' + sectionData.sourceRef.section">
+            关联中学教材：{{ sectionData.sourceRef.grade }} · {{ sectionData.sourceRef.book }} · {{ sectionData.sourceRef.chapter }} · {{ sectionData.sourceRef.section }}
+          </router-link>
+        </div>
+
         <div class="body-text">
           <p>{{ sectionData.content.body }}</p>
         </div>
@@ -73,7 +89,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { grades, findSection, findChapter } from './data/index.js'
+import { grades, findSection, findChapter, findCollegeRef } from './data/index.js'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -83,6 +99,11 @@ const sectionId = computed(() => route.params.section)
 
 const chapterData = computed(() => findChapter(gradeId.value, bookId.value, chapterId.value))
 const sectionData = computed(() => findSection(gradeId.value, bookId.value, chapterId.value, sectionId.value))
+const collegeRef = computed(() =>
+  gradeId.value !== '大学'
+    ? findCollegeRef(gradeId.value, bookId.value, chapterId.value, sectionId.value)
+    : null
+)
 
 const prevSection = computed(() => {
   if (!chapterData.value) return null
@@ -177,6 +198,21 @@ const nextSection = computed(() => {
 }
 .key-points ul { margin: 0; padding-left: 18px; }
 .key-points li { font-size: 14px; line-height: 1.7; color: #333; }
+.college-link {
+  border: 1px solid #d4a854;
+  background: #fef9ee;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.college-icon { margin-right: 6px; }
+.college-link a {
+  color: #8b6914;
+  text-decoration: none;
+  font-weight: 600;
+}
+.college-link a:hover { text-decoration: underline; }
 .body-text {
   font-size: 14px;
   line-height: 1.8;
