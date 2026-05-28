@@ -121,6 +121,13 @@ export function CelestialSphereModule(scene, params, services) {
   glow.position.copy(pulsarPos)
   group.add(glow)
 
+  // Animated object references
+  const animatedObjects = {
+    betelgeuse: objectMeshes['betelgeuse'],
+    pulsar: { glow, angle: 0 },
+    cygnus: { disk, angle: 0 },
+  }
+
   if (labelSystem) {
     const sysLabels = [
       { text: '天顶', pos: [0, CS_RADIUS + 0.2, 0], color: '#888' },
@@ -141,7 +148,28 @@ export function CelestialSphereModule(scene, params, services) {
     setParams(p) {
       if (p.mode) { mode = p.mode }
     },
-    update(dt, elapsed) {},
+    update(dt, elapsed) {
+      if (mode !== 'professional') return
+
+      // Betelgeuse pulsing
+      if (animatedObjects.betelgeuse) {
+        const pulse = 1 + Math.sin(elapsed * 0.8) * 0.08
+        animatedObjects.betelgeuse.scale.setScalar(pulse)
+        const mat = animatedObjects.betelgeuse.material
+        if (mat.emissiveIntensity !== undefined) {
+          mat.emissiveIntensity = 0.8 + Math.sin(elapsed * 0.8) * 0.4
+        }
+      }
+
+      // Crab Pulsar beam rotation
+      animatedObjects.pulsar.angle += dt * 2.0
+      animatedObjects.pulsar.glow.rotation.z = animatedObjects.pulsar.angle
+      animatedObjects.pulsar.glow.material.opacity = 0.2 + Math.sin(elapsed * 4) * 0.15
+
+      // Cygnus X-1 accretion disk rotation
+      animatedObjects.cygnus.angle += dt * 0.6
+      animatedObjects.cygnus.disk.rotation.z = animatedObjects.cygnus.angle
+    },
     dispose() {},
   }
   group.userData = { api }
