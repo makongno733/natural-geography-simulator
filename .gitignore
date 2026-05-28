@@ -7,6 +7,14 @@ build/
 coverage/
 *.tsbuildinfo
 
+# Local teaching source materials / large binary references
+# Keep these on this computer, but do not upload them to GitHub.
+45-高中地理【人教版】/
+电子课本/
+*.ppt
+*.pptx
+*.pdf
+
 # Tool caches
 .npm-cache/
 .pnpm-store/
