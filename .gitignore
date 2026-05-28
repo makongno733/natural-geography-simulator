@@ -38,3 +38,6 @@ Thumbs.db
 .claude/
 .home/
 .superpowers/
+
+# pnpm home store
+.home/
