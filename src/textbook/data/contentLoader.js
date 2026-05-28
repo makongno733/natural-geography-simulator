@@ -2,7 +2,7 @@
  * Content loader for textbook sections.
  * Supports two formats:
  * - University (大学): per-section content in index.json
- * - Middle/High school: per-chapter content in content.json
+ * - Middle/High school: chapter + section content in content.json
  */
 const contentCache = {}
 
@@ -18,7 +18,7 @@ export async function loadSectionContent(gradeId, bookId, chapterId, sectionId) 
     return contentCache[key][chapterId]?.[sectionId] || null
   }
 
-  // Middle/high school: load chapter-level content
+  // Middle/high school: load chapter-level content, with optional section override
   const key = `${gradeId}/${bookId}`
   if (!contentCache[key]) {
     try {
@@ -26,7 +26,12 @@ export async function loadSectionContent(gradeId, bookId, chapterId, sectionId) 
       contentCache[key] = mod.default || mod
     } catch { contentCache[key] = {} }
   }
-  return contentCache[key][chapterId] || null
+  const chapter = contentCache[key][chapterId]
+  if (!chapter) return null
+  if (sectionId && chapter.sections && chapter.sections[sectionId]) {
+    return chapter.sections[sectionId]
+  }
+  return chapter
 }
 
 export async function loadKeyPoints(gradeId, bookId, chapterId) {

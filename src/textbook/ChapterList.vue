@@ -22,17 +22,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { grades } from './data/index.js'
+import { getBook } from './data/catalogLoader.js'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
 const bookId = computed(() => route.params.book)
-const currentBook = computed(() => {
-  const grade = grades.find(g => g.id === gradeId.value)
-  return grade?.books.find(b => b.id === bookId.value)
-})
+const currentBook = ref({ chapters: [] })
+
+watch(
+  [gradeId, bookId],
+  async ([nextGradeId, nextBookId]) => {
+    currentBook.value = (await getBook(nextGradeId, nextBookId)) || { chapters: [] }
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

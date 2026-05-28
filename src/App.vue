@@ -3,12 +3,39 @@
     <header class="app-header">
       <router-link to="/" class="app-title">中学地理教学系统</router-link>
       <p class="app-subtitle">人教版 · 初中 / 高中</p>
+      <div class="global-ppt-tools">
+        <label class="global-folder-picker">
+          <input
+            type="file"
+            webkitdirectory
+            directory
+            multiple
+            accept=".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            @change="handleGlobalFolderPicked"
+          >
+          选择本地文件夹（全站PPT）
+        </label>
+        <span v-if="localFolderLoaded" class="global-folder-state">已导入 {{ localPptResources.length }} 个课件</span>
+      </div>
     </header>
     <router-view />
   </div>
 </template>
 
 <script setup>
+import { parseLocalPptFolder } from './textbook/data/pptResources.js'
+import { usePptFolderStore } from './textbook/data/pptFolderStore.js'
+
+const {
+  localPptResources,
+  localFolderLoaded,
+  setLocalPptResources
+} = usePptFolderStore()
+
+function handleGlobalFolderPicked(event) {
+  const resources = parseLocalPptFolder(event.target.files)
+  setLocalPptResources(resources)
+}
 </script>
 
 <style scoped>
@@ -47,6 +74,34 @@
   color: #b85a4d;
   font-size: 14px;
   font-family: "Noto Serif SC", "Songti SC", serif;
+}
+.global-ppt-tools {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+.global-folder-picker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--brown);
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #6b3b32;
+  cursor: pointer;
+  user-select: none;
+}
+.global-folder-picker input {
+  display: none;
+}
+.global-folder-state {
+  font-size: 12px;
+  color: #8d463d;
 }
 
 @media (max-width: 720px) {

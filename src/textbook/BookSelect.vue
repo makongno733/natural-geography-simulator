@@ -20,13 +20,21 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { grades } from './data/index.js'
+import { getGrade } from './data/catalogLoader.js'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
-const currentGrade = computed(() => grades.find(g => g.id === gradeId.value))
+const currentGrade = ref({ books: [] })
+
+watch(
+  gradeId,
+  async (nextGradeId) => {
+    currentGrade.value = (await getGrade(nextGradeId)) || { books: [] }
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

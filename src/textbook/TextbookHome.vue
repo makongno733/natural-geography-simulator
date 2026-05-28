@@ -10,7 +10,14 @@
 </template>
 
 <script setup>
-import { grades } from './data/index.js'
+import { onMounted, ref } from 'vue'
+import { getGrades } from './data/catalogLoader.js'
+
+const grades = ref([])
+
+onMounted(async () => {
+  grades.value = await getGrades()
+})
 </script>
 
 <style scoped>

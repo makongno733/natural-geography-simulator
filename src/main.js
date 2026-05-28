@@ -3,10 +3,10 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 import './style.css'
 
-import TextbookHome from './textbook/TextbookHome.vue'
-import BookSelect from './textbook/BookSelect.vue'
-import ChapterList from './textbook/ChapterList.vue'
-import SectionContent from './textbook/SectionContent.vue'
+const TextbookHome = () => import('./textbook/TextbookHome.vue')
+const BookSelect = () => import('./textbook/BookSelect.vue')
+const ChapterList = () => import('./textbook/ChapterList.vue')
+const SectionContent = () => import('./textbook/SectionContent.vue')
 
 const routes = [
   { path: '/', name: 'home', component: TextbookHome },
