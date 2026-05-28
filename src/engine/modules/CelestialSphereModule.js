@@ -14,6 +14,9 @@ export function CelestialSphereModule(scene, params, services) {
   const { labelSystem } = services
   const group = new THREE.Group()
   const CS_RADIUS = 2.5
+  let mode = params.mode || 'simple'
+  const sphereSegs = mode === 'simple' ? 24 : 48
+  const gridSegs = mode === 'simple' ? 36 : 64
 
   const originGeo = GeometryFactory.sphere(0.05, 12)
   const originMat = new THREE.MeshBasicMaterial({ color: 0x888888 })
@@ -24,8 +27,8 @@ export function CelestialSphereModule(scene, params, services) {
     const r = Math.cos(phi) * CS_RADIUS
     const y = Math.sin(phi) * CS_RADIUS
     const pts = []
-    for (let i = 0; i <= 36; i++) {
-      const theta = (i / 36) * Math.PI * 2
+    for (let i = 0; i <= gridSegs; i++) {
+      const theta = (i / gridSegs) * Math.PI * 2
       pts.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r))
     }
     group.add(GeometryFactory.lineFromPoints(pts, 0x446688, 0.15))
@@ -34,8 +37,8 @@ export function CelestialSphereModule(scene, params, services) {
   for (let lon = 0; lon < 360; lon += 30) {
     const theta = (lon * Math.PI) / 180
     const pts = []
-    for (let i = 0; i <= 36; i++) {
-      const phi = (i / 36) * Math.PI
+    for (let i = 0; i <= gridSegs; i++) {
+      const phi = (i / gridSegs) * Math.PI
       pts.push(new THREE.Vector3(
         Math.cos(theta) * Math.sin(phi) * CS_RADIUS,
         Math.cos(phi) * CS_RADIUS,
@@ -68,7 +71,7 @@ export function CelestialSphereModule(scene, params, services) {
   const objectMeshes = {}
   CELESTIAL_OBJECTS.forEach(obj => {
     const pos = new THREE.Vector3(...obj.pos)
-    const geo = GeometryFactory.sphere(obj.size, 16)
+    const geo = GeometryFactory.sphere(obj.size, sphereSegs)
     const mat = MaterialLibrary.emissive({
       color: obj.color,
       intensity: obj.emissiveIntensity,
@@ -134,6 +137,11 @@ export function CelestialSphereModule(scene, params, services) {
 
   const api = {
     getObjectMeshes() { return objectMeshes },
+    setMode(m) { mode = m },
+    setParams(p) {
+      if (p.mode) { mode = p.mode }
+    },
+    update(dt, elapsed) {},
     dispose() {},
   }
   group.userData = { api }
