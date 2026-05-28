@@ -152,7 +152,7 @@
   <Earth3D v-else-if="showEarth3D" />
 
   <!-- 3D 土壤剖面 -->
-  <SoilProfileModal v-else-if="showSoilProfile" @close="showSoilProfile = false" />
+  <SoilProfilePage v-else-if="showSoilProfile" />
 
   </div>
 
@@ -192,7 +192,7 @@ import { usePptFolderStore } from './data/pptFolderStore.js'
 import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
 import SandboxApp from '../sandbox/SandboxApp.vue'
 import Earth3D from '../sandbox/Earth3D.vue'
-import SoilProfileModal from '../soil-profile/SoilProfileModal.vue'
+import SoilProfilePage from '../soil-profile/SoilProfilePage.vue'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
