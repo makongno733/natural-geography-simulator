@@ -179,24 +179,40 @@ export function AtmosphereModule(scene, params, services) {
 
   // ── Theme 0: 大气垂直分层 ──
   function showVerticalLayers() {
-    Object.entries(LAYER_HEIGHTS).forEach(([name, h]) => {
+    // Transparent atmospheric shells
+    const layerNames = Object.keys(LAYER_HEIGHTS)
+    layerNames.forEach((name, idx) => {
+      const h = LAYER_HEIGHTS[name]
       const outerR = EARTH_RADIUS + (h.max / 1000) * 6
       const innerR = EARTH_RADIUS + (h.min / 1000) * 6
       const r = (outerR + innerR) / 2
+      const thickness = outerR - innerR
 
-      const geo = GeometryFactory.sphere(r, 48)
-      const mat = new THREE.ShaderMaterial({
+      // Transparent shell using sphere geometry
+      const geo = GeometryFactory.sphere(r, 64)
+      const mat = new THREE.MeshBasicMaterial({
+        color: h.color,
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.08 + idx * 0.005,
         side: THREE.DoubleSide,
         depthWrite: false,
-        uniforms: { uColor: { value: new THREE.Color(h.color) } },
-        vertexShader: `varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `uniform vec3 uColor; varying vec3 vNormal; void main() { float rim = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))); float alpha = smoothstep(0.4, 1.0, rim) * 0.3; gl_FragColor = vec4(uColor, alpha); }`,
       })
       const mesh = new THREE.Mesh(geo, mat)
       group.add(mesh)
       themeObjects.push(mesh)
+
+      // Layer name label placed on the right side of each shell
+      if (labelSystem) {
+        const labelR = r + 0.02
+        const angle = (idx - 2) * 0.25
+        const labelPos = new THREE.Vector3(labelR, angle * 0.3, 0)
+        labelSystem.addToGroup(group, name, labelPos, {
+          color: '#' + h.color.toString(16).padStart(6, '0'),
+          fontSize: '13px',
+          fontWeight: '700',
+          background: 'rgba(0,0,0,0.4)',
+        })
+      }
     })
 
     // Temperature curve
@@ -260,19 +276,7 @@ export function AtmosphereModule(scene, params, services) {
     const auroraSouth = addRibbon(group, GeometryFactory.arcPoints(0, Math.PI * 2, EARTH_RADIUS + 0.62, -1.45, 128), 0x88bbff, 0.008, 0.26)
     themeObjects.push(auroraNorth, auroraSouth)
 
-    if (labelSystem) {
-      LAYER_LABELS.forEach(l => {
-        const r = EARTH_RADIUS + l.height * SCALE
-        const text = isProfessional ? `${l.name}\n${l.profExtra}` : l.name
-        labelSystem.addToGroup(group, text, new THREE.Vector3(r, 0, 0), {
-          fontSize: isProfessional ? '10px' : '12px',
-          fontWeight: '600',
-          whiteSpace: 'pre-line',
-          textAlign: 'center',
-          lineHeight: '1.4',
-        })
-      })
-    }
+    // Layer labels now attached directly to each shell above
   }
 
   // ── Theme 1: 大气组成 ──
