@@ -79,7 +79,9 @@
         <div v-if="mode === 'professional'" class="knowledge-box professional">
           <h4>📚 学术扩展</h4>
           <ul>
-            <li v-for="pt in currentModule.advancedPoints" :key="pt">{{ pt }}</li>
+            <li v-for="(pt, i) in currentModule.advancedPoints" :key="i">
+              <GlossaryText :text="pt" :glossary="glossary" @show-term="openGlossary" />
+            </li>
           </ul>
           <div class="ref-section" v-if="currentModule.references">
             <h4>📎 参考文献</h4>
@@ -95,6 +97,20 @@
         </div>
       </aside>
     </div>
+
+    <!-- Glossary popup -->
+    <Teleport to="body">
+      <div v-if="activeGlossaryTerm" class="glossary-mask" @click="activeGlossaryTerm = null"></div>
+      <div
+        v-if="activeGlossaryTerm"
+        class="glossary-popup"
+        :style="{ top: glossaryPos.y + 'px', left: glossaryPos.x + 'px' }"
+      >
+        <h4 class="glossary-term">{{ activeGlossaryTerm.term }}</h4>
+        <p class="glossary-def">{{ activeGlossaryTerm.explanation }}</p>
+        <button class="glossary-close" @click="activeGlossaryTerm = null">✕</button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -102,11 +118,24 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { SceneEngine } from './engine/SceneEngine.js'
 import { landformModules } from './modules/landformModules.js'
+import { glossary } from './modules/glossary.js'
+import GlossaryText from './modules/GlossaryText.vue'
 
 const props = defineProps({
   embedded: { type: Boolean, default: false }
 })
 defineEmits(['close'])
+
+const activeGlossaryTerm = ref(null)
+const glossaryPos = ref({ x: 0, y: 0 })
+function openGlossary(term, event) {
+  const rect = event.target.getBoundingClientRect()
+  glossaryPos.value = {
+    x: Math.min(rect.left, window.innerWidth - 300),
+    y: rect.bottom + 6
+  }
+  activeGlossaryTerm.value = term
+}
 
 const viewportRef = ref(null)
 const mode = ref('simple')
@@ -373,4 +402,47 @@ function onResize() {
 @media (max-width: 640px) {
   .module-panel, .info-panel { display: none; }
 }
+
+/* Glossary popup (non-scoped, teleported to body) */
+:global(.glossary-mask) {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: transparent;
+}
+:global(.glossary-popup) {
+  position: fixed;
+  z-index: 101;
+  max-width: 320px;
+  background: #fff;
+  border: 1px solid #ceb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+:global(.glossary-term) {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #6b4a8a;
+  padding-right: 24px;
+}
+:global(.glossary-def) {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #3d2822;
+}
+:global(.glossary-close) {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: #99897a;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+:global(.glossary-close:hover) { color: var(--red); }
 </style>
