@@ -98,9 +98,9 @@ export function CelestialSphereModule(scene, params, services) {
     objectMeshes[obj.id] = mesh
 
     if (labelSystem) {
-      labelSystem.addToGroup(group, obj.name,
+      labelSystem.addToGroup(group, `${obj.name} (${obj.type})`,
         pos.clone().add(new THREE.Vector3(0, obj.size + 0.15, 0)),
-        { color: '#' + obj.color.toString(16).padStart(6, '0'), fontSize: '11px' })
+        { color: '#' + obj.color.toString(16).padStart(6, '0'), fontSize: '10px' })
     }
   })
 

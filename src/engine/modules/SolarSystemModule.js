@@ -3,12 +3,12 @@ import { MaterialLibrary } from '../materials/MaterialLibrary.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 
 const PLANETS = [
-  { name: '水星', radius: 0.9, size: 0.03, color: 0xaaaaaa, period: 0.24 },
-  { name: '金星', radius: 1.3, size: 0.05, color: 0xe8cda0, period: 0.62 },
-  { name: '地球', radius: 1.8, size: 0.07, color: 0x4a90d9, period: 1.0, isEarth: true },
-  { name: '火星', radius: 2.4, size: 0.05, color: 0xcd5c5c, period: 1.88, isMars: true },
-  { name: '木星', radius: 3.3, size: 0.12, color: 0xd4a574, period: 11.86 },
-  { name: '土星', radius: 4.2, size: 0.10, color: 0xead6b8, period: 29.46 },
+  { name: '水星', radius: 0.9, size: 0.03, color: 0xaaaaaa, period: 0.24, cls: '类地行星' },
+  { name: '金星', radius: 1.3, size: 0.05, color: 0xe8cda0, period: 0.62, cls: '类地行星' },
+  { name: '地球', radius: 1.8, size: 0.07, color: 0x4a90d9, period: 1.0, isEarth: true, cls: '类地行星' },
+  { name: '火星', radius: 2.4, size: 0.05, color: 0xcd5c5c, period: 1.88, isMars: true, cls: '类地行星' },
+  { name: '木星', radius: 3.3, size: 0.12, color: 0xd4a574, period: 11.86, cls: '巨行星' },
+  { name: '土星', radius: 4.2, size: 0.10, color: 0xead6b8, period: 29.46, cls: '巨行星' },
 ]
 
 export function SolarSystemModule(scene, params, services) {
@@ -193,9 +193,10 @@ export function SolarSystemModule(scene, params, services) {
 
     if (labelSystem) {
       const isKey = p.isEarth || p.isMars
-      labelSystem.addToGroup(group, p.name,
+      const labelText = isDetailed ? `${p.name}\n${p.cls}` : p.name
+      labelSystem.addToGroup(group, labelText,
         new THREE.Vector3(0, p.size + 0.18, 0).add(mesh.position),
-        { color: isKey ? '#' + p.color.toString(16).padStart(6, '0') : '#aaa', fontSize: isKey ? '12px' : '10px', fontWeight: isKey ? '700' : '400' })
+        { color: isKey ? '#' + p.color.toString(16).padStart(6, '0') : '#aaa', fontSize: isKey ? '11px' : '9px', fontWeight: isKey ? '700' : '400' })
     }
   })
 
@@ -327,6 +328,35 @@ export function SolarSystemModule(scene, params, services) {
   trail.userData._managed = true
   group.add(trail)
 
+  // Mars base — appears at mission end
+  const marsBase = new THREE.Group()
+  const baseDomeGeo = new THREE.SphereGeometry(0.05, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)
+  const baseDome = new THREE.Mesh(baseDomeGeo, new THREE.MeshStandardMaterial({
+    color: 0xcccccc, roughness: 0.4, metalness: 0.6,
+  }))
+  marsBase.add(baseDome)
+  // Small solar panel
+  const panelGeo = new THREE.PlaneGeometry(0.08, 0.04)
+  const panel = new THREE.Mesh(panelGeo, new THREE.MeshStandardMaterial({
+    color: 0x2244aa, roughness: 0.3, emissive: 0x112244, emissiveIntensity: 0.3, side: THREE.DoubleSide,
+  }))
+  panel.rotation.x = -0.5
+  panel.position.set(0.04, 0.01, 0)
+  marsBase.add(panel)
+  marsBase.visible = false
+  group.add(marsBase)
+
+  // Voyager 1 marker at edge of solar system
+  const voyagerGeo = GeometryFactory.sphere(0.02, 8)
+  const voyagerMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 })
+  const voyager = new THREE.Mesh(voyagerGeo, voyagerMat)
+  voyager.position.set(6, 0.3, 3)
+  group.add(voyager)
+  if (labelSystem) {
+    labelSystem.addToGroup(group, '旅行者1号\n(1977-至今)', new THREE.Vector3(6.1, 0.4, 3.1),
+      { color: '#ffcc00', fontSize: '9px' })
+  }
+
   // Phase label markers
   const phaseLabels = [
     { prog: 0, text: '① 发射', color: '#60a5fa' },
@@ -432,6 +462,13 @@ export function SolarSystemModule(scene, params, services) {
       }
       // Slow asteroid belt rotation
       asteroidBelt.rotation.y += dt * 0.02
+
+      // Show Mars base when rocket near Mars
+      marsBase.visible = transferProgress > 0.92
+      if (marsBase.visible && marsMesh) {
+        marsBase.position.copy(marsMesh.position)
+        marsBase.position.y += 0.07
+      }
 
       trail.position.copy(rocket.position)
 

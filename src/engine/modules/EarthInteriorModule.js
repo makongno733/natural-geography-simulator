@@ -2,16 +2,16 @@ import * as THREE from 'three'
 import { MaterialLibrary } from '../materials/MaterialLibrary.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 
-const ANNOTATION_LAYERS = [
-  { name: '地壳', color: '#4a90d9', pos: [1.4, 0.5, 0], props: ['厚度 5-70km', '温度 地表~1000°C', '组成 花岗岩/玄武岩', '状态 固态'] },
-  { name: '地幔', color: '#e67e22', pos: [1.1, -0.8, 0.8], props: ['厚度 ~2900km', '温度 1000-3700°C', '密度 3.3-5.7 g/cm³', '组成 橄榄岩'] },
-  { name: '外核', color: '#f39c12', pos: [0.8, 0.6, -0.4], props: ['厚度 ~2210km', '温度 3700-4500°C', '组成 Fe+Ni', '状态 液态'] },
-  { name: '内核', color: '#f1c40f', pos: [0.5, -0.3, -0.5], props: ['半径 ~1220km', '温度 ~5500°C', '密度 ~13 g/cm³', '状态 固态'] },
+const DISCONTINUITIES = [
+  { name: '莫霍界面 ~33km', radius: 1.0, color: '#6688aa', desc: '地壳与地幔分界' },
+  { name: '古登堡界面 ~2900km', radius: 0.85, color: '#6688aa', desc: '地幔与外核分界' },
 ]
 
-const DISCONTINUITIES = [
-  { name: '莫霍界面', radius: 1.0, color: '#6688aa' },
-  { name: '古登堡界面', radius: 0.85, color: '#6688aa' },
+const ANNOTATION_LAYERS = [
+  { name: '地壳 5-70km', color: '#4a90d9', pos: [1.4, 0.5, 0], props: ['固态 · 花岗岩/玄武岩', '温度 地表~1000°C', '莫霍面为下界'] },
+  { name: '地幔 ~2900km', color: '#e67e22', pos: [1.1, -0.8, 0.8], props: ['固态 · 橄榄岩为主', '温度 1000-3700°C', '上地幔+下地幔', '软流层位于上部'] },
+  { name: '外核 ~2210km', color: '#f39c12', pos: [0.8, 0.6, -0.4], props: ['液态 · Fe+Ni合金', '温度 3700-4500°C', '对流产生地磁场'] },
+  { name: '内核 ~1220km', color: '#f1c40f', pos: [0.5, -0.3, -0.5], props: ['固态 · Fe+Ni合金', '温度 ~5500°C', '密度 ~13 g/cm³', '半径 ~1220km'] },
 ]
 
 function makeCurveTube(points, color, radius = 0.01, opacity = 0.7) {
@@ -216,6 +216,30 @@ export function EarthInteriorModule(scene, params, services) {
     torus.rotation.x = Math.PI / 2
     group.add(torus)
   })
+
+  // Depth scale bar (right side of cross-section, 0→6371km)
+  const scaleGroup = new THREE.Group()
+  const scaleX = 1.15
+  // Vertical line
+  const linePts = [new THREE.Vector3(scaleX, -1.0, 0), new THREE.Vector3(scaleX, 1.0, 0)]
+  scaleGroup.add(GeometryFactory.lineFromPoints(linePts, 0x888888, 0.5))
+  // Tick marks at key depths
+  const ticks = [
+    { y: 1.0, label: '地表 0km', color: '#4a90d9' },
+    { y: 0.85, label: '莫霍面 ~33km', color: '#6688aa' },
+    { y: 0.55, label: '古登堡面 ~2900km', color: '#6688aa' },
+    { y: 0.3, label: '内核边界 ~5150km', color: '#f39c12' },
+    { y: 0, label: '地心 6371km', color: '#aaa' },
+  ]
+  ticks.forEach(t => {
+    const tickLine = [new THREE.Vector3(scaleX - 0.05, t.y, 0), new THREE.Vector3(scaleX + 0.05, t.y, 0)]
+    scaleGroup.add(GeometryFactory.lineFromPoints(tickLine, 0x888888, 0.4))
+    if (labelSystem) {
+      labelSystem.addToGroup(scaleGroup, t.label, new THREE.Vector3(scaleX + 0.2, t.y, 0),
+        { color: t.color, fontSize: '10px', fontWeight: '500' })
+    }
+  })
+  group.add(scaleGroup)
 
   if (labelSystem) {
     ANNOTATION_LAYERS.forEach(l => {

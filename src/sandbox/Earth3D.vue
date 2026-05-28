@@ -57,6 +57,11 @@
         <div v-show="mode === 'deepspace'" class="info-content" style="height:100%">
           <h2>🚀 深空探索</h2>
           <div class="space-scroll">
+            <div class="zoom-levels">
+              <button :class="['zoom-btn', { active: zoomLevel === 'earth' }]" @click="setZoom('earth')">🌍 地球</button>
+              <button :class="['zoom-btn', { active: zoomLevel === 'solar' }]" @click="setZoom('solar')">☀️ 太阳系</button>
+              <button :class="['zoom-btn', { active: zoomLevel === 'galaxy' }]" @click="setZoom('galaxy')">🌌 银河系</button>
+            </div>
             <h3>🌌 太阳系概览</h3>
             <p>行星绕太阳公转，轨道近似椭圆。公转速度随距离增大而减小。</p>
             <div class="planet-table">
@@ -108,7 +113,30 @@ const coordDesc = ref('')
 const currentCoords = ref({})
 const transferDay = ref(0)
 const autoPlay = ref(false)
+const zoomLevel = ref('solar')
 let autoPlayTimer = null
+
+function setZoom(level) {
+  zoomLevel.value = level
+  if (!engine?.cameraRig) return
+  const cam = engine.cameraRig.camera
+  const ct = engine.cameraRig.controls.target
+  switch (level) {
+    case 'earth':
+      ct.set(1.8, 0, 0)
+      cam.position.set(1.8, 1.2, 2.5)
+      break
+    case 'solar':
+      ct.set(2.0, 0, 0.5)
+      cam.position.set(3, 4, 7)
+      break
+    case 'galaxy':
+      ct.set(0, 0, 0)
+      cam.position.set(0, 15, 20)
+      break
+  }
+  engine.cameraRig.controls.update()
+}
 
 const phaseName = computed(() => {
   const p = transferDay.value / 259
@@ -292,6 +320,13 @@ onBeforeUnmount(() => {
 .obj-info strong { display: block; font-size: 0.82rem; }
 .obj-type { color: #666; font-size: 0.7rem; }
 .obj-coord { font-size: 0.65rem; background: #1e293b; padding: 1px 6px; border-radius: 4px; color: #facc15; }
+.zoom-levels { display: flex; gap: 4px; margin-bottom: 12px; }
+.zoom-btn {
+  flex: 1; padding: 6px 4px; border: 1px solid #444; border-radius: 6px;
+  background: transparent; color: #888; font-size: 0.72rem; cursor: pointer; text-align: center;
+}
+.zoom-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.zoom-btn:hover:not(.active) { border-color: #666; color: #ccc; }
 .space-scroll { overflow-y: auto; height: calc(100% - 30px); padding-right: 4px; }
 .planet-table { font-size: 0.7rem; margin: 6px 0; }
 .pt-header, .pt-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2px; padding: 3px 0; border-bottom: 1px solid #1a1a1a; }
