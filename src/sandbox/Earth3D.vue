@@ -281,7 +281,7 @@ onBeforeUnmount(() => {
 .mode-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
 .chapter-ref { font-size: 12px; color: #555; }
 #main { display: flex; flex: 1; overflow: hidden; }
-#canvas-container { flex: 1; position: relative; }
+#canvas-container { flex: 1; position: relative; overflow: hidden; }
 .controls-hint {
   position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
   background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 6px;

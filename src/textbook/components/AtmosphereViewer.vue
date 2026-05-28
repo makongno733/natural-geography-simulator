@@ -37,7 +37,7 @@ const props = defineProps({
   defaultTab: { type: Number, default: 0 },
 })
 
-const tabs = ['垂直分层', '大气组成', '受热过程', '三圈环流']
+const tabs = ['垂直分层', '大气组成', '受热过程', '大气环流', '热力环流', '温室效应']
 const activeTab = ref(props.defaultTab || 0)
 const currentMode = ref(props.mode)
 const sceneContainer = ref(null)
@@ -134,6 +134,8 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 400px;
   display: block;
+  position: relative;
+  overflow: hidden;
 }
 @media (max-width: 720px) {
   .atmo-canvas { height: 280px; }

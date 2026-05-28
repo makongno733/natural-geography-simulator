@@ -8,6 +8,7 @@ export class LabelSystem {
     this.renderer.domElement.style.top = '0'
     this.renderer.domElement.style.left = '0'
     this.renderer.domElement.style.pointerEvents = 'none'
+    this.renderer.domElement.style.overflow = 'hidden'
     container.appendChild(this.renderer.domElement)
     this._labels = []
   }
