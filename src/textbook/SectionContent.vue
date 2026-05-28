@@ -12,6 +12,18 @@
       <span>{{ sectionId }}</span>
     </div>
 
+    <!-- 3D 地球切换（第一章宇宙中的地球专用） -->
+    <div v-if="isEarthChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showEarth3D }]"
+        @click="showEarth3D = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showEarth3D }]"
+        @click="showEarth3D = true"
+      >🌍 3D 地球探索</button>
+    </div>
+
     <!-- 3D 大气模型切换（第二章地球上的大气专用） -->
     <div v-if="isAtmoChapter" class="sandbox-toggle-bar">
       <button
@@ -24,7 +36,7 @@
       >🌍 3D 大气模型</button>
     </div>
 
-    <template v-if="!showAtmo">
+    <template v-if="!showEarth3D && !showAtmo">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -117,6 +129,9 @@
     </div>
   </template>
 
+  <!-- 3D 地球视图 -->
+  <Earth3D v-else-if="showEarth3D" />
+
   <!-- 3D 大气模型视图 -->
   <AtmosphereViewer v-else-if="showAtmo" />
   </div>
@@ -155,6 +170,7 @@ import { loadSectionContent } from './data/contentLoader.js'
 import { matchPptResources } from './data/pptResources.js'
 import { usePptFolderStore } from './data/pptFolderStore.js'
 import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
+import Earth3D from '../sandbox/Earth3D.vue'
 import AtmosphereViewer from './components/AtmosphereViewer.vue'
 
 const route = useRoute()
@@ -237,7 +253,11 @@ const estimatedReadMinutes = computed(() => {
   return Math.max(1, Math.round(plain.length / 240))
 })
 
+const showEarth3D = ref(false)
 const showAtmo = ref(false)
+const isEarthChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第一章'
+)
 const isAtmoChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第二章'
 )
