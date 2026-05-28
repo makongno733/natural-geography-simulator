@@ -12,6 +12,31 @@
       <span>{{ sectionId }}</span>
     </div>
 
+    <!-- 3D 沙盘切换（第四章地貌专用） -->
+    <div v-if="isLandformChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showSandbox }]"
+        @click="showSandbox = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showSandbox }]"
+        @click="showSandbox = true"
+      >🏔 3D 沙盘</button>
+    </div>
+
+    <!-- 3D 地球切换（第一章宇宙中的地球专用） -->
+    <div v-if="isEarthChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showEarth3D }]"
+        @click="showEarth3D = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showEarth3D }]"
+        @click="showEarth3D = true"
+      >🌍 3D 地球探索</button>
+    </div>
+
+    <template v-if="!showSandbox && !showEarth3D">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -106,6 +131,14 @@
         </div>
       </main>
     </div>
+  </template>
+
+  <!-- 3D 沙盘视图 -->
+  <SandboxApp v-else-if="showSandbox" embedded @close="showSandbox = false" />
+
+  <!-- 3D 地球视图 -->
+  <Earth3D v-else-if="showEarth3D" />
+
   </div>
 
   <div v-if="pptPreview.open" class="ppt-preview-mask" @click.self="closePreview">
@@ -142,12 +175,23 @@ import { loadSectionContent } from './data/contentLoader.js'
 import { matchPptResources } from './data/pptResources.js'
 import { usePptFolderStore } from './data/pptFolderStore.js'
 import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectureNormalization.js'
+import SandboxApp from '../sandbox/SandboxApp.vue'
+import Earth3D from '../sandbox/Earth3D.vue'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
 const bookId = computed(() => route.params.book)
 const chapterId = computed(() => route.params.chapter)
 const sectionId = computed(() => route.params.section)
+
+const showSandbox = ref(false)
+const showEarth3D = ref(false)
+const isLandformChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
+)
+const isEarthChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第一章'
+)
 
 const chapterData = ref(null)
 const sectionData = ref(null)
@@ -896,6 +940,35 @@ const nextSection = computed(() => {
 }
 .not-found { text-align: center; padding: 60px 20px; }
 .not-found a { color: #b01217; }
+
+.sandbox-toggle-bar {
+  max-width: 1100px;
+  margin: 0 auto 10px;
+  padding: 0 20px;
+  display: flex;
+  gap: 2px;
+}
+.sandbox-toggle {
+  border: 1px solid var(--brown);
+  border-radius: 6px 6px 0 0;
+  padding: 6px 16px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.7);
+  color: #6b3b32;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+}
+.sandbox-toggle.active {
+  background: rgba(255,255,255,0.97);
+  border-bottom-color: rgba(255,255,255,0.97);
+  color: var(--red);
+  font-weight: 600;
+}
+.sandbox-toggle:hover:not(.active) {
+  background: rgba(183,55,44,0.05);
+}
 
 @media (max-width: 960px) {
   .content-layout { grid-template-columns: 180px 1fr; gap: 14px; }
