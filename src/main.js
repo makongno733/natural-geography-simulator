@@ -7,9 +7,13 @@ const TextbookHome = () => import('./textbook/TextbookHome.vue')
 const BookSelect = () => import('./textbook/BookSelect.vue')
 const ChapterList = () => import('./textbook/ChapterList.vue')
 const SectionContent = () => import('./textbook/SectionContent.vue')
+const SandboxApp = () => import('./sandbox/SandboxApp.vue')
+const Earth3D = () => import('./sandbox/Earth3D.vue')
 
 const routes = [
   { path: '/', name: 'home', component: TextbookHome },
+  { path: '/sandbox', name: 'sandbox', component: SandboxApp },
+  { path: '/earth3d', name: 'earth3d', component: Earth3D },
   { path: '/textbook', redirect: '/' },
   { path: '/:grade', name: 'grade', component: BookSelect },
   { path: '/:grade/:book', name: 'book', component: ChapterList },
