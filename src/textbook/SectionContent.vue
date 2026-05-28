@@ -48,6 +48,12 @@
       >🧪 3D 土壤剖面</button>
     </div>
 
+    <!-- 3D 灾害模拟（第六章自然灾害专用） -->
+    <div v-if="isDisasterChapter" class="sandbox-toggle-bar">
+      <button class="sandbox-toggle active">📖 课文</button>
+      <router-link to="/disasters" class="sandbox-toggle">🌀 3D 灾害模拟</router-link>
+    </div>
+
     <template v-if="!showSandbox && !showEarth3D && !showSoilProfile">
     <div class="content-layout">
       <aside class="sidebar">
@@ -205,6 +211,9 @@ const showEarth3D = ref(false)
 const showSoilProfile = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
+)
+const isDisasterChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第六章'
 )
 const isEarthChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第一章'
@@ -988,6 +997,11 @@ const nextSection = computed(() => {
 }
 .sandbox-toggle:hover:not(.active) {
   background: rgba(183,55,44,0.05);
+}
+.sandbox-toggle:not(button) {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 @media (max-width: 960px) {
