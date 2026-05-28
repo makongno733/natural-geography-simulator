@@ -54,7 +54,19 @@
       <router-link to="/disasters" class="sandbox-toggle">🌀 3D 灾害模拟</router-link>
     </div>
 
-    <template v-if="!showSandbox && !showEarth3D && !showSoilProfile">
+    <!-- 3D 大气模型切换（第二章地球上的大气专用） -->
+    <div v-if="isAtmoChapter" class="sandbox-toggle-bar">
+      <button
+        :class="['sandbox-toggle', { active: !showAtmo }]"
+        @click="showAtmo = false"
+      >📖 课文</button>
+      <button
+        :class="['sandbox-toggle', { active: showAtmo }]"
+        @click="showAtmo = true"
+      >🌍 3D 大气模型</button>
+    </div>
+
+    <template v-if="!showSandbox && !showEarth3D && !showSoilProfile && !showAtmo">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -160,6 +172,9 @@
   <!-- 3D 土壤剖面 -->
   <SoilProfilePage v-else-if="showSoilProfile" />
 
+  <!-- 3D 大气模型视图 -->
+  <AtmosphereViewer v-else-if="showAtmo" />
+
   </div>
 
   <div v-if="pptPreview.open" class="ppt-preview-mask" @click.self="closePreview">
@@ -199,6 +214,7 @@ import { normalizeEscapedNewlines, normalizeLectureSection } from './utils/lectu
 import SandboxApp from '../sandbox/SandboxApp.vue'
 import Earth3D from '../sandbox/Earth3D.vue'
 import SoilProfilePage from '../soil-profile/SoilProfilePage.vue'
+import AtmosphereViewer from './components/AtmosphereViewer.vue'
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -209,6 +225,7 @@ const sectionId = computed(() => route.params.section)
 const showSandbox = ref(false)
 const showEarth3D = ref(false)
 const showSoilProfile = ref(false)
+const showAtmo = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
 )
@@ -217,6 +234,9 @@ const isDisasterChapter = computed(() =>
 )
 const isEarthChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第一章'
+)
+const isAtmoChapter = computed(() =>
+  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第二章'
 )
 const isSoilChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第五章'

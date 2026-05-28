@@ -1,7 +1,8 @@
 import * as THREE from 'three'
-import { Atmosphere, Sky, AerialPerspective } from '@takram/three-atmosphere'
+import { SkyMaterial } from '@takram/three-atmosphere'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 const LAYER_COLORS = {
   对流层: 0x4a9eff,
@@ -48,11 +49,38 @@ export default class AtmosphereScene {
 
     this.composer = new EffectComposer(this.renderer)
     this.composer.addPass(new RenderPass(this.scene, this.camera))
+
+    this.labelRenderer = new CSS2DRenderer()
+    this.labelRenderer.setSize(container.clientWidth, container.clientHeight)
+    this.labelRenderer.domElement.style.position = 'absolute'
+    this.labelRenderer.domElement.style.top = '0'
+    this.labelRenderer.domElement.style.left = '0'
+    this.labelRenderer.domElement.style.pointerEvents = 'none'
+    container.appendChild(this.labelRenderer.domElement)
   }
 
   _initScene() {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x0a0e27)
+    this._initStars()
+  }
+
+  _initStars() {
+    const starCount = 2000
+    const positions = new Float32Array(starCount * 3)
+    for (let i = 0; i < starCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 2000
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    const mat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.5,
+      transparent: true,
+      opacity: 0.8,
+    })
+    this.stars = new THREE.Points(geo, mat)
+    this.scene.add(this.stars)
   }
 
   _initCamera(container) {
@@ -86,12 +114,15 @@ export default class AtmosphereScene {
 
   _initAtmoScattering() {
     try {
-      const atmo = new Atmosphere({ date: new Date() })
-      const sky = new Sky({ atmosphere: atmo })
-      this.scene.add(sky)
-      this.atmo = atmo
+      this.skyMaterial = new SkyMaterial()
+      this.skyMaterial.setSunDirection(new THREE.Vector3(1, 0.3, 0.5).normalize())
+      const skyGeo = new THREE.SphereGeometry(800, 32, 15)
+      const skyMesh = new THREE.Mesh(skyGeo, this.skyMaterial)
+      skyMesh.scale.set(-1, 1, 1)
+      this.scene.add(skyMesh)
+      this.skyMesh = skyMesh
     } catch (e) {
-      console.warn('@takram/three-atmosphere not available, falling back', e)
+      console.warn('SkyMaterial not available', e)
     }
   }
 
@@ -206,7 +237,43 @@ export default class AtmosphereScene {
       this.scene.add(mesh)
       this.layers.push(mesh)
     })
+    this._createLayerLabels()
   }
+
+  _createLayerLabels() {
+    const earthRadius = 1.8
+    const scale = 6 / 1000
+    const layers = [
+      { name: '对流层', height: 6, profExtra: '天气现象 · 每百米降0.65℃' },
+      { name: '平流层', height: 30, profExtra: '臭氧层 20-25km · 适合飞行' },
+      { name: '中间层', height: 65, profExtra: '流星在此燃烧' },
+      { name: '热层', height: 200, profExtra: '电离层 85-500km · 极光' },
+      { name: '散逸层', height: 600, profExtra: '卡门线 100km · 逃逸层' },
+    ]
+    layers.forEach((layer) => {
+      const r = earthRadius + layer.height * scale
+      const div = document.createElement('div')
+      div.textContent = this.mode === 'simple' ? layer.name : `${layer.name}\n${layer.profExtra}`
+      div.style.color = '#fff'
+      div.style.fontSize = this.mode === 'simple' ? '13px' : '11px'
+      div.style.fontWeight = this.mode === 'simple' ? '600' : '400'
+      div.style.fontFamily = '"Noto Serif SC", "Songti SC", serif'
+      div.style.textShadow = '0 0 8px rgba(0,0,0,0.8), 0 0 3px rgba(0,0,0,0.5)'
+      div.style.whiteSpace = 'pre-line'
+      div.style.textAlign = 'center'
+      div.style.lineHeight = '1.4'
+      div.style.padding = '2px 6px'
+      div.style.background = 'rgba(0,0,0,0.3)'
+      div.style.borderRadius = '4px'
+      div.style.backdropFilter = 'blur(2px)'
+      const label = new CSS2DObject(div)
+      label.position.set(r, 0, 0)
+      this.scene.add(label)
+      this.layers.push(label)
+    })
+  }
+
+  _heightStr(km) { return km >= 100 ? `${km}km` : `${km}km` }
 
   _showComposition() {
     this._setCamPosition(0, 0, 4.5)
@@ -374,12 +441,14 @@ export default class AtmosphereScene {
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h)
     this.composer.setSize(w, h)
+    if (this.labelRenderer) this.labelRenderer.setSize(w, h)
   }
 
   render(time) {
     this._updateOrbit()
     if (this.earth) this.earth.rotation.y += 0.001
     this.composer.render()
+    if (this.labelRenderer) this.labelRenderer.render(this.scene, this.camera)
   }
 
   dispose() {
@@ -388,6 +457,9 @@ export default class AtmosphereScene {
     window.removeEventListener('mousemove', this._onMouseMove)
     window.removeEventListener('mouseup', this._onMouseUp)
     el.removeEventListener('wheel', this._onWheel)
+    if (this.skyMesh) { this.scene.remove(this.skyMesh); this.skyMesh.geometry.dispose(); this.skyMesh.material.dispose() }
+    if (this.stars) { this.scene.remove(this.stars); this.stars.geometry.dispose(); this.stars.material.dispose() }
+    if (this.labelRenderer) { this.labelRenderer.domElement.remove(); this.labelRenderer = null }
     this.renderer.dispose()
     el.remove()
   }
