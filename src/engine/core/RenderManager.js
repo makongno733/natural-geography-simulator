@@ -13,6 +13,7 @@ export class RenderManager {
     this.renderer.setClearColor(options.bg || 0x0a0e27, 1)
     this.renderer.shadowMap.enabled = options.shadows ?? true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.localClippingEnabled = true
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = options.toneExposure ?? 1.2
 
