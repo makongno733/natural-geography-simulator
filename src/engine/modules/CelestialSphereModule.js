@@ -18,9 +18,14 @@ export function CelestialSphereModule(scene, params, services) {
   const sphereSegs = mode === 'simple' ? 24 : 48
   const gridSegs = mode === 'simple' ? 36 : 64
 
-  const originGeo = GeometryFactory.sphere(0.05, 12)
-  const originMat = new THREE.MeshBasicMaterial({ color: 0x888888 })
-  group.add(new THREE.Mesh(originGeo, originMat))
+  // Earth at center with atmosphere
+  const earthGeo = GeometryFactory.sphere(0.12, 32)
+  const earthMat = new THREE.MeshStandardMaterial({
+    color: 0x4a90d9, roughness: 0.5, metalness: 0.1,
+  })
+  group.add(new THREE.Mesh(earthGeo, earthMat))
+  const earthAtmo = GeometryFactory.atmosphereShells(0.12, 0.5 / 1000)
+  group.add(earthAtmo)
 
   for (let lat = -80; lat <= 80; lat += 20) {
     const phi = (lat * Math.PI) / 180

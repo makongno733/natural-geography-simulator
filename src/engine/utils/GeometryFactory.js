@@ -91,4 +91,30 @@ export class GeometryFactory {
     const curve = new THREE.CatmullRomCurve3(pts)
     return new THREE.TubeGeometry(curve, segments * 2, tubeRadius, 8, false)
   }
+
+  // Transparent atmospheric shells around an Earth sphere
+  static atmosphereShells(earthRadius, scaleKmToWorld = 6 / 1000) {
+    const layers = [
+      { name: '对流层', alt: [0, 12], color: 0x4a9eff },
+      { name: '平流层', alt: [12, 50], color: 0xffaa44 },
+      { name: '中间层', alt: [50, 85], color: 0x9966ff },
+      { name: '热层', alt: [85, 500], color: 0xff4466 },
+    ]
+    const group = new THREE.Group()
+    layers.forEach((d, idx) => {
+      const rOuter = earthRadius + (d.alt[1] * scaleKmToWorld)
+      const rInner = earthRadius + (d.alt[0] * scaleKmToWorld)
+      const rMid = (rOuter + rInner) / 2
+      const shell = new THREE.Mesh(
+        GeometryFactory.sphere(rMid, 48),
+        new THREE.MeshBasicMaterial({
+          color: d.color, transparent: true,
+          opacity: 0.05 + idx * 0.005,
+          side: THREE.DoubleSide, depthWrite: false,
+        }),
+      )
+      group.add(shell)
+    })
+    return group
+  }
 }

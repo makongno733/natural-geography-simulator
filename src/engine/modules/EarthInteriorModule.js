@@ -201,6 +201,10 @@ export function EarthInteriorModule(scene, params, services) {
   const crust = new THREE.Mesh(crustGeo, crustMat)
   group.add(crust)
 
+  // Atmosphere shells above crust
+  const atmoShells = GeometryFactory.atmosphereShells(1.0, 3 / 1000)
+  group.add(atmoShells)
+
   addCutFace(group, clipPlane)
   addLithosphereDetail(group, clipPlane)
   addInteriorDynamics(group)
