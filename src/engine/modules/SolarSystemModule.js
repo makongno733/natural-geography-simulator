@@ -12,7 +12,7 @@ const PLANETS = [
 ]
 
 export function SolarSystemModule(scene, params, services) {
-  const { labelSystem } = services
+  const { labelSystem, cameraRig } = services
   const group = new THREE.Group()
   let mode = params.mode || 'simple'
   const isDetailed = mode !== 'simple'
@@ -123,6 +123,9 @@ export function SolarSystemModule(scene, params, services) {
     mesh.position.set(Math.cos(initialAngle) * p.radius, 0, Math.sin(initialAngle) * p.radius)
     group.add(mesh)
     planetMeshes.push({ mesh, radius: p.radius, period: p.period, initialAngle })
+
+    if (p.isEarth) earthMesh = mesh
+    if (p.isMars) marsMesh = mesh
 
     // Saturn rings
     if (p.name === '土星') {
@@ -245,6 +248,8 @@ export function SolarSystemModule(scene, params, services) {
 
   // Rocket marker on transfer orbit
   let transferProgress = 0
+  let currentPhase = 0
+  let prevPhase = 0
   const rocketGeo = GeometryFactory.sphere(0.04, 12)
   const rocketMat = new THREE.MeshStandardMaterial({
     color: 0x44ff88,
@@ -253,8 +258,7 @@ export function SolarSystemModule(scene, params, services) {
     roughness: 0.2,
   })
   const rocket = new THREE.Mesh(rocketGeo, rocketMat)
-  // Initial position at Earth end
-  rocket.position.set(cX + aT * Math.cos(0), 0.05, sB * Math.sin(0))
+  rocket.position.set(earthR, 0.05, 0)
   group.add(rocket)
 
   // Rocket trail glow
@@ -271,6 +275,18 @@ export function SolarSystemModule(scene, params, services) {
   trail.rotation.x = -Math.PI / 2
   trail.userData._managed = true
   group.add(trail)
+
+  // Phase label markers
+  const phaseLabels = [
+    { prog: 0, text: '① 发射', color: '#60a5fa' },
+    { prog: 0.12, text: '② 地球逃逸', color: '#facc15' },
+    { prog: 0.2, text: '③ 霍曼转移', color: '#44ff88' },
+    { prog: 0.82, text: '④ 火星捕获', color: '#ef4444' },
+  ]
+
+  // Store references to Earth and Mars meshes for orbit computation
+  let earthMesh = null
+  let marsMesh = null
 
   if (labelSystem) {
     labelSystem.addToGroup(group, '地球 (出发)', new THREE.Vector3(earthR, -0.25, 0),
@@ -308,14 +324,93 @@ export function SolarSystemModule(scene, params, services) {
           Math.sin(angle) * p.radius,
         )
       })
-      // Update rocket position on transfer orbit
-      const t = transferProgress * Math.PI
-      rocket.position.set(
-        cX + aT * Math.cos(t),
-        0.05,
-        sB * Math.sin(t),
-      )
+      // Multi-phase rocket trajectory
+      let rp = transferProgress
+      if (earthMesh && marsMesh) {
+        const earthPos = earthMesh.position
+        const marsPos = marsMesh.position
+
+        if (rp < 0.12) {
+          // Phase 1: Earth orbit
+          currentPhase = 1
+          const phase1 = rp / 0.12
+          const ang = phase1 * Math.PI * 6
+          rocket.position.set(
+            earthPos.x + Math.cos(ang) * 0.15,
+            earthPos.y + 0.03,
+            earthPos.z + Math.sin(ang) * 0.15,
+          )
+          rocketMat.color.set(0x60a5fa)
+        } else if (rp < 0.2) {
+          // Phase 2: Escape Earth → transfer insertion
+          currentPhase = 2
+          const phase2 = (rp - 0.12) / 0.08
+          const ang = phase2 * Math.PI * 2
+          const spiralR = 0.15 + phase2 * 0.4
+          const insetX = earthPos.x + Math.cos(ang) * spiralR
+          const insetZ = earthPos.z + Math.sin(ang) * spiralR
+          // Blend from Earth orbit to transfer start
+          const earthStartX = cX + aT * Math.cos(0)
+          const earthStartZ = sB * Math.sin(0)
+          rocket.position.set(
+            insetX + (earthStartX - insetX) * phase2,
+            0.05,
+            insetZ + (earthStartZ - insetZ) * phase2,
+          )
+          rocketMat.color.set(0xfacc15)
+        } else if (rp < 0.82) {
+          // Phase 3: Hohmann transfer
+          currentPhase = 3
+          const phase3 = (rp - 0.2) / 0.62
+          const t = phase3 * Math.PI
+          rocket.position.set(
+            cX + aT * Math.cos(t),
+            0.05,
+            sB * Math.sin(t),
+          )
+          rocketMat.color.set(0x44ff88)
+        } else {
+          // Phase 4: Mars approach and orbit insertion
+          currentPhase = 4
+          const phase4 = (rp - 0.82) / 0.18
+          const ang = phase4 * Math.PI * 4
+          const marsApproachR = 0.2 * (1 - phase4 * 0.7)
+          rocket.position.set(
+            marsPos.x + Math.cos(ang) * marsApproachR,
+            marsPos.y + 0.03,
+            marsPos.z + Math.sin(ang) * marsApproachR,
+          )
+          rocketMat.color.set(0xef4444)
+        }
+        rocketMat.emissive.copy(rocketMat.color)
+      }
       trail.position.copy(rocket.position)
+
+      // Camera transitions between phases
+      if (cameraRig && currentPhase !== prevPhase && earthMesh && marsMesh) {
+        prevPhase = currentPhase
+        const ct = cameraRig.controls.target
+        const cp = cameraRig.camera.position
+        switch (currentPhase) {
+          case 1: // Focus on Earth
+            ct.copy(earthMesh.position)
+            cp.set(earthMesh.position.x + 2, earthMesh.position.y + 1.5, earthMesh.position.z + 2)
+            break
+          case 2: // Transitioning: pull back
+            ct.set(1.5, 0, 0.5)
+            cp.set(3, 2.5, 3)
+            break
+          case 3: // Wide view of transfer
+            ct.set(2.0, 0, 0.5)
+            cp.set(0, 6, 8)
+            break
+          case 4: // Focus on Mars
+            ct.copy(marsMesh.position)
+            cp.set(marsMesh.position.x + 2, marsMesh.position.y + 1.5, marsMesh.position.z + 2)
+            break
+        }
+        cameraRig.controls.update()
+      }
     },
     setMode(m) { mode = m },
     setParams(p) {

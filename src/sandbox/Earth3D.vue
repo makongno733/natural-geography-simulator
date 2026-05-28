@@ -74,11 +74,14 @@
             <p><strong>转移时间：</strong>约 <span class="coord-tag">259 天</span></p>
             <div class="timeline-section">
               <h3>🕐 任务时间轴</h3>
+              <div class="phase-markers">
+                <span>① 发射</span><span>② 逃逸</span><span>③ 转移巡航</span><span>④ 火星捕获</span>
+              </div>
               <div class="timeline-bar">
                 <input type="range" min="0" max="259" :value="transferDay" @input="setTransferDay($event.target.value)" class="timeline-slider" />
               </div>
               <div class="timeline-info">
-                <span>第 <strong>{{ transferDay }}</strong> 天</span>
+                <span>第 <strong>{{ transferDay }}</strong> 天 · {{ phaseName }}</span>
                 <button class="play-btn" @click="toggleAutoPlay">{{ autoPlay ? '⏸ 暂停' : '▶ 自动飞行' }}</button>
               </div>
             </div>
@@ -90,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { BaseScene } from '../engine/core/BaseScene.js'
 import { EarthInteriorModule } from '../engine/modules/EarthInteriorModule.js'
 import { CelestialSphereModule } from '../engine/modules/CelestialSphereModule.js'
@@ -106,6 +109,14 @@ const currentCoords = ref({})
 const transferDay = ref(0)
 const autoPlay = ref(false)
 let autoPlayTimer = null
+
+const phaseName = computed(() => {
+  const p = transferDay.value / 259
+  if (p < 0.12) return '地球轨道'
+  if (p < 0.2) return '逃逸加速'
+  if (p < 0.82) return '霍曼转移'
+  return '火星捕获'
+})
 let engine = null
 let postFx = null
 
@@ -289,6 +300,10 @@ onBeforeUnmount(() => {
 /* Timeline */
 .timeline-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid #333; }
 .timeline-section h3 { font-size: 0.85rem; margin: 0 0 8px; color: #44ff88; }
+.phase-markers {
+  display: flex; justify-content: space-between; font-size: 0.65rem; color: #666;
+  margin-bottom: 4px; padding: 0 2px;
+}
 .timeline-slider { width: 100%; accent-color: #44ff88; height: 4px; cursor: pointer; }
 .timeline-info { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.8rem; }
 .timeline-info strong { color: #44ff88; font-size: 1rem; }
