@@ -99,6 +99,10 @@ export function SolarSystemModule(scene, params, services) {
     return new THREE.CanvasTexture(canvas)
   }
 
+  // Store references to Earth and Mars meshes for orbit computation
+  let earthMesh = null
+  let marsMesh = null
+
   const planetMeshes = []
   PLANETS.forEach((p, i) => {
     const ring = GeometryFactory.ring(p.radius, p.radius + 0.01, ringSegs)
@@ -283,10 +287,6 @@ export function SolarSystemModule(scene, params, services) {
     { prog: 0.2, text: '③ 霍曼转移', color: '#44ff88' },
     { prog: 0.82, text: '④ 火星捕获', color: '#ef4444' },
   ]
-
-  // Store references to Earth and Mars meshes for orbit computation
-  let earthMesh = null
-  let marsMesh = null
 
   if (labelSystem) {
     labelSystem.addToGroup(group, '地球 (出发)', new THREE.Vector3(earthR, -0.25, 0),
