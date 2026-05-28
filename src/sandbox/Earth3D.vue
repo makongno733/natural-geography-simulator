@@ -162,7 +162,8 @@ function makeRing(radius, color, opacity = 0.3) {
 
 function buildSimple() {
   earthGroup.children.forEach(c => earthGroup.remove(c))
-  const R = { crust:1.0, mantle:0.85, outerCore:0.55, innerCore:0.3 }
+  const RC=1.0, RM=0.85, ROC=0.55, RIC=0.3
+  const R = { crust:RC, mantle:RM, outerCore:ROC, innerCore:RIC }
   const clip = new THREE.Plane(new THREE.Vector3(-1, 0.3, 0.5), 0.1)
   const opts = { clippingPlanes: [clip], clipShadows: true }
 
@@ -173,18 +174,27 @@ function buildSimple() {
     )
     earthGroup.add(m)
   }
-  addSphere(R.innerCore, 0xf1c40f, 0xf1c40f, { emissiveIntensity:0.3, metalness:0.7, roughness:0.3 })
-  addSphere(R.outerCore, 0xf39c12, 0xf39c12, { emissiveIntensity:0.15, side:THREE.DoubleSide })
-  addSphere(R.mantle, 0xe67e22, 0xe67e22, { emissiveIntensity:0.08, side:THREE.DoubleSide })
-  addSphere(R.crust, 0x4a90d9, 0, { side:THREE.DoubleSide })
+  addSphere(RIC, 0xf1c40f, 0xf1c40f, { emissiveIntensity:0.3, metalness:0.7, roughness:0.3 })
+  addSphere(ROC, 0xf39c12, 0xf39c12, { emissiveIntensity:0.15, side:THREE.DoubleSide })
+  addSphere(RM, 0xe67e22, 0xe67e22, { emissiveIntensity:0.08, side:THREE.DoubleSide })
+  addSphere(RC, 0x4a90d9, 0, { side:THREE.DoubleSide })
 
-  const labels = [
-    { text:'地壳', pos:[R.crust*1.3,0.3,0] },
-    { text:'地幔', pos:[R.mantle*1.2,-0.4,0.6] },
-    { text:'外核', pos:[R.outerCore*1.3,0.5,-0.3] },
-    { text:'内核', pos:[R.innerCore*1.3,-0.2,-0.4] },
+  // Enhanced property labels
+  const layers = [
+    { name:'地壳', color:'#4a90d9', pos:[RC*1.4,0.5,0], props:['厚度 5-70km','温度 地表~1000°C','组成 花岗岩/玄武岩','状态 固态'] },
+    { name:'地幔', color:'#e67e22', pos:[RM*1.3,-0.6,0.8], props:['厚度 ~2900km','温度 1000-3700°C','密度 3.3-5.7 g/cm³','组成 橄榄岩'] },
+    { name:'外核', color:'#f39c12', pos:[ROC*1.5,0.6,-0.4], props:['厚度 ~2210km','温度 3700-4500°C','组成 Fe+Ni','状态 液态🧲'] },
+    { name:'内核', color:'#f1c40f', pos:[RIC*1.5,-0.3,-0.5], props:['半径 ~1220km','温度 ~5500°C','密度 ~13 g/cm³','状态 固态🔥'] },
   ]
-  labels.forEach(l => earthGroup.add(makeLabel(l.text, '#fff', '13px', new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2]))))
+  layers.forEach(l => {
+    const p = new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2])
+    earthGroup.add(makeLabel(l.name, l.color, '14px', p))
+    l.props.forEach((prop, i) => {
+      earthGroup.add(makeLabel(prop, '#aaa', '10px', new THREE.Vector3(p.x, p.y - 0.2 - i*0.17, p.z)))
+    })
+  })
+  earthGroup.add(makeLabel('莫霍界面', '#6688aa', '11px', new THREE.Vector3(0, -RC*1.2, RC*1.2)))
+  earthGroup.add(makeLabel('古登堡界面', '#6688aa', '11px', new THREE.Vector3(0, RM*1.2, -RM*1.2)))
 }
 
 onMounted(async () => {
