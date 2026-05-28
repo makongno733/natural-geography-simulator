@@ -27,27 +27,46 @@ function makeCurveTube(points, color, radius = 0.01, opacity = 0.7) {
   return new THREE.Mesh(geo, mat)
 }
 
-function addCutFaceTexture(group, clipPlane) {
-  const rings = [
-    { r: 0.32, color: 0xfff4aa, opacity: 0.75 },
-    { r: 0.55, color: 0xff9d28, opacity: 0.55 },
-    { r: 0.84, color: 0xd75a22, opacity: 0.45 },
-    { r: 1.01, color: 0x7bb8e8, opacity: 0.42 },
+function addCutFace(group) {
+  // Flat colored disks on the cut face showing each layer
+  const layers = [
+    { inner: 0, outer: 0.3, color: 0xf1c40f, label: '内核' },
+    { inner: 0.3, outer: 0.55, color: 0xf39c12, label: '外核' },
+    { inner: 0.55, outer: 0.85, color: 0xe67e22, label: '地幔' },
+    { inner: 0.85, outer: 1.0, color: 0x4a90d9, label: '地壳' },
   ]
 
-  rings.forEach((ring, idx) => {
-    const geo = GeometryFactory.torus(ring.r, idx === 0 ? 0.012 : 0.009, 8, 144)
+  layers.forEach(layer => {
+    const geo = GeometryFactory.ring(layer.inner, layer.outer, 64)
+    geo.rotateY(Math.PI / 2)
     const mat = new THREE.MeshBasicMaterial({
-      color: ring.color,
-      transparent: true,
-      opacity: ring.opacity,
-      clippingPlanes: [clipPlane],
+      color: layer.color,
+      side: THREE.DoubleSide,
       depthWrite: false,
     })
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.rotation.x = Math.PI / 2
-    mesh.rotation.z = idx * 0.35
-    group.add(mesh)
+    const disk = new THREE.Mesh(geo, mat)
+    disk.position.set(0, 0, 0)
+    group.add(disk)
+  })
+
+  // Layer boundary rings on sphere surface
+  const boundaries = [
+    { r: 0.3, color: 0xf1c40f, name: '内核边界' },
+    { r: 0.55, color: 0xf39c12, name: '外核边界' },
+    { r: 0.85, color: 0xe67e22, name: '莫霍界面' },
+  ]
+
+  boundaries.forEach(b => {
+    const torusGeo = GeometryFactory.torus(b.r, 0.015, 16, 96)
+    const torusMat = new THREE.MeshBasicMaterial({
+      color: b.color,
+      transparent: true,
+      opacity: 0.6,
+      clippingPlanes: [clipPlane],
+    })
+    const torus = new THREE.Mesh(torusGeo, torusMat)
+    torus.rotation.x = Math.PI / 2
+    group.add(torus)
   })
 }
 
@@ -116,7 +135,8 @@ export function EarthInteriorModule(scene, params, services) {
   const group = new THREE.Group()
   const isProfessional = params.mode === 'professional'
 
-  const clipPlane = new THREE.Plane(new THREE.Vector3(-1, 0.3, 0.5), 0.1)
+  // Clean vertical cut through center — shows half-sphere cross-section
+  const clipPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0.0)
 
   const innerCoreGeo = GeometryFactory.sphere(0.3, 48)
   const innerCoreMat = MaterialLibrary.emissive({ color: 0xf1c40f, intensity: 0.5 })
@@ -155,7 +175,7 @@ export function EarthInteriorModule(scene, params, services) {
   const crust = new THREE.Mesh(crustGeo, crustMat)
   group.add(crust)
 
-  addCutFaceTexture(group, clipPlane)
+  addCutFace(group)
   addLithosphereDetail(group, clipPlane)
   addInteriorDynamics(group)
 
