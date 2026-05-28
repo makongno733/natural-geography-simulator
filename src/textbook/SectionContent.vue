@@ -53,11 +53,7 @@
           </router-link>
         </div>
 
-        <div class="body-text">
-          <template v-if="extraContent?.body">{{ extraContent.body }}</template>
-          <template v-else-if="extraContent?.fullText"><pre class="chapter-text">{{ extraContent.fullText }}</pre></template>
-          <p v-else>{{ sectionData.content.body }}</p>
-        </div>
+        <div class="body-text markdown-body" v-html="renderedBody"></div>
 
         <div class="reserved-slot" v-if="!sectionData.content.interactive">
           <span class="slot-label">3D 互动预留位</span>
@@ -91,6 +87,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import MarkdownIt from 'markdown-it'
 import { grades, findSection, findChapter, findCollegeRef } from './data/index.js'
 import { loadSectionContent } from './data/contentLoader.js'
 
@@ -120,6 +117,118 @@ const extraContent = computed(() => {
   // Chapter-level content: has fullText, keyPoints
   return loadedContent.value
 })
+
+const markdown = new MarkdownIt({
+  html: false,
+  linkify: false,
+  breaks: false,
+  typographer: true
+})
+
+const sourceBody = computed(() =>
+  extraContent.value?.body ||
+  extraContent.value?.fullText ||
+  sectionData.value?.content?.body ||
+  ''
+)
+
+const renderedBody = computed(() => markdown.render(toReadableMarkdown(sourceBody.value)))
+
+function toReadableMarkdown(text) {
+  return buildMarkdown(cleanOcrLines(String(text || '')))
+}
+
+function cleanOcrLines(text) {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .split('\n')
+    .map(line => line.replace(/\u3000/g, ' ').replace(/[ \t]+/g, ' ').trim())
+    .filter(line => line === '' || !isGarbledLine(line))
+}
+
+function isGarbledLine(line) {
+  if (!line) return false
+  if (/^(图|表)\d|^第[一二三四五六七八九十\d]+[章节]|^[（(]?\d+[）).、]/.test(line)) return false
+
+  const chars = Array.from(line.replace(/\s/g, ''))
+  if (chars.length < 3) return false
+
+  const allowed = chars.filter(ch =>
+    /[\u3400-\u9fffA-Za-z0-9０-９，。！？；：、“”‘’（）()《》<>·\-—–%％℃°+＝=,.!?;:/]/.test(ch)
+  ).length
+  const suspicious = chars.length - allowed
+  const chinese = chars.filter(ch => /[\u4e00-\u9fff]/.test(ch)).length
+  const suspiciousRatio = suspicious / chars.length
+  const chineseRatio = chinese / chars.length
+
+  return suspiciousRatio > 0.25 && chineseRatio < 0.55
+}
+
+function buildMarkdown(lines) {
+  const blocks = []
+  let paragraph = ''
+
+  const flush = () => {
+    if (!paragraph) return
+    blocks.push(paragraph)
+    paragraph = ''
+  }
+
+  for (const line of lines) {
+    if (!line) {
+      flush()
+      continue
+    }
+
+    if (isHeading(line)) {
+      flush()
+      blocks.push(`## ${line}`)
+      continue
+    }
+
+    if (isCaption(line)) {
+      flush()
+      blocks.push(`> ${line}`)
+      continue
+    }
+
+    if (isListItem(line)) {
+      flush()
+      blocks.push(normalizeListItem(line))
+      continue
+    }
+
+    paragraph = paragraph ? `${paragraph}${shouldJoin(paragraph, line) ? '' : ' '}${line}` : line
+  }
+
+  flush()
+  return blocks.join('\n\n')
+}
+
+function isHeading(line) {
+  return /^第[一二三四五六七八九十\d]+[章节]/.test(line) ||
+    /^(第一节|第二节|第三节|第四节|第五节|第六节|第七节|第八节|第九节|第十节)/.test(line) ||
+    /^(活动|思考|案例|自学窗|问题研究|本章要点)$/.test(line)
+}
+
+function isCaption(line) {
+  return /^(图|表)\d+(\.\d+)?/.test(line)
+}
+
+function isListItem(line) {
+  return /^([（(]?\d+[）).、]|[①②③④⑤⑥⑦⑧⑨⑩]|[•·])/.test(line)
+}
+
+function normalizeListItem(line) {
+  return `- ${line.replace(/^[•·]\s*/, '').trim()}`
+}
+
+function shouldJoin(prev, next) {
+  if (/[。！？；：.!?;:]$/.test(prev)) return false
+  if (/^(图|表)\d|^第[一二三四五六七八九十\d]+[章节]/.test(next)) return false
+  return true
+}
 
 watch([gradeId, bookId, chapterId, sectionId], async () => {
   contentReady.value = false
@@ -258,14 +367,31 @@ const nextSection = computed(() => {
   color: #2f201d;
   margin-bottom: 16px;
 }
-.chapter-text {
-  font-family: inherit;
-  font-size: 15px;
-  line-height: 1.92;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  margin: 0;
-  color: #2f201d;
+.markdown-body :deep(h2) {
+  margin: 22px 0 10px;
+  padding-left: 10px;
+  border-left: 4px solid var(--red);
+  color: var(--red);
+  font-size: 18px;
+  line-height: 1.5;
+}
+.markdown-body :deep(p) {
+  margin: 0 0 14px;
+  text-align: justify;
+}
+.markdown-body :deep(blockquote) {
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--brown-dark);
+  background: #fff9ef;
+  color: var(--muted);
+}
+.markdown-body :deep(ul) {
+  margin: 8px 0 16px;
+  padding-left: 22px;
+}
+.markdown-body :deep(li) {
+  margin: 4px 0;
 }
 .reserved-slot {
   border: 1px dashed var(--brown-dark);
