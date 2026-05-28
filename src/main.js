@@ -1,19 +1,24 @@
-import { createApp } from 'vue';
-import App from './App.vue';
-import './style.css';
+import { createApp } from 'vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import App from './App.vue'
+import './style.css'
 
-let mounted = false;
+import TextbookHome from './textbook/TextbookHome.vue'
+import BookSelect from './textbook/BookSelect.vue'
+import ChapterList from './textbook/ChapterList.vue'
+import SectionContent from './textbook/SectionContent.vue'
 
-function mountApp() {
-  if (mounted) return;
-  const host = document.querySelector('#app');
-  if (!host) return;
-  createApp(App).mount(host);
-  mounted = true;
-}
+const routes = [
+  { path: '/', name: 'home', component: TextbookHome },
+  { path: '/textbook', redirect: '/' },
+  { path: '/:grade', name: 'grade', component: BookSelect },
+  { path: '/:grade/:book', name: 'book', component: ChapterList },
+  { path: '/:grade/:book/:chapter/:section', name: 'section', component: SectionContent },
+]
 
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', mountApp, { once: true });
-} else {
-  mountApp();
-}
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes,
+})
+
+createApp(App).use(router).mount('#app')

@@ -1,52 +1,43 @@
 <template>
   <div class="app-root">
-    <nav class="app-nav">
-      <a href="#/atmosphere" :class="{ active: view === 'atmosphere' }">大气结构</a>
-      <a href="#/sandbox" :class="{ active: view === 'sandbox' }">地貌沙盒</a>
-    </nav>
-    <AtmosphereView v-if="view === 'atmosphere'" />
-    <SandboxApp v-else-if="view === 'sandbox'" />
-    <div v-else class="welcome">
-      <h1>自然地理教学系统</h1>
-      <p>请选择上方模块</p>
-    </div>
+    <header class="app-header">
+      <router-link to="/" class="app-title">中学地理教学系统</router-link>
+      <p class="app-subtitle">人教版 · 初中 / 高中</p>
+    </header>
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import AtmosphereView from './AtmosphereView.vue'
-import SandboxApp from './sandbox/SandboxApp.vue'
-
-const view = ref(window.location.hash.replace(/^#\//, '') || 'atmosphere')
-
-function onHashChange() {
-  view.value = window.location.hash.replace(/^#\//, '') || 'atmosphere'
-}
-
-onMounted(() => window.addEventListener('hashchange', onHashChange))
-onUnmounted(() => window.removeEventListener('hashchange', onHashChange))
 </script>
 
 <style scoped>
-.app-root { min-height: 100vh; }
-.app-nav {
-  display: flex; gap: 0; justify-content: center;
-  padding: 8px; background: linear-gradient(180deg, #d8e9ff, #eef5ff);
-  border-bottom: 1px solid #a9c6e8;
+.app-root {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255,243,214,.75) 0, rgba(255,252,244,.95) 42%, #fffef9 100%),
+    repeating-linear-gradient(45deg, rgba(225,198,149,.08) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(-45deg, rgba(225,198,149,.05) 0 1px, transparent 1px 10px);
+  background-color: #fffdf8;
 }
-.app-nav a {
-  padding: 6px 20px; font-size: 0.85rem; color: #365776;
-  text-decoration: none; border: 1px solid #a9c6e8;
-  border-radius: 8px 8px 0 0; background: rgba(247,252,255,0.6);
-  margin: 0 2px;
+.app-header {
+  text-align: center;
+  padding: 24px 20px 8px;
 }
-.app-nav a.active {
-  background: #f7fcff; border-bottom-color: #f7fcff;
-  color: #0f2542; font-weight: 600;
+.app-title {
+  font-family: "Ma Shan Zheng", "STXingkai", serif;
+  font-size: clamp(48px, 8vw, 120px);
+  color: #b01217;
+  text-shadow: 0 6px 20px rgba(183,55,44,0.2);
+  line-height: 1;
+  letter-spacing: 2px;
+  text-decoration: none;
+  display: block;
 }
-.welcome {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; min-height: 60vh; color: #365776;
+.app-subtitle {
+  margin: 4px 0 0;
+  color: #b85a4d;
+  font-size: 14px;
+  font-family: "Noto Serif SC", "Songti SC", serif;
 }
 </style>
