@@ -14,8 +14,31 @@ const PLANETS = [
 export function SolarSystemModule(scene, params, services) {
   const { labelSystem } = services
   const group = new THREE.Group()
+  let mode = params.mode || 'simple'
+  const isDetailed = mode !== 'simple'
+  const sunSegs = isDetailed ? 64 : 32
+  const planetSegs = isDetailed ? 48 : 24
+  const ringSegs = isDetailed ? 128 : 64
 
-  const sunGeo = GeometryFactory.sphere(0.35, 24)
+  // Background star field
+  const starCount = 3000
+  const starPos = new Float32Array(starCount * 3)
+  for (let i = 0; i < starCount * 3; i++) {
+    starPos[i] = (Math.random() - 0.5) * 20
+  }
+  const starGeo = new THREE.BufferGeometry()
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
+  const starMat = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.03,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  group.add(new THREE.Points(starGeo, starMat))
+
+  const sunGeo = GeometryFactory.sphere(0.35, sunSegs)
   const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 })
   const sun = new THREE.Mesh(sunGeo, sunMat)
   group.add(sun)
