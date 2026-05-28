@@ -1,18 +1,20 @@
 :root {
-  --ink: #333;
-  --muted: #b85a4d;
-  --red: #b01217;
-  --red-hover: #c9473a;
+  --ink: #2f201d;
+  --muted: #9f4d42;
+  --red: #ad1419;
+  --red-hover: #d12a2f;
   --cream: #fffdf8;
-  --brown: #e2c9b4;
-  --brown-light: #f0e4d8;
-  --brown-dark: #d4b8a0;
-  --card-bg: rgba(255,255,255,0.94);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
-  --shadow-hover: 0 6px 16px rgba(183,55,44,0.10);
-  --radius-card: 12px;
-  --radius-box: 10px;
-  --radius-sm: 8px;
+  --paper: #fffaf0;
+  --paper-strong: #fff4df;
+  --brown: #dfc5ad;
+  --brown-light: #f2e4d4;
+  --brown-dark: #c99f80;
+  --card-bg: rgba(255, 255, 255, 0.96);
+  --shadow-sm: 0 1px 6px rgba(127, 39, 27, 0.06);
+  --shadow-hover: 0 8px 22px rgba(173, 20, 25, 0.14);
+  --radius-card: 8px;
+  --radius-box: 8px;
+  --radius-sm: 6px;
   --transition: 0.2s;
 }
 
@@ -22,7 +24,12 @@ body {
   margin: 0;
   font-family: "Noto Serif SC", "Songti SC", "STKaiti", serif;
   color: var(--ink);
-  background-color: var(--cream);
+  background:
+    linear-gradient(90deg, rgba(173, 20, 25, 0.035) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(173, 20, 25, 0.025) 1px, transparent 1px),
+    radial-gradient(circle at 20% 12%, rgba(255, 234, 190, 0.8), transparent 34%),
+    linear-gradient(180deg, #fffefb 0%, var(--paper) 100%);
+  background-size: 18px 18px, 18px 18px, auto, auto;
   min-height: 100vh;
 }
 

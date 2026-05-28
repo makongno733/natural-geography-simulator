@@ -33,14 +33,14 @@ const currentGrade = computed(() => grades.find(g => g.id === gradeId.value))
 .page-shell {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 22px 20px 40px;
 }
 .breadcrumb {
   font-size: 13px;
   color: var(--muted);
-  margin-bottom: 18px;
-  padding: 6px 12px;
-  background: rgba(255,255,255,0.6);
+  margin-bottom: 20px;
+  padding: 7px 12px;
+  background: rgba(255,255,255,0.82);
   border-radius: var(--radius-sm);
   border: 1px solid var(--brown-light);
   display: inline-block;
@@ -51,16 +51,16 @@ const currentGrade = computed(() => grades.find(g => g.id === gradeId.value))
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 .card {
   display: block;
   text-decoration: none;
   border: 1px solid var(--brown);
   border-radius: var(--radius-card);
-  padding: 18px 16px;
+  padding: 20px 16px;
   text-align: center;
-  background: var(--card-bg);
+  background: linear-gradient(180deg, #fff, #fff8f0);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
@@ -71,7 +71,7 @@ const currentGrade = computed(() => grades.find(g => g.id === gradeId.value))
   box-shadow: var(--shadow-hover);
 }
 .card-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: #b01217;
   margin-bottom: 4px;

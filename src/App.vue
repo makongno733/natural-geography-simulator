@@ -15,22 +15,25 @@
 .app-root {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 15% 10%, rgba(255,243,214,.75) 0, rgba(255,252,244,.95) 42%, #fffef9 100%),
-    repeating-linear-gradient(45deg, rgba(225,198,149,.08) 0 2px, transparent 2px 12px),
-    repeating-linear-gradient(-45deg, rgba(225,198,149,.05) 0 1px, transparent 1px 10px);
+    linear-gradient(90deg, rgba(173, 20, 25, 0.035) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(173, 20, 25, 0.025) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(255, 239, 205, 0.88), transparent 38%),
+    linear-gradient(180deg, #fffefb 0%, var(--paper) 100%);
+  background-size: 18px 18px, 18px 18px, auto, auto;
   background-color: var(--cream);
 }
 .app-header {
   text-align: center;
-  padding: 24px 20px 8px;
+  padding: 28px 20px 14px;
+  border-bottom: 1px solid rgba(173, 20, 25, 0.12);
 }
 .app-title {
-  font-family: "Ma Shan Zheng", "STXingkai", serif;
-  font-size: clamp(48px, 8vw, 120px);
+  font-family: "Ma Shan Zheng", "STXingkai", "Kaiti SC", serif;
+  font-size: 96px;
   color: var(--red);
-  text-shadow: 0 6px 20px rgba(183,55,44,0.2);
+  text-shadow: 0 8px 22px rgba(173, 20, 25, 0.18);
   line-height: 1;
-  letter-spacing: 2px;
+  letter-spacing: 0;
   text-decoration: none;
   display: block;
 }
@@ -39,5 +42,15 @@
   color: #b85a4d;
   font-size: 14px;
   font-family: "Noto Serif SC", "Songti SC", serif;
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    padding: 22px 14px 12px;
+  }
+  .app-title {
+    font-size: 54px;
+    white-space: nowrap;
+  }
 }
 </style>

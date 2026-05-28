@@ -39,14 +39,14 @@ const currentBook = computed(() => {
 .page-shell {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 22px 20px 40px;
 }
 .breadcrumb {
   font-size: 13px;
   color: var(--muted);
-  margin-bottom: 18px;
-  padding: 6px 12px;
-  background: rgba(255,255,255,0.6);
+  margin-bottom: 20px;
+  padding: 7px 12px;
+  background: rgba(255,255,255,0.82);
   border-radius: var(--radius-sm);
   border: 1px solid var(--brown-light);
   display: inline-block;
@@ -63,10 +63,10 @@ const currentBook = computed(() => {
   display: block;
   text-decoration: none;
   border: 1px solid var(--brown);
-  border-left: 3px solid var(--red);
-  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  border-left: 4px solid var(--red);
+  border-radius: var(--radius-card);
   padding: 16px;
-  background: var(--card-bg);
+  background: linear-gradient(90deg, rgba(173, 20, 25, 0.045), rgba(255, 255, 255, 0.96) 18%);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);

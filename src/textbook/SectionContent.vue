@@ -145,14 +145,14 @@ const nextSection = computed(() => {
 .page-shell {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 22px 20px 44px;
 }
 .breadcrumb {
   font-size: 13px;
   color: var(--muted);
-  margin-bottom: 18px;
-  padding: 6px 12px;
-  background: rgba(255,255,255,0.6);
+  margin-bottom: 20px;
+  padding: 7px 12px;
+  background: rgba(255,255,255,0.82);
   border-radius: var(--radius-sm);
   border: 1px solid var(--brown-light);
   display: inline-block;
@@ -164,18 +164,19 @@ const nextSection = computed(() => {
 
 .content-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 20px;
+  grid-template-columns: 230px 1fr;
+  gap: 18px;
   align-items: start;
 }
 
 .sidebar {
   border: 1px solid var(--brown);
   border-radius: var(--radius-box);
-  background: var(--card-bg);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,248,238,0.95));
   padding: 14px;
   position: sticky;
   top: 20px;
+  box-shadow: var(--shadow-sm);
 }
 .sidebar-title {
   margin: 0 0 10px;
@@ -195,7 +196,7 @@ const nextSection = computed(() => {
   display: block;
   padding: 7px 10px;
   text-decoration: none;
-  color: #365776;
+  color: #6b3b32;
   font-size: 13px;
   border-radius: 6px;
   transition: background var(--transition);
@@ -210,12 +211,13 @@ const nextSection = computed(() => {
 .content {
   border: 1px solid var(--brown);
   border-radius: var(--radius-box);
-  background: var(--card-bg);
-  padding: 20px;
+  background: rgba(255,255,255,0.97);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 .section-title {
   margin: 0 0 16px;
-  font-size: 18px;
+  font-size: 20px;
   color: var(--red);
   padding-bottom: 12px;
   border-bottom: 2px solid var(--brown-light);
@@ -226,19 +228,19 @@ const nextSection = computed(() => {
   color: var(--muted);
 }
 .key-points {
-  background: #fef7e6;
+  background: linear-gradient(180deg, #fff7e8, #fffdf8);
   border: 1px solid var(--brown);
-  border-top: 3px solid var(--red);
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  border-left: 4px solid var(--red);
+  border-radius: var(--radius-sm);
   padding: 12px 16px;
   margin-bottom: 16px;
 }
 .key-points ul { margin: 0; padding-left: 18px; }
 .key-points li { font-size: 14px; line-height: 1.7; color: #333; }
 .college-link {
-  border: 1px solid #d4a854;
-  background: #fef9ee;
-  border-radius: 8px;
+  border: 1px solid var(--brown);
+  background: #fff9ef;
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   margin-bottom: 16px;
   font-size: 13px;
@@ -251,19 +253,19 @@ const nextSection = computed(() => {
 }
 .college-link a:hover { text-decoration: underline; }
 .body-text {
-  font-size: 14px;
-  line-height: 1.8;
-  color: #444;
+  font-size: 15px;
+  line-height: 1.92;
+  color: #2f201d;
   margin-bottom: 16px;
 }
 .chapter-text {
   font-family: inherit;
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: 15px;
+  line-height: 1.92;
   white-space: pre-wrap;
   word-wrap: break-word;
   margin: 0;
-  color: #444;
+  color: #2f201d;
 }
 .reserved-slot {
   border: 1px dashed var(--brown-dark);
@@ -296,6 +298,7 @@ const nextSection = computed(() => {
   padding: 8px 16px;
   border: 1px solid var(--brown);
   border-radius: var(--radius-sm);
+  background: #fffaf3;
   transition: background var(--transition), border-color var(--transition);
 }
 .nav-link:hover {
