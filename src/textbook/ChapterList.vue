@@ -43,11 +43,17 @@ const currentBook = computed(() => {
 }
 .breadcrumb {
   font-size: 13px;
-  color: #b85a4d;
-  margin-bottom: 16px;
+  color: var(--muted);
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--brown-light);
+  display: inline-block;
 }
-.breadcrumb a { color: #b01217; text-decoration: none; }
-.sep { margin: 0 6px; color: #e2c9b4; }
+.breadcrumb a { color: var(--red); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.sep { margin: 0 8px; color: var(--brown-dark); }
 .card-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -56,22 +62,25 @@ const currentBook = computed(() => {
 .card {
   display: block;
   text-decoration: none;
-  border: 1px solid #e2c9b4;
-  border-radius: 12px;
+  border: 1px solid var(--brown);
+  border-left: 3px solid var(--red);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
   padding: 16px;
-  background: rgba(255,255,255,0.94);
+  background: var(--card-bg);
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
-  transform: translateY(-1px);
-  border-color: #b01217;
+  transform: translateY(-2px);
+  border-color: var(--red);
+  box-shadow: var(--shadow-hover);
 }
 .card-title {
   font-size: 15px;
   font-weight: 700;
-  color: #b01217;
+  color: var(--red);
   margin-bottom: 4px;
 }
-.card-desc { font-size: 12px; color: #b85a4d; line-height: 1.6; }
+.card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
 </style>

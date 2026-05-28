@@ -37,11 +37,17 @@ const currentGrade = computed(() => grades.find(g => g.id === gradeId.value))
 }
 .breadcrumb {
   font-size: 13px;
-  color: #b85a4d;
-  margin-bottom: 16px;
+  color: var(--muted);
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--brown-light);
+  display: inline-block;
 }
-.breadcrumb a { color: #b01217; text-decoration: none; }
-.sep { margin: 0 6px; color: #e2c9b4; }
+.breadcrumb a { color: var(--red); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.sep { margin: 0 8px; color: var(--brown-dark); }
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -50,17 +56,19 @@ const currentGrade = computed(() => grades.find(g => g.id === gradeId.value))
 .card {
   display: block;
   text-decoration: none;
-  border: 1px solid #e2c9b4;
-  border-radius: 12px;
+  border: 1px solid var(--brown);
+  border-radius: var(--radius-card);
   padding: 18px 16px;
   text-align: center;
-  background: rgba(255,255,255,0.94);
+  background: var(--card-bg);
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
-  transform: translateY(-2px);
-  border-color: #b01217;
+  transform: translateY(-3px);
+  border-color: var(--red);
+  box-shadow: var(--shadow-hover);
 }
 .card-title {
   font-size: 16px;

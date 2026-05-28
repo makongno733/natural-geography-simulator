@@ -1,6 +1,19 @@
 :root {
   --ink: #333;
   --muted: #b85a4d;
+  --red: #b01217;
+  --red-hover: #c9473a;
+  --cream: #fffdf8;
+  --brown: #e2c9b4;
+  --brown-light: #f0e4d8;
+  --brown-dark: #d4b8a0;
+  --card-bg: rgba(255,255,255,0.94);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-hover: 0 6px 16px rgba(183,55,44,0.10);
+  --radius-card: 12px;
+  --radius-box: 10px;
+  --radius-sm: 8px;
+  --transition: 0.2s;
 }
 
 * { box-sizing: border-box; }
@@ -9,10 +22,16 @@ body {
   margin: 0;
   font-family: "Noto Serif SC", "Songti SC", "STKaiti", serif;
   color: var(--ink);
-  background-color: #fffdf8;
+  background-color: var(--cream);
   min-height: 100vh;
+}
+
+:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #e2c9b4; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 3px; }

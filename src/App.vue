@@ -18,7 +18,7 @@
     radial-gradient(circle at 15% 10%, rgba(255,243,214,.75) 0, rgba(255,252,244,.95) 42%, #fffef9 100%),
     repeating-linear-gradient(45deg, rgba(225,198,149,.08) 0 2px, transparent 2px 12px),
     repeating-linear-gradient(-45deg, rgba(225,198,149,.05) 0 1px, transparent 1px 10px);
-  background-color: #fffdf8;
+  background-color: var(--cream);
 }
 .app-header {
   text-align: center;
@@ -27,7 +27,7 @@
 .app-title {
   font-family: "Ma Shan Zheng", "STXingkai", serif;
   font-size: clamp(48px, 8vw, 120px);
-  color: #b01217;
+  color: var(--red);
   text-shadow: 0 6px 20px rgba(183,55,44,0.2);
   line-height: 1;
   letter-spacing: 2px;
