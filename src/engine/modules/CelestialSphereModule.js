@@ -128,25 +128,89 @@ export function CelestialSphereModule(scene, params, services) {
     cygnus: { disk, angle: 0 },
   }
 
-  if (labelSystem) {
-    const sysLabels = [
-      { text: '天顶', pos: [0, CS_RADIUS + 0.2, 0], color: '#888' },
-      { text: 'N', pos: [0, 0.1, -CS_RADIUS - 0.3], color: '#888' },
-      { text: '天赤道', pos: [CS_RADIUS * 0.7, 0.1, 0], color: '#888' },
-    ]
-    sysLabels.forEach(l => {
-      labelSystem.addToGroup(group, l.text, new THREE.Vector3(...l.pos), {
-        color: l.color,
-        fontSize: '12px',
+  // Coordinate system visualization groups
+  const coordGroups = {}
+  const C_RING = CS_RADIUS * 0.85
+
+  function buildCoordSystem(name, axisColor, axisDir, tiltAngle, labels) {
+    const g = new THREE.Group()
+
+    // Axis arrow
+    const dir = axisDir.clone().normalize()
+    const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), CS_RADIUS * 0.9, axisColor, 0.25, 0.12)
+    g.add(arrow)
+
+    // Reference plane ring (tilted)
+    const ringPts = []
+    const q = tiltAngle ? new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir) : null
+    for (let i = 0; i <= 64; i++) {
+      const theta = (i / 64) * Math.PI * 2
+      const p = new THREE.Vector3(Math.cos(theta) * C_RING, 0, Math.sin(theta) * C_RING)
+      if (q) p.applyQuaternion(q)
+      ringPts.push(p)
+    }
+    g.add(GeometryFactory.lineFromPoints(ringPts, axisColor, 0.3))
+
+    // Labels
+    if (labelSystem) {
+      labels.forEach(l => {
+        const pos = typeof l.pos === 'function' ? l.pos() : new THREE.Vector3(...l.pos)
+        labelSystem.addToGroup(g, l.text, pos, { color: l.color || '#' + axisColor.toString(16).padStart(6, '0'), fontSize: '11px', fontWeight: '600' })
       })
-    })
+    }
+
+    g.visible = false
+    return g
   }
+
+  // 地平坐标系 — zenith up, horizon ring
+  coordGroups.horizontal = buildCoordSystem('地平', 0xffaa33,
+    new THREE.Vector3(0, 1, 0), null, [
+    { text: '天顶', pos: [0, CS_RADIUS * 0.95, 0] },
+    { text: 'N', pos: [0, 0, -CS_RADIUS * 0.92] },
+    { text: 'S', pos: [0, 0, CS_RADIUS * 0.92] },
+    { text: 'E', pos: [CS_RADIUS * 0.92, 0, 0] },
+    { text: 'W', pos: [-CS_RADIUS * 0.92, 0, 0] },
+  ])
+
+  // 赤道坐标系 — celestial pole axis, equator ring
+  coordGroups.equatorial = buildCoordSystem('赤道', 0x60a5fa,
+    new THREE.Vector3(0, 1, 0), null, [
+    { text: '天北极', pos: [0, CS_RADIUS * 0.95, 0] },
+    { text: '天南极', pos: [0, -CS_RADIUS * 0.95, 0] },
+    { text: '春分点 →', pos: [CS_RADIUS * 0.92, 0.05, 0] },
+  ])
+
+  // 黄道坐标系 — ecliptic pole (tilted 23.44°)
+  const eclipticTilt = 23.44 * Math.PI / 180
+  const eclipticPole = new THREE.Vector3(0, Math.cos(eclipticTilt), Math.sin(eclipticTilt))
+  coordGroups.ecliptic = buildCoordSystem('黄道', 0x44ff88,
+    eclipticPole, eclipticTilt, [
+    { text: '黄极', pos: () => eclipticPole.clone().multiplyScalar(CS_RADIUS * 0.95) },
+  ])
+
+  // 银道坐标系 — galactic pole (tilted ~62.6°)
+  const galacticTilt = 62.6 * Math.PI / 180
+  const galacticPole = new THREE.Vector3(0, Math.cos(galacticTilt), Math.sin(galacticTilt))
+  coordGroups.galactic = buildCoordSystem('银道', 0xcc66ff,
+    galacticPole, galacticTilt, [
+    { text: '银极', pos: () => galacticPole.clone().multiplyScalar(CS_RADIUS * 0.95) },
+  ])
+
+  // Add all coord groups to scene, default to horizontal visible
+  Object.values(coordGroups).forEach(g => group.add(g))
+  coordGroups.horizontal.visible = true
 
   const api = {
     getObjectMeshes() { return objectMeshes },
     setMode(m) { mode = m },
     setParams(p) {
       if (p.mode) { mode = p.mode }
+      if (p.coordSystem && coordGroups[p.coordSystem]) {
+        Object.keys(coordGroups).forEach(key => {
+          coordGroups[key].visible = (key === p.coordSystem)
+        })
+      }
     },
     update(dt, elapsed) {
       if (mode !== 'professional') return
