@@ -26,7 +26,12 @@
       </aside>
 
       <main class="viewport-area" ref="viewportRef">
-        <div class="viewport-toolbar">
+        <div v-if="loading" class="viewport-loading">加载 3D 场景中…</div>
+        <div v-else-if="initError" class="viewport-error">
+          <p>⚠ 加载失败：{{ initError }}</p>
+          <p class="error-hint">请检查浏览器是否支持 WebGL，或刷新页面重试。</p>
+        </div>
+        <div v-else class="viewport-toolbar">
           <label class="tool-item" v-if="activeModule === 'flood'">
             <span class="tool-label">水位</span>
             <input type="range" min="0" max="1" step="0.01" v-model.number="timeline" @input="onTimelineChange" class="timeline-slider">
@@ -34,7 +39,7 @@
           <button class="tool-btn" @click="toggleAutoRotate">{{ autoRotate ? '⏸ 暂停' : '▶ 旋转' }}</button>
           <button class="tool-btn" @click="resetCamera">⟲ 复位</button>
         </div>
-        <div class="viewport-hint">拖拽旋转 · 滚轮缩放 · 右键平移</div>
+        <div v-if="!initError" class="viewport-hint">拖拽旋转 · 滚轮缩放 · 右键平移</div>
       </main>
 
       <aside class="info-panel">
@@ -82,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { DisasterEngine } from './engine/DisasterEngine.js'
 import { disasterModules } from './modules/disasterModules.js'
 import { disasterGlossary as glossary } from './modules/glossary.js'
@@ -95,6 +100,8 @@ const timeline = ref(0)
 const autoRotate = ref(true)
 const activeGlossaryTerm = ref(null)
 const glossaryPos = ref({ x: 0, y: 0 })
+const loading = ref(true)
+const initError = ref('')
 
 let engine = null
 
@@ -133,10 +140,18 @@ function openGlossary(term, event) {
 
 watch(mode, (val) => { if (engine) engine.setMode(val) })
 
-onMounted(() => {
-  if (!viewportRef.value) return
-  engine = new DisasterEngine(viewportRef.value)
-  engine.setModule(activeModule.value)
+onMounted(async () => {
+  await nextTick()
+  if (!viewportRef.value) { initError.value = '容器未找到'; loading.value = false; return }
+  try {
+    engine = new DisasterEngine(viewportRef.value)
+    engine.setModule(activeModule.value)
+    loading.value = false
+  } catch (e) {
+    initError.value = e.message || '3D 引擎初始化失败'
+    loading.value = false
+    console.error('DisasterEngine init error:', e)
+  }
   window.addEventListener('resize', onResize)
 })
 
@@ -192,6 +207,13 @@ function onResize() { if (engine) engine.resize() }
 .module-sub { font-size: 11px; color: var(--muted); }
 
 .viewport-area { flex: 1; position: relative; overflow: hidden; }
+.viewport-loading, .viewport-error {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 15px; color: #6b3b32; background: #f5efe8;
+}
+.viewport-error p { margin: 4px 0; }
+.error-hint { font-size: 12px; color: #99897a; }
 .viewport-toolbar {
   position: absolute; bottom: 14px; left: 14px; right: 14px;
   display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
