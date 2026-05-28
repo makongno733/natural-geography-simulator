@@ -41,6 +41,7 @@ const activeTab = ref(props.defaultTab || 0)
 const currentMode = ref(props.mode)
 const sceneContainer = ref(null)
 let scene = null
+let running = true
 
 function setMode(m) {
   currentMode.value = m
@@ -58,8 +59,8 @@ function handleResize() {
 onMounted(() => {
   scene = new AtmosphereScene(sceneContainer.value, currentMode.value)
   scene.setTheme(activeTab.value)
+  running = true
 
-  let running = true
   function loop() {
     if (!running) return
     scene.render()
@@ -71,6 +72,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  running = false
   window.removeEventListener('resize', handleResize)
   if (scene) scene.dispose()
 })
