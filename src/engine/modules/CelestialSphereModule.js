@@ -45,6 +45,26 @@ export function CelestialSphereModule(scene, params, services) {
     group.add(GeometryFactory.lineFromPoints(pts, 0x446688, 0.1))
   }
 
+  // Background star field
+  const starCount = 3000
+  const starPos = new Float32Array(starCount * 3)
+  for (let i = 0; i < starCount * 3; i++) {
+    starPos[i] = (Math.random() - 0.5) * 20
+  }
+  const starGeo = new THREE.BufferGeometry()
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
+  const starMat = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.03,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const stars = new THREE.Points(starGeo, starMat)
+  stars.userData._managed = true
+  group.add(stars)
+
   const objectMeshes = {}
   CELESTIAL_OBJECTS.forEach(obj => {
     const pos = new THREE.Vector3(...obj.pos)
