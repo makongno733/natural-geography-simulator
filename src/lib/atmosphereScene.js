@@ -29,9 +29,9 @@ export default class AtmosphereScene {
     this.radiationPaths = []
     this.circulationParticles = []
 
-    this._initRenderer(container)
     this._initScene()
-    this._initCamera()
+    this._initCamera(container)
+    this._initRenderer(container)
     this._initLights()
     this._initEarth()
     this._initAtmoScattering()
@@ -47,8 +47,7 @@ export default class AtmosphereScene {
     container.appendChild(this.renderer.domElement)
 
     this.composer = new EffectComposer(this.renderer)
-    const renderPass = new RenderPass(this.scene, this.camera)
-    this.composer.addPass(renderPass)
+    this.composer.addPass(new RenderPass(this.scene, this.camera))
   }
 
   _initScene() {
@@ -56,8 +55,7 @@ export default class AtmosphereScene {
     this.scene.background = new THREE.Color(0x0a0e27)
   }
 
-  _initCamera() {
-    const container = this.renderer.domElement.parentElement
+  _initCamera(container) {
     const aspect = container.clientWidth / container.clientHeight
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 10000)
     this.camera.position.set(0, 4, 10)
@@ -104,19 +102,23 @@ export default class AtmosphereScene {
     this._camDist = 10
     const el = this.renderer.domElement
 
-    el.addEventListener('mousedown', (e) => { this.isDragging = true; this._prevX = e.clientX; this._prevY = e.clientY })
-    window.addEventListener('mousemove', (e) => {
+    this._onMouseDown = (e) => { this.isDragging = true; this._prevX = e.clientX; this._prevY = e.clientY }
+    this._onMouseMove = (e) => {
       if (!this.isDragging) return
       const dx = e.clientX - this._prevX; const dy = e.clientY - this._prevY
       this._rotY += dx * 0.005; this._rotX += dy * 0.005
       this._rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this._rotX))
       this._prevX = e.clientX; this._prevY = e.clientY
-    })
-    window.addEventListener('mouseup', () => { this.isDragging = false })
-
-    el.addEventListener('wheel', (e) => {
+    }
+    this._onMouseUp = () => { this.isDragging = false }
+    this._onWheel = (e) => {
       this._camDist = Math.max(3, Math.min(30, this._camDist + e.deltaY * 0.01))
-    })
+    }
+
+    el.addEventListener('mousedown', this._onMouseDown)
+    window.addEventListener('mousemove', this._onMouseMove)
+    window.addEventListener('mouseup', this._onMouseUp)
+    el.addEventListener('wheel', this._onWheel)
   }
 
   _setCamPosition(x, y, z) {
@@ -226,7 +228,12 @@ export default class AtmosphereScene {
   }
 
   dispose() {
+    const el = this.renderer.domElement
+    el.removeEventListener('mousedown', this._onMouseDown)
+    window.removeEventListener('mousemove', this._onMouseMove)
+    window.removeEventListener('mouseup', this._onMouseUp)
+    el.removeEventListener('wheel', this._onWheel)
     this.renderer.dispose()
-    this.renderer.domElement.remove()
+    el.remove()
   }
 }
