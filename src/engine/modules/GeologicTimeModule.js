@@ -129,7 +129,7 @@ function buildTerrain(era){
     const x=p.getX(i),z=p.getZ(i),dist=Math.sqrt(x*x+z*z)
     if(dist>R){p.setY(i,-1);continue}
     const n=noise2D(x,z)+ridge(x,z)*.4+noise2D(x,z,2)*.3
-    const mtn=Math.exp(-((dist-R*.3)/.8)**2)*.5+Math.exp(-((z-x*.3)/.7)**2)*.4+Math.exp(-((x+.5)/.5)**2)*.3
+    const mtn=Math.exp(-(((dist-R*.3)/.8)**2))*.5+Math.exp(-(((z-x*.3)/.7)**2))*.4+Math.exp(-(((x+.5)/.5)**2))*.3
     const h=Math.max(-.2,Math.min(.5,n*.3+mtn*era.mtns*.04-.05+Math.random()*.02))
     p.setY(i,h)
   }
