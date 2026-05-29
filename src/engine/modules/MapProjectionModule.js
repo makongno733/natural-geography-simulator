@@ -113,10 +113,12 @@ export function MapProjectionModule(scene, params, services) {
 
   // High-res textured sphere
   const tex = earthTexture(2048)
-  const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(R, 128, 64),
-    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05 }),
+  const sphereGeo = new THREE.SphereGeometry(R, 128, 64)
+  const sphere = new THREE.Mesh(sphereGeo,
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide }),
   )
+  const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
+  let sphereTarget = null
   group.add(sphere)
 
   // Deformation grid overlay (coarse, for animation)
@@ -124,15 +126,13 @@ export function MapProjectionModule(scene, params, services) {
   const gridOrig = new Float32Array(grid.geometry.attributes.position.array)
   group.add(grid)
 
-  /* ── Compute grid target for a projection ── */
-  function computeGridTarget(proj) {
+  /* ── Compute target positions ── */
+  function computeTarget(origData, count, proj) {
     const fn = proj.fn || PF.equirectangular
-    const pos = grid.geometry.attributes.position
-    const count = pos.count
     const tp = new Float32Array(count * 3)
     const S = R * 2.2
     for (let i = 0; i < count; i++) {
-      const x = gridOrig[i * 3], y = gridOrig[i * 3 + 1], z = gridOrig[i * 3 + 2]
+      const x = origData[i * 3], y = origData[i * 3 + 1], z = origData[i * 3 + 2]
       const lat = Math.asin(y / R), lon = Math.atan2(z, x)
       let px, py
       try {
@@ -147,19 +147,23 @@ export function MapProjectionModule(scene, params, services) {
     return tp
   }
 
-  function interpolateGrid(t) {
-    const pos = grid.geometry.attributes.position
+  function interpolateMesh(geo, orig, target, t, setNormals) {
+    const pos = geo.attributes.position
     for (let i = 0; i < pos.count; i++) {
       pos.setXYZ(i,
-        gridOrig[i * 3] + (gridTarget[i * 3] - gridOrig[i * 3]) * t,
-        gridOrig[i * 3 + 1] + (gridTarget[i * 3 + 1] - gridOrig[i * 3 + 1]) * t,
-        gridOrig[i * 3 + 2] + (gridTarget[i * 3 + 2] - gridOrig[i * 3 + 2]) * t,
+        orig[i * 3] + (target[i * 3] - orig[i * 3]) * t,
+        orig[i * 3 + 1] + (target[i * 3 + 1] - orig[i * 3 + 1]) * t,
+        orig[i * 3 + 2] + (target[i * 3 + 2] - orig[i * 3 + 2]) * t,
       )
     }
     pos.needsUpdate = true
-    // Fade sphere during unfold
-    sphere.material.opacity = 1 - t * 0.5
-    sphere.material.transparent = true
+    if (setNormals && t > 0.9) {
+      const n = geo.attributes.normal
+      for (let i = 0; i < pos.count; i++) n.setXYZ(i, 0, 0, 1)
+      n.needsUpdate = true
+    } else {
+      geo.computeVertexNormals()
+    }
   }
 
   /* ── Labels ── */
@@ -191,9 +195,10 @@ export function MapProjectionModule(scene, params, services) {
         current = p.projection; target = 1
         const proj = PROJECTIONS.find(x => x.id === p.projection)
         if (proj && proj.flat !== false) {
-          gridTarget = computeGridTarget(proj)
+          gridTarget = computeTarget(gridOrig, grid.geometry.attributes.position.count, proj)
+          sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
         } else {
-          gridTarget = null; target = 0
+          gridTarget = null; sphereTarget = null; target = 0
         }
         showLabel(p.projection)
       }
@@ -202,19 +207,24 @@ export function MapProjectionModule(scene, params, services) {
       // Animate grid unfold/restore
       if (Math.abs(unfold - target) > 0.002) {
         unfold += (target - unfold) * 0.04
-        if (target === 1 && gridTarget) interpolateGrid(unfold)
-        else {
-          // Restore grid to sphere
-          const pos = grid.geometry.attributes.position
-          for (let i = 0; i < pos.count; i++) {
-            pos.setXYZ(i,
-              pos.getX(i) + (gridOrig[i * 3] - pos.getX(i)) * 0.04,
-              pos.getY(i) + (gridOrig[i * 3 + 1] - pos.getY(i)) * 0.04,
-              pos.getZ(i) + (gridOrig[i * 3 + 2] - pos.getZ(i)) * 0.04,
-            )
+        if (target === 1 && gridTarget && sphereTarget) {
+          interpolateMesh(grid.geometry, gridOrig, gridTarget, unfold, false)
+          interpolateMesh(sphereGeo, sphereOrig, sphereTarget, unfold, true)
+        } else {
+          // Restore both to sphere
+          const restoreMesh = (geo, orig) => {
+            const pos = geo.attributes.position
+            for (let i = 0; i < pos.count; i++) {
+              pos.setXYZ(i,
+                pos.getX(i) + (orig[i * 3] - pos.getX(i)) * 0.04,
+                pos.getY(i) + (orig[i * 3 + 1] - pos.getY(i)) * 0.04,
+                pos.getZ(i) + (orig[i * 3 + 2] - pos.getZ(i)) * 0.04,
+              )
+            }
+            pos.needsUpdate = true; geo.computeVertexNormals()
           }
-          pos.needsUpdate = true
-          sphere.material.opacity += (1 - sphere.material.opacity) * 0.04
+          restoreMesh(grid.geometry, gridOrig)
+          restoreMesh(sphereGeo, sphereOrig)
         }
       }
 
