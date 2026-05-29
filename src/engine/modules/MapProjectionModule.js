@@ -86,11 +86,16 @@ export function MapProjectionModule(scene, params, services) {
   scene.background = new THREE.Color(0xf5f0e8)
 
   // High-res textured sphere
-  const tex = earthTexture(2048)
-  const sphereGeo = new THREE.SphereGeometry(R, 128, 64)
-  const sphere = new THREE.Mesh(sphereGeo,
-    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide }),
+  const tex = earthTexture(2048) // Canvas fallback with continent polygons
+  // Try loading real Blue Marble texture
+  new THREE.TextureLoader().load(
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/1280px-Blue_Marble_2002.png',
+    (loaded) => { loaded.colorSpace = THREE.SRGBColorSpace; sphereMat.map = loaded; sphereMat.needsUpdate = true },
+    undefined, () => {} // silent fail, keep canvas texture
   )
+  const sphereGeo = new THREE.SphereGeometry(R, 128, 64)
+  const sphereMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat)
   const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
   group.add(sphere)
 
@@ -104,16 +109,15 @@ export function MapProjectionModule(scene, params, services) {
     const fn = proj.fn || PF.equirectangular
     const S = R * 2.2
     const maxLat = 85 * Math.PI / 180
-    const lineMat = (color, opacity) => new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false })
-    const labelStyle = (color) => ({ color: '#' + color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600', background: 'rgba(255,255,255,0.7)' })
+    const lineMat = (color, opacity) => new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false, linewidth: 1 })
+    const fLabel = (color) => ({ color: '#' + color.toString(16).padStart(6, '0'), fontSize: '10px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '2px 5px', borderRadius: '3px' })
 
-    // Latitude lines
     const latLines = [
-      { deg: 0, color: 0xcc3333, label: '赤道 0°' },
-      { deg: 23.5, color: 0xcc8833, label: '北回归线 23.5°N' },
-      { deg: -23.5, color: 0xcc8833, label: '南回归线 23.5°S' },
-      { deg: 66.5, color: 0xcc6633, label: '北极圈 66.5°N' },
-      { deg: -66.5, color: 0xcc6633, label: '南极圈 66.5°S' },
+      { deg: 0, color: 0xcc3333, label: '0°' },
+      { deg: 23.5, color: 0xcc8833, label: '23.5°N' },
+      { deg: -23.5, color: 0xcc8833, label: '23.5°S' },
+      { deg: 66.5, color: 0xcc6633, label: '66.5°N' },
+      { deg: -66.5, color: 0xcc6633, label: '66.5°S' },
     ]
     latLines.forEach(({ deg, color, label }) => {
       const lat = Math.max(-maxLat, Math.min(maxLat, deg * Math.PI / 180))
@@ -131,13 +135,12 @@ export function MapProjectionModule(scene, params, services) {
       }
       if (label && labelSystem && pts.length > 10) {
         const mid = pts[Math.floor(pts.length / 2)]
-        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0, 0.05, 0.01)), labelStyle(color))
+        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0, 0.05, 0.01)), fLabel(color))
       }
     })
 
-    // Longitude lines
     const lonLines = [
-      { deg: 0, color: 0x3366cc, label: '本初 0°' },
+      { deg: 0, color: 0x3366cc, label: '0°' },
       { deg: 90, color: 0x3366cc, label: '90°E' },
       { deg: -90, color: 0x3366cc, label: '90°W' },
       { deg: 180, color: 0x3366cc, label: '180°' },
@@ -158,38 +161,38 @@ export function MapProjectionModule(scene, params, services) {
       }
       if (label && labelSystem && pts.length > 5) {
         const mid = pts[Math.floor(pts.length * 0.6)]
-        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0.08, 0, 0.01)), labelStyle(color))
+        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0.08, 0, 0.01)), fLabel(color))
       }
     })
   }
 
   // ── Lat/lon reference lines on sphere ──
+  const crispLabel = (color) => ({ color, fontSize: '11px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '2px 6px', borderRadius: '3px' })
+
   function addLatLine(latDeg, color, label) {
     const phi = (90 - latDeg) * Math.PI / 180; const r = Math.sin(phi) * R * 1.01; const y = Math.cos(phi) * R * 1.01
     const pts = []; for (let i = 0; i <= 100; i++) { const t = i / 100 * Math.PI * 2; pts.push(new THREE.Vector3(-Math.cos(t) * r, y, Math.sin(t) * r)) }
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5, depthTest: true }))
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6, depthTest: true, linewidth: 1 }))
     group.add(line)
-    if (label && labelSystem) {
-      labelSystem.addToGroup(group, label, new THREE.Vector3(0, y, r + 0.05), { color: '#' + color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600' })
-    }
+    if (label && labelSystem) labelSystem.addToGroup(group, label, new THREE.Vector3(0, y, r + 0.05), crispLabel('#' + color.toString(16).padStart(6, '0')))
     return line
   }
   function addLonLine(lonDeg, color, label) {
     const theta = lonDeg * Math.PI / 180; const pts = []
     for (let i = 0; i <= 100; i++) { const phi = i / 100 * Math.PI; pts.push(new THREE.Vector3(-Math.sin(phi) * Math.cos(theta) * R * 1.01, Math.cos(phi) * R * 1.01, Math.sin(phi) * Math.sin(theta) * R * 1.01)) }
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5, depthTest: true }))
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6, depthTest: true }))
     group.add(line)
     if (label && labelSystem) {
-      const mid = 45 * Math.PI / 180; labelSystem.addToGroup(group, label, new THREE.Vector3(-Math.sin(mid) * Math.cos(theta) * R * 1.08, Math.cos(mid) * R * 1.08, Math.sin(mid) * Math.sin(theta) * R * 1.08), { color: '#' + color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600' })
+      const mid = 45 * Math.PI / 180; labelSystem.addToGroup(group, label, new THREE.Vector3(-Math.sin(mid) * Math.cos(theta) * R * 1.08, Math.cos(mid) * R * 1.08, Math.sin(mid) * Math.sin(theta) * R * 1.08), crispLabel('#' + color.toString(16).padStart(6, '0')))
     }
     return line
   }
-  addLatLine(0, 0xcc3333, '赤道 0°')
-  addLatLine(30, 0xcc8833, '30°N')
-  addLatLine(-30, 0xcc8833, '30°S')
-  addLatLine(60, 0xcc6633, '60°N')
-  addLatLine(-60, 0xcc6633, '60°S')
-  addLonLine(0, 0x3366cc, '本初子午线 0°')
+  addLatLine(0, 0xcc3333, '0°')
+  addLatLine(23.5, 0xcc8833, '23.5°N')
+  addLatLine(-23.5, 0xcc8833, '23.5°S')
+  addLatLine(66.5, 0xcc6633, '66.5°N')
+  addLatLine(-66.5, 0xcc6633, '66.5°S')
+  addLonLine(0, 0x3366cc, '0°')
   addLonLine(90, 0x3366cc, '90°E')
   addLonLine(-90, 0x3366cc, '90°W')
   addLonLine(180, 0x3366cc, '180°')
@@ -343,6 +346,16 @@ export function MapProjectionModule(scene, params, services) {
           buildFlatGrid(proj)
         }
       }
+
+      // Fade sphere reference lines during unfold
+      group.children.forEach(c => {
+        if (c instanceof THREE.Line && c.material.color && (c.material.color.getHex() === 0xcc3333 || c.material.color.getHex() === 0xcc8833 || c.material.color.getHex() === 0xcc6633 || c.material.color.getHex() === 0x3366cc)) {
+          c.material.opacity = 0.6 * (1 - unfold)
+        }
+      })
+
+      // Fix lighting when flat
+      sphereMat.roughness = unfold > 0.8 ? 0.95 : 0.55
 
       // Flat grid fade-in
       if (flatGridGroup) {

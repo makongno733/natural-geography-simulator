@@ -9,6 +9,8 @@ export class LabelSystem {
     this.renderer.domElement.style.left = '0'
     this.renderer.domElement.style.pointerEvents = 'none'
     this.renderer.domElement.style.overflow = 'hidden'
+    this.renderer.domElement.style.fontSmooth = 'always'
+    this.renderer.domElement.style.webkitFontSmoothing = 'antialiased'
     container.appendChild(this.renderer.domElement)
     this._labels = []
   }
