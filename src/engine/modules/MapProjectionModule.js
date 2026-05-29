@@ -141,12 +141,13 @@ const CATEGORIES = [...new Set(PROJECTIONS.map(p => p.cat))]
 
 /* ── Module ── */
 export function MapProjectionModule(scene, params, services) {
-  const { labelSystem } = services
+  const { labelSystem, cameraRig } = services
   const group = new THREE.Group()
   const R = 1.5, SEG = 128
   let current = 'mercator'
-  let unfold = 0, target = 0
-  let targetPos = null // Pre-computed target positions
+  let unfold = 0, target = 0, flatMode = false
+  let targetPos = null
+  let camTargetPos = null, camTargetLook = null
 
   scene.background = new THREE.Color(0xf5f0e8)
 
@@ -254,19 +255,42 @@ export function MapProjectionModule(scene, params, services) {
         unfold += (target - unfold) * 0.05
         if (current !== 'reset' && targetPos) interpolate(unfold)
         else if (current === 'reset') {
-          // Interpolate back to sphere
           for (let i = 0; i < count; i++) {
-            pos.setXYZ(i,
-              pos.getX(i) + (orig[i * 3] - pos.getX(i)) * 0.05,
-              pos.getY(i) + (orig[i * 3 + 1] - pos.getY(i)) * 0.05,
-              pos.getZ(i) + (orig[i * 3 + 2] - pos.getZ(i)) * 0.05,
-            )
+            pos.setXYZ(i, pos.getX(i) + (orig[i * 3] - pos.getX(i)) * 0.05, pos.getY(i) + (orig[i * 3 + 1] - pos.getY(i)) * 0.05, pos.getZ(i) + (orig[i * 3 + 2] - pos.getZ(i)) * 0.05)
           }
-          pos.needsUpdate = true
-          globe.geometry.computeVertexNormals()
+          pos.needsUpdate = true; globe.geometry.computeVertexNormals()
           gridGroup.children.forEach(c => { if (c.material) c.material.opacity += (0.15 - c.material.opacity) * 0.05 })
         }
       }
+
+      // Camera: when fully unfolded, lock to top-down view
+      if (unfold > 0.95 && target === 1 && !flatMode) {
+        flatMode = true
+        if (cameraRig) {
+          camTargetPos = cameraRig.camera.position.clone()
+          camTargetLook = cameraRig.controls.target.clone()
+        }
+      }
+      if (flatMode && cameraRig) {
+        const cam = cameraRig.camera
+        const ct = cameraRig.controls.target
+        cam.position.lerp(new THREE.Vector3(0, 2.5, 0.1), 0.06)
+        ct.lerp(new THREE.Vector3(0, -0.3, 0), 0.06)
+        cameraRig.controls.update()
+        cameraRig.controls.enableRotate = false
+        cameraRig.controls.enableZoom = true
+      }
+
+      // When returning to sphere, unlock camera
+      if (unfold < 0.1 && flatMode) {
+        flatMode = false
+        if (cameraRig) {
+          cameraRig.controls.enableRotate = true
+          if (camTargetPos) { cameraRig.camera.position.copy(camTargetPos); camTargetPos = null }
+          if (camTargetLook) { cameraRig.controls.target.copy(camTargetLook); camTargetLook = null }
+        }
+      }
+
       if (unfold < 0.1) { globe.rotation.y += dt * 0.08; gridGroup.rotation.y += dt * 0.08 }
     },
     dispose() {},
