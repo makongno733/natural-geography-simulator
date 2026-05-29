@@ -16,7 +16,8 @@ import { getGrades } from './data/catalogLoader.js'
 const grades = ref([])
 
 onMounted(async () => {
-  grades.value = await getGrades()
+  const all = await getGrades()
+  grades.value = all.filter(g => g.id !== '大学')
 })
 </script>
 
