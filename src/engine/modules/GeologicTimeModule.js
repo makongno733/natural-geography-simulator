@@ -233,7 +233,14 @@ export function GeologicTimeModule(scene,params,services){
   gauges=buildGauges();grp.add(gauges)
 
   // Strata
-  [0xFF3300,0xFF5533,0xDD7722,0xDD9922,0xDD8822,0xDDAA44,0xDDBB66,0x448844,0x6666CC,0x9944AA,0xDD6644,0x66AA88,0x88BB88,0x77AA77,0x559955,0x669966,0xCC8844].forEach((c,i)=>{const y=.18-i*.04;const b=new THREE.Mesh(new THREE.BoxGeometry(.35,i===16?0.05:0.04,.18),new THREE.MeshStandardMaterial({color:c,roughness:.7,metalness:.1,transparent:true,opacity:.85}));b.position.set(-R-.45,y,0);grp.add(b)})
+  const strataCols=[0xFF3300,0xFF5533,0xDD7722,0xDD9922,0xDD8822,0xDDAA44,0xDDBB66,0x448844,0x6666CC,0x9944AA,0xDD6644,0x66AA88,0x88BB88,0x77AA77,0x559955,0x669966,0xCC8844]
+  strataCols.forEach((c,i)=>{
+    const y=.18-i*.04
+    const h=i===16?0.05:0.04
+    const b=new THREE.Mesh(new THREE.BoxGeometry(.35,h,.18),new THREE.MeshStandardMaterial({color:c,roughness:.7,metalness:.1,transparent:true,opacity:.85}))
+    b.position.set(-R-.45,y,0)
+    grp.add(b)
+  })
 
   // Time rings
   const rings=[];ERAS.forEach((e,i)=>{const r=R+.3+i*.03,pts=[];for(let j=0;j<=64;j++){const t=j/64*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(t)*r,.02,Math.sin(t)*r))};rings.push(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:e.c,transparent:true,opacity:.1,depthTest:true})));grp.add(rings[i])})
@@ -270,7 +277,7 @@ export function GeologicTimeModule(scene,params,services){
   lbls()
 
   const api={
-    setParams(p){if(p.era!==undefined&&p.era!==ei){fi=ei;ei=p.era;tt=0;imp.visible=ei===N-1;rings.forEach((r,i)=>{r.material.opacity=i===ei?.8:.1});volcanoMarker.visible=ERAS[ei].volcano||false;impactMarker.visible=ERAS[ei].impact||false;lbls()}},
+    setParams(p){if(p.era!==undefined&&p.era!==ei){fi=ei;ei=p.era;tt=0;imp.visible=ei===N-1;rings.forEach((r,i)=>{r.material.opacity=i===ei?0.8:0.1});volcanoMarker.visible=ERAS[ei].volcano||false;impactMarker.visible=ERAS[ei].impact||false;lbls()}},
     update(dt){
       counter++;const era=ERAS[ei]
       animateOcean(ocean,counter*.016);animateClouds(clouds,dt)
