@@ -241,10 +241,13 @@ export function MapProjectionModule(scene, params, services) {
       )
     }
     pos.needsUpdate = true
-    if (setNormals && t > 0.9) {
+    if (setNormals && t > 0.95) {
+      // Force flat: all Z=0, all normals=(0,0,1)
+      for (let i = 0; i < pos.count; i++) pos.setZ(i, 0)
       const n = geo.attributes.normal
       for (let i = 0; i < pos.count; i++) n.setXYZ(i, 0, 0, 1)
       n.needsUpdate = true
+      pos.needsUpdate = true
     } else {
       geo.computeVertexNormals()
     }
@@ -325,8 +328,13 @@ export function MapProjectionModule(scene, params, services) {
         savedCam = { pos: cameraRig.camera.position.clone(), look: cameraRig.controls.target.clone() }
       }
       if (flatMode && cameraRig) {
-        cameraRig.camera.position.lerp(new THREE.Vector3(0, 0, 7), 0.05)
-        cameraRig.controls.target.lerp(new THREE.Vector3(0, 0, 0), 0.05)
+        const camTarget = new THREE.Vector3(0, 0, 7)
+        const lookTarget = new THREE.Vector3(0, 0, 0)
+        cameraRig.camera.position.lerp(camTarget, 0.08)
+        cameraRig.controls.target.lerp(lookTarget, 0.08)
+        // Snap when very close
+        if (cameraRig.camera.position.distanceTo(camTarget) < 0.05) cameraRig.camera.position.copy(camTarget)
+        if (cameraRig.controls.target.distanceTo(lookTarget) < 0.05) cameraRig.controls.target.copy(lookTarget)
         cameraRig.controls.enableRotate = false
         cameraRig.controls.update()
       }
