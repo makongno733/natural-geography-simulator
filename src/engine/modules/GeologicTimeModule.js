@@ -75,9 +75,9 @@ function buildGeo(){
     const n1=Math.sin(x*.6)*Math.cos(z*.5)+Math.cos(x*.8+z*.3)*.7+Math.sin(z*.9-x*.4)*.6
     const n2=Math.sin(x*1.8+z)*Math.cos(z*2.1-x)*.35+Math.sin(x*2.5-z*.7)*Math.cos(z*1.6+x)*.3
     const n3=Math.sin(x*3.5)*Math.cos(z*3.2)*.15+Math.cos(x*4+z*3.5)*.1
-    const mt1=Math.exp(-((z-x*.3+.5)/.8)**2)*.6
-    const mt2=Math.exp(-((x+.8)/.5)**2)*.5
-    const mt3=Math.exp(-((z-1)/.4)**2)*.4
+    const mt1=Math.exp(-(((z-x*.3+.5)/.8)**2))*.6
+    const mt2=Math.exp(-(((x+.8)/.5)**2))*.5
+    const mt3=Math.exp(-(((z-1)/.4)**2))*.4
     p.setY(i,Math.min(.45,Math.max(-.15,n1*.25+n2+n3+(mt1+mt2+mt3)*.7-.1+Math.random()*.02)))
   }
   const dc=new Float32Array(p.count*3)
