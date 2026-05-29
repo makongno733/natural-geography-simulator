@@ -119,7 +119,6 @@ export function MapProjectionModule(scene, params, services) {
     new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide }),
   )
   const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
-  let sphereTarget = null
   group.add(sphere)
 
   // Deformation grid overlay (coarse, for animation)
