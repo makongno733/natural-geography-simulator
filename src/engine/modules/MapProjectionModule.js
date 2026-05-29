@@ -200,8 +200,8 @@ export function MapProjectionModule(scene, params, services) {
       let px = 0, py = 0
       try { [px, py] = fn(lat, lon) } catch (_) { px = lon / Math.PI; py = lat / (Math.PI / 2) }
       tp[i * 3] = (px || 0) * S
-      tp[i * 3 + 1] = -R * 0.5 + (py || 0) * S * 0.55
-      tp[i * 3 + 2] = 0
+      tp[i * 3 + 1] = 0
+      tp[i * 3 + 2] = -R * 0.5 + (py || 0) * S * 0.55
     }
     return tp
   }
