@@ -81,7 +81,7 @@ function buildDeformGrid(R, cols, rows) {
     const phi = Math.PI * j / rows  // 0 to PI
     for (let i = 0; i <= cols; i++) {
       const theta = 2 * Math.PI * i / cols
-      verts.push(Math.sin(phi) * Math.cos(theta) * R, Math.cos(phi) * R, Math.sin(phi) * Math.sin(theta) * R)
+      verts.push(-Math.sin(phi) * Math.cos(theta) * R, Math.cos(phi) * R, Math.sin(phi) * Math.sin(theta) * R)
     }
   }
   for (let j = 0; j < rows; j++) {
@@ -107,7 +107,8 @@ export function MapProjectionModule(scene, params, services) {
   const group = new THREE.Group()
   const R = 1.5
   let current = null, unfold = 0, target = 0, flatMode = false, savedCam = null
-  let gridTarget = null
+  let gridTarget = null, sphereTarget = null
+  let pendingProj = null // Queue next projection after sphere restore
 
   scene.background = new THREE.Color(0xf5f0e8)
 
@@ -189,17 +190,30 @@ export function MapProjectionModule(scene, params, services) {
     setParams(p) {
       if (p.projection === undefined) return
       if (p.projection === 'reset') {
-        current = 'reset'; target = 0
+        current = 'reset'; target = 0; pendingProj = null
         showLabel('reset')
+        return
+      }
+      const proj = PROJECTIONS.find(x => x.id === p.projection)
+      if (!proj) return
+
+      if (proj.flat === false) {
+        // Azimuthal: stay sphere
+        current = p.projection; target = 0; pendingProj = null
+        gridTarget = null; sphereTarget = null
+        showLabel(p.projection)
+        return
+      }
+
+      // Already flat? Restore to sphere first, then unfold to new
+      if (unfold > 0.5) {
+        pendingProj = p.projection
+        target = 0
+        showLabel(p.projection)
       } else {
-        current = p.projection; target = 1
-        const proj = PROJECTIONS.find(x => x.id === p.projection)
-        if (proj && proj.flat !== false) {
-          gridTarget = computeTarget(gridOrig, grid.geometry.attributes.position.count, proj)
-          sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
-        } else {
-          gridTarget = null; sphereTarget = null; target = 0
-        }
+        current = p.projection; target = 1; pendingProj = null
+        gridTarget = computeTarget(gridOrig, grid.geometry.attributes.position.count, proj)
+        sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
         showLabel(p.projection)
       }
     },
@@ -244,6 +258,16 @@ export function MapProjectionModule(scene, params, services) {
         if (cameraRig) {
           cameraRig.controls.enableRotate = true
           if (savedCam) { cameraRig.camera.position.copy(savedCam.pos); cameraRig.controls.target.copy(savedCam.look); savedCam = null }
+        }
+      }
+
+      // When fully restored to sphere, trigger pending projection
+      if (unfold < 0.05 && pendingProj) {
+        const proj = PROJECTIONS.find(x => x.id === pendingProj)
+        if (proj) {
+          current = pendingProj; target = 1; pendingProj = null
+          gridTarget = computeTarget(gridOrig, grid.geometry.attributes.position.count, proj)
+          sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
         }
       }
 
