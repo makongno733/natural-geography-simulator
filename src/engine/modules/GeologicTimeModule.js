@@ -100,7 +100,7 @@ function updateTerrainColors(geo,params){
   const cols=colorAttr?colorAttr.array:new Float32Array(pos.count*3)
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i),z=pos.getZ(i),dist=Math.sqrt(x*x+z*z)
-    if(dist>R){cols[i*3]=0;cols[i*3+1]=0;cols[i*3+2]=0;continue}
+    if(dist>R){cols[i*3]=.08;cols[i*3+1]=.12;cols[i*3+2]=.2;continue}
     const n=Math.sin(x*.8)*Math.cos(z*.6)+Math.sin(x*1.3+z*.4)*.7+Math.cos(z*1.1-x*.3)*.6
     const isLand=n>(.5-params.landFrac*.75)&&dist<R*.92
     if(isLand){cols[i*3]=params.landR+Math.random()*.04;cols[i*3+1]=params.landG+Math.random()*.04;cols[i*3+2]=params.landB+Math.random()*.03}
@@ -153,6 +153,12 @@ export function GeologicTimeModule(scene,params,services){
   const atmoGeo=new THREE.SphereGeometry(R*1.3,48,24)
   const atmoMat=new THREE.MeshBasicMaterial({color:0x88ccff,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false})
   const atmo=new THREE.Mesh(atmoGeo,atmoMat);atmo.position.y=.3;group.add(atmo)
+
+  // Ice caps — visible in Quaternary/Holocene
+  const iceNorth=new THREE.Mesh(new THREE.CircleGeometry(R*.25,32),new THREE.MeshBasicMaterial({color:0xeeffff,transparent:true,opacity:.4,depthWrite:false,side:THREE.DoubleSide}))
+  iceNorth.rotation.x=-Math.PI/2;iceNorth.position.set(0,.02,R*.85);group.add(iceNorth)
+  const iceSouth=new THREE.Mesh(new THREE.CircleGeometry(R*.3,32),new THREE.MeshBasicMaterial({color:0xeeffff,transparent:true,opacity:.4,depthWrite:false,side:THREE.DoubleSide}))
+  iceSouth.rotation.x=-Math.PI/2;iceSouth.position.set(0,.02,-R*.85);group.add(iceSouth)
 
   // Cloud particles — pre-allocate with initial data
   const cloudGeo=new THREE.BufferGeometry()
@@ -232,6 +238,9 @@ export function GeologicTimeModule(scene,params,services){
       impacts.children.forEach(c=>{if(c.material?.blending===THREE.AdditiveBlending)c.material.opacity=.3+Math.sin(Date.now()*.003)*.15})
       // Rotate clouds slowly
       cloudPts.rotation.y+=dt*.015
+      // Ice caps visible from Quaternary onward
+      const iceVis=eraIdx>=N-2
+      iceNorth.visible=iceVis;iceSouth.visible=iceVis
     },
     dispose(){},
   }
