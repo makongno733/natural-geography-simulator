@@ -27,10 +27,10 @@
           <div class="tl-bar">
             <button v-for="(era, i) in eras" :key="i"
               :class="['tl-btn', { active: currentEra === i }]"
-              :style="{ borderColor: '#' + era.color.toString(16).padStart(6, '0') }"
+              :style="{ borderColor: '#' + (era.color||era.c).toString(16).padStart(6, '0') }"
               @click="selectEra(i)"
             >
-              <span class="tl-dot" :style="{ background: '#' + era.color.toString(16).padStart(6, '0') }"></span>
+              <span class="tl-dot" :style="{ background: '#' + (era.color||era.c).toString(16).padStart(6, '0') }"></span>
               <span class="tl-name">{{ era.name }}</span>
               <span class="tl-en">{{ era.en }}</span>
               <span class="tl-time">{{ era.start }}{{ era.end === 0 ? '+' : '' }}Ma</span>
@@ -62,7 +62,7 @@
           @click="selectEra(eras.indexOf(era))"
         >
           <span>{{ era.eon || '—' }}</span>
-          <span :style="{ color: '#' + era.color.toString(16).padStart(6, '0'), fontWeight: '700' }">{{ era.name }}</span>
+          <span :style="{ color: '#' + (era.color||era.c).toString(16).padStart(6, '0'), fontWeight: '700' }">{{ era.name }}</span>
           <span>{{ era.start }}</span>
           <span class="gt-desc">{{ (era.d || era.desc || '').split('。')[0] }}。</span>
         </div>
