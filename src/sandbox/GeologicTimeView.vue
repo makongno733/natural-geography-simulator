@@ -40,7 +40,7 @@
 
         <!-- Current Era Info -->
         <div class="era-info" v-if="currentEraData">
-          <h3 :style="{ color: '#' + currentEraData.color.toString(16).padStart(6, '0') }">{{ currentEraData.name }} · {{ currentEraData.en }}</h3>
+          <h3 :style="{ color: '#' + (currentEraData.color||currentEraData.c).toString(16).padStart(6, '0') }">{{ currentEraData.name }} · {{ currentEraData.en }}</h3>
           <p>{{ currentEraData.d || currentEraData.desc }}</p>
           <div class="fossil-box" v-if="currentEraData.f || currentEraData.fossils">
             <h4>🦴 代表生物 / 标志物</h4>
