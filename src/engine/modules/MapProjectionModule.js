@@ -74,40 +74,13 @@ const PROJECTIONS = [
 ]
 const CATS = [...new Set(PROJECTIONS.map(p => p.cat))]
 
-/* ── Build coarse deformation grid ── */
-function buildDeformGrid(R, cols, rows) {
-  const verts = [], indices = []
-  for (let j = 0; j <= rows; j++) {
-    const phi = Math.PI * j / rows  // 0 to PI
-    for (let i = 0; i <= cols; i++) {
-      const theta = 2 * Math.PI * i / cols
-      verts.push(-Math.sin(phi) * Math.cos(theta) * R, Math.cos(phi) * R, Math.sin(phi) * Math.sin(theta) * R)
-    }
-  }
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      const a = j * (cols + 1) + i, b = a + 1, c = a + cols + 1, d = c + 1
-      indices.push(a, b, d, a, d, c)
-    }
-  }
-  const geo = new THREE.BufferGeometry()
-  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3))
-  geo.setIndex(indices)
-  geo.computeVertexNormals()
-  const mat = new THREE.MeshBasicMaterial({ color: 0xffaa33, wireframe: true, transparent: true, opacity: 0.6, depthTest: true, depthWrite: false })
-  const mesh = new THREE.Mesh(geo, mat)
-  mesh.renderOrder = 1
-  mesh.material.depthTest = true
-  return mesh
-}
-
 /* ── Module ── */
 export function MapProjectionModule(scene, params, services) {
   const { labelSystem, cameraRig } = services
   const group = new THREE.Group()
   const R = 1.5
   let current = null, unfold = 0, target = 0, flatMode = false, savedCam = null
-  let gridTarget = null, sphereTarget = null
+  let sphereTarget = null
   let pendingProj = null // Queue next projection after sphere restore
 
   scene.background = new THREE.Color(0xf5f0e8)
@@ -159,10 +132,6 @@ export function MapProjectionModule(scene, params, services) {
     const a = new THREE.Mesh(arrowGeo, arrowMat); a.position.set(px, py, pz); a.rotation.z = Math.PI / 2; a.rotation.y = ry; group.add(a)
   })
 
-  // Deformation grid overlay (coarse, for animation)
-  const grid = buildDeformGrid(R, 24, 12)
-  const gridOrig = new Float32Array(grid.geometry.attributes.position.array)
-  group.add(grid)
 
   /* ── Compute target positions ── */
   function computeTarget(origData, count, proj) {
@@ -241,7 +210,7 @@ export function MapProjectionModule(scene, params, services) {
       if (proj.flat === false) {
         // Azimuthal: stay sphere
         current = p.projection; target = 0; pendingProj = null
-        gridTarget = null; sphereTarget = null
+        sphereTarget = null
         showLabel(p.projection)
         return
       }
@@ -253,7 +222,6 @@ export function MapProjectionModule(scene, params, services) {
         showLabel(p.projection)
       } else {
         current = p.projection; target = 1; pendingProj = null
-        gridTarget = computeTarget(gridOrig, grid.geometry.attributes.position.count, proj)
         sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
         showLabel(p.projection)
       }
@@ -262,24 +230,18 @@ export function MapProjectionModule(scene, params, services) {
       // Animate grid unfold/restore
       if (Math.abs(unfold - target) > 0.002) {
         unfold += (target - unfold) * 0.04
-        if (target === 1 && gridTarget && sphereTarget) {
-          interpolateMesh(grid.geometry, gridOrig, gridTarget, unfold, false)
+        if (target === 1 && sphereTarget) {
           interpolateMesh(sphereGeo, sphereOrig, sphereTarget, unfold, true)
         } else {
-          // Restore both to sphere
-          const restoreMesh = (geo, orig) => {
-            const pos = geo.attributes.position
-            for (let i = 0; i < pos.count; i++) {
-              pos.setXYZ(i,
-                pos.getX(i) + (orig[i * 3] - pos.getX(i)) * 0.04,
-                pos.getY(i) + (orig[i * 3 + 1] - pos.getY(i)) * 0.04,
-                pos.getZ(i) + (orig[i * 3 + 2] - pos.getZ(i)) * 0.04,
-              )
-            }
-            pos.needsUpdate = true; geo.computeVertexNormals()
+          const pos = sphereGeo.attributes.position
+          for (let i = 0; i < pos.count; i++) {
+            pos.setXYZ(i,
+              pos.getX(i) + (sphereOrig[i * 3] - pos.getX(i)) * 0.04,
+              pos.getY(i) + (sphereOrig[i * 3 + 1] - pos.getY(i)) * 0.04,
+              pos.getZ(i) + (sphereOrig[i * 3 + 2] - pos.getZ(i)) * 0.04,
+            )
           }
-          restoreMesh(grid.geometry, gridOrig)
-          restoreMesh(sphereGeo, sphereOrig)
+          pos.needsUpdate = true; sphereGeo.computeVertexNormals()
         }
       }
 
@@ -307,7 +269,6 @@ export function MapProjectionModule(scene, params, services) {
         const proj = PROJECTIONS.find(x => x.id === pendingProj)
         if (proj) {
           current = pendingProj; target = 1; pendingProj = null
-          gridTarget = computeTarget(gridOrig, grid.geometry.attributes.position.count, proj)
           sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
         }
       }
