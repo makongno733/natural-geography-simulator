@@ -230,15 +230,15 @@ export function MapProjectionModule(scene, params, services) {
     if (!labelSystem) return
     labelSystem.clearAll(scene)
     if (id === 'reset' || !id) {
-      labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '6px 14px', borderRadius: '6px' })
-      labelSystem.addToGroup(group, '地球是近似的椭球体 · 经纬网标注赤道/本初子午线 · 点击右侧投影按钮观察球面如何展开为平面', new THREE.Vector3(0, R + 1.0, 0), { color: '#666', fontSize: '11px', background: 'rgba(255,255,255,0.85)', padding: '4px 10px', borderRadius: '4px' })
+      labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.5, 0), { color: '#222', fontSize: '20px', fontWeight: '700', background: 'rgba(255,255,255,0.98)', padding: '8px 16px', borderRadius: '6px' })
+      labelSystem.addToGroup(group, '地球是近似的椭球体 · 经纬网已标注 · 拖拽旋转观察 · 点击右侧投影按钮展开', new THREE.Vector3(0, R + 1.0, 0), { color: '#555', fontSize: '13px', background: 'rgba(255,255,255,0.9)', padding: '4px 12px', borderRadius: '4px' })
       return
     }
     const p = PROJECTIONS.find(x => x.id === id)
     if (!p) return
-    labelSystem.addToGroup(group, `${p.name} · ${p.en}`, new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '6px 14px', borderRadius: '6px' })
-    labelSystem.addToGroup(group, `${p.cat}投影 · ${p.prop}${p.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.1, 0), { color: '#999', fontSize: '11px', background: 'rgba(255,255,255,0.8)', padding: '2px 8px', borderRadius: '3px' })
-    labelSystem.addToGroup(group, p.desc, new THREE.Vector3(0, R + 0.7, 0), { color: '#444', fontSize: '11px', fontWeight: '500', background: 'rgba(255,255,255,0.9)', padding: '6px 10px', borderRadius: '4px' })
+    labelSystem.addToGroup(group, `${p.name} · ${p.en}`, new THREE.Vector3(0, R + 1.5, 0), { color: '#222', fontSize: '20px', fontWeight: '700', background: 'rgba(255,255,255,0.98)', padding: '8px 16px', borderRadius: '6px' })
+    labelSystem.addToGroup(group, `${p.cat}投影 · ${p.prop}${p.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.05, 0), { color: '#888', fontSize: '13px', background: 'rgba(255,255,255,0.9)', padding: '3px 10px', borderRadius: '4px' })
+    labelSystem.addToGroup(group, p.desc, new THREE.Vector3(0, R + 0.65, 0), { color: '#333', fontSize: '13px', fontWeight: '500', background: 'rgba(255,255,255,0.95)', padding: '8px 14px', borderRadius: '6px' })
   }
 
   /* ── API ── */

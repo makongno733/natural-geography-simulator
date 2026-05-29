@@ -22,7 +22,7 @@ export class LabelSystem {
       color: '#fff',
       fontSize: '13px',
       fontWeight: '600',
-      textShadow: '0 0 8px rgba(0,0,0,0.8)',
+      textShadow: 'none',
       background: 'rgba(0,0,0,0.5)',
       padding: '2px 8px',
       borderRadius: '4px',
