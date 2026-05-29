@@ -7,7 +7,9 @@
       <span class="sep">></span>
       <router-link :to="'/' + gradeId + '/' + bookId">{{ bookId }}</router-link>
       <span class="sep">></span>
-      <span>{{ chapterId }} {{ chapterData.title }}</span>
+      <router-link :to="{ name: 'chapter', params: { grade: gradeId, book: bookId, chapter: chapterId } }">
+        {{ chapterId }} {{ chapterData.title }}
+      </router-link>
       <span class="sep">></span>
       <span>{{ sectionId }}</span>
     </div>

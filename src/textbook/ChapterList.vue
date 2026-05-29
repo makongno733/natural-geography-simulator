@@ -11,7 +11,7 @@
       <router-link
         v-for="ch in currentBook.chapters"
         :key="ch.id"
-        :to="'/' + gradeId + '/' + bookId + '/' + ch.id + '/' + ch.sections[0].id"
+        :to="{ name: 'chapter', params: { grade: gradeId, book: bookId, chapter: ch.id } }"
         class="card"
       >
         <div class="card-title">{{ ch.id }} {{ ch.title }}</div>
