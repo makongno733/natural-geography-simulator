@@ -453,7 +453,29 @@ const nextSection = computed(() => {
   width: 150px;
 }
 .primary-action,
-.ghost-action,
+.ghost-action {
+  border: 1px solid rgba(100, 122, 63, 0.42);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--button-green-ink);
+  background: linear-gradient(180deg, rgba(246, 250, 228, 0.98), rgba(220, 232, 184, 0.94));
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+.primary-action {
+  color: #fdfef6;
+  border-color: rgba(84, 104, 51, 0.62);
+  background: linear-gradient(135deg, #7f9850, #536936);
+}
+.primary-action:hover,
+.ghost-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(100, 122, 63, 0.74);
+  box-shadow: var(--shadow-hover);
+}
 .section-nav {
   display: flex;
   justify-content: space-between;
@@ -463,18 +485,18 @@ const nextSection = computed(() => {
 }
 .nav-link {
   text-decoration: none;
-  color: var(--red);
+  color: var(--button-green-ink);
   font-size: 14px;
   font-weight: 600;
   padding: 8px 16px;
-  border: 1px solid var(--brown);
+  border: 1px solid rgba(100, 122, 63, 0.38);
   border-radius: var(--radius-sm);
-  background: #fffaf3;
+  background: linear-gradient(180deg, rgba(250, 253, 235, 0.98), rgba(223, 234, 190, 0.9));
   transition: background var(--transition), border-color var(--transition);
 }
 .nav-link:hover {
-  background: rgba(183,55,44,0.06);
-  border-color: var(--red);
+  background: var(--button-green);
+  border-color: rgba(100, 122, 63, 0.72);
   text-decoration: none;
 }
 .not-found { text-align: center; padding: 60px 20px; }
@@ -488,25 +510,25 @@ const nextSection = computed(() => {
   gap: 2px;
 }
 .sandbox-toggle {
-  border: 1px solid var(--brown);
+  border: 1px solid rgba(100, 122, 63, 0.38);
   border-radius: 6px 6px 0 0;
   padding: 6px 16px;
   font-size: 13px;
-  background: rgba(255,255,255,0.7);
-  color: #6b3b32;
+  background: rgba(246, 250, 228, 0.76);
+  color: var(--button-green-ink);
   cursor: pointer;
   transition: all 0.15s;
   border-bottom: 1px solid transparent;
   margin-bottom: -1px;
 }
 .sandbox-toggle.active {
-  background: rgba(255,255,255,0.97);
-  border-bottom-color: rgba(255,255,255,0.97);
-  color: var(--red);
+  background: linear-gradient(180deg, rgba(230, 239, 200, 0.98), rgba(203, 219, 157, 0.94));
+  border-bottom-color: rgba(230, 239, 200, 0.98);
+  color: var(--button-green-ink);
   font-weight: 600;
 }
 .sandbox-toggle:hover:not(.active) {
-  background: rgba(183,55,44,0.05);
+  background: rgba(220, 232, 184, 0.76);
 }
 .sandbox-toggle:not(button) {
   display: inline-flex;

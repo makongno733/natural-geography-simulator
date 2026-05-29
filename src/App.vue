@@ -3,20 +3,6 @@
     <header class="app-header">
       <router-link to="/" class="app-title">中学地理教学系统</router-link>
       <p class="app-subtitle">人教版 · 初中 / 高中</p>
-      <div class="global-ppt-tools">
-        <label class="global-folder-picker">
-          <input
-            type="file"
-            webkitdirectory
-            directory
-            multiple
-            accept=".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            @change="handleGlobalFolderPicked"
-          >
-          选择本地文件夹（全站PPT）
-        </label>
-        <span v-if="localFolderLoaded" class="global-folder-state">已导入 {{ localPptResources.length }} 个课件</span>
-      </div>
     </header>
     <router-view />
   </div>
@@ -25,33 +11,24 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { parseLocalPptFolder } from './textbook/data/pptResources.js'
-import { usePptFolderStore } from './textbook/data/pptFolderStore.js'
 
-const {
-  localPptResources,
-  localFolderLoaded,
-  setLocalPptResources
-} = usePptFolderStore()
 const route = useRoute()
 const isHome = computed(() => route.path === '/')
-
-function handleGlobalFolderPicked(event) {
-  const resources = parseLocalPptFolder(event.target.files)
-  setLocalPptResources(resources)
-}
 </script>
 
 <style scoped>
 .app-root {
   min-height: 100vh;
   background:
-    linear-gradient(90deg, rgba(173, 20, 25, 0.035) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(173, 20, 25, 0.025) 1px, transparent 1px),
-    radial-gradient(circle at 50% 0%, rgba(255, 239, 205, 0.88), transparent 38%),
-    linear-gradient(180deg, #fffefb 0%, var(--paper) 100%);
-  background-size: 18px 18px, 18px 18px, auto, auto;
+    linear-gradient(90deg, var(--grid-green) 1px, transparent 1px),
+    linear-gradient(0deg, var(--grid-green) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-gold) 1px, transparent 1px),
+    linear-gradient(0deg, var(--grid-gold) 1px, transparent 1px),
+    radial-gradient(circle at 50% 4%, rgba(236, 228, 169, 0.44), transparent 36%),
+    linear-gradient(180deg, #fffff7 0%, var(--paper) 100%);
+  background-size: 36px 36px, 36px 36px, 18px 18px, 18px 18px, auto, auto;
   background-color: var(--cream);
+  overflow-x: hidden;
 }
 .app-root.home-mode {
   display: flex;
@@ -63,7 +40,8 @@ function handleGlobalFolderPicked(event) {
 .app-header {
   text-align: center;
   padding: 28px 20px 14px;
-  border-bottom: 1px solid rgba(173, 20, 25, 0.12);
+  border-bottom: 1px solid rgba(126, 157, 105, 0.16);
+  min-width: 0;
 }
 .home-mode .app-header {
   padding: 0 20px 8px;
@@ -71,59 +49,34 @@ function handleGlobalFolderPicked(event) {
 }
 .app-title {
   font-family: "Ma Shan Zheng", "STXingkai", "Kaiti SC", serif;
-  font-size: clamp(44px, 9vw, 96px);
+  font-size: clamp(38px, 8vw, 92px);
   color: var(--red);
-  text-shadow: 0 8px 22px rgba(173, 20, 25, 0.18);
+  text-shadow: 0 6px 18px rgba(137, 96, 45, 0.14);
   line-height: 1;
   letter-spacing: 0;
   text-decoration: none;
-  display: block;
-  max-width: 100%;
+  display: inline-block;
+  width: min(100%, 1180px);
   margin: 0 auto;
-  padding: 0 6px;
+  padding: 0 12px;
   word-break: keep-all;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  text-wrap: balance;
 }
 .home-mode .app-title {
-  font-size: clamp(68px, 13vw, 148px);
+  font-size: clamp(54px, 12vw, 136px);
   white-space: nowrap;
 }
 .app-subtitle {
   margin: 4px 0 0;
-  color: #b85a4d;
+  color: #8f7652;
   font-size: 14px;
   font-family: "Noto Serif SC", "Songti SC", serif;
 }
-.global-ppt-tools {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
-}
-.home-mode .global-ppt-tools {
-  margin-top: 12px;
-}
-.global-folder-picker {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--brown);
-  border-radius: 6px;
-  background: #fff;
-  padding: 6px 10px;
-  font-size: 12px;
-  color: #6b3b32;
-  cursor: pointer;
-  user-select: none;
-}
-.global-folder-picker input {
-  display: none;
-}
-.global-folder-state {
-  font-size: 12px;
-  color: #8d463d;
+@media (max-width: 1120px) {
+  .home-mode .app-title {
+    font-size: clamp(48px, 10.5vw, 112px);
+  }
 }
 
 @media (max-width: 720px) {
@@ -131,11 +84,13 @@ function handleGlobalFolderPicked(event) {
     padding: 22px 14px 12px;
   }
   .app-title {
-    font-size: clamp(32px, 11vw, 54px);
+    font-size: clamp(30px, 10vw, 52px);
     line-height: 1.04;
+    width: 100%;
+    overflow-wrap: anywhere;
   }
   .home-mode .app-title {
-    font-size: clamp(42px, 14vw, 68px);
+    font-size: clamp(38px, 13vw, 64px);
     white-space: normal;
   }
   .app-root.home-mode {

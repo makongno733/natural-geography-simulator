@@ -45,15 +45,15 @@ watch(
 }
 .breadcrumb {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--button-green-deep);
   margin-bottom: 20px;
   padding: 7px 12px;
-  background: rgba(255,255,255,0.82);
+  background: rgba(247, 250, 229, 0.84);
   border-radius: var(--radius-sm);
   border: 1px solid var(--brown-light);
   display: inline-block;
 }
-.breadcrumb a { color: var(--red); text-decoration: none; }
+.breadcrumb a { color: var(--button-green-ink); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
 .sep { margin: 0 8px; color: var(--brown-dark); }
 .card-grid {
@@ -64,25 +64,25 @@ watch(
 .card {
   display: block;
   text-decoration: none;
-  border: 1px solid var(--brown);
+  border: 1px solid rgba(100, 122, 63, 0.38);
   border-radius: var(--radius-card);
   padding: 20px 16px;
   text-align: center;
-  background: linear-gradient(180deg, #fff, #fff8f0);
+  background: linear-gradient(180deg, rgba(250, 253, 235, 0.98), rgba(223, 234, 190, 0.88));
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
   transform: translateY(-3px);
-  border-color: var(--red);
+  border-color: rgba(100, 122, 63, 0.72);
   box-shadow: var(--shadow-hover);
 }
 .card-title {
   font-size: 17px;
   font-weight: 700;
-  color: #b01217;
+  color: var(--button-green-ink);
   margin-bottom: 4px;
 }
-.card-desc { font-size: 12px; color: #b85a4d; }
+.card-desc { font-size: 12px; color: var(--button-green-deep); }
 </style>

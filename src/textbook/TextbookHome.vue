@@ -34,31 +34,36 @@ onMounted(async () => {
   display: grid;
   place-items: center;
   min-width: 118px;
+  max-width: min(100%, 168px);
   text-decoration: none;
-  border: 1px solid var(--brown);
+  border: 1px solid rgba(100, 122, 63, 0.42);
   border-radius: 999px;
   padding: 11px 18px 10px;
   text-align: center;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 238, 0.95));
+    linear-gradient(180deg, rgba(246, 250, 228, 0.98), rgba(220, 232, 184, 0.92));
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  min-width: 0;
 }
 .card:hover {
   transform: translateY(-2px);
-  border-color: var(--red);
+  border-color: rgba(100, 122, 63, 0.72);
   box-shadow: var(--shadow-hover);
 }
 .card-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--red);
+  color: var(--button-green-ink);
   margin-bottom: 2px;
+  max-width: 100%;
+  line-height: 1.2;
 }
 .card-desc {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--button-green-deep);
+  max-width: 100%;
 }
 
 @media (max-width: 720px) {

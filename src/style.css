@@ -1,17 +1,23 @@
 :root {
-  --ink: #2f201d;
-  --muted: #9f4d42;
-  --red: #ad1419;
-  --red-hover: #d12a2f;
-  --cream: #fffdf8;
-  --paper: #fffaf0;
-  --paper-strong: #fff4df;
-  --brown: #dfc5ad;
-  --brown-light: #f2e4d4;
-  --brown-dark: #c99f80;
-  --card-bg: rgba(255, 255, 255, 0.96);
-  --shadow-sm: 0 1px 6px rgba(127, 39, 27, 0.06);
-  --shadow-hover: 0 8px 22px rgba(173, 20, 25, 0.14);
+  --ink: #302820;
+  --muted: #8a6a49;
+  --red: #9e2426;
+  --red-hover: #b93637;
+  --cream: #fffdf2;
+  --paper: #fbf6df;
+  --paper-strong: #f4edcb;
+  --grid-green: rgba(126, 157, 105, 0.16);
+  --grid-gold: rgba(191, 161, 86, 0.13);
+  --button-green: #dce8b8;
+  --button-green-strong: #c6d896;
+  --button-green-deep: #647a3f;
+  --button-green-ink: #43552d;
+  --brown: #d5c39c;
+  --brown-light: #ebe2c5;
+  --brown-dark: #b8a57a;
+  --card-bg: rgba(255, 254, 246, 0.94);
+  --shadow-sm: 0 1px 6px rgba(88, 73, 39, 0.055);
+  --shadow-hover: 0 8px 22px rgba(120, 91, 43, 0.12);
   --radius-card: 8px;
   --radius-box: 8px;
   --radius-sm: 6px;
@@ -20,17 +26,38 @@
 
 * { box-sizing: border-box; }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: "Noto Serif SC", "Songti SC", "STKaiti", serif;
   color: var(--ink);
   background:
-    linear-gradient(90deg, rgba(173, 20, 25, 0.035) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(173, 20, 25, 0.025) 1px, transparent 1px),
-    radial-gradient(circle at 20% 12%, rgba(255, 234, 190, 0.8), transparent 34%),
-    linear-gradient(180deg, #fffefb 0%, var(--paper) 100%);
-  background-size: 18px 18px, 18px 18px, auto, auto;
+    linear-gradient(90deg, var(--grid-green) 1px, transparent 1px),
+    linear-gradient(0deg, var(--grid-green) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-gold) 1px, transparent 1px),
+    linear-gradient(0deg, var(--grid-gold) 1px, transparent 1px),
+    radial-gradient(circle at 22% 10%, rgba(234, 224, 154, 0.42), transparent 32%),
+    linear-gradient(180deg, #fffff5 0%, var(--paper) 100%);
+  background-size: 36px 36px, 36px 36px, 18px 18px, 18px 18px, auto, auto;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body,
+button,
+a,
+p,
+h1,
+h2,
+h3,
+h4,
+span,
+li,
+div {
+  overflow-wrap: anywhere;
 }
 
 :focus-visible {
