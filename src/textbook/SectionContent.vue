@@ -134,7 +134,7 @@
           </div>
         </section>
 
-        <section class="mindmap-card">
+        <section v-if="!isGrouped" class="mindmap-card">
           <div class="mindmap-center">
             <strong>{{ sectionData.title }}</strong>
             <span>{{ chapterData.title }}</span>
@@ -146,6 +146,23 @@
                 <li v-for="item in branch.items" :key="item">{{ item }}</li>
               </ul>
             </div>
+          </div>
+        </section>
+
+        <section v-if="isGrouped" class="concept-defs">
+          <div v-for="(concepts, groupName) in conceptDefinitions" :key="groupName" class="concept-group">
+            <h3 class="concept-group-title">{{ groupName }}</h3>
+            <div v-for="(defs, conceptName) in concepts" :key="conceptName" class="concept-item">
+              <div class="concept-item-name">• {{ conceptName }}</div>
+              <div class="concept-item-body">• {{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
+            </div>
+          </div>
+        </section>
+        <section v-else-if="conceptEntries.length" class="concept-defs">
+          <h3 class="concept-group-title">核心概念</h3>
+          <div v-for="[name, defs] in conceptEntries" :key="name" class="concept-item">
+            <div class="concept-item-name">• {{ name }}</div>
+            <div class="concept-item-body">• {{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
           </div>
         </section>
 
@@ -280,6 +297,30 @@ const mindMapBranches = computed(() => {
     { title: '空间层次', items: recipe?.layers?.slice(0, 4) || [chapterData.value?.title, sectionData.value?.title].filter(Boolean) },
     { title: '判读迁移', items: recipe?.metrics?.slice(0, 4) || ['读图', '解释', '迁移'] },
   ].filter(branch => branch.items?.length)
+})
+
+const gradeLevel = computed(() => {
+  if (gradeId.value === '初中') return '初中'
+  return '高中'
+})
+
+const isGrouped = computed(() => {
+  const defs = conceptDefinitions.value
+  if (!defs) return false
+  const keys = Object.keys(defs)
+  if (keys.length === 0) return false
+  return typeof defs[keys[0]] === 'object' && !('初中' in (defs[keys[0]] || {}) || '高中' in (defs[keys[0]] || {}))
+})
+
+const conceptDefinitions = computed(() => {
+  if (!loadedContent.value) return null
+  return loadedContent.value.conceptDefinitions || null
+})
+
+const conceptEntries = computed(() => {
+  const defs = conceptDefinitions.value
+  if (!defs) return []
+  return Object.entries(defs)
 })
 
 const loadedContent = ref(null)
@@ -503,6 +544,38 @@ const nextSection = computed(() => {
 }
 .not-found { text-align: center; padding: 60px 20px; }
 .not-found a { color: #b01217; }
+
+.concept-defs {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--brown-light);
+}
+.concept-group {
+  margin-bottom: 18px;
+}
+.concept-group-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--red);
+}
+.concept-item {
+  margin-bottom: 8px;
+}
+.concept-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--button-green-ink);
+  padding-left: 4px;
+}
+.concept-item-body {
+  padding-left: 20px;
+  font-size: 13.5px;
+  line-height: 1.88;
+  color: #3d231b;
+  text-align: justify;
+  white-space: pre-line;
+}
 
 .sandbox-toggle-bar {
   max-width: 1100px;
