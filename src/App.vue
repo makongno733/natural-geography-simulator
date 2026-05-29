@@ -1,5 +1,5 @@
 <template>
-  <div class="app-root">
+  <div :class="['app-root', { 'home-mode': isHome }]">
     <header class="app-header">
       <router-link to="/" class="app-title">中学地理教学系统</router-link>
       <p class="app-subtitle">人教版 · 初中 / 高中</p>
@@ -23,6 +23,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { parseLocalPptFolder } from './textbook/data/pptResources.js'
 import { usePptFolderStore } from './textbook/data/pptFolderStore.js'
 
@@ -31,6 +33,8 @@ const {
   localFolderLoaded,
   setLocalPptResources
 } = usePptFolderStore()
+const route = useRoute()
+const isHome = computed(() => route.path === '/')
 
 function handleGlobalFolderPicked(event) {
   const resources = parseLocalPptFolder(event.target.files)
@@ -49,10 +53,21 @@ function handleGlobalFolderPicked(event) {
   background-size: 18px 18px, 18px 18px, auto, auto;
   background-color: var(--cream);
 }
+.app-root.home-mode {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  padding-bottom: 8vh;
+}
 .app-header {
   text-align: center;
   padding: 28px 20px 14px;
   border-bottom: 1px solid rgba(173, 20, 25, 0.12);
+}
+.home-mode .app-header {
+  padding: 0 20px 8px;
+  border-bottom: 0;
 }
 .app-title {
   font-family: "Ma Shan Zheng", "STXingkai", "Kaiti SC", serif;
@@ -69,6 +84,10 @@ function handleGlobalFolderPicked(event) {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
+.home-mode .app-title {
+  font-size: clamp(68px, 13vw, 148px);
+  white-space: nowrap;
+}
 .app-subtitle {
   margin: 4px 0 0;
   color: #b85a4d;
@@ -82,6 +101,9 @@ function handleGlobalFolderPicked(event) {
   gap: 8px;
   justify-content: center;
   align-items: center;
+}
+.home-mode .global-ppt-tools {
+  margin-top: 12px;
 }
 .global-folder-picker {
   display: inline-flex;
@@ -111,6 +133,15 @@ function handleGlobalFolderPicked(event) {
   .app-title {
     font-size: clamp(32px, 11vw, 54px);
     line-height: 1.04;
+  }
+  .home-mode .app-title {
+    font-size: clamp(42px, 14vw, 68px);
+    white-space: normal;
+  }
+  .app-root.home-mode {
+    justify-content: flex-start;
+    padding-top: 22vh;
+    padding-bottom: 28px;
   }
 }
 </style>

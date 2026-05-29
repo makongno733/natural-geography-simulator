@@ -21,20 +21,23 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.home-shell { padding: 28px 20px 40px; }
+.home-shell { padding: 8px 20px 34px; }
 .card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  max-width: 760px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 560px;
   margin: 0 auto;
 }
 .card {
-  display: block;
+  display: grid;
+  place-items: center;
+  min-width: 118px;
   text-decoration: none;
   border: 1px solid var(--brown);
-  border-radius: var(--radius-card);
-  padding: 28px 22px;
+  border-radius: 999px;
+  padding: 11px 18px 10px;
   text-align: center;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 238, 0.95));
@@ -43,18 +46,34 @@ onMounted(async () => {
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   border-color: var(--red);
   box-shadow: var(--shadow-hover);
 }
 .card-title {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--red);
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 .card-desc {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--muted);
+}
+
+@media (max-width: 720px) {
+  .home-shell {
+    padding: 10px 14px 28px;
+  }
+  .card-grid {
+    gap: 8px;
+  }
+  .card {
+    min-width: 96px;
+    padding: 9px 13px 8px;
+  }
+  .card-title {
+    font-size: 16px;
+  }
 }
 </style>
