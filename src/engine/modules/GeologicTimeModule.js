@@ -4,57 +4,57 @@ import * as THREE from 'three'
 
 const R=3.8, N=26
 const ERAS = [
-  { n:'冥古宙', en:'Hadean', s:4600, e:4000, c:0x660000, eon:'冥古宙', era:'—',
+  { name:'冥古宙', en:'Hadean', s:4600, e:4000, color:0x660000, eon:'冥古宙', era:'—',
     d:'地球吸积。月球诞生。全球岩浆海洋。', f:'无生命。', atm:'H₂/He/CH₄为主，无水汽，无氧。地表温度>200°C。', ice:false, ocean:false, land:5 },
-  { n:'始太古宙', en:'Eoarchean', s:4000, e:3600, c:0x882222, eon:'太古宙', era:'始太古代',
+  { name:'始太古宙', en:'Eoarchean', s:4000, e:3600, color:0x882222, eon:'太古宙', era:'始太古代',
     d:'最古老岩石。地壳冷却。海洋形成。', f:'最古老生命化学痕迹(Isua)。', atm:'CO₂/N₂为主，少量H₂O。无游离氧。地表~80°C。', ice:false, ocean:true, land:8 },
-  { n:'古太古宙', en:'Paleoarchean', s:3600, e:3200, c:0x993333, eon:'太古宙', era:'古太古代',
+  { name:'古太古宙', en:'Paleoarchean', s:3600, e:3200, color:0x993333, eon:'太古宙', era:'古太古代',
     d:'最早确凿生命证据。叠层石建造。', f:'叠层石(Stromatolite,~3.48Ga)。', atm:'N₂/CO₂为主。海洋富Fe²⁺呈绿色。厌氧大气。', ice:false, ocean:true, land:10 },
-  { n:'中太古宙', en:'Mesoarchean', s:3200, e:2800, c:0xAA4444, eon:'太古宙', era:'中太古代',
+  { name:'中太古宙', en:'Mesoarchean', s:3200, e:2800, color:0xAA4444, eon:'太古宙', era:'中太古代',
     d:'最早克拉通。BIF沉积。', f:'蓝藻繁盛，光合产氧开始。', atm:'蓝藻释放微量O₂，立即被海洋Fe²⁺消耗。大气仍缺氧。', ice:false, ocean:true, land:12 },
-  { n:'新太古宙', en:'Neoarchean', s:2800, e:2500, c:0xBB5555, eon:'太古宙', era:'新太古代',
+  { name:'新太古宙', en:'Neoarchean', s:2800, e:2500, color:0xBB5555, eon:'太古宙', era:'新太古代',
     d:'大陆快速生长。BIF高峰。', f:'真核生物甾烷(~2.7Ga)。', atm:'O₂开始在大气积累的临界点。条带状铁建造指示海洋化学转变。', ice:false, ocean:true, land:15 },
-  { n:'古元古代', en:'Paleoproterozoic', s:2500, e:1600, c:0xBB8855, eon:'元古宙', era:'古元古代',
+  { name:'古元古代', en:'Paleoproterozoic', s:2500, e:1600, color:0xBB8855, eon:'元古宙', era:'古元古代',
     d:'大氧化事件(GOE)。休伦冰期。', f:'Grypania spiralis。', atm:'GOE(~2.4Ga)：大气O₂从<0.001%升至~1%。甲烷温室效应崩溃触发休伦冰期。', ice:true, ocean:true, land:20 },
-  { n:'中元古代', en:'Mesoproterozoic', s:1600, e:1000, c:0xCC9966, eon:'元古宙', era:'中元古代',
+  { name:'中元古代', en:'Mesoproterozoic', s:1600, e:1000, color:0xCC9966, eon:'元古宙', era:'中元古代',
     d:'罗迪尼亚超大陆聚合。有性生殖。', f:'Bangiomorpha(红藻)。', atm:'O₂稳定在~1%PAL。"无聊的十亿年"——大气氧几乎不变。', ice:false, ocean:true, land:25 },
-  { n:'拉伸纪', en:'Tonian', s:1000, e:720, c:0xDDBB77, eon:'元古宙', era:'新元古代',
+  { name:'拉伸纪', en:'Tonian', s:1000, e:720, color:0xDDBB77, eon:'元古宙', era:'新元古代',
     d:'罗迪尼亚裂解。最早动物?', f:'Otavia antiqua(海绵?)。', atm:'O₂缓慢上升。超大陆裂解释放营养盐促进生物生产力。', ice:false, ocean:true, land:30 },
-  { n:'成冰纪', en:'Cryogenian', s:720, e:635, c:0xCCDDEE, eon:'元古宙', era:'新元古代',
+  { name:'成冰纪', en:'Cryogenian', s:720, e:635, color:0xCCDDEE, eon:'元古宙', era:'新元古代',
     d:'Sturtian+Marinoan全球冰期。', f:'冰期后疑源类爆发。', atm:'O₂约2-5%PAL。全球冰封反射阳光→极端温室后冰融。'+"雪球地球"+"。", ice:true, ocean:true, land:25 },
-  { n:'埃迪卡拉纪', en:'Ediacaran', s:635, e:541, c:0xCC8844, eon:'元古宙', era:'新元古代',
+  { name:'埃迪卡拉纪', en:'Ediacaran', s:635, e:541, color:0xCC8844, eon:'元古宙', era:'新元古代',
     d:'最早大型多细胞生物。', f:'狄更逊虫、查恩盘虫。', atm:'O₂升至~8-15%PAL。海洋深层氧化。为寒武纪爆发奠定基础。', ice:false, ocean:true, land:35 },
-  { n:'寒武纪', en:'Cambrian', s:541, e:485, c:0x669966, eon:'显生宙', era:'古生代',
+  { name:'寒武纪', en:'Cambrian', s:541, e:485, color:0x669966, eon:'显生宙', era:'古生代',
     d:'寒武纪大爆发。所有动物门类出现。', f:'三叶虫、奇虾。伯吉斯页岩。', atm:'O₂~15-20%，CO₂~4500ppm(现代11倍)。超级温室气候。', ice:false, ocean:true, land:40 },
-  { n:'奥陶纪', en:'Ordovician', s:485, e:444, c:0x559955, eon:'显生宙', era:'古生代',
+  { name:'奥陶纪', en:'Ordovician', s:485, e:444, color:0x559955, eon:'显生宙', era:'古生代',
     d:'海平面历史最高。末期冰期大灭绝。', f:'笔石、鹦鹉螺。', atm:'CO₂~4200ppm。末期CO₂骤降触发冰期→灭绝。', ice:true, ocean:true, land:42 },
-  { n:'志留纪', en:'Silurian', s:444, e:419, c:0x77AA77, eon:'显生宙', era:'古生代',
+  { name:'志留纪', en:'Silurian', s:444, e:419, color:0x77AA77, eon:'显生宙', era:'古生代',
     d:'气候回暖。维管植物登陆。', f:'Cooksonia。', atm:'CO₂回升至~3000ppm。O₂~15%。温暖湿润。', ice:false, ocean:true, land:45 },
-  { n:'泥盆纪', en:'Devonian', s:419, e:359, c:0x88BB88, eon:'显生宙', era:'古生代',
+  { name:'泥盆纪', en:'Devonian', s:419, e:359, color:0x88BB88, eon:'显生宙', era:'古生代',
     d:'鱼类时代。森林出现。两栖登陆。', f:'邓氏鱼。鱼石螈。', atm:'O₂升至~20%。森林光合作用大增。末期CO₂下降+变冷。', ice:false, ocean:true, land:48 },
-  { n:'石炭纪', en:'Carboniferous', s:359, e:299, c:0x66AA88, eon:'显生宙', era:'古生代',
+  { name:'石炭纪', en:'Carboniferous', s:359, e:299, color:0x66AA88, eon:'显生宙', era:'古生代',
     d:'蕨类森林→煤层。O₂~35%!', f:'Meganeura(70cm)。Arthropleura。', atm:'O₂峰值~35%(现代1.7倍!)——巨型昆虫的直接原因。CO₂降至当代水平。', ice:true, ocean:true, land:50 },
-  { n:'二叠纪', en:'Permian', s:299, e:252, c:0xDD6644, eon:'显生宙', era:'古生代',
+  { name:'二叠纪', en:'Permian', s:299, e:252, color:0xDD6644, eon:'显生宙', era:'古生代',
     d:'盘古大陆。最大灭绝96%物种。', f:'异齿龙、二齿兽。', atm:'西伯利亚大火成岩省喷发→CO₂暴增→全球变暖+海洋酸化→大灭绝。', ice:false, ocean:true, land:55 },
-  { n:'三叠纪', en:'Triassic', s:252, e:201, c:0x9944AA, eon:'显生宙', era:'中生代',
+  { name:'三叠纪', en:'Triassic', s:252, e:201, color:0x9944AA, eon:'显生宙', era:'中生代',
     d:'大灭绝后复苏。最早恐龙。', f:'腔骨龙。Morganucodon。', atm:'CO₂~2000ppm。泛大陆内陆极端干旱。末期火山喷发导致灭绝。', ice:false, ocean:true, land:52 },
-  { n:'侏罗纪', en:'Jurassic', s:201, e:145, c:0x6666CC, eon:'显生宙', era:'中生代',
+  { name:'侏罗纪', en:'Jurassic', s:201, e:145, color:0x6666CC, eon:'显生宙', era:'中生代',
     d:'恐龙鼎盛。泛大陆裂解。', f:'梁龙、剑龙、始祖鸟。', atm:'CO₂~1200ppm。O₂~18%。全球温暖无冰。', ice:false, ocean:true, land:50 },
-  { n:'白垩纪', en:'Cretaceous', s:145, e:66, c:0x448844, eon:'显生宙', era:'中生代',
+  { name:'白垩纪', en:'Cretaceous', s:145, e:66, color:0x448844, eon:'显生宙', era:'中生代',
     d:'被子植物崛起。Chicxulub撞击。', f:'霸王龙、三角龙。最早的花。', atm:'CO₂~1700ppm。O₂~20%。白垩纪温室达到峰值。撞击导致核冬天→灭绝。', ice:false, ocean:true, land:55 },
-  { n:'古新世', en:'Paleocene', s:66, e:56, c:0xDDBB66, eon:'显生宙', era:'新生代',
+  { name:'古新世', en:'Paleocene', s:66, e:56, color:0xDDBB66, eon:'显生宙', era:'新生代',
     d:'哺乳动物快速演化。全球温暖。', f:'Titanoboa。早期灵长类。', atm:'CO₂~500ppm。PETM前温暖温室。', ice:false, ocean:true, land:55 },
-  { n:'始新世', en:'Eocene', s:56, e:33.9, c:0xDDAA44, eon:'显生宙', era:'新生代',
+  { name:'始新世', en:'Eocene', s:56, e:33.9, color:0xDDAA44, eon:'显生宙', era:'新生代',
     d:'PETM极热。现代哺乳动物目出现。', f:'始祖象、走鲸。', atm:'PETM：CO₂~2000ppm，全球温升5-8°C。此后CO₂持续下降→南极结冰。', ice:false, ocean:true, land:55 },
-  { n:'渐新世', en:'Oligocene', s:33.9, e:23, c:0xDD8822, eon:'显生宙', era:'新生代',
+  { name:'渐新世', en:'Oligocene', s:33.9, e:23, color:0xDD8822, eon:'显生宙', era:'新生代',
     d:'全球变冷。南极冰盖形成。', f:'巨犀。最早猿类。', atm:'CO₂降至~400ppm。环南极洋流形成→南极被热隔离→冰盖生长。', ice:true, ocean:true, land:58 },
-  { n:'中新世', en:'Miocene', s:23, e:5.33, c:0xDD9922, eon:'显生宙', era:'新生代',
+  { name:'中新世', en:'Miocene', s:23, e:5.33, color:0xDD9922, eon:'显生宙', era:'新生代',
     d:'喜马拉雅造山。C4草原扩张。', f:'巨齿鲨。人亚科祖先。', atm:'CO₂~300-400ppm。中新世中期气候适宜期→晚期变冷。', ice:false, ocean:true, land:58 },
-  { n:'上新世', en:'Pliocene', s:5.33, e:2.58, c:0xDD7722, eon:'显生宙', era:'新生代',
+  { name:'上新世', en:'Pliocene', s:5.33, e:2.58, color:0xDD7722, eon:'显生宙', era:'新生代',
     d:'巴拿马地峡形成。北极冰盖扩展。', f:'南方古猿"露西"。', atm:'CO₂~350-400ppm。全球比现在暖2-3°C。北极冰盖开始形成。', ice:true, ocean:true, land:60 },
-  { n:'更新世', en:'Pleistocene', s:2.58, e:0.0117, c:0xFF5533, eon:'显生宙', era:'第四纪',
+  { name:'更新世', en:'Pleistocene', s:2.58, e:0.0117, color:0xFF5533, eon:'显生宙', era:'第四纪',
     d:'冰期-间冰期×~20次。智人扩散全球。', f:'猛犸象、剑齿虎、尼安德特人。', atm:'CO₂在冰期~180ppm/间冰期~280ppm振荡。O₂~21%。现代大气组成确立。', ice:true, ocean:true, land:58 },
-  { n:'全新世', en:'Holocene', s:0.0117, e:0, c:0xFF3300, eon:'显生宙', era:'第四纪',
+  { name:'全新世', en:'Holocene', s:0.0117, e:0, color:0xFF3300, eon:'显生宙', era:'第四纪',
     d:'农业→文明→工业。CO₂ 280→420ppm!', f:'混凝土、塑料、²³⁹Pu、鸡骨化石。', atm:'工业革命后CO₂从280ppm↑420ppm(+50%)，CH₄↑150%。人类世大气扰动史无前例。', ice:true, ocean:true, land:60 },
 ]
 
@@ -88,8 +88,8 @@ function buildGeo(){
 }
 
 function updColors(geo,pr){
-  const pos=geo.attributes.position,ca=geo.attributes.color,cols=ca.array
-  for(let i=0;i<pos.count;i++){
+  const pos=geo.attributes.position,ca=geo.attributes.colorolor,cols=ca.array
+  for(let i=0;i<pos.colorount;i++){
     const x=pos.getX(i),z=pos.getZ(i),d=Math.sqrt(x*x+z*z)
     if(d>R){cols[i*3]=.06;cols[i*3+1]=.1;cols[i*3+2]=.18;continue}
     const n=Math.sin(x*.8)*Math.cos(z*.6)+Math.sin(x*1.3+z*.4)*.7+Math.cos(z*1.1-x*.3)*.6
@@ -137,13 +137,13 @@ export function GeologicTimeModule(scene,params,services){
 
   // Cross-section edge
   const strata=[
-    {n:'全新世',y:.15,c:0xFF3300},{n:'更新世',y:.1,c:0xFF5533},{n:'上新世',y:.06,c:0xDD7722},
-    {n:'中新世',y:.02,c:0xDD9922},{n:'古近纪',y:-.02,c:0xDDBB66},{n:'白垩纪',y:-.06,c:0x448844},
-    {n:'侏罗纪',y:-.1,c:0x6666CC},{n:'三叠纪',y:-.14,c:0x9944AA},{n:'古生代',y:-.18,c:0x669966},{n:'前寒武',y:-.24,c:0xCC8844},
+    {name:'全新世',y:.15,color:0xFF3300},{name:'更新世',y:.1,color:0xFF5533},{name:'上新世',y:.06,color:0xDD7722},
+    {name:'中新世',y:.02,color:0xDD9922},{name:'古近纪',y:-.02,color:0xDDBB66},{name:'白垩纪',y:-.06,color:0x448844},
+    {name:'侏罗纪',y:-.1,color:0x6666CC},{name:'三叠纪',y:-.14,color:0x9944AA},{name:'古生代',y:-.18,color:0x669966},{name:'前寒武',y:-.24,color:0xCC8844},
   ]
   const xs=g
   strata.forEach(s=>{
-    const b=new THREE.Mesh(new THREE.BoxGeometry(.3,s.n==='前寒武'?.1:.05,.15),new THREE.MeshBasicMaterial({color:s.c,transparent:true,opacity:.7}))
+    const b=new THREE.Mesh(new THREE.BoxGeometry(.3,s.n==='前寒武'?.1:.05,.15),new THREE.MeshBasicMaterial({color:s.color,transparent:true,opacity:.7}))
     b.position.set(-R-.4,s.y,0);xs.add(b)
   })
 
@@ -152,7 +152,7 @@ export function GeologicTimeModule(scene,params,services){
   ERAS.forEach((e,i)=>{
     const r=R+.3+i*.03,pts=[]
     for(let j=0;j<=64;j++){const t=j/64*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(t)*r,.02,Math.sin(t)*r))}
-    rings.push(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:e.c,transparent:true,opacity:.1,depthTest:true})))
+    rings.push(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:e.color,transparent:true,opacity:.1,depthTest:true})))
     g.add(rings[i])
   })
 
@@ -171,7 +171,7 @@ export function GeologicTimeModule(scene,params,services){
     if(!labelSystem)return
     labelSystem.clearAll(scene)
     const e=ERAS[ei]
-    labelSystem.addToGroup(g,`${e.n} · ${e.en}`,new THREE.Vector3(0,3.5,0),{color:'#'+e.c.toString(16).padStart(6,'0'),fontSize:'18px',fontWeight:'700',background:'rgba(0,0,0,0.7)',padding:'8px 16px',borderRadius:'6px'})
+    labelSystem.addToGroup(g,`${e.name} · ${e.en}`,new THREE.Vector3(0,3.5,0),{color:'#'+e.color.toString(16).padStart(6,'0'),fontSize:'18px',fontWeight:'700',background:'rgba(0,0,0,0.7)',padding:'8px 16px',borderRadius:'6px'})
     labelSystem.addToGroup(g,`${e.eon}/${e.era} · ${e.s}—${e.e===0?'今':e.e} Ma`,new THREE.Vector3(0,2.85,0),{color:'#aaa',fontSize:'11px',background:'rgba(0,0,0,0.5)',padding:'3px 10px'})
     labelSystem.addToGroup(g,e.d,new THREE.Vector3(0,-3.5,0),{color:'#ddd',fontSize:'13px',background:'rgba(0,0,0,0.65)',padding:'8px 14px',borderRadius:'6px',whiteSpace:'normal',maxWidth:'500px',lineHeight:'1.5'})
     labelSystem.addToGroup(g,`🌫 大气: ${e.atm}`,new THREE.Vector3(0,-2.8,0),{color:'#aaccff',fontSize:'11px',background:'rgba(0,0,0,0.6)',padding:'6px 10px',borderRadius:'4px',whiteSpace:'normal',maxWidth:'480px',lineHeight:'1.4'})

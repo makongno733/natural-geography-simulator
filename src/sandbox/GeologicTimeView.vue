@@ -41,10 +41,10 @@
         <!-- Current Era Info -->
         <div class="era-info" v-if="currentEraData">
           <h3 :style="{ color: '#' + currentEraData.color.toString(16).padStart(6, '0') }">{{ currentEraData.name }} · {{ currentEraData.en }}</h3>
-          <p>{{ currentEraData.desc }}</p>
-          <div class="fossil-box" v-if="currentEraData.fossils">
+          <p>{{ currentEraData.d || currentEraData.desc }}</p>
+          <div class="fossil-box" v-if="currentEraData.f || currentEraData.fossils">
             <h4>🦴 代表生物 / 标志物</h4>
-            <p>{{ currentEraData.fossils }}</p>
+            <p>{{ currentEraData.f || currentEraData.fossils }}</p>
           </div>
         </div>
       </aside>
@@ -64,7 +64,7 @@
           <span>{{ era.eon || '—' }}</span>
           <span :style="{ color: '#' + era.color.toString(16).padStart(6, '0'), fontWeight: '700' }">{{ era.name }}</span>
           <span>{{ era.start }}</span>
-          <span class="gt-desc">{{ era.desc.split('。')[0] }}。</span>
+          <span class="gt-desc">{{ (era.d || era.desc || '').split('。')[0] }}。</span>
         </div>
       </div>
     </div>
