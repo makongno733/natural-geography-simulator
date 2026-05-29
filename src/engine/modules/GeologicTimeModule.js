@@ -171,8 +171,20 @@ function buildOcean(){
   geo.rotateX(-Math.PI/2)
   const orig=new Float32Array(geo.attributes.position.array)
   geo.userData={orig,seg}
-  const mat=new THREE.MeshBasicMaterial({color:0x3377cc,transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide})
-  return new THREE.Mesh(geo,mat)
+  const mat=new THREE.MeshBasicMaterial({color:0x3377cc,transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide})
+  const mesh=new THREE.Mesh(geo,mat)
+  // Blue wave lines on ocean surface
+  const wg=new THREE.Group()
+  const lMat=new THREE.LineBasicMaterial({color:0x88bbff,transparent:true,opacity:.35,depthTest:true})
+  for(let i=0;i<60;i++){
+    const a=Math.random()*Math.PI*2,dist=R*.15+Math.random()*R*.8
+    const cx=Math.cos(a)*dist,cz=Math.sin(a)*dist,len=.08+Math.random()*.25
+    const pts=[new THREE.Vector3(cx-len*.5,OCEAN_Y+.01,cz),new THREE.Vector3(cx+len*.5,OCEAN_Y+.01,cz)]
+    wg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lMat))
+  }
+  mesh.add(wg)
+  mesh.userData.waveLines=wg
+  return mesh
 }
 
 function animateOcean(ocean,t){
@@ -261,12 +273,19 @@ export function GeologicTimeModule(scene,params,services){
   // Erosion rivers
   grp.add(buildErosion())
 
-  // Cross-section wedge
-  const strataCols=[0xFF3300,0xFF5533,0xDD7722,0xDD9922,0xDDBB66,0x448844,0x6666CC,0x9944AA,0x669966,0xCC8844]
-  strataCols.forEach((c,i)=>{
-    const y=.15-i*.04
-    const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.04,.15),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.7}))
-    b.position.set(-R-.4,y,0);grp.add(b)
+  // Cross-section wedge — visible strata layers
+  const strataData=[
+    {name:'全新世',y:.18,c:0xFF3300},{name:'更新世',y:.13,c:0xFF5533},{name:'上新世',y:.09,c:0xDD7722},
+    {name:'中新世',y:.05,c:0xDD9922},{name:'渐新世',y:.01,c:0xDD8822},{name:'始新世',y:-.03,c:0xDDAA44},
+    {name:'古新世',y:-.07,c:0xDDBB66},{name:'白垩纪',y:-.11,c:0x448844},{name:'侏罗纪',y:-.15,c:0x6666CC},
+    {name:'三叠纪',y:-.19,c:0x9944AA},{name:'二叠纪',y:-.23,c:0xDD6644},{name:'石炭纪',y:-.27,c:0x66AA88},
+    {name:'泥盆纪',y:-.31,c:0x88BB88},{name:'志留纪',y:-.35,c:0x77AA77},{name:'奥陶纪',y:-.39,c:0x559955},
+    {name:'寒武纪',y:-.43,c:0x669966},{name:'前寒武',y:-.48,c:0xCC8844},
+  ]
+  strataData.forEach((s,i)=>{
+    const h=i===16?.05:.04
+    const b=new THREE.Mesh(new THREE.BoxGeometry(.35,h,.18),new THREE.MeshStandardMaterial({color:s.c,roughness:.7,metalness:.1,transparent:true,opacity:.85}))
+    b.position.set(-R-.45,s.y,0);grp.add(b)
   })
 
   // Time rings
@@ -298,6 +317,8 @@ export function GeologicTimeModule(scene,params,services){
     labelSystem.addToGroup(grp,e.d,new THREE.Vector3(0,-3.5,0),{color:'#ddd',fontSize:'13px',background:'rgba(0,0,0,0.65)',padding:'8px 14px',borderRadius:'6px',whiteSpace:'normal',maxWidth:'500px',lineHeight:'1.5'})
     labelSystem.addToGroup(grp,`🌫 ${e.atm}`,new THREE.Vector3(0,-2.8,0),{color:'#aaccff',fontSize:'11px',background:'rgba(0,0,0,0.6)',padding:'6px 10px',borderRadius:'4px',whiteSpace:'normal',maxWidth:'480px',lineHeight:'1.4'})
     if(e.ice>0)labelSystem.addToGroup(grp,`🧊 冰盖覆盖: ${Math.round(e.ice*100)}%`,new THREE.Vector3(-R-1,.9,0),{color:'#cceeff',fontSize:'11px',fontWeight:'700',background:'rgba(0,0,0,0.6)',padding:'4px 8px'})
+    const oceanDesc=e.ocean===0?'海洋未形成':e.oceanC[1]>.7?'冰盖覆盖海洋':e.oceanC[1]>.5?'含氧蓝色深海':e.oceanC[1]>.4?'富铁绿色浅海':'初生还原性海洋'
+    labelSystem.addToGroup(grp,`🌊 ${oceanDesc}`,new THREE.Vector3(-R-1,.4,0),{color:'#88ccff',fontSize:'11px',fontWeight:'700',background:'rgba(0,0,0,0.6)',padding:'4px 8px'})
     labelSystem.addToGroup(grp,'◀ 地层',new THREE.Vector3(-R-.8,.7,0),{color:'#ffaa44',fontSize:'12px',fontWeight:'700',background:'rgba(0,0,0,0.6)'})
   }
   lbls()
@@ -310,7 +331,7 @@ export function GeologicTimeModule(scene,params,services){
       counter++
       animateOcean(ocean,counter*.016)
       animateClouds(clouds,dt)
-      if(tt<1){tt=Math.min(1,tt+dt*2);if(counter%2===0)updateColors(terrainGeo,ERAS[ei])}
+      if(tt<1){tt=Math.min(1,tt+dt*1.5);if(counter%2===0){const t=tt,fa=ERAS[fi],ea=ERAS[ei];const lerpEra={landC:[fa.landC[0]+(ea.landC[0]-fa.landC[0])*t,fa.landC[1]+(ea.landC[1]-fa.landC[1])*t,fa.landC[2]+(ea.landC[2]-fa.landC[2])*t],oceanC:[fa.oceanC[0]+(ea.oceanC[0]-fa.oceanC[0])*t,fa.oceanC[1]+(ea.oceanC[1]-fa.oceanC[1])*t,fa.oceanC[2]+(ea.oceanC[2]-fa.oceanC[2])*t],ice:fa.ice+(ea.ice-fa.ice)*t,mtns:fa.mtns+(ea.mtns-fa.mtns)*t};updateColors(terrainGeo,lerpEra);ocean.material.color.setRGB(lerpEra.oceanC[0]+.05,lerpEra.oceanC[1]+.1,lerpEra.oceanC[2]+.2)}}
       imp.children.forEach(c=>{if(c.material?.blending===THREE.AdditiveBlending)c.material.opacity=.3+Math.sin(Date.now()*.003)*.15})
     },
     dispose(){},
