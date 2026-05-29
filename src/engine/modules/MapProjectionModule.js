@@ -95,6 +95,7 @@ export function MapProjectionModule(scene, params, services) {
   )
   const sphereGeo = new THREE.SphereGeometry(R, 128, 64)
   const sphereMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
+  const flatMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }) // No lighting, full brightness
   const sphere = new THREE.Mesh(sphereGeo, sphereMat)
   const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
   group.add(sphere)
@@ -354,8 +355,14 @@ export function MapProjectionModule(scene, params, services) {
         }
       })
 
-      // Fix lighting when flat
-      sphereMat.roughness = unfold > 0.8 ? 0.95 : 0.55
+      // Switch to unlit material when flat — map stays bright
+      if (unfold > 0.9 && sphere.material !== flatMat) {
+        flatMat.map = sphereMat.map
+        sphere.material = flatMat
+      } else if (unfold < 0.1 && sphere.material !== sphereMat) {
+        sphereMat.map = flatMat.map
+        sphere.material = sphereMat
+      }
 
       // Flat grid fade-in
       if (flatGridGroup) {
