@@ -121,6 +121,44 @@ export function MapProjectionModule(scene, params, services) {
   const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
   group.add(sphere)
 
+  // ── Lat/lon reference lines on sphere ──
+  function addLatLine(latDeg, color, label) {
+    const phi = (90 - latDeg) * Math.PI / 180; const r = Math.sin(phi) * R * 1.01; const y = Math.cos(phi) * R * 1.01
+    const pts = []; for (let i = 0; i <= 100; i++) { const t = i / 100 * Math.PI * 2; pts.push(new THREE.Vector3(-Math.cos(t) * r, y, Math.sin(t) * r)) }
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5, depthTest: true }))
+    group.add(line)
+    if (label && labelSystem) {
+      labelSystem.addToGroup(group, label, new THREE.Vector3(0, y, r + 0.05), { color: '#' + color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600' })
+    }
+    return line
+  }
+  function addLonLine(lonDeg, color, label) {
+    const theta = lonDeg * Math.PI / 180; const pts = []
+    for (let i = 0; i <= 100; i++) { const phi = i / 100 * Math.PI; pts.push(new THREE.Vector3(-Math.sin(phi) * Math.cos(theta) * R * 1.01, Math.cos(phi) * R * 1.01, Math.sin(phi) * Math.sin(theta) * R * 1.01)) }
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5, depthTest: true }))
+    group.add(line)
+    if (label && labelSystem) {
+      const mid = 45 * Math.PI / 180; labelSystem.addToGroup(group, label, new THREE.Vector3(-Math.sin(mid) * Math.cos(theta) * R * 1.08, Math.cos(mid) * R * 1.08, Math.sin(mid) * Math.sin(theta) * R * 1.08), { color: '#' + color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600' })
+    }
+    return line
+  }
+  addLatLine(0, 0xcc3333, '赤道 0°')
+  addLatLine(30, 0xcc8833, '30°N')
+  addLatLine(-30, 0xcc8833, '30°S')
+  addLatLine(60, 0xcc6633, '60°N')
+  addLatLine(-60, 0xcc6633, '60°S')
+  addLonLine(0, 0x3366cc, '本初子午线 0°')
+  addLonLine(90, 0x3366cc, '90°E')
+  addLonLine(-90, 0x3366cc, '90°W')
+  addLonLine(180, 0x3366cc, '180°')
+  // Small arrow markers at key intersections
+  const arrowGeo = new THREE.ConeGeometry(0.03, 0.1, 4)
+  const arrowMat = new THREE.MeshBasicMaterial({ color: 0xcc3333 })
+  const eqArrows = [[0, 0, R * 1.02, 0.05], [R * 1.02, 0, 0, -0.05]]
+  eqArrows.forEach(([px, py, pz, ry]) => {
+    const a = new THREE.Mesh(arrowGeo, arrowMat); a.position.set(px, py, pz); a.rotation.z = Math.PI / 2; a.rotation.y = ry; group.add(a)
+  })
+
   // Deformation grid overlay (coarse, for animation)
   const grid = buildDeformGrid(R, 24, 12)
   const gridOrig = new Float32Array(grid.geometry.attributes.position.array)
@@ -131,14 +169,18 @@ export function MapProjectionModule(scene, params, services) {
     const fn = proj.fn || PF.equirectangular
     const tp = new Float32Array(count * 3)
     const S = R * 2.2
+    const maxLat = 85 * Math.PI / 180 // Clamp to avoid infinity at poles
     for (let i = 0; i < count; i++) {
       const x = origData[i * 3], y = origData[i * 3 + 1], z = origData[i * 3 + 2]
-      const lat = Math.asin(y / R), lon = Math.atan2(z, x)
+      let lat = Math.asin(Math.max(-1, Math.min(1, y / R)))
+      const lon = Math.atan2(z, x)
+      lat = Math.max(-maxLat, Math.min(maxLat, lat))
       let px, py
       try {
         const r = fn(lat, lon)
         if (Array.isArray(r)) [px, py] = r
-        else { const b = r; const E = lon * Math.cos(lat) / (b.p || 0.001); px = b.p * Math.sin(E) * 0.6; py = (b.cot - b.p * Math.cos(E)) * 0.5 }
+        else if (r && typeof r === 'object') { const b = r; const E = lon * Math.cos(lat) / (b.p || 0.001); px = b.p * Math.sin(E) * 0.6; py = (b.cot - b.p * Math.cos(E)) * 0.5 }
+        else { px = lon / Math.PI; py = lat / (Math.PI / 2) }
       } catch (_) { px = lon / Math.PI; py = lat / (Math.PI / 2) }
       tp[i * 3] = (px || 0) * S
       tp[i * 3 + 1] = (py || 0) * S * 0.55
@@ -171,15 +213,15 @@ export function MapProjectionModule(scene, params, services) {
     if (!labelSystem) return
     labelSystem.clearAll(scene)
     if (id === 'reset' || !id) {
-      labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.9)', padding: '4px 12px' })
-      labelSystem.addToGroup(group, '地球是近似的椭球体。将球面展开为平面必然产生变形，选择投影就是选择"容忍哪种变形"。', new THREE.Vector3(0, -R - 1.2, 0), { color: '#555', fontSize: '12px', background: 'rgba(255,255,255,0.85)', maxWidth: '380px', whiteSpace: 'normal', padding: '6px 10px', lineHeight: '1.5' })
+      labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '6px 14px', borderRadius: '6px' })
+      labelSystem.addToGroup(group, '地球是近似的椭球体 · 经纬网标注赤道/本初子午线 · 点击右侧投影按钮观察球面如何展开为平面', new THREE.Vector3(0, R + 1.0, 0), { color: '#666', fontSize: '11px', background: 'rgba(255,255,255,0.85)', padding: '4px 10px', borderRadius: '4px' })
       return
     }
     const p = PROJECTIONS.find(x => x.id === id)
     if (!p) return
-    labelSystem.addToGroup(group, `${p.name} · ${p.en}`, new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.9)', padding: '4px 12px' })
-    labelSystem.addToGroup(group, `${p.cat}投影 · ${p.prop}${p.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.1, 0), { color: '#999', fontSize: '11px', background: 'rgba(255,255,255,0.7)' })
-    labelSystem.addToGroup(group, p.desc, new THREE.Vector3(0, -R - 1.2, 0), { color: '#444', fontSize: '12px', fontWeight: '500', background: 'rgba(255,255,255,0.9)', maxWidth: '400px', whiteSpace: 'normal', padding: '6px 10px', lineHeight: '1.5' })
+    labelSystem.addToGroup(group, `${p.name} · ${p.en}`, new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '6px 14px', borderRadius: '6px' })
+    labelSystem.addToGroup(group, `${p.cat}投影 · ${p.prop}${p.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.1, 0), { color: '#999', fontSize: '11px', background: 'rgba(255,255,255,0.8)', padding: '2px 8px', borderRadius: '3px' })
+    labelSystem.addToGroup(group, p.desc, new THREE.Vector3(0, R + 0.7, 0), { color: '#444', fontSize: '11px', fontWeight: '500', background: 'rgba(255,255,255,0.9)', padding: '6px 10px', borderRadius: '4px' })
   }
 
   /* ── API ── */
