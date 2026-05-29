@@ -27,13 +27,13 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { BaseScene } from '../engine/core/BaseScene.js'
-import { MapProjectionModule, PROJECTIONS, CATEGORIES } from '../engine/modules/MapProjectionModule.js'
+import { MapProjectionModule, PROJECTIONS, CATS } from '../engine/modules/MapProjectionModule.js'
 
 const canvasRef = ref(null)
 const current = ref('reset')
 let engine = null
 
-const categories = CATEGORIES
+const categories = CATS
 
 function getCat(cat) { return PROJECTIONS.filter(p => p.cat === cat) }
 

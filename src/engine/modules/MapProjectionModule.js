@@ -1,205 +1,145 @@
-// [M10] MapProjectionModule — 高精度地图投影教学
+// [M10] MapProjectionModule — 地图投影教学 — 粗网格展开+高清球体
 
 import * as THREE from 'three'
 
-/* ── High-res Earth texture via canvas ── */
-function generateEarthTexture(size) {
+/* ── High-res Earth texture ── */
+function earthTexture(size) {
   const c = document.createElement('canvas')
   c.width = size; c.height = size / 2
   const ctx = c.getContext('2d')
+  ctx.fillStyle = '#3a7cc3'; ctx.fillRect(0, 0, c.width, c.height)
 
-  // Ocean
-  ctx.fillStyle = '#4a90d9'
-  ctx.fillRect(0, 0, c.width, c.height)
+  const land = (polys) => { ctx.fillStyle = '#5a9e3e'; polys.forEach(p => { ctx.beginPath(); p.forEach(([lo, la], i) => { const x = (lo + 180) / 360 * c.width; const y = (90 - la) / 180 * c.height; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) }); ctx.closePath(); ctx.fill() }) }
+  const green = (polys) => { ctx.fillStyle = '#7ab86a'; polys.forEach(p => { ctx.beginPath(); p.forEach(([lo, la], i) => { const x = (lo + 180) / 360 * c.width; const y = (90 - la) / 180 * c.height; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) }); ctx.closePath(); ctx.fill() }) }
 
-  // Continent polygons in pixel coords (simplified high-res outlines)
-  const drawLand = (polygons, color = '#5a9e3e') => {
-    ctx.fillStyle = color
-    polygons.forEach(poly => {
-      ctx.beginPath()
-      poly.forEach(([lon, lat], i) => {
-        const x = (lon + 180) / 360 * c.width
-        const y = (90 - lat) / 180 * c.height
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
-      })
-      ctx.closePath(); ctx.fill()
-    })
-  }
+  land([[[-17,15],[10,16],[18,18],[22,16],[26,16],[30,20],[34,25],[34,30],[32,32],[28,33],[22,34],[14,34],[6,33],[0,30],[-5,27],[-12,24],[-18,22],[-25,20],[-33,18],[-35,20],[-32,17],[-25,16],[-17,15]]])
+  land([[[-10,36],[5,39],[15,44],[30,50],[45,54],[60,56],[75,57],[90,58],[105,58],[120,57],[135,54],[145,50],[150,50],[160,55],[170,60],[180,65],[180,72],[165,72],[145,70],[120,68],[95,66],[72,65],[58,62],[45,58],[32,55],[20,52],[8,48],[-3,44],[-10,36]]])
+  green([[[68,10],[72,18],[76,30],[79,35],[81,32],[80,24],[80,16],[78,12],[75,8],[70,8],[68,10]]])
+  land([[[-135,55],[-140,62],[-148,70],[-155,72],[-162,68],[-166,62],[-162,52],[-155,42],[-145,36],[-135,32],[-125,26],[-115,22],[-105,18],[-95,15],[-86,12],[-80,8],[-76,12],[-72,18],[-68,25],[-62,32],[-55,38],[-48,44],[-42,50],[-36,55],[-30,62],[-24,68],[-18,76],[-10,82],[0,86],[15,84],[30,80],[42,74],[55,67],[66,60],[76,55],[86,55],[100,50],[98,48],[86,48],[76,52],[-135,55]]])
+  land([[[-78,-2],[-72,8],[-68,2],[-60,-6],[-50,-10],[-40,-12],[-28,-18],[-18,-24],[-8,-30],[2,-36],[12,-42],[22,-48],[32,-54],[42,-58],[50,-62],[55,-68],[58,-74],[54,-76],[48,-72],[40,-68],[32,-64],[22,-60],[14,-55],[6,-50],[-2,-44],[-8,-38],[-14,-30],[-20,-22],[-28,-16],[-38,-12],[-48,-8],[-58,-4],[-68,4],[-76,4],[-78,-2]]])
+  land([[[115,-14],[118,-20],[124,-26],[132,-32],[138,-36],[142,-34],[145,-26],[148,-18],[150,-10],[152,-14],[152,-22],[148,-32],[142,-38],[135,-38],[128,-32],[120,-24],[115,-18],[115,-14]]])
+  land([[[-52,60],[-42,64],[-30,70],[-22,78],[-18,82],[-28,84],[-42,82],[-52,76],[-60,68],[-64,60],[-52,60]]])
+  land([[[130,32],[135,38],[140,42],[144,41],[144,36],[140,31],[135,30],[130,32]]])
+  land([[[44,-14],[47,-20],[48,-26],[46,-26],[43,-20],[42,-14],[44,-14]]])
+  land([[[166,-36],[170,-42],[174,-46],[176,-48],[174,-46],[170,-42],[166,-38],[166,-36]]])
+  land([[[-180,-65],[-120,-70],[-60,-76],[0,-82],[60,-76],[120,-70],[180,-65],[120,-72],[60,-78],[0,-80],[-60,-74],[-120,-68],[-180,-65]]])
+  land([[[95,0],[105,6],[115,4],[120,-4],[114,-6],[105,-4],[98,-3],[95,0]]])
+  land([[[32,29],[38,32],[45,38],[54,40],[58,36],[54,32],[46,28],[38,24],[32,26],[32,29]]])
+  land([[[-86,12],[-84,18],[-80,22],[-78,20],[-82,12],[-86,8],[-86,12]]])
 
-  // Africa
-  drawLand([[[-17,15],[10,15],[12,12],[15,13],[20,13],[25,15],[30,15],[33,18],[34,23],[33,28],[31,30],[26,33],[22,34],[18,34],[12,34],[8,34],[2,32],[-3,30],[-6,28],[-10,26],[-14,24],[-18,22],[-23,20],[-30,18],[-35,20],[-32,18],[-30,16],[-22,15],[-17,15]]])
-  // Eurasia
-  drawLand([[[-10,36],[-2,37],[5,38],[8,40],[15,42],[20,45],[25,48],[35,50],[45,52],[55,54],[70,56],[80,55],[90,57],[100,58],[110,55],[120,55],[130,52],[140,48],[145,45],[150,48],[155,53],[160,55],[165,58],[170,60],[175,63],[180,65],[180,70],[170,72],[150,71],[130,70],[110,68],[90,67],[70,65],[60,63],[50,60],[40,58],[30,56],[20,54],[10,50],[0,48],[-10,44],[-10,36]]])
-  // India
-  drawLand([[[68,8],[70,12],[72,18],[74,25],[76,35],[78,33],[80,30],[80,22],[80,15],[78,10],[76,8],[70,8],[68,8]]])
-  // Southeast Asia
-  drawLand([[[95,-8],[98,-2],[100,5],[102,12],[104,18],[106,20],[108,18],[110,10],[108,2],[106,-5],[104,-8],[100,-8],[98,-10],[95,-8]]])
-  // North America
-  drawLand([[[-130,55],[-135,60],[-140,65],[-145,70],[-150,72],[-155,70],[-160,65],[-165,60],[-165,55],[-160,50],[-155,45],[-150,40],[-140,38],[-130,35],[-120,30],[-110,25],[-100,22],[-95,20],[-90,15],[-85,12],[-80,10],[-75,15],[-70,20],[-65,25],[-60,30],[-55,35],[-50,40],[-45,45],[-40,50],[-35,55],[-30,60],[-25,65],[-20,70],[-15,75],[-10,80],[0,82],[10,85],[20,82],[30,78],[40,73],[50,68],[60,63],[70,58],[80,55],[90,55],[95,52],[100,50],[95,48],[85,48],[75,50],[65,55],[-130,55]]])
-  // South America
-  drawLand([[[-80,-5],[-75,5],[-70,10],[-65,5],[-60,2],[-55,0],[-50,-2],[-45,-5],[-40,-8],[-35,-10],[-30,-12],[-25,-15],[-20,-18],[-15,-22],[-10,-25],[-5,-28],[0,-30],[5,-32],[10,-35],[15,-38],[20,-42],[25,-45],[30,-48],[35,-52],[40,-55],[45,-58],[48,-62],[50,-65],[52,-68],[54,-72],[52,-75],[48,-74],[44,-72],[40,-70],[35,-68],[30,-66],[25,-64],[20,-60],[15,-58],[10,-55],[5,-52],[0,-48],[-3,-44],[-8,-40],[-12,-36],[-15,-30],[-18,-25],[-20,-20],[-25,-15],[-30,-12],[-35,-10],[-40,-8],[-45,-5],[-50,-2],[-55,0],[-60,2],[-65,5],[-70,8],[-75,3],[-80,-5]]])
-  // Australia
-  drawLand([[[115,-15],[118,-18],[122,-22],[125,-25],[128,-28],[132,-32],[135,-35],[138,-35],[140,-33],[142,-30],[144,-25],[145,-20],[146,-15],[148,-10],[150,-8],[152,-12],[153,-18],[152,-25],[150,-30],[148,-35],[145,-38],[142,-40],[138,-38],[135,-35],[132,-32],[128,-30],[125,-28],[122,-25],[118,-22],[115,-18],[115,-15]]])
-  // Greenland
-  drawLand([[[-50,60],[-45,62],[-40,65],[-35,68],[-30,72],[-25,76],[-20,80],[-20,82],[-30,83],[-40,82],[-50,78],[-55,75],[-60,72],[-65,68],[-60,63],[-55,62],[-50,60]]])
-  // Japan
-  drawLand([[[130,32],[132,34],[135,36],[138,40],[140,42],[142,42],[144,40],[145,35],[142,32],[140,30],[135,30],[132,32],[130,32]]])
-  // Madagascar
-  drawLand([[[44,-14],[46,-18],[48,-22],[48,-25],[46,-25],[44,-22],[43,-18],[42,-14],[44,-14]]])
-  // NZ
-  drawLand([[[166,-35],[168,-37],[170,-40],[172,-42],[174,-44],[176,-46],[178,-47],[174,-45],[170,-43],[168,-40],[166,-37],[166,-35]]])
-  // Antarctica
-  drawLand([[[-180,-65],[-150,-67],[-120,-70],[-90,-72],[-60,-75],[-30,-78],[0,-80],[30,-78],[60,-75],[90,-72],[120,-70],[150,-67],[180,-65],[150,-68],[120,-71],[90,-73],[60,-76],[30,-79],[0,-78],[-30,-76],[-60,-73],[-90,-71],[-120,-68],[-150,-66],[-180,-65]]])
-  // Indonesia arch
-  drawLand([[[95,-6],[98,0],[100,2],[104,5],[108,6],[112,5],[116,2],[118,-2],[120,-5],[122,-8],[120,-6],[116,-4],[112,-2],[108,-4],[104,-6],[100,-5],[97,-5],[95,-6]]])
-  // Middle East
-  drawLand([[[30,28],[33,30],[36,33],[40,35],[45,38],[50,40],[55,38],[58,35],[56,32],[52,30],[48,28],[42,25],[38,22],[35,20],[30,22],[30,28]]])
-  // Central America
-  drawLand([[[-90,8],[-88,10],[-86,14],[-84,18],[-82,20],[-80,22],[-78,20],[-80,15],[-82,10],[-85,8],[-88,7],[-90,8]]])
-
-  // Coastline detail strokes
-  ctx.fillStyle = '#3d6b24'
-  ctx.fillRect(0, 0, c.width, 1)
-  ctx.fillRect(0, c.height - 1, c.width, 1)
+  // Ice caps
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'
+  ctx.fillRect(0, 0, c.width, c.height * 0.03)
+  ctx.fillRect(0, c.height * 0.97, c.width, c.height * 0.03)
 
   return new THREE.CanvasTexture(c)
 }
 
-/* ── Projection forward equations ── */
-const PROJ_FN = {
-  equirectangular: (lat, lon) => [lon / Math.PI, lat / (Math.PI / 2)],
-  mercator: (lat, lon) => [lon / Math.PI, Math.log(Math.tan(Math.PI / 4 + lat / 2)) / Math.PI],
-  gall_peters: (lat, lon) => [lon / Math.PI, Math.sin(lat) * 0.85],
-  mollweide(lat, lon) { let t = lat; for (let i = 0; i < 5; i++) t -= (2 * t + Math.sin(2 * t) - Math.PI * Math.sin(lat)) / (2 + 2 * Math.cos(2 * t)); return [lon * Math.cos(t) / Math.PI, Math.sin(t)] },
-  sinusoidal: (lat, lon) => [lon * Math.cos(lat) / Math.PI, lat / (Math.PI / 2)],
-  robinson(lat, lon) {
-    const a = Math.abs(lat) * 180 / Math.PI
-    const yt = [0,0.032,0.063,0.093,0.122,0.148,0.171,0.192,0.21,0.225,0.237,0.247,0.254,0.259,0.261,0.262,0.26,0.256,0.249,0.24]
-    const xt = [1,0.999,0.996,0.99,0.98,0.968,0.952,0.933,0.91,0.884,0.854,0.82,0.783,0.743,0.7,0.655,0.608,0.56,0.512,0.464]
-    const i = Math.min(18, Math.floor(a / 5)), f = (a / 5) - i, s = Math.sign(lat)
-    return [lon * (xt[i] + f * (xt[i + 1] - xt[i])) / Math.PI, s * (yt[i] + f * (yt[i + 1] - yt[i])) * 2 / 0.5072]
-  },
-  winkel_tripel(lat, lon) { let t = lat; for (let i = 0; i < 4; i++) t -= (2 * t + Math.sin(2 * t) - Math.PI * Math.sin(lat)) / (2 + 2 * Math.cos(2 * t)); return [(lon / Math.PI + lon * Math.cos(t) / Math.PI) / 2, (lat / (Math.PI / 2) + Math.sin(t)) / 2] },
-  aitoff(lat, lon) { const c = Math.acos(Math.cos(lat) * Math.cos(lon / 2)) || 0.001; return [2 * Math.cos(lat) * Math.sin(lon / 2) / (c / Math.sin(c)), Math.sin(lat) / (c / Math.sin(c))] },
-  hammer(lat, lon) { const z = Math.sqrt(1 + Math.cos(lat) * Math.cos(lon / 2)); return [Math.cos(lat) * Math.sin(lon / 2) / z, Math.sin(lat) / z] },
-  orthographic: (lat, lon) => [Math.cos(lat) * Math.sin(lon), Math.sin(lat)],
-  stereographic(lat, lon) { const k = 2 / (1 + Math.cos(lat) * Math.cos(lon)); return [k * Math.cos(lat) * Math.sin(lon), k * Math.sin(lat)] },
-  gnomonic(lat, lon) { const d = Math.cos(lat) * Math.cos(lon); if (d <= 0.05) return [Math.sign(lon) * 2, Math.sign(lat) * 2]; const k = 1 / d; return [k * Math.cos(lat) * Math.sin(lon), k * Math.sin(lat)] },
-  azimuthal_equidistant(lat, lon) { const c = Math.acos(Math.cos(lat) * Math.cos(lon)) || 0.001; const k = c / Math.sin(c); return [k * Math.cos(lat) * Math.sin(lon), k * Math.sin(lat)] },
-  bonne(lat, lon) { const s0 = 45 * Math.PI / 180; const cot = 1 / Math.tan(s0); const p = cot + s0 - lat; const E = lon * Math.cos(lat) / (p || 0.001); return [p * Math.sin(E) * 0.6, (cot - p * Math.cos(E)) * 0.5] },
-  van_der_grinten(lat, lon) { const a = Math.abs(lat), pl = lon / Math.PI; if (a < 0.0001) return [pl, 0]; const th = Math.asin(2 * a / Math.PI); return [pl * (Math.cos(th) + 1) / 2, Math.sign(lat) * Math.sin(th) / 2 * 1.2] },
-  eckert4(lat, lon) { let t = lat * 0.8; for (let i = 0; i < 3; i++) t -= (t + Math.sin(t) * Math.cos(t) + 2 * Math.sin(t) - (2 + Math.PI / 2) * Math.sin(lat)) / (2 * Math.cos(t) * (1 + Math.cos(t))); const A = Math.sqrt(3) / (2 * Math.sqrt(Math.PI)); return [lon * Math.cos(t) * 2 * A / Math.PI, Math.sin(t) / A] },
+/* ── Projection equations ── */
+const PF = {
+  equirectangular: (la, lo) => [lo / Math.PI, la / (Math.PI / 2)],
+  mercator: (la, lo) => [lo / Math.PI, Math.log(Math.tan(Math.PI / 4 + la / 2)) / Math.PI * 0.7],
+  mollweide(la, lo) { let t = la; for (let i = 0; i < 5; i++) t -= (2 * t + Math.sin(2 * t) - Math.PI * Math.sin(la)) / (2 + 2 * Math.cos(2 * t)); return [lo * Math.cos(t) / Math.PI, Math.sin(t)] },
+  sinusoidal: (la, lo) => [lo * Math.cos(la) / Math.PI, la / (Math.PI / 2)],
+  robinson(la, lo) { const a = Math.abs(la) * 180 / Math.PI; const yt = [0,0.032,0.063,0.093,0.122,0.148,0.171,0.192,0.21,0.225,0.237,0.247,0.254,0.259,0.261,0.262,0.26,0.256,0.249,0.24]; const xt = [1,0.999,0.996,0.99,0.98,0.968,0.952,0.933,0.91,0.884,0.854,0.82,0.783,0.743,0.7,0.655,0.608,0.56,0.512,0.464]; const i = Math.min(18, Math.floor(a / 5)), f = (a / 5) - i, s = Math.sign(la); return [lo * (xt[i] + f * (xt[i + 1] - xt[i])) / Math.PI, s * (yt[i] + f * (yt[i + 1] - yt[i])) * 2 / 0.5072] },
+  winkel_tripel(la, lo) { let t = la; for (let i = 0; i < 4; i++) t -= (2 * t + Math.sin(2 * t) - Math.PI * Math.sin(la)) / (2 + 2 * Math.cos(2 * t)); return [(lo / Math.PI + lo * Math.cos(t) / Math.PI) / 2, (la / (Math.PI / 2) + Math.sin(t)) / 2] },
+  aitoff(la, lo) { const c = Math.acos(Math.cos(la) * Math.cos(lo / 2)) || 0.001; return [2 * Math.cos(la) * Math.sin(lo / 2) / (c / Math.sin(c)), Math.sin(la) / (c / Math.sin(c))] },
+  hammer(la, lo) { const z = Math.sqrt(1 + Math.cos(la) * Math.cos(lo / 2)); return [Math.cos(la) * Math.sin(lo / 2) / z, Math.sin(la) / z] },
+  bonne(la) { const s0 = 45 * Math.PI / 180; const cot = 1 / Math.tan(s0); return { p: cot + s0 - la, cot } },
+  van_der_grinten(la, lo) { const a = Math.abs(la), pl = lo / Math.PI; if (a < 0.0001) return [pl, 0]; const th = Math.asin(2 * a / Math.PI); return [pl * (Math.cos(th) + 1) / 2, Math.sign(la) * Math.sin(th) / 2 * 1.2] },
+  eckert4(la, lo) { let t = la * 0.8; for (let i = 0; i < 4; i++) t -= (t + Math.sin(t) * Math.cos(t) + 2 * Math.sin(t) - (2 + Math.PI / 2) * Math.sin(la)) / (2 * Math.cos(t) * (1 + Math.cos(t))); const A = Math.sqrt(3) / (2 * Math.sqrt(Math.PI)); return [lo * Math.cos(t) * 2 * A / Math.PI, Math.sin(t) / A] },
 }
-PROJ_FN.transverse_mercator = PROJ_FN.mercator
-PROJ_FN.goode = PROJ_FN.mollweide
-PROJ_FN.albers = PROJ_FN.bonne
-PROJ_FN.lambert_conic = PROJ_FN.bonne
 
 const PROJECTIONS = [
-  { id: 'mercator', name: '墨卡托', en: 'Mercator', cat: '圆柱', prop: '等角',
-    desc: '圆柱面切赤道，经纬线正交。角度无变形，高纬面积剧烈放大。航海标配，Google Maps 沿用至今。' },
-  { id: 'transverse_mercator', name: '横轴墨卡托', en: 'Transverse Mercator', cat: '圆柱', prop: '等角',
-    desc: '圆柱横置切某经线，中央经线附近变形最小。UTM 与高斯-克吕格的基础，各国大比例尺地形图首选。' },
-  { id: 'equirectangular', name: '等距圆柱', en: 'Equirectangular', cat: '圆柱', prop: '等距',
-    desc: '经纬线等距网格，最简单投影。适合快速显示全球数据，计算机纹理映射的标准方式。' },
-  { id: 'gall_peters', name: '高尔-彼得斯', en: 'Gall–Peters', cat: '圆柱', prop: '等积',
-    desc: '圆柱割线于45°，面积保真。发展中国家面积不被低估，教科文组织曾推广用于公正展示全球。' },
-  { id: 'mollweide', name: '摩尔维德', en: 'Mollweide', cat: '伪圆柱', prop: '等积',
-    desc: '椭圆外形，面积保真，中央经线为直线。全球气候带、生物群落分布图的经典选择。' },
-  { id: 'sinusoidal', name: '正弦曲线', en: 'Sinusoidal', cat: '伪圆柱', prop: '等积',
-    desc: '纬线为平行直线，面积保真。赤道无变形，适合热带地区专题图。MODIS 卫星数据即用此投影。' },
-  { id: 'robinson', name: '罗宾森', en: 'Robinson', cat: '伪圆柱', prop: '折衷',
-    desc: '查表法拟合，视觉舒适。国家地理学会曾长期用于世界全图，教科书常用。' },
-  { id: 'winkel_tripel', name: '温克尔三重', en: 'Winkel Tripel', cat: '伪圆柱', prop: '折衷',
-    desc: '等距圆柱与艾托夫的算术平均，三者折衷。国家地理学会 1998 年起的世界地图标准。' },
-  { id: 'goode', name: '古德分瓣', en: 'Goode Homolosine', cat: '伪圆柱', prop: '等积',
-    desc: '摩尔维德+正弦曲线拼接，分瓣切开海洋。面积保真，大陆完整，适合全球土地利用图。' },
-  { id: 'eckert4', name: '埃克特 IV', en: 'Eckert IV', cat: '伪圆柱', prop: '等积',
-    desc: '椭圆外形，极点映射为半长轴一半的直线。面积保真，外形美观，常用于专题世界地图。' },
-  { id: 'van_der_grinten', name: '范德格林顿', en: 'Van der Grinten', cat: '伪圆柱', prop: '折衷',
-    desc: '全球投影在正圆内。美国国家地理学会 1922-1988 年标准世界地图，现已少见。' },
-  { id: 'aitoff', name: '艾托夫', en: 'Aitoff', cat: '伪方位', prop: '折衷',
-    desc: '横轴方位等距的数学改造，椭圆形。常用于天球图与全球概览，温克尔三重的前身。' },
-  { id: 'hammer', name: '哈默', en: 'Hammer', cat: '伪方位', prop: '等积',
-    desc: '兰伯特等积方位的横向改造。面积保真，外形椭圆，适合全球人口密度等专题图。' },
-  { id: 'orthographic', name: '正射投影', en: 'Orthographic', cat: '方位', prop: '透视', flat: false,
-    desc: '从无限远处透视地球，如太空中看地球。天然直观，适合科普与标志设计，不用于量测。' },
-  { id: 'stereographic', name: '球极平面', en: 'Stereographic', cat: '方位', prop: '等角', flat: false,
-    desc: '平面切极点，从对跖点投影。角度保真，适合极地导航与地质构造分析（赤平极射投影）。' },
-  { id: 'gnomonic', name: '日晷投影', en: 'Gnomonic', cat: '方位', prop: '大圆直线', flat: false,
-    desc: '从球心投影到切平面。大圆航线变成直线，航海航空中用于规划最短路径。' },
-  { id: 'azimuthal_equidistant', name: '等距方位', en: 'Azimuthal Equidistant', cat: '方位', prop: '等距', flat: false,
-    desc: '从中心点出发距离和方位角保真。联合国会徽即用此投影，适合无线电导航与导弹射程图。' },
-  { id: 'lambert_conic', name: '兰伯特等角圆锥', en: 'Lambert Conformal Conic', cat: '圆锥', prop: '等角',
-    desc: '圆锥面割两条标准纬线，角度保真。中纬度国家（中美俄加）航空图与地形图标配。' },
-  { id: 'albers', name: '阿尔伯斯等积圆锥', en: 'Albers Equal-Area Conic', cat: '圆锥', prop: '等积',
-    desc: '圆锥面割两条标准纬线，面积保真。美国地质调查局（USGS）大陆地图标准投影。' },
-  { id: 'bonne', name: '彭纳投影', en: 'Bonne', cat: '圆锥', prop: '等积',
-    desc: '伪圆锥投影，中央经线为直线，纬线同心圆弧。面积保真，外形呈心形，适合中纬度大陆图。' },
+  { id: 'mercator', name: '墨卡托', en: 'Mercator (1569)', cat: '圆柱', prop: '等角', fn: PF.mercator, desc: '圆柱面切赤道。角度无变形，高纬面积剧烈放大。航海标配，Google Maps沿用。' },
+  { id: 'transverse_mercator', name: '横轴墨卡托', en: 'Transverse Mercator', cat: '圆柱', prop: '等角', fn: PF.mercator, desc: '圆柱横置切经线，中央经线附近变形最小。UTM与高斯-克吕格的基础，各国地形图首选。' },
+  { id: 'equirectangular', name: '等距圆柱', en: 'Equirectangular', cat: '圆柱', prop: '等距', fn: PF.equirectangular, desc: '经纬线等距正交，最简单投影。计算机纹理映射的标准方式，适合快速显示全球数据。' },
+  { id: 'gall_peters', name: '高尔-彼得斯', en: 'Gall–Peters', cat: '圆柱', prop: '等积', fn: PF.mercator, desc: '圆柱割线于45°，面积保真。发展中国家面积不被低估，教科文组织推广用于公正展示。' },
+  { id: 'mollweide', name: '摩尔维德', en: 'Mollweide', cat: '伪圆柱', prop: '等积', fn: PF.mollweide, desc: '椭圆外形，面积保真。全球气候带、生物群落分布图的经典选择。' },
+  { id: 'sinusoidal', name: '正弦曲线', en: 'Sinusoidal', cat: '伪圆柱', prop: '等积', fn: PF.sinusoidal, desc: '纬线平行等距，面积保真，赤道无变形。MODIS卫星数据标准投影。' },
+  { id: 'robinson', name: '罗宾森', en: 'Robinson', cat: '伪圆柱', prop: '折衷', fn: PF.robinson, desc: '查表法拟合，视觉最舒适。国家地理学会1988年前世界全图标准，教科书常用。' },
+  { id: 'winkel_tripel', name: '温克尔三重', en: 'Winkel Tripel', cat: '伪圆柱', prop: '折衷', fn: PF.winkel_tripel, desc: '等距圆柱+艾托夫平均。国家地理学会1998年起的世界地图新标准。' },
+  { id: 'goode', name: '古德分瓣', en: 'Goode Homolosine', cat: '伪圆柱', prop: '等积', fn: PF.mollweide, desc: '摩尔维德+正弦曲线拼接，分瓣切海洋。面积保真，大陆完整。全球土地利用图。' },
+  { id: 'eckert4', name: '埃克特 IV', en: 'Eckert IV', cat: '伪圆柱', prop: '等积', fn: PF.eckert4, desc: '椭圆外形，极点为半长轴一半的直线。面积保真，外形美观。' },
+  { id: 'van_der_grinten', name: '范德格林顿', en: 'Van der Grinten', cat: '伪圆柱', prop: '折衷', fn: PF.van_der_grinten, desc: '全球投影在正圆内。国家地理学会1922-1988年世界地图，现已少见。' },
+  { id: 'aitoff', name: '艾托夫', en: 'Aitoff', cat: '伪方位', prop: '折衷', fn: PF.aitoff, desc: '横轴方位等距的数学改造，椭圆形。天球图与全球概览常用。' },
+  { id: 'hammer', name: '哈默', en: 'Hammer', cat: '伪方位', prop: '等积', fn: PF.hammer, desc: '兰伯特等积方位横向改造。面积保真，外形椭圆。全球人口密度图常用。' },
+  { id: 'orthographic', name: '正射投影', en: 'Orthographic', cat: '方位', prop: '透视', flat: false, desc: '从无限远透视地球，如太空中所见。天然直观，科普与标志设计，不用于量测。' },
+  { id: 'stereographic', name: '球极平面', en: 'Stereographic', cat: '方位', prop: '等角', flat: false, desc: '平面切极点，对跖点投影。角度保真。极地导航与地质赤平极射投影。' },
+  { id: 'gnomonic', name: '日晷投影', en: 'Gnomonic', cat: '方位', prop: '大圆直线', flat: false, desc: '球心投影到切平面。大圆航线变直线，航海航空最短路径规划。' },
+  { id: 'azimuthal_equidistant', name: '等距方位', en: 'Azimuthal Equidistant', cat: '方位', prop: '等距', flat: false, desc: '中心点出发距离方位保真。联合国会徽，无线电导航与导弹射程图。' },
+  { id: 'lambert_conic', name: '兰伯特等角圆锥', en: 'Lambert Conformal Conic', cat: '圆锥', prop: '等角', fn: PF.bonne, desc: '圆锥面割两条标准纬线，角度保真。中纬度国家航空图与地形图标配。' },
+  { id: 'albers', name: '阿尔伯斯等积圆锥', en: 'Albers Equal-Area Conic', cat: '圆锥', prop: '等积', fn: PF.bonne, desc: '圆锥面割两条标准纬线，面积保真。USGS大陆地图标准。' },
+  { id: 'bonne', name: '彭纳投影', en: 'Bonne', cat: '圆锥', prop: '等积', fn: PF.bonne, desc: '伪圆锥，中央经线直线，纬线同心弧。面积保真，外形心形。' },
 ]
-const CATEGORIES = [...new Set(PROJECTIONS.map(p => p.cat))]
+const CATS = [...new Set(PROJECTIONS.map(p => p.cat))]
+
+/* ── Build coarse deformation grid ── */
+function buildDeformGrid(R, cols, rows) {
+  const verts = [], indices = []
+  for (let j = 0; j <= rows; j++) {
+    const phi = Math.PI * j / rows  // 0 to PI
+    for (let i = 0; i <= cols; i++) {
+      const theta = 2 * Math.PI * i / cols
+      verts.push(Math.sin(phi) * Math.cos(theta) * R, Math.cos(phi) * R, Math.sin(phi) * Math.sin(theta) * R)
+    }
+  }
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const a = j * (cols + 1) + i, b = a + 1, c = a + cols + 1, d = c + 1
+      indices.push(a, b, d, a, d, c)
+    }
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3))
+  geo.setIndex(indices)
+  geo.computeVertexNormals()
+  const mat = new THREE.MeshBasicMaterial({ color: 0xffaa33, wireframe: true, transparent: true, opacity: 0.6, depthTest: true, depthWrite: false })
+  const mesh = new THREE.Mesh(geo, mat)
+  mesh.renderOrder = 1
+  mesh.material.depthTest = true
+  return mesh
+}
 
 /* ── Module ── */
 export function MapProjectionModule(scene, params, services) {
   const { labelSystem, cameraRig } = services
   const group = new THREE.Group()
-  const R = 1.5, SEG = 128
-  let current = 'mercator'
-  let unfold = 0, target = 0, flatMode = false
-  let targetPos = null
-  let camTargetPos = null, camTargetLook = null
+  const R = 1.5
+  let current = null, unfold = 0, target = 0, flatMode = false, savedCam = null
+  let gridTarget = null
 
   scene.background = new THREE.Color(0xf5f0e8)
 
-  // Generate high-res Earth texture
-  const texture = generateEarthTexture(1024)
+  // High-res textured sphere
+  const tex = earthTexture(2048)
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(R, 128, 64),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05 }),
+  )
+  group.add(sphere)
 
-  // Globe with texture
-  const globeGeo = new THREE.SphereGeometry(R, SEG, SEG / 2)
-  const globeMat = new THREE.MeshStandardMaterial({
-    map: texture, roughness: 0.6, metalness: 0.05, side: THREE.DoubleSide,
-  })
-  const globe = new THREE.Mesh(globeGeo, globeMat)
-  group.add(globe)
+  // Deformation grid overlay (coarse, for animation)
+  const grid = buildDeformGrid(R, 24, 12)
+  const gridOrig = new Float32Array(grid.geometry.attributes.position.array)
+  group.add(grid)
 
-  // Store original positions
-  const count = globeGeo.attributes.position.count
-  const orig = new Float32Array(count * 3)
-  const lats = new Float32Array(count), lons = new Float32Array(count)
-  const pos = globeGeo.attributes.position
-  for (let i = 0; i < count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
-    orig[i * 3] = x; orig[i * 3 + 1] = y; orig[i * 3 + 2] = z
-    lats[i] = Math.asin(y / R); lons[i] = Math.atan2(z, x)
-  }
-
-  // Grid lines
-  const gridGroup = new THREE.Group()
-  for (let lat = -80; lat <= 80; lat += 20) {
-    const phi = (90 - lat) * Math.PI / 180; const r = Math.sin(phi) * R * 1.003; const y = Math.cos(phi) * R * 1.003
-    const pts = []; for (let i = 0; i <= 72; i++) { const t = i / 72 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(t) * r, y, Math.sin(t) * r)) }
-    gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })))
-  }
-  for (let lon = 0; lon < 360; lon += 30) {
-    const t = lon * Math.PI / 180; const pts = []
-    for (let i = 0; i <= 72; i++) { const phi = i / 72 * Math.PI; pts.push(new THREE.Vector3(Math.cos(t) * Math.sin(phi) * R * 1.003, Math.cos(phi) * R * 1.003, Math.sin(t) * Math.sin(phi) * R * 1.003)) }
-    gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08 })))
-  }
-  group.add(gridGroup)
-
-  // Equator ring
-  const eqPts = []; for (let i = 0; i <= 72; i++) { const t = i / 72 * Math.PI * 2; eqPts.push(new THREE.Vector3(Math.cos(t) * R * 1.01, 0, Math.sin(t) * R * 1.01)) }
-  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(eqPts), new THREE.LineBasicMaterial({ color: 0xcc3333, transparent: true, opacity: 0.25 })))
-
-  /* ── Pre-compute target positions ── */
-  function computeTarget(projId) {
-    const fn = PROJ_FN[projId] || PROJ_FN.equirectangular
+  /* ── Compute grid target for a projection ── */
+  function computeGridTarget(proj) {
+    const fn = proj.fn || PF.equirectangular
+    const pos = grid.geometry.attributes.position
+    const count = pos.count
     const tp = new Float32Array(count * 3)
-    const S = R * 2.5
+    const S = R * 2.2
     for (let i = 0; i < count; i++) {
-      const lat = lats[i], lon = lons[i]
-      let px = 0, py = 0
-      try { [px, py] = fn(lat, lon) } catch (_) { px = lon / Math.PI; py = lat / (Math.PI / 2) }
+      const x = gridOrig[i * 3], y = gridOrig[i * 3 + 1], z = gridOrig[i * 3 + 2]
+      const lat = Math.asin(y / R), lon = Math.atan2(z, x)
+      let px, py
+      try {
+        const r = fn(lat, lon)
+        if (Array.isArray(r)) [px, py] = r
+        else { const b = r; const E = lon * Math.cos(lat) / (b.p || 0.001); px = b.p * Math.sin(E) * 0.6; py = (b.cot - b.p * Math.cos(E)) * 0.5 }
+      } catch (_) { px = lon / Math.PI; py = lat / (Math.PI / 2) }
       tp[i * 3] = (px || 0) * S
       tp[i * 3 + 1] = (py || 0) * S * 0.55
       tp[i * 3 + 2] = 0
@@ -207,99 +147,98 @@ export function MapProjectionModule(scene, params, services) {
     return tp
   }
 
-  // Interpolate between original and target
-  function interpolate(progress) {
-    const tp = targetPos
-    for (let i = 0; i < count; i++) {
+  function interpolateGrid(t) {
+    const pos = grid.geometry.attributes.position
+    for (let i = 0; i < pos.count; i++) {
       pos.setXYZ(i,
-        orig[i * 3] + (tp[i * 3] - orig[i * 3]) * progress,
-        orig[i * 3 + 1] + (tp[i * 3 + 1] - orig[i * 3 + 1]) * progress,
-        orig[i * 3 + 2] + (tp[i * 3 + 2] - orig[i * 3 + 2]) * progress,
+        gridOrig[i * 3] + (gridTarget[i * 3] - gridOrig[i * 3]) * t,
+        gridOrig[i * 3 + 1] + (gridTarget[i * 3 + 1] - gridOrig[i * 3 + 1]) * t,
+        gridOrig[i * 3 + 2] + (gridTarget[i * 3 + 2] - gridOrig[i * 3 + 2]) * t,
       )
     }
     pos.needsUpdate = true
-    if (progress > 0.9) {
-      // Flat: all normals point up
-      const n = globe.geometry.attributes.normal || globe.geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
-      for (let i = 0; i < count; i++) { n.setXYZ(i, 0, 0, 1) }
-      n.needsUpdate = true
-    } else {
-      globe.geometry.computeVertexNormals()
-    }
-    gridGroup.children.forEach(c => { if (c.material) c.material.opacity = 0.15 * (1 - progress) })
+    // Fade sphere during unfold
+    sphere.material.opacity = 1 - t * 0.5
+    sphere.material.transparent = true
   }
 
-  targetPos = computeTarget(current)
+  /* ── Labels ── */
+  function showLabel(id) {
+    if (!labelSystem) return
+    labelSystem.clearAll(scene)
+    if (id === 'reset' || !id) {
+      labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.9)', padding: '4px 12px' })
+      labelSystem.addToGroup(group, '地球是近似的椭球体。将球面展开为平面必然产生变形，选择投影就是选择"容忍哪种变形"。', new THREE.Vector3(0, -R - 1.2, 0), { color: '#555', fontSize: '12px', background: 'rgba(255,255,255,0.85)', maxWidth: '380px', whiteSpace: 'normal', padding: '6px 10px', lineHeight: '1.5' })
+      return
+    }
+    const p = PROJECTIONS.find(x => x.id === id)
+    if (!p) return
+    labelSystem.addToGroup(group, `${p.name} · ${p.en}`, new THREE.Vector3(0, R + 1.5, 0), { color: '#333', fontSize: '18px', fontWeight: '700', background: 'rgba(255,255,255,0.9)', padding: '4px 12px' })
+    labelSystem.addToGroup(group, `${p.cat}投影 · ${p.prop}${p.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.1, 0), { color: '#999', fontSize: '11px', background: 'rgba(255,255,255,0.7)' })
+    labelSystem.addToGroup(group, p.desc, new THREE.Vector3(0, -R - 1.2, 0), { color: '#444', fontSize: '12px', fontWeight: '500', background: 'rgba(255,255,255,0.9)', maxWidth: '400px', whiteSpace: 'normal', padding: '6px 10px', lineHeight: '1.5' })
+  }
+
+  /* ── API ── */
+  showLabel('reset')
 
   const api = {
     setParams(p) {
-      if (p.projection !== undefined) {
-        if (p.projection === 'reset') {
-          current = 'reset'; target = 0
-          if (labelSystem) {
-            labelSystem.clearAll(scene)
-            labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.4, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
-          labelSystem.addToGroup(group, '拖拽旋转 · 滚轮缩放 · 点击投影按钮展开', new THREE.Vector3(0, R + 1.05, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
-          labelSystem.addToGroup(group, '地球是一个近似的椭球体。将球面展开为平面必然产生变形，选择投影就是选择"容忍哪种变形"。', new THREE.Vector3(0, -R - 1.0, 0), { color: '#555', fontSize: '11px', fontWeight: '400', background: 'rgba(255,255,255,0.75)', whiteSpace: 'normal', maxWidth: '400px', padding: '6px 10px' })
-          }
+      if (p.projection === undefined) return
+      if (p.projection === 'reset') {
+        current = 'reset'; target = 0
+        showLabel('reset')
+      } else {
+        current = p.projection; target = 1
+        const proj = PROJECTIONS.find(x => x.id === p.projection)
+        if (proj && proj.flat !== false) {
+          gridTarget = computeGridTarget(proj)
         } else {
-          current = p.projection
-          const projData = PROJECTIONS.find(x => x.id === p.projection)
-          const shouldUnfold = projData?.flat !== false
-          target = shouldUnfold ? 1 : 0
-          if (shouldUnfold) targetPos = computeTarget(p.projection)
-          const proj = PROJECTIONS.find(x => x.id === p.projection)
-          if (labelSystem && proj) {
-            labelSystem.clearAll(scene)
-            labelSystem.addToGroup(group, `${proj.name} · ${proj.en}`, new THREE.Vector3(0, R + 1.4, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
-            labelSystem.addToGroup(group, `${proj.cat} · ${proj.prop}${proj.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.05, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
-            labelSystem.addToGroup(group, proj.desc, new THREE.Vector3(0, -R - 1.0, 0), { color: '#555', fontSize: '11px', fontWeight: '400', background: 'rgba(255,255,255,0.75)', whiteSpace: 'normal', maxWidth: '400px', padding: '6px 10px' })
-          }
+          gridTarget = null; target = 0
         }
+        showLabel(p.projection)
       }
     },
     update(dt) {
+      // Animate grid unfold/restore
       if (Math.abs(unfold - target) > 0.002) {
-        unfold += (target - unfold) * 0.05
-        if (current !== 'reset' && targetPos) interpolate(unfold)
-        else if (current === 'reset') {
-          for (let i = 0; i < count; i++) {
-            pos.setXYZ(i, pos.getX(i) + (orig[i * 3] - pos.getX(i)) * 0.05, pos.getY(i) + (orig[i * 3 + 1] - pos.getY(i)) * 0.05, pos.getZ(i) + (orig[i * 3 + 2] - pos.getZ(i)) * 0.05)
+        unfold += (target - unfold) * 0.04
+        if (target === 1 && gridTarget) interpolateGrid(unfold)
+        else {
+          // Restore grid to sphere
+          const pos = grid.geometry.attributes.position
+          for (let i = 0; i < pos.count; i++) {
+            pos.setXYZ(i,
+              pos.getX(i) + (gridOrig[i * 3] - pos.getX(i)) * 0.04,
+              pos.getY(i) + (gridOrig[i * 3 + 1] - pos.getY(i)) * 0.04,
+              pos.getZ(i) + (gridOrig[i * 3 + 2] - pos.getZ(i)) * 0.04,
+            )
           }
-          pos.needsUpdate = true; globe.geometry.computeVertexNormals()
-          gridGroup.children.forEach(c => { if (c.material) c.material.opacity += (0.15 - c.material.opacity) * 0.05 })
+          pos.needsUpdate = true
+          sphere.material.opacity += (1 - sphere.material.opacity) * 0.04
         }
       }
 
-      // Camera: when fully unfolded, lock to top-down view
-      if (unfold > 0.95 && target === 1 && !flatMode) {
+      // Camera: lock to flat map view when unfolded
+      if (unfold > 0.95 && target === 1 && !flatMode && cameraRig) {
         flatMode = true
-        if (cameraRig) {
-          camTargetPos = cameraRig.camera.position.clone()
-          camTargetLook = cameraRig.controls.target.clone()
-        }
+        savedCam = { pos: cameraRig.camera.position.clone(), look: cameraRig.controls.target.clone() }
       }
       if (flatMode && cameraRig) {
-        const cam = cameraRig.camera
-        const ct = cameraRig.controls.target
-        cam.position.lerp(new THREE.Vector3(0, 0, 6), 0.06)
-        ct.lerp(new THREE.Vector3(0, 0, 0), 0.06)
-        cameraRig.controls.update()
+        cameraRig.camera.position.lerp(new THREE.Vector3(0, 0, 7), 0.05)
+        cameraRig.controls.target.lerp(new THREE.Vector3(0, 0, 0), 0.05)
         cameraRig.controls.enableRotate = false
-        cameraRig.controls.enableZoom = true
+        cameraRig.controls.update()
       }
-
-      // When returning to sphere, unlock camera
       if (unfold < 0.1 && flatMode) {
         flatMode = false
         if (cameraRig) {
           cameraRig.controls.enableRotate = true
-          if (camTargetPos) { cameraRig.camera.position.copy(camTargetPos); camTargetPos = null }
-          if (camTargetLook) { cameraRig.controls.target.copy(camTargetLook); camTargetLook = null }
+          if (savedCam) { cameraRig.camera.position.copy(savedCam.pos); cameraRig.controls.target.copy(savedCam.look); savedCam = null }
         }
       }
 
-      if (unfold < 0.1) { globe.rotation.y += dt * 0.08; gridGroup.rotation.y += dt * 0.08 }
+      // Rotate when sphere
+      if (unfold < 0.05) { sphere.rotation.y += dt * 0.06 }
     },
     dispose() {},
   }
@@ -307,4 +246,4 @@ export function MapProjectionModule(scene, params, services) {
   return group
 }
 
-export { PROJECTIONS, CATEGORIES }
+export { PROJECTIONS, CATS }
