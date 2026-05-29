@@ -194,10 +194,19 @@ function animateOcean(ocean,t){
     const x=orig[i*3],z=orig[i*3+2]
     const dist=Math.sqrt(x*x+z*z)
     if(dist>R*.98){p.setY(i,-.35);continue}
-    const wave=Math.sin(dist*3-t*2)*.015+Math.sin(x*5+t)*.01+Math.cos(z*4+t*1.5)*.012
-    p.setY(i,OCEAN_Y+wave)
+    const w1=Math.sin(dist*4-t*3)*.02+Math.sin(x*6+t*1.5)*.015
+    const w2=Math.cos(z*5+t*2)*.015+Math.sin((x+z)*3.5+t)*.018
+    const w3=Math.sin(dist*7+t*4)*.008+Math.cos(x*8-t)*.01
+    p.setY(i,OCEAN_Y+w1+w2+w3)
   }
   p.needsUpdate=true
+  // Animate wave lines rotation
+  if(ocean.userData.waveLines){
+    ocean.userData.waveLines.children.forEach((l,i)=>{
+      l.position.y=OCEAN_Y+.01+Math.sin(i*.5+t*2)*.008
+      l.rotation.z+=.003
+    })
+  }
 }
 
 // ── Cloud system ──
@@ -306,7 +315,7 @@ export function GeologicTimeModule(scene,params,services){
   })
   imp.visible=false;grp.add(imp)
 
-  if(cameraRig){const a=50*Math.PI/180;cameraRig.camera.position.set(0,Math.sin(a)*10,Math.cos(a)*10);cameraRig.controls.target.set(0,.1,0);cameraRig.controls.enableRotate=false;cameraRig.controls.minDistance=5;cameraRig.controls.maxDistance=18;cameraRig.controls.update()}
+  if(cameraRig){const a=25*Math.PI/180;cameraRig.camera.position.set(0,Math.sin(a)*12,Math.cos(a)*12);cameraRig.controls.target.set(0,-.2,0);cameraRig.controls.enableRotate=false;cameraRig.controls.minDistance=5;cameraRig.controls.maxDistance=18;cameraRig.controls.update()}
 
   function lbls(){
     if(!labelSystem)return
