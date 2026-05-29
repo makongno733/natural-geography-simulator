@@ -5,7 +5,10 @@
       <h1 class="geo-title">地质年代表</h1>
       <p class="geo-sub">Geological Time Scale · 46亿年演化 · 拖动时间轴浏览</p>
       <div class="time-scrubber">
-        <input type="range" min="0" :max="eras.length - 1" :value="currentEra" @input="selectEra(parseInt($event.target.value))" class="scrubber" />
+        <div class="scrub-row">
+          <input type="range" min="0" :max="eras.length - 1" :value="currentEra" @input="selectEra(parseInt($event.target.value))" class="scrubber" />
+          <button class="auto-btn" @click="toggleAuto">{{ playing ? '⏸' : '▶' }}</button>
+        </div>
         <div class="scrub-labels">
           <span v-for="(era, i) in eras" :key="i" :class="{ active: i === currentEra }" @click="selectEra(i)">{{ era.name }}</span>
         </div>
@@ -75,8 +78,21 @@ import { GeologicTimeModule, ERAS } from '../engine/modules/GeologicTimeModule.j
 
 const canvasRef = ref(null)
 const currentEra = ref(ERAS.length - 1)
+const playing = ref(false)
 const eras = ERAS
-let engine = null
+let engine = null, autoTimer = null
+
+function toggleAuto() {
+  playing.value = !playing.value
+  if (playing.value) {
+    autoTimer = setInterval(() => {
+      currentEra.value = (currentEra.value + 1) % eras.length
+      if (engine) engine.setParams({ era: currentEra.value })
+    }, 1200)
+  } else {
+    clearInterval(autoTimer); autoTimer = null
+  }
+}
 
 const currentEraData = computed(() => eras[currentEra.value] || null)
 
@@ -93,7 +109,7 @@ onMounted(async () => {
   window.addEventListener('resize', () => engine.resize())
 })
 
-onBeforeUnmount(() => { engine?.dispose() })
+onBeforeUnmount(() => { engine?.dispose(); if (autoTimer) clearInterval(autoTimer) })
 </script>
 
 <style scoped>
@@ -119,7 +135,13 @@ onBeforeUnmount(() => { engine?.dispose() })
 .tl-en { font-size: 10px; color: #666; flex: 1; }
 .tl-time { font-size: 10px; color: #888; }
 .time-scrubber { padding: 10px 16px 2px; }
-.scrubber { width: 100%; accent-color: #58a6ff; height: 4px; cursor: pointer; }
+.scrub-row { display: flex; gap: 8px; align-items: center; }
+.scrubber { flex: 1; accent-color: #58a6ff; height: 4px; cursor: pointer; }
+.auto-btn {
+  padding: 4px 10px; border: 1px solid #58a6ff; border-radius: 4px;
+  background: rgba(88,166,255,0.1); color: #58a6ff; font-size: 14px; cursor: pointer;
+}
+.auto-btn:hover { background: rgba(88,166,255,0.2); }
 .scrub-labels { display: flex; justify-content: space-between; padding: 0 2px; }
 .scrub-labels span { font-size: 10px; color: #555; cursor: pointer; padding: 2px 0; }
 .scrub-labels span.active { color: #58a6ff; font-weight: 700; }
