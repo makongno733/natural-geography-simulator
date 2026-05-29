@@ -72,7 +72,7 @@ function buildTerrainGeo(){
   const pos=geo.attributes.position
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i),z=pos.getZ(i),dist=Math.sqrt(x*x+z*z)
-    if(dist>R){pos.setY(i,-.35);continue}
+    if(dist>R){pos.setY(i,-.8);continue}
     // Multi-octave noise for realistic terrain
     const n1=Math.sin(x*.6)*Math.cos(z*.5)+Math.cos(x*.8+z*.3)*.7+Math.sin(z*.9-x*.4)*.6
     const n2=Math.sin(x*1.8+z)*Math.cos(z*2.1-x)*.35+Math.sin(x*2.5-z*.7)*Math.cos(z*1.6+x)*.3
@@ -100,7 +100,7 @@ function updateTerrainColors(geo,params){
   const cols=colorAttr?colorAttr.array:new Float32Array(pos.count*3)
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i),z=pos.getZ(i),dist=Math.sqrt(x*x+z*z)
-    if(dist>R){cols[i*3]=params.oceanR;cols[i*3+1]=params.oceanG;cols[i*3+2]=params.oceanB;continue}
+    if(dist>R){cols[i*3]=0;cols[i*3+1]=0;cols[i*3+2]=0;continue}
     const n=Math.sin(x*.8)*Math.cos(z*.6)+Math.sin(x*1.3+z*.4)*.7+Math.cos(z*1.1-x*.3)*.6
     const isLand=n>(.5-params.landFrac*.75)&&dist<R*.92
     if(isLand){cols[i*3]=params.landR+Math.random()*.04;cols[i*3+1]=params.landG+Math.random()*.04;cols[i*3+2]=params.landB+Math.random()*.03}
@@ -138,11 +138,11 @@ export function GeologicTimeModule(scene,params,services){
 
   scene.background=new THREE.Color(0x0a0a14)
 
-  // Transparent ocean — large blue disc with subtle animation
-  const oceanGeo=new THREE.CircleGeometry(R*1.3,128)
-  const oceanMat=new THREE.MeshBasicMaterial({color:0x3377cc,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide})
+  // Ocean — fills the circular terrain basin, same radius
+  const oceanGeo=new THREE.CircleGeometry(R,128)
+  const oceanMat=new THREE.MeshBasicMaterial({color:0x3377cc,transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide})
   const ocean=new THREE.Mesh(oceanGeo,oceanMat)
-  ocean.rotation.x=-Math.PI/2;ocean.position.y=-.35;group.add(ocean)
+  ocean.rotation.x=-Math.PI/2;ocean.position.y=-.32;group.add(ocean)
 
   // Terrain (built once)
   terrainGeo=buildTerrainGeo()
