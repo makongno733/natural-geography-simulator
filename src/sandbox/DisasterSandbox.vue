@@ -1,7 +1,8 @@
 <template>
   <div class="sandbox-root">
     <div class="sandbox-topbar">
-      <router-link to="/高中/必修第一册/第六章/第一节" class="back-link">← 返回课文</router-link>
+      <button v-if="props.embedded" class="back-link" @click="$emit('close')">← 返回课文</button>
+      <router-link v-else to="/高中/必修第一册/第六章/第一节" class="back-link">← 返回课文</router-link>
       <div class="mode-tabs">
         <button :class="['mode-btn', { active: mode === 'simple' }]" @click="mode = 'simple'">🔰 简单模式</button>
         <button :class="['mode-btn', { active: mode === 'professional' }]" @click="mode = 'professional'">🎓 专业模式</button>
@@ -93,6 +94,11 @@ import { DisasterModule } from '../engine/modules/DisasterModule.js'
 import { disasterModules } from './modules/disasterModules.js'
 import { disasterGlossary as glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
+
+defineEmits(['close'])
+const props = defineProps({
+  embedded: { type: Boolean, default: false },
+})
 
 const viewportRef = ref(null)
 const mode = ref('simple')

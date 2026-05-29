@@ -73,6 +73,15 @@ export function SolarSystemModule(scene, params, services) {
   }
 
   function makePlanetTexture(baseColor, variation, texSize, name) {
+    if (typeof document === 'undefined') {
+      const r = (baseColor >> 16) & 0xff
+      const g = (baseColor >> 8) & 0xff
+      const b = baseColor & 0xff
+      const texture = new THREE.DataTexture(new Uint8Array([r, g, b, 255]), 1, 1, THREE.RGBAFormat)
+      texture.needsUpdate = true
+      return texture
+    }
+
     const canvas = document.createElement('canvas')
     canvas.width = texSize || 128
     canvas.height = (texSize || 128) / 2

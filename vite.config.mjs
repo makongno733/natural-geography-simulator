@@ -31,7 +31,6 @@ export default defineConfig({
         manualChunks(id) {
           if (!id.includes('node_modules')) return null;
           if (id.includes('three')) return 'vendor-three';
-          if (id.includes('markdown-it')) return 'vendor-markdown';
           if (id.includes('vue-router')) return 'vendor-vue';
           return 'vendor-core';
         }
