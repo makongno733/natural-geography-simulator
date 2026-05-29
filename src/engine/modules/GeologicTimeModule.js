@@ -1,165 +1,160 @@
-// [M11] GeologicTimeModule — 地质年代3D教学 — 四大圈层+人类影响
+// [M11] GeologicTimeModule — 地质年代3D教学 — 年代变换地形+四大圈层
 
 import * as THREE from 'three'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 
-/* ── Geological Time Scale Data ── */
 const ERAS = [
-  { name: '冥古宙', en: 'Hadean', start: 4600, end: 4000, color: 0x8B0000,
-    desc: '地球形成，岩浆海洋，无生命。月球在约45亿年前由忒伊亚撞击形成。大气以氢、氦、甲烷为主。' },
-  { name: '太古宙', en: 'Archean', start: 4000, end: 2500, color: 0xCD5C5C,
-    desc: '最早的原核生命（细菌、古菌）出现于约38亿年前。叠层石开始形成。大气缺氧，海洋富含溶解铁。' },
-  { name: '元古宙', en: 'Proterozoic', start: 2500, end: 541, color: 0xDEB887,
-    desc: '大氧化事件（约24亿年前）：蓝藻光合作用释放氧气。真核生物出现。雪球地球冰期。埃迪卡拉生物群。' },
-  { name: '古生代', en: 'Paleozoic', start: 541, end: 252, color: 0x4A9E4A,
-    desc: '寒武纪生命大爆发。鱼类→两栖类→爬行类。石炭纪巨型昆虫和蕨类森林形成今日煤层。盘古大陆形成。' },
-  { name: '中生代', en: 'Mesozoic', start: 252, end: 66, color: 0x6495ED,
-    desc: '恐龙时代。三叠纪-侏罗纪-白垩纪。泛大陆分裂。被子植物出现。白垩纪末小行星撞击灭绝恐龙。' },
-  { name: '新生代', en: 'Cenozoic', start: 66, end: 2.58, color: 0xFFD700,
-    desc: '哺乳动物和鸟类崛起。喜马拉雅造山运动。草原扩张。人类祖先在非洲出现。第四纪冰期开始。' },
-  { name: '第四纪', en: 'Quaternary', start: 2.58, end: 0.0117, color: 0xFF6347,
-    desc: '更新世大冰期，海平面下降百米。智人（Homo sapiens）在约30万年前出现，约7万年前走出非洲。' },
-  { name: '全新世', en: 'Holocene', start: 0.0117, end: 0, color: 0xFF4500,
-    desc: '农业革命（~1.2万年前）→ 工业革命（~1760）→ 信息时代。人类成为地质营力：城市扩张、CO₂排放、物种灭绝加速、塑料污染、核试验标记"人类世"。' },
+  { name: '冥古宙', en: 'Hadean', start: 4600, end: 4000, color: 0x8B0000, eon: '冥古宙',
+    desc: '地球形成于46亿年前。岩浆海洋遍布，忒伊亚撞击形成月球。大气以氢、氦、甲烷为主，无水无氧无生命。',
+    fossils: '无生命。最古老的锆石晶体（Jack Hills, 44亿年）是地球早期地壳的唯一证据。' },
+  { name: '太古宙', en: 'Archean', start: 4000, end: 2500, color: 0xCD5C5C, eon: '太古宙',
+    desc: '最早原核生命（细菌、古菌）~38亿年前出现。叠层石形成。大气缺氧，海洋富铁呈绿色。最初的小型陆核形成。',
+    fossils: '代表生物：叠层石(Stromatolite) · 蓝藻(Cyanobacteria)。最古老微化石见于西澳大利亚Apex Chert(~34.6亿年)。Isua绿岩带(格陵兰)含最古老生命化学痕迹。' },
+  { name: '元古宙', en: 'Proterozoic', start: 2500, end: 541, color: 0xDEB887, eon: '元古宙',
+    desc: '大氧化事件~24亿年前：蓝藻释放氧气彻底改变大气。真核生物出现。多次"雪球地球"全球冰期。埃迪卡拉生物群繁盛。',
+    fossils: '代表生物：埃迪卡拉生物群(Ediacaran biota) · 狄更逊虫(Dickinsonia) · 查恩盘虫(Charnia) · 斯普里格蠕虫(Spriggina)。Grypania spiralis是最早的真核多细胞化石。' },
+  { name: '古生代', en: 'Paleozoic', start: 541, end: 252, color: 0x4A9E4A, eon: '显生宙',
+    desc: '寒武纪生命大爆发。鱼类→两栖→爬行类演化。石炭纪蕨类森林形成煤层。盘古超大陆聚合。二叠纪末大灭绝(96%物种)。',
+    fossils: '代表生物：三叶虫(Trilobite) · 奇虾(Anomalocaris) · 海蝎子(Eurypterid) · 邓氏鱼(Dunkleosteus) · 鱼石螈(Ichthyostega) · 异齿龙(Dimetrodon)。石炭纪巨型蜻蜓Meganeura翼展70cm。' },
+  { name: '中生代', en: 'Mesozoic', start: 252, end: 66, color: 0x6495ED, eon: '显生宙',
+    desc: '恐龙称霸陆地。泛大陆逐步分裂。被子植物出现。鸟类从恐龙演化。白垩纪末小行星撞击(Chicxulub)导致恐龙灭绝。',
+    fossils: '代表生物：霸王龙(Tyrannosaurus rex) · 三角龙(Triceratops) · 梁龙(Diplodocus) · 翼龙(Pterosaur) · 始祖鸟(Archaeopteryx) · 菊石(Ammonite) · 鱼龙(Ichthyosaur)。白垩纪末铱异常层为全球撞击标志。' },
+  { name: '新生代', en: 'Cenozoic', start: 66, end: 2.58, color: 0xFFD700, eon: '显生宙',
+    desc: '哺乳动物和鸟类崛起填补生态位。印度撞向亚洲形成喜马拉雅。草原扩张。最早人科祖先在非洲出现(~7Ma)。',
+    fossils: '代表生物：始祖象(Moeritherium) · 巨犀(Paraceratherium)：史上最大陆生哺乳动物 · 剑齿虎(Smilodon) · 猛犸象(Mammuthus) · 南方古猿(Australopithecus) · 能人(Homo habilis)。' },
+  { name: '第四纪', en: 'Quaternary', start: 2.58, end: 0.0117, color: 0xFF6347, eon: '显生宙',
+    desc: '更新世冰期-间冰期循环，海平面升降百米。智人~30万年前演化，约7万年前走出非洲扩散全球。大型动物群灭绝。',
+    fossils: '代表生物：猛犸象(Mammuthus primigenius) · 披毛犀(Coelodonta) · 剑齿虎(Smilodon) · 巨地懒(Megatherium) · 尼安德特人(Homo neanderthalensis) · 智人(Homo sapiens)。拉布雷亚沥青坑保存了完美的更新世动物群。' },
+  { name: '全新世', en: 'Holocene', start: 0.0117, end: 0, color: 0xFF4500, eon: '显生宙',
+    desc: '农业革命→文明诞生(~1.2万年前)。工业革命(~1760)→化石燃料→CO₂从280ppm升至420ppm。人类成为地质营力：城市扩张、物种加速灭绝、塑料遍及海洋、核试验留下全球标记——"人类世"已被提议为新的地质时代。',
+    fossils: '人类世标志物：混凝土(Concrete) · 塑料(Plastics) · 核沉降物(²³⁹Pu) · 鸡骨化石(Gallus gallus domesticus)：全球存量~230亿只 · 玉米花粉(Zea mays) · 铝金属(Aluminum)。第六次大灭绝正在发生。' },
 ]
 
-/* ── Generate terrain ── */
-function buildTerrain() {
+const ERA_PARAMS = [
+  { landFrac: 0.05, landColor: [0.45,0.12,0.05], oceanColor: [0.6,0.2,0.08], atmoColor: 0x884422, atmoOp: 0.2, hydroColor: 0x886644, hydroOp: 0.06, bioOp: 0.0 },
+  { landFrac: 0.12, landColor: [0.5,0.3,0.15], oceanColor: [0.2,0.5,0.35], atmoColor: 0x886644, atmoOp: 0.15, hydroColor: 0x668855, hydroOp: 0.05, bioOp: 0.01 },
+  { landFrac: 0.3, landColor: [0.6,0.45,0.25], oceanColor: [0.15,0.35,0.6], atmoColor: 0x6688aa, atmoOp: 0.1, hydroColor: 0x3388bb, hydroOp: 0.04, bioOp: 0.02 },
+  { landFrac: 0.45, landColor: [0.3,0.55,0.2], oceanColor: [0.1,0.3,0.55], atmoColor: 0x88aacc, atmoOp: 0.08, hydroColor: 0x3388cc, hydroOp: 0.04, bioOp: 0.04 },
+  { landFrac: 0.5, landColor: [0.25,0.5,0.15], oceanColor: [0.1,0.35,0.5], atmoColor: 0x88bbdd, atmoOp: 0.07, hydroColor: 0x3388cc, hydroOp: 0.04, bioOp: 0.05 },
+  { landFrac: 0.55, landColor: [0.32,0.55,0.22], oceanColor: [0.1,0.3,0.55], atmoColor: 0x88ccff, atmoOp: 0.06, hydroColor: 0x3388cc, hydroOp: 0.04, bioOp: 0.06 },
+  { landFrac: 0.55, landColor: [0.5,0.5,0.3], oceanColor: [0.08,0.25,0.5], atmoColor: 0x88ccff, atmoOp: 0.08, hydroColor: 0x3388cc, hydroOp: 0.06, bioOp: 0.06 },
+  { landFrac: 0.6, landColor: [0.35,0.52,0.2], oceanColor: [0.1,0.3,0.55], atmoColor: 0x88ccff, atmoOp: 0.06, hydroColor: 0x3388cc, hydroOp: 0.04, bioOp: 0.08 },
+]
+
+function buildTerrain(eraIdx) {
   const size = 8, seg = 128
   const geo = new THREE.PlaneGeometry(size, size, seg, seg)
   geo.rotateX(-Math.PI / 2)
   const pos = geo.attributes.position
   const colors = new Float32Array(pos.count * 3)
+  const p = ERA_PARAMS[eraIdx] || ERA_PARAMS[7]
 
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i)
-    // Continental shapes via noise-like function
-    const continent = Math.sin(x * 0.8) * Math.cos(z * 0.6) + Math.sin(x * 1.3 + z * 0.4) * 0.7 + Math.cos(z * 1.1 - x * 0.3) * 0.6
-    const isLand = continent > 0.15
-    const h = isLand ? Math.max(0, continent - 0.15) * 0.8 + Math.random() * 0.1 : -0.3 - Math.random() * 0.4
+    const n = Math.sin(x * 0.8) * Math.cos(z * 0.6) + Math.sin(x * 1.3 + z * 0.4) * 0.7 + Math.cos(z * 1.1 - x * 0.3) * 0.6
+    const thresh = 0.5 - p.landFrac * 0.75
+    const isLand = n > thresh
+    const h = isLand ? Math.max(0, n - thresh) * 0.8 + Math.random() * 0.06 : -0.3 - Math.random() * 0.3
     pos.setY(i, h)
-
-    if (isLand) {
-      const shade = 0.4 + Math.random() * 0.3
-      colors[i * 3] = 0.3 * shade; colors[i * 3 + 1] = 0.55 * shade; colors[i * 3 + 2] = 0.2 * shade
-    } else {
-      const d = Math.max(0, Math.min(1, (-h) / 0.7))
-      colors[i * 3] = 0.1 + d * 0.1; colors[i * 3 + 1] = 0.3 + d * 0.3; colors[i * 3 + 2] = 0.55 + d * 0.3
-    }
+    if (isLand) { colors[i * 3] = p.landColor[0] + Math.random() * 0.08; colors[i * 3 + 1] = p.landColor[1] + Math.random() * 0.08; colors[i * 3 + 2] = p.landColor[2] + Math.random() * 0.05 }
+    else { const d = Math.max(0, Math.min(1, (-h) / 0.5)); colors[i * 3] = p.oceanColor[0] + d * 0.08; colors[i * 3 + 1] = p.oceanColor[1] + d * 0.12; colors[i * 3 + 2] = p.oceanColor[2] + d * 0.15 }
   }
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   geo.computeVertexNormals()
-  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0.05, side: THREE.DoubleSide }))
+  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5 + (1 - p.landFrac) * 0.4, metalness: 0.05, side: THREE.DoubleSide }))
 }
 
-/* ─── Spheres visualization ─── */
-function buildSpheres() {
-  const g = new THREE.Group()
-  // Atmosphere — thin blue shell above land
-  const atmo = new THREE.Mesh(new THREE.SphereGeometry(5, 48, 24), new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false }))
+function buildSpheres(eraIdx) {
+  const g = new THREE.Group(), p = ERA_PARAMS[eraIdx] || ERA_PARAMS[7]
+  const atmo = new THREE.Mesh(new THREE.SphereGeometry(5, 48, 24), new THREE.MeshBasicMaterial({ color: p.atmoColor, transparent: true, opacity: p.atmoOp, side: THREE.DoubleSide, depthWrite: false }))
   atmo.position.y = 0.3; g.add(atmo)
-  // Hydrosphere — blue dots over oceans
-  const hydro = new THREE.Mesh(new THREE.SphereGeometry(4.8, 48, 24), new THREE.MeshBasicMaterial({ color: 0x3388cc, wireframe: true, transparent: true, opacity: 0.04, depthWrite: false }))
+  const hydro = new THREE.Mesh(new THREE.SphereGeometry(4.8, 48, 24), new THREE.MeshBasicMaterial({ color: p.hydroColor, wireframe: true, transparent: true, opacity: p.hydroOp, depthWrite: false }))
   hydro.position.y = -0.2; g.add(hydro)
-  // Biosphere — green dots
-  const bio = new THREE.Mesh(new THREE.SphereGeometry(4.6, 48, 24), new THREE.MeshBasicMaterial({ color: 0x44aa44, wireframe: true, transparent: true, opacity: 0.05, depthWrite: false }))
+  const bio = new THREE.Mesh(new THREE.SphereGeometry(4.6, 48, 24), new THREE.MeshBasicMaterial({ color: 0x44aa44, wireframe: true, transparent: true, opacity: p.bioOp, depthWrite: false }))
   bio.position.y = 0.05; g.add(bio)
   return g
 }
 
-/* ─── Module ─── */
+/* ── Module ── */
 export function GeologicTimeModule(scene, params, services) {
   const { labelSystem, cameraRig } = services
   const group = new THREE.Group()
-  let currentEra = params.era || ERAS.length - 1 // Default to Holocene
+  let currentEra = params.era !== undefined ? params.era : ERAS.length - 1
 
-  scene.background = new THREE.Color(0x1a1a2e)
-  scene.fog = new THREE.Fog(0x1a1a2e, 8, 25)
+  scene.background = new THREE.Color(0x0a0a14)
 
-  // Ocean plane
-  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshStandardMaterial({ color: 0x1a4488, roughness: 0.3, metalness: 0.1 }))
+  // Ocean base
+  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshStandardMaterial({ color: 0x1a3366, roughness: 0.3, metalness: 0.1 }))
   ocean.rotation.x = -Math.PI / 2; ocean.position.y = -0.5; group.add(ocean)
 
-  // Terrain
-  const terrain = buildTerrain()
+  // Dynamic terrain + spheres
+  let terrain = buildTerrain(currentEra)
   group.add(terrain)
-
-  // Spheres
-  const spheres = buildSpheres()
+  let spheres = buildSpheres(currentEra)
   group.add(spheres)
 
-  // Time rings around terrain
+  // Time rings
+  const rings = []
   ERAS.forEach((era, i) => {
-    const r = 4.5 + i * 0.15
-    const pts = []
-    for (let j = 0; j <= 128; j++) { const t = j / 128 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(t) * r, 0.02, Math.sin(t) * r)) }
+    const r = 4.5 + i * 0.12
+    const pts = []; for (let j = 0; j <= 128; j++) { const t = j / 128 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(t) * r, 0.02, Math.sin(t) * r)) }
     const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: era.color, transparent: true, opacity: i === currentEra ? 0.8 : 0.2, depthTest: true }))
-    ring.userData.eraIdx = i; group.add(ring)
+    group.add(ring); rings.push(ring)
   })
 
-  // Human impact markers (Holocene)
+  // Human impact markers (Holocene only)
   const impactGroup = new THREE.Group()
-  const cities = [[1.5, 0.04, 1.2], [-1.8, 0.04, -1], [0.5, 0.04, -2], [-1, 0.04, 1.8], [2, 0.04, -1.5]]
-  cities.forEach(([x, y, z]) => {
-    const dot = new THREE.Mesh(GeometryFactory.sphere(0.06, 8), new THREE.MeshBasicMaterial({ color: 0xff4400 }))
-    dot.position.set(x, y, z); impactGroup.add(dot)
-    // Glow
-    const glow = new THREE.Mesh(GeometryFactory.ring(0.08, 0.16, 16), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }))
-    glow.rotation.x = -Math.PI / 2; glow.position.copy(dot.position); impactGroup.add(glow)
+  ;[[1.5, 0.04, 1.2], [-1.8, 0.04, -1], [0.5, 0.04, -2], [-1, 0.04, 1.8], [2, 0.04, -1.5]].forEach(([x, y, z]) => {
+    impactGroup.add(new THREE.Mesh(GeometryFactory.sphere(0.06, 8), new THREE.MeshBasicMaterial({ color: 0xff4400 })))
+    const g = new THREE.Mesh(GeometryFactory.ring(0.08, 0.16, 16), new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }))
+    g.rotation.x = -Math.PI / 2; g.position.set(x, y, z); impactGroup.add(g)
   })
+  impactGroup.visible = currentEra === ERAS.length - 1
   group.add(impactGroup)
 
-  // Labels
-  if (labelSystem) {
-    labelSystem.addToGroup(group, '四大圈层', new THREE.Vector3(5.5, 3, 0), { color: '#88ccff', fontSize: '14px', fontWeight: '700', background: 'rgba(0,0,0,0.6)' })
-    labelSystem.addToGroup(group, '大气圈 · 水圈 · 岩石圈 · 生物圈', new THREE.Vector3(5.5, 2.5, 0), { color: '#aaa', fontSize: '11px', background: 'rgba(0,0,0,0.5)' })
-    labelSystem.addToGroup(group, '全新世人类影响', new THREE.Vector3(0, 0.5, 4.5), { color: '#ff6644', fontSize: '14px', fontWeight: '700', background: 'rgba(0,0,0,0.6)' })
-    labelSystem.addToGroup(group, '城市 · CO₂ · 塑料 · 核试验', new THREE.Vector3(0, 0.1, 4.5), { color: '#ff9966', fontSize: '10px', background: 'rgba(0,0,0,0.5)' })
-    // Era description
-    const era = ERAS[currentEra]
-    if (era) {
-      labelSystem.addToGroup(group, `${era.name} · ${era.en}\n${era.start}Ma — ${era.end === 0 ? '至今' : era.end + 'Ma'}`, new THREE.Vector3(0, 3.5, 0), { color: '#' + era.color.toString(16).padStart(6, '0'), fontSize: '16px', fontWeight: '700', background: 'rgba(0,0,0,0.7)', padding: '6px 14px', borderRadius: '6px', whiteSpace: 'pre-line' })
-      labelSystem.addToGroup(group, era.desc, new THREE.Vector3(0, -3.5, 0), { color: '#ddd', fontSize: '12px', background: 'rgba(0,0,0,0.65)', padding: '8px 14px', borderRadius: '6px', whiteSpace: 'normal', maxWidth: '500px', lineHeight: '1.5' })
-    }
-  }
-
-  // Fixed camera at 50° angle
+  // Fixed 50° camera
   if (cameraRig) {
-    const angle = 50 * Math.PI / 180
-    cameraRig.camera.position.set(0, Math.sin(angle) * 10, Math.cos(angle) * 10)
+    const a = 50 * Math.PI / 180
+    cameraRig.camera.position.set(0, Math.sin(a) * 10, Math.cos(a) * 10)
     cameraRig.controls.target.set(0, 0, 0)
     cameraRig.controls.enableRotate = false
     cameraRig.controls.enableZoom = true
-    cameraRig.controls.minDistance = 5
-    cameraRig.controls.maxDistance = 20
+    cameraRig.controls.minDistance = 4; cameraRig.controls.maxDistance = 18
     cameraRig.controls.update()
   }
 
+  function updateLabels() {
+    if (!labelSystem) return
+    labelSystem.clearAll(scene)
+    const era = ERAS[currentEra]
+    labelSystem.addToGroup(group, `${era.name} · ${era.en}`, new THREE.Vector3(0, 3.5, 0), { color: '#' + era.color.toString(16).padStart(6, '0'), fontSize: '18px', fontWeight: '700', background: 'rgba(0,0,0,0.7)', padding: '8px 16px', borderRadius: '6px' })
+    labelSystem.addToGroup(group, `${era.start} — ${era.end === 0 ? '至今' : era.end} Ma`, new THREE.Vector3(0, 2.9, 0), { color: '#aaa', fontSize: '12px', background: 'rgba(0,0,0,0.5)', padding: '3px 10px', borderRadius: '4px' })
+    labelSystem.addToGroup(group, era.desc, new THREE.Vector3(0, -3.5, 0), { color: '#ddd', fontSize: '13px', background: 'rgba(0,0,0,0.65)', padding: '8px 14px', borderRadius: '6px', whiteSpace: 'normal', maxWidth: '500px', lineHeight: '1.5' })
+    labelSystem.addToGroup(group, '四大圈层', new THREE.Vector3(5.5, 3, 0), { color: '#88ccff', fontSize: '14px', fontWeight: '700', background: 'rgba(0,0,0,0.6)' })
+    labelSystem.addToGroup(group, '大气圈 · 水圈 · 岩石圈 · 生物圈', new THREE.Vector3(5.5, 2.5, 0), { color: '#aaa', fontSize: '11px', background: 'rgba(0,0,0,0.5)' })
+    if (currentEra === ERAS.length - 1) labelSystem.addToGroup(group, '人类世标志', new THREE.Vector3(0, 0.5, 4.5), { color: '#ff6644', fontSize: '13px', fontWeight: '700', background: 'rgba(0,0,0,0.6)' })
+  }
+
+  updateLabels()
+
   const api = {
     setParams(p) {
-      if (p.era !== undefined) {
+      if (p.era !== undefined && p.era !== currentEra) {
         currentEra = p.era
-        // Update ring opacity
-        group.children.forEach(c => { if (c.userData?.eraIdx !== undefined) c.material.opacity = c.userData.eraIdx === p.era ? 0.8 : 0.2 })
-        // Update impact visibility
+        // Replace terrain
+        group.remove(terrain); terrain = buildTerrain(currentEra); group.add(terrain)
+        // Replace spheres
+        group.remove(spheres); spheres = buildSpheres(currentEra); group.add(spheres)
+        // Update rings
+        rings.forEach((r, i) => { r.material.opacity = i === currentEra ? 0.8 : 0.2 })
+        // Impact markers
         impactGroup.visible = currentEra === ERAS.length - 1
-        // Update labels
-        if (labelSystem) {
-          labelSystem.clearAll(scene)
-          const era = ERAS[currentEra]
-          if (era) {
-            labelSystem.addToGroup(group, `${era.name} · ${era.en}\n${era.start}Ma — ${era.end === 0 ? '至今' : era.end + 'Ma'}`, new THREE.Vector3(0, 3.5, 0), { color: '#' + era.color.toString(16).padStart(6, '0'), fontSize: '16px', fontWeight: '700', background: 'rgba(0,0,0,0.7)', padding: '6px 14px', borderRadius: '6px', whiteSpace: 'pre-line' })
-            labelSystem.addToGroup(group, era.desc, new THREE.Vector3(0, -3.5, 0), { color: '#ddd', fontSize: '12px', background: 'rgba(0,0,0,0.65)', padding: '8px 14px', borderRadius: '6px', whiteSpace: 'normal', maxWidth: '500px', lineHeight: '1.5' })
-          }
-          labelSystem.addToGroup(group, '四大圈层', new THREE.Vector3(5.5, 3, 0), { color: '#88ccff', fontSize: '14px', fontWeight: '700', background: 'rgba(0,0,0,0.6)' })
-          labelSystem.addToGroup(group, '大气圈 · 水圈 · 岩石圈 · 生物圈', new THREE.Vector3(5.5, 2.5, 0), { color: '#aaa', fontSize: '11px', background: 'rgba(0,0,0,0.5)' })
-          labelSystem.addToGroup(group, '全新世人类影响', new THREE.Vector3(0, 0.5, 4.5), { color: '#ff6644', fontSize: '14px', fontWeight: '700', background: 'rgba(0,0,0,0.6)' })
-        }
+        updateLabels()
       }
     },
     update(dt) {
       impactGroup.children.forEach(c => { if (c.material?.blending === THREE.AdditiveBlending) c.material.opacity = 0.3 + Math.sin(Date.now() * 0.003) * 0.2 })
-      spheres.children.forEach(s => { s.rotation.y += dt * 0.02; s.rotation.x += dt * 0.01 })
+      spheres.children.forEach(s => { s.rotation.y += dt * 0.015; s.rotation.x += dt * 0.008 })
     },
     dispose() {},
   }

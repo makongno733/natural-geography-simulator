@@ -3,7 +3,13 @@
     <header class="geo-top">
       <router-link to="/" class="geo-back">← 返回首页</router-link>
       <h1 class="geo-title">地质年代表</h1>
-      <p class="geo-sub">Geological Time Scale · 冥古宙—全新世 · 46亿年地球演化</p>
+      <p class="geo-sub">Geological Time Scale · 46亿年演化 · 拖动时间轴浏览</p>
+      <div class="time-scrubber">
+        <input type="range" min="0" :max="eras.length - 1" :value="currentEra" @input="selectEra(parseInt($event.target.value))" class="scrubber" />
+        <div class="scrub-labels">
+          <span v-for="(era, i) in eras" :key="i" :class="{ active: i === currentEra }" @click="selectEra(i)">{{ era.name }}</span>
+        </div>
+      </div>
     </header>
 
     <div class="geo-body">
@@ -33,6 +39,10 @@
         <div class="era-info" v-if="currentEraData">
           <h3 :style="{ color: '#' + currentEraData.color.toString(16).padStart(6, '0') }">{{ currentEraData.name }} · {{ currentEraData.en }}</h3>
           <p>{{ currentEraData.desc }}</p>
+          <div class="fossil-box" v-if="currentEraData.fossils">
+            <h4>🦴 代表生物 / 标志物</h4>
+            <p>{{ currentEraData.fossils }}</p>
+          </div>
         </div>
       </aside>
     </div>
@@ -108,9 +118,17 @@ onBeforeUnmount(() => { engine?.dispose() })
 .tl-name { font-size: 13px; color: #ddd; font-weight: 600; }
 .tl-en { font-size: 10px; color: #666; flex: 1; }
 .tl-time { font-size: 10px; color: #888; }
+.time-scrubber { padding: 10px 16px 2px; }
+.scrubber { width: 100%; accent-color: #58a6ff; height: 4px; cursor: pointer; }
+.scrub-labels { display: flex; justify-content: space-between; padding: 0 2px; }
+.scrub-labels span { font-size: 10px; color: #555; cursor: pointer; padding: 2px 0; }
+.scrub-labels span.active { color: #58a6ff; font-weight: 700; }
 .era-info { margin-top: 16px; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #0a0a0f; }
 .era-info h3 { margin: 0 0 8px; font-size: 14px; }
 .era-info p { margin: 0; font-size: 12px; color: #aaa; line-height: 1.6; }
+.fossil-box { margin-top: 12px; padding: 10px; border-top: 1px solid #222; }
+.fossil-box h4 { margin: 0 0 6px; font-size: 12px; color: #ffaa44; }
+.fossil-box p { font-size: 11px; color: #998; line-height: 1.5; }
 .geo-table-wrap { padding: 20px; }
 .geo-table-wrap h2 { margin: 0 0 12px; font-size: 16px; color: #888; }
 .geo-table { border: 1px solid #222; border-radius: 8px; overflow: hidden; }
