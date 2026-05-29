@@ -14,7 +14,7 @@
       <span>{{ sectionId }}</span>
     </div>
 
-    <template v-if="!showMindMap && !showSandbox && !showEarth3D && !showSoilProfile && !showAtmo && !showWater && !showDisaster">
+    <template v-if="!showMindMap && !showSandbox && !showEarth3D && !showSoilProfile && !showAtmo && !showWater && !showDisaster && !showDataViz">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -44,9 +44,13 @@
             <button v-if="isEarthChapter" class="ghost-action" @click="showEarth3D = true">专项地球模型</button>
             <button v-if="isAtmoChapter" class="ghost-action" @click="showAtmo = true">专项大气模型</button>
             <button v-if="isWaterChapter" class="ghost-action" @click="showWater = true">专项水循环</button>
-            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true">专项地貌沙盘</button>
+            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy=''">专项地貌沙盘</button>
+            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy='guilin'">📌 桂林喀斯特</button>
+            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy='yellowriver'">📌 黄河三角洲</button>
+            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy='taklamakan'">📌 塔克拉玛干</button>
             <button v-if="isSoilChapter" class="ghost-action" @click="showSoilProfile = true">专项土壤剖面</button>
             <button v-if="isDisasterChapter" class="ghost-action" @click="showDisaster = true">专项灾害模拟</button>
+            <button v-if="dataVizType" class="ghost-action" @click="showDataViz = true">数据可视化</button>
           </div>
         </section>
 
@@ -110,7 +114,7 @@
   />
 
   <!-- 3D 沙盘视图 -->
-  <SandboxApp v-else-if="showSandbox" embedded @close="showSandbox = false" />
+  <SandboxApp v-else-if="showSandbox" embedded :caseStudy="caseStudy" @close="showSandbox = false" />
 
   <!-- 3D 地球视图 -->
   <Earth3D v-else-if="showEarth3D" :mode="moduleMode" />
@@ -126,6 +130,8 @@
 
   <!-- 3D 灾害模拟 -->
   <DisasterSandbox v-else-if="showDisaster" embedded @close="showDisaster = false" />
+
+  <DataVizViewer v-else-if="showDataViz && dataVizType" :type="dataVizType" :title="sectionData?.title || '数据可视化'" @close="showDataViz = false" />
 
   </div>
 
@@ -149,6 +155,7 @@ const Earth3D = defineAsyncComponent(() => import('../sandbox/Earth3D.vue'))
 const SoilProfilePage = defineAsyncComponent(() => import('../soil-profile/SoilProfilePage.vue'))
 const AtmosphereViewer = defineAsyncComponent(() => import('./components/AtmosphereViewer.vue'))
 const MindMapViewer = defineAsyncComponent(() => import('./components/MindMapViewer.vue'))
+const DataVizViewer = defineAsyncComponent(() => import('./components/DataVizViewer.vue'))
 const WaterCycleView = defineAsyncComponent(() => import('../engine/WaterCycleView.vue'))
 const DisasterSandbox = defineAsyncComponent(() => import('../sandbox/DisasterSandbox.vue'))
 
@@ -165,6 +172,8 @@ const showSoilProfile = ref(false)
 const showAtmo = ref(false)
 const showWater = ref(false)
 const showDisaster = ref(false)
+const showDataViz = ref(false)
+const caseStudy = ref('')
 const showMindMap = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && (
@@ -175,6 +184,12 @@ const isLandformChapter = computed(() =>
 const isDisasterChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第六章'
 )
+// 必修二 data visualization chapters
+const dataVizType = computed(() => {
+  if (gradeId.value !== '高中' || bookId.value !== '必修第二册') return null
+  const map = { '第一章':'pyramid', '第二章':'urban', '第三章':'triangle', '第四章':'transport', '第五章':'sustain' }
+  return map[chapterId.value] || null
+})
 const isEarthChapter = computed(() =>
   gradeId.value === '高中' && (
     (bookId.value === '必修第一册' && chapterId.value === '第一章') ||
@@ -275,6 +290,7 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   showAtmo.value = false
   showWater.value = false
   showDisaster.value = false
+  showDataViz.value = false
   showMindMap.value = false
   loadedContent.value = null
   loading.value = true

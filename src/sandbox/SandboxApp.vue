@@ -123,7 +123,8 @@ import { glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
 
 const props = defineProps({
-  embedded: { type: Boolean, default: false }
+  embedded: { type: Boolean, default: false },
+  caseStudy: { type: String, default: '' },
 })
 defineEmits(['close'])
 
@@ -160,6 +161,7 @@ function selectModule(id) {
       activeModule: id,
       timeline: timeline.value,
       climateFactor: climateFactor.value,
+      caseStudy: props.caseStudy,
     })
   }
 }
