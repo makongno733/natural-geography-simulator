@@ -95,7 +95,9 @@ function buildTerrainGeo(){
 }
 
 function updateTerrainColors(geo,params){
-  const pos=geo.attributes.position,cols=geo.attributes.color||new Float32Array(pos.count*3)
+  const pos=geo.attributes.position
+  const colorAttr=geo.attributes.color
+  const cols=colorAttr?colorAttr.array:new Float32Array(pos.count*3)
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i),z=pos.getZ(i),dist=Math.sqrt(x*x+z*z)
     if(dist>R){cols[i*3]=params.oceanR;cols[i*3+1]=params.oceanG;cols[i*3+2]=params.oceanB;continue}
@@ -104,7 +106,8 @@ function updateTerrainColors(geo,params){
     if(isLand){cols[i*3]=params.landR+Math.random()*.04;cols[i*3+1]=params.landG+Math.random()*.04;cols[i*3+2]=params.landB+Math.random()*.03}
     else{cols[i*3]=params.oceanR+Math.random()*.04;cols[i*3+1]=params.oceanG+Math.random()*.06;cols[i*3+2]=params.oceanB+Math.random()*.08}
   }
-  geo.setAttribute('color',new THREE.BufferAttribute(cols,3))
+  if(colorAttr){colorAttr.needsUpdate=true}
+  else{geo.setAttribute('color',new THREE.BufferAttribute(cols,3))}
 }
 
 /* ── Cross-section wedge ── */
@@ -137,9 +140,8 @@ export function GeologicTimeModule(scene,params,services){
 
   // Transparent ocean plane (large, no square edges visible)
   const oceanGeo=new THREE.CircleGeometry(R*1.2,128)
-  oceanGeo.rotateX(-Math.PI/2)
   const ocean=new THREE.Mesh(oceanGeo,new THREE.MeshStandardMaterial({color:0x2266aa,roughness:.2,metalness:.1,transparent:true,opacity:.7,depthWrite:false}))
-  ocean.position.y=-.35;group.add(ocean)
+  ocean.rotation.x=-Math.PI/2;ocean.position.y=-.35;group.add(ocean)
 
   // Terrain (built once)
   terrainGeo=buildTerrainGeo()
@@ -183,7 +185,7 @@ export function GeologicTimeModule(scene,params,services){
   let updateCounter=0
   const api={
     setParams(p){
-      if(p.era!==undefined&&p.era!==eraIdx){fromIdx=eraIdx;eraIdx=p.era;transT=0;impacts.visible=eraIdx===N-1;rings.forEach((r,i)=>{r.material.opacity=i===eraIdx?.8:.12});updateLabels()}
+      if(p.era!==undefined&&p.era!==eraIdx){fromIdx=eraIdx;eraIdx=p.era;transT=0;impacts.visible=eraIdx===N-1;rings.forEach((r,i)=>{r.material.opacity=i===eraIdx?0.8:0.12});updateLabels()}
     },
     update(dt){
       if(transT<1){transT=Math.min(1,transT+dt*2);const pr=eraParams(fromIdx,eraIdx,transT);updateCounter++;if(updateCounter%3===0)updateTerrainColors(terrainGeo,pr);if(updateCounter%6===0){atmo.material.color.setHSL(pr.atmoHue,.6,pr.atmoLight);atmo.material.opacity=pr.atmoOp;const cc=Math.floor(pr.cloudOp*600);if(cloudPts.geometry.attributes.position){const cp=cloudPts.geometry.attributes.position;if(cp.count!==cc){const np=new Float32Array(cc*3);for(let i=0;i<cc;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2,rr=R*.9+Math.random()*.5;np[i*3]=rr*Math.sin(phi)*Math.cos(theta);np[i*3+1]=rr*Math.cos(phi)+.3;np[i*3+2]=rr*Math.sin(phi)*Math.sin(theta)}cloudPts.geometry.setAttribute('position',new THREE.BufferAttribute(np,3))}}else{const np=new Float32Array(cc*3);for(let i=0;i<cc;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2,rr=R*.9+Math.random()*.5;np[i*3]=rr*Math.sin(phi)*Math.cos(theta);np[i*3+1]=rr*Math.cos(phi)+.3;np[i*3+2]=rr*Math.sin(phi)*Math.sin(theta)}cloudPts.geometry.setAttribute('position',new THREE.BufferAttribute(np,3))}terrainMesh.material.roughness=pr.roughness;}}
