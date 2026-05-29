@@ -109,10 +109,10 @@ const PROJECTIONS = [
   { id: 'van_der_grinten', name: '范德格林顿', en: 'Van der Grinten', cat: '伪圆柱', prop: '折衷' },
   { id: 'aitoff', name: '艾托夫', en: 'Aitoff', cat: '伪方位', prop: '折衷' },
   { id: 'hammer', name: '哈默', en: 'Hammer', cat: '伪方位', prop: '等积' },
-  { id: 'orthographic', name: '正射投影', en: 'Orthographic', cat: '方位', prop: '透视' },
-  { id: 'stereographic', name: '球极平面', en: 'Stereographic', cat: '方位', prop: '等角' },
-  { id: 'gnomonic', name: '日晷投影', en: 'Gnomonic', cat: '方位', prop: '大圆直线' },
-  { id: 'azimuthal_equidistant', name: '等距方位', en: 'Azimuthal Equidistant', cat: '方位', prop: '等距' },
+  { id: 'orthographic', name: '正射投影', en: 'Orthographic', cat: '方位', prop: '透视', flat: false },
+  { id: 'stereographic', name: '球极平面', en: 'Stereographic', cat: '方位', prop: '等角', flat: false },
+  { id: 'gnomonic', name: '日晷投影', en: 'Gnomonic', cat: '方位', prop: '大圆直线', flat: false },
+  { id: 'azimuthal_equidistant', name: '等距方位', en: 'Azimuthal Equidistant', cat: '方位', prop: '等距', flat: false },
   { id: 'lambert_conic', name: '兰伯特等角圆锥', en: 'Lambert Conformal Conic', cat: '圆锥', prop: '等角' },
   { id: 'albers', name: '阿尔伯斯等积圆锥', en: 'Albers Equal-Area Conic', cat: '圆锥', prop: '等积' },
   { id: 'bonne', name: '彭纳投影', en: 'Bonne', cat: '圆锥', prop: '等积' },
@@ -212,13 +212,16 @@ export function MapProjectionModule(scene, params, services) {
             labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.2, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
           }
         } else {
-          current = p.projection; target = 1
-          targetPos = computeTarget(p.projection)
+          current = p.projection
+          const projData = PROJECTIONS.find(x => x.id === p.projection)
+          const shouldUnfold = projData?.flat !== false
+          target = shouldUnfold ? 1 : 0
+          if (shouldUnfold) targetPos = computeTarget(p.projection)
           const proj = PROJECTIONS.find(x => x.id === p.projection)
           if (labelSystem && proj) {
             labelSystem.clearAll(scene)
             labelSystem.addToGroup(group, `${proj.name} · ${proj.en}`, new THREE.Vector3(0, R + 1.2, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
-            labelSystem.addToGroup(group, `${proj.cat} · ${proj.prop}`, new THREE.Vector3(0, R + 0.85, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
+            labelSystem.addToGroup(group, `${proj.cat} · ${proj.prop}${proj.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 0.85, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
           }
         }
       }
