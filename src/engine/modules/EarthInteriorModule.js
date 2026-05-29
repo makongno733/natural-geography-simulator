@@ -1,3 +1,4 @@
+// [M01] EarthInteriorModule — 地球内部圈层剖面（半剖） — 必修一Ch1 · 选必1Ch1
 import * as THREE from 'three'
 import { MaterialLibrary } from '../materials/MaterialLibrary.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'

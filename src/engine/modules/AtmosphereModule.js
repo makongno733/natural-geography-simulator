@@ -1,3 +1,4 @@
+// [M04] AtmosphereModule — 大气垂直分层·组成·受热·环流·温室 — 必修一Ch2 · 选必1Ch3
 import * as THREE from 'three'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 

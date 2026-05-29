@@ -1,3 +1,4 @@
+// [M03] SolarSystemModule — 太阳系+地火转移轨道+深空探索 — 必修一Ch1
 import * as THREE from 'three'
 import { MaterialLibrary } from '../materials/MaterialLibrary.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'

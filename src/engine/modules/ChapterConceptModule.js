@@ -1,3 +1,4 @@
+// [M09] ChapterConceptModule — 通用章节概念三维结构图 — 必修二·选必2·选必3
 import * as THREE from 'three'
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline'
 import { GeometryFactory } from '../utils/GeometryFactory.js'

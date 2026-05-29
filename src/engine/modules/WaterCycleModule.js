@@ -1,3 +1,4 @@
+// [M05] WaterCycleModule — 水循环·海陆间循环·洋流 — 必修一Ch3 · 选必1Ch4
 import * as THREE from 'three'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 

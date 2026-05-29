@@ -1,3 +1,4 @@
+// [M07] SoilProfileModule — 土壤剖面·O/A/B/C层·淋溶 — 必修一Ch5
 import * as THREE from 'three'
 import { SOIL_LAYERS } from '../../soil-profile/soilData.js'
 import { MaterialLibrary } from '../materials/MaterialLibrary.js'

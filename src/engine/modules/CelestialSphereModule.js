@@ -1,3 +1,4 @@
+// [M02] CelestialSphereModule — 天球坐标系+天体示例 — 必修一Ch1
 import * as THREE from 'three'
 import { MaterialLibrary } from '../materials/MaterialLibrary.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'

@@ -1,3 +1,4 @@
+// [M08] DisasterModule — 台风·暴雨·地震·滑坡泥石流灾害模拟 — 必修一Ch6
 import * as THREE from 'three'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 import { MaterialLibrary } from '../materials/MaterialLibrary.js'

@@ -1,3 +1,4 @@
+// [M06] LandformModule — 流水·喀斯特·风沙·海岸地貌沙盘 — 必修一Ch4 · 选必1Ch2
 import * as THREE from 'three'
 import { createTerrainMaterial } from '../../lib/shaders/terrainMaterial.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
