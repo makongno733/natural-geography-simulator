@@ -67,7 +67,7 @@ function eraParams(from,to,t){
 }
 
 function buildTerrainGeo(){
-  const seg=200,size=R*2.5,geo=new THREE.PlaneGeometry(size,size,seg,seg)
+  const seg=160,size=R*2.5,geo=new THREE.PlaneGeometry(size,size,seg,seg)
   geo.rotateX(-Math.PI/2)
   const pos=geo.attributes.position
   for(let i=0;i<pos.count;i++){
@@ -86,6 +86,10 @@ function buildTerrainGeo(){
     const h=Math.max(-.1,n*.25+mtns-.1+Math.random()*.03)
     pos.setY(i,Math.min(.45,h))
   }
+  // Add default color attribute
+  const defCols = new Float32Array(pos.count * 3)
+  for (let i = 0; i < pos.count; i++) { defCols[i * 3] = 0.15; defCols[i * 3 + 1] = 0.35; defCols[i * 3 + 2] = 0.55 }
+  geo.setAttribute('color', new THREE.BufferAttribute(defCols, 3))
   geo.computeVertexNormals()
   return geo
 }
