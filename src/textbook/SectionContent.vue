@@ -234,7 +234,7 @@ const gradeLevel = computed(() => {
 
 const moduleMode = computed(() => {
   if (gradeLevel.value === '初中') return 'junior'
-  return level.value || 'simple'
+  return 'simple'
 })
 
 const isGrouped = computed(() => {
