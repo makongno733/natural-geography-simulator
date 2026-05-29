@@ -80,7 +80,7 @@ export function MapProjectionModule(scene, params, services) {
   const group = new THREE.Group()
   const R = 1.5
   let current = null, unfold = 0, target = 0, flatMode = false, savedCam = null
-  let sphereTarget = null
+  let sphereTarget = null, flatGridGroup = null
   let pendingProj = null // Queue next projection after sphere restore
 
   scene.background = new THREE.Color(0xf5f0e8)
@@ -93,6 +93,75 @@ export function MapProjectionModule(scene, params, services) {
   )
   const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
   group.add(sphere)
+
+  // ── Flat grid that appears after unfold ──
+  flatGridGroup = new THREE.Group()
+  flatGridGroup.visible = false
+  group.add(flatGridGroup)
+
+  function buildFlatGrid(proj) {
+    flatGridGroup.clear()
+    const fn = proj.fn || PF.equirectangular
+    const S = R * 2.2
+    const maxLat = 85 * Math.PI / 180
+    const lineMat = (color, opacity) => new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false })
+    const labelStyle = (color) => ({ color: '#' + color.toString(16).padStart(6, '0'), fontSize: '9px', fontWeight: '600', background: 'rgba(255,255,255,0.7)' })
+
+    // Latitude lines
+    const latLines = [
+      { deg: 0, color: 0xcc3333, label: '赤道 0°' },
+      { deg: 23.5, color: 0xcc8833, label: '北回归线 23.5°N' },
+      { deg: -23.5, color: 0xcc8833, label: '南回归线 23.5°S' },
+      { deg: 66.5, color: 0xcc6633, label: '北极圈 66.5°N' },
+      { deg: -66.5, color: 0xcc6633, label: '南极圈 66.5°S' },
+    ]
+    latLines.forEach(({ deg, color, label }) => {
+      const lat = Math.max(-maxLat, Math.min(maxLat, deg * Math.PI / 180))
+      const pts = []
+      for (let i = 0; i <= 200; i++) {
+        const lon = (i / 200 - 0.5) * 2 * Math.PI
+        try {
+          const [px, py] = fn(lat, lon)
+          pts.push(new THREE.Vector3((px || 0) * S, (py || 0) * S * 0.55, 0))
+        } catch (_) {}
+      }
+      if (pts.length > 1) {
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(color, 0.4))
+        flatGridGroup.add(line)
+      }
+      if (label && labelSystem && pts.length > 10) {
+        const mid = pts[Math.floor(pts.length / 2)]
+        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0, 0.05, 0.01)), labelStyle(color))
+      }
+    })
+
+    // Longitude lines
+    const lonLines = [
+      { deg: 0, color: 0x3366cc, label: '本初 0°' },
+      { deg: 90, color: 0x3366cc, label: '90°E' },
+      { deg: -90, color: 0x3366cc, label: '90°W' },
+      { deg: 180, color: 0x3366cc, label: '180°' },
+    ]
+    lonLines.forEach(({ deg, color, label }) => {
+      const lon = deg * Math.PI / 180
+      const pts = []
+      for (let i = 0; i <= 100; i++) {
+        const lat = (i / 100 - 0.5) * 2 * maxLat
+        try {
+          const [px, py] = fn(lat, lon)
+          pts.push(new THREE.Vector3((px || 0) * S, (py || 0) * S * 0.55, 0))
+        } catch (_) {}
+      }
+      if (pts.length > 1) {
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(color, 0.4))
+        flatGridGroup.add(line)
+      }
+      if (label && labelSystem && pts.length > 5) {
+        const mid = pts[Math.floor(pts.length * 0.6)]
+        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0.08, 0, 0.01)), labelStyle(color))
+      }
+    })
+  }
 
   // ── Lat/lon reference lines on sphere ──
   function addLatLine(latDeg, color, label) {
@@ -223,6 +292,7 @@ export function MapProjectionModule(scene, params, services) {
       } else {
         current = p.projection; target = 1; pendingProj = null
         sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
+        buildFlatGrid(proj)
         showLabel(p.projection)
       }
     },
@@ -270,6 +340,18 @@ export function MapProjectionModule(scene, params, services) {
         if (proj) {
           current = pendingProj; target = 1; pendingProj = null
           sphereTarget = computeTarget(sphereOrig, sphereGeo.attributes.position.count, proj)
+          buildFlatGrid(proj)
+        }
+      }
+
+      // Flat grid fade-in
+      if (flatGridGroup) {
+        flatGridGroup.visible = unfold > 0.5
+        if (unfold > 0.5) {
+          const alpha = Math.min(1, (unfold - 0.5) / 0.5)
+          flatGridGroup.children.forEach(c => {
+            if (c.material && c.material.opacity !== undefined) c.material.opacity = 0.4 * alpha
+          })
         }
       }
 
