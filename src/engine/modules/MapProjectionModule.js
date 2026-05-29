@@ -156,9 +156,10 @@ export function MapProjectionModule(scene, params, services) {
 
   // Globe with texture
   const globeGeo = new THREE.SphereGeometry(R, SEG, SEG / 2)
-  const globe = new THREE.Mesh(globeGeo, new THREE.MeshStandardMaterial({
-    map: texture, roughness: 0.6, metalness: 0.05,
-  }))
+  const globeMat = new THREE.MeshStandardMaterial({
+    map: texture, roughness: 0.6, metalness: 0.05, side: THREE.DoubleSide,
+  })
+  const globe = new THREE.Mesh(globeGeo, globeMat)
   group.add(globe)
 
   // Store original positions
@@ -200,8 +201,8 @@ export function MapProjectionModule(scene, params, services) {
       let px = 0, py = 0
       try { [px, py] = fn(lat, lon) } catch (_) { px = lon / Math.PI; py = lat / (Math.PI / 2) }
       tp[i * 3] = (px || 0) * S
-      tp[i * 3 + 1] = 0
-      tp[i * 3 + 2] = -R * 0.5 + (py || 0) * S * 0.55
+      tp[i * 3 + 1] = (py || 0) * S * 0.55
+      tp[i * 3 + 2] = 0
     }
     return tp
   }
@@ -213,11 +214,18 @@ export function MapProjectionModule(scene, params, services) {
       pos.setXYZ(i,
         orig[i * 3] + (tp[i * 3] - orig[i * 3]) * progress,
         orig[i * 3 + 1] + (tp[i * 3 + 1] - orig[i * 3 + 1]) * progress,
-        orig[i * 3 + 2] * (1 - progress),
+        orig[i * 3 + 2] + (tp[i * 3 + 2] - orig[i * 3 + 2]) * progress,
       )
     }
     pos.needsUpdate = true
-    globe.geometry.computeVertexNormals()
+    if (progress > 0.9) {
+      // Flat: all normals point up
+      const n = globe.geometry.attributes.normal || globe.geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
+      for (let i = 0; i < count; i++) { n.setXYZ(i, 0, 0, 1) }
+      n.needsUpdate = true
+    } else {
+      globe.geometry.computeVertexNormals()
+    }
     gridGroup.children.forEach(c => { if (c.material) c.material.opacity = 0.15 * (1 - progress) })
   }
 
@@ -274,8 +282,8 @@ export function MapProjectionModule(scene, params, services) {
       if (flatMode && cameraRig) {
         const cam = cameraRig.camera
         const ct = cameraRig.controls.target
-        cam.position.lerp(new THREE.Vector3(0, 2.5, 0.1), 0.06)
-        ct.lerp(new THREE.Vector3(0, -0.3, 0), 0.06)
+        cam.position.lerp(new THREE.Vector3(0, 0, 6), 0.06)
+        ct.lerp(new THREE.Vector3(0, 0, 0), 0.06)
         cameraRig.controls.update()
         cameraRig.controls.enableRotate = false
         cameraRig.controls.enableZoom = true
