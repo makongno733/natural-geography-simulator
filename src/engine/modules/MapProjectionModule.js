@@ -113,7 +113,7 @@ export function MapProjectionModule(scene, params, services) {
     undefined, () => {} // silent fail, keep canvas texture
   )
   const sphereGeo = new THREE.SphereGeometry(R, 128, 64)
-  const sphereMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
+  const sphereMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35, metalness: 0.02, side: THREE.DoubleSide })
   const flatMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }) // No lighting, full brightness
   const sphere = new THREE.Mesh(sphereGeo, sphereMat)
   const sphereOrig = new Float32Array(sphereGeo.attributes.position.array)
@@ -127,16 +127,16 @@ export function MapProjectionModule(scene, params, services) {
   function buildFlatGrid(proj) {
     flatGridGroup.clear()
     const fn = proj.fn || PF.equirectangular, S = R * 2.2, mL = 85 * Math.PI / 180
-    const lM = (c) => new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.4, depthTest: false, depthWrite: false })
+    const lM = (c) => new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.75, depthTest: false, depthWrite: false })
     const lb = (c) => ({ color: '#' + c.toString(16).padStart(6, '0'), fontSize: '10px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '2px 5px', borderRadius: '3px' })
     const add = (pts, color, label, off) => {
       if (pts.length < 2) return
       flatGridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lM(color)))
       if (label && labelSystem) { const m = pts[Math.floor(pts.length * 0.55)]; labelSystem.addToGroup(flatGridGroup, label, m.clone().add(off || new THREE.Vector3(0, 0.05, 0)), lb(color)) }
     }
-    const latCols = { 0: 0xcc3333, 23.5: 0xcc8833, '-23.5': 0xcc8833, 66.5: 0xcc6633, '-66.5': 0xcc6633 }
+    const latCols = { 0: 0xff4444, 23.5: 0xff9944, '-23.5': 0xff9944, 66.5: 0xff7744, '-66.5': 0xff7744 }
     ;[0, 23.5, -23.5, 66.5, -66.5].forEach(d => { const la = Math.max(-mL, Math.min(mL, d * Math.PI / 180)), p = []; for (let i = 0; i <= 160; i++) { try { const [x, y] = fn(la, (i / 160 - 0.5) * 2 * Math.PI); p.push(new THREE.Vector3((x || 0) * S, (y || 0) * S * 0.55, 0)) } catch (_) {} }; add(p, latCols[String(d)], d === 0 ? '0°' : `${Math.abs(d)}°${d > 0 ? 'N' : 'S'}`) })
-    ;[0, 90, -90, 180].forEach(d => { const lo = d * Math.PI / 180, p = []; for (let i = 0; i <= 100; i++) { try { const [x, y] = fn((i / 100 - 0.5) * 2 * mL, lo); p.push(new THREE.Vector3((x || 0) * S, (y || 0) * S * 0.55, 0)) } catch (_) {} }; add(p, 0x3366cc, d === 0 ? '0°' : `${Math.abs(d)}°${d > 0 ? 'E' : 'W'}`, new THREE.Vector3(0.08, 0, 0)) })
+    ;[0, 90, -90, 180].forEach(d => { const lo = d * Math.PI / 180, p = []; for (let i = 0; i <= 100; i++) { try { const [x, y] = fn((i / 100 - 0.5) * 2 * mL, lo); p.push(new THREE.Vector3((x || 0) * S, (y || 0) * S * 0.55, 0)) } catch (_) {} }; add(p, 0x4488ff, d === 0 ? '0°' : `${Math.abs(d)}°${d > 0 ? 'E' : 'W'}`, new THREE.Vector3(0.08, 0, 0)) })
   }
 
   // ── Lat/lon reference lines on sphere ──
@@ -145,7 +145,7 @@ export function MapProjectionModule(scene, params, services) {
   function addLatLine(latDeg, color, label) {
     const phi = (90 - latDeg) * Math.PI / 180; const r = Math.sin(phi) * R * 1.01; const y = Math.cos(phi) * R * 1.01
     const pts = []; for (let i = 0; i <= 100; i++) { const t = i / 100 * Math.PI * 2; pts.push(new THREE.Vector3(-Math.cos(t) * r, y, Math.sin(t) * r)) }
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6, depthTest: true, linewidth: 1 }))
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true, linewidth: 1 }))
     group.add(line)
     if (label && labelSystem) labelSystem.addToGroup(group, label, new THREE.Vector3(0, y, r + 0.05), crispLabel('#' + color.toString(16).padStart(6, '0')))
     return line
@@ -153,7 +153,7 @@ export function MapProjectionModule(scene, params, services) {
   function addLonLine(lonDeg, color, label) {
     const theta = lonDeg * Math.PI / 180; const pts = []
     for (let i = 0; i <= 100; i++) { const phi = i / 100 * Math.PI; pts.push(new THREE.Vector3(-Math.sin(phi) * Math.cos(theta) * R * 1.01, Math.cos(phi) * R * 1.01, Math.sin(phi) * Math.sin(theta) * R * 1.01)) }
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6, depthTest: true }))
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true }))
     group.add(line)
     if (label && labelSystem) {
       const mid = 45 * Math.PI / 180; labelSystem.addToGroup(group, label, new THREE.Vector3(-Math.sin(mid) * Math.cos(theta) * R * 1.08, Math.cos(mid) * R * 1.08, Math.sin(mid) * Math.sin(theta) * R * 1.08), crispLabel('#' + color.toString(16).padStart(6, '0')))
@@ -165,17 +165,10 @@ export function MapProjectionModule(scene, params, services) {
   addLatLine(-23.5, 0xcc8833, '23.5°S')
   addLatLine(66.5, 0xcc6633, '66.5°N')
   addLatLine(-66.5, 0xcc6633, '66.5°S')
-  addLonLine(0, 0x3366cc, '0°')
-  addLonLine(90, 0x3366cc, '90°E')
-  addLonLine(-90, 0x3366cc, '90°W')
-  addLonLine(180, 0x3366cc, '180°')
-  // Small arrow markers at key intersections
-  const arrowGeo = new THREE.ConeGeometry(0.03, 0.1, 4)
-  const arrowMat = new THREE.MeshBasicMaterial({ color: 0xcc3333 })
-  const eqArrows = [[0, 0, R * 1.02, 0.05], [R * 1.02, 0, 0, -0.05]]
-  eqArrows.forEach(([px, py, pz, ry]) => {
-    const a = new THREE.Mesh(arrowGeo, arrowMat); a.position.set(px, py, pz); a.rotation.z = Math.PI / 2; a.rotation.y = ry; group.add(a)
-  })
+  addLonLine(0, 0x4488ff, '0°')
+  addLonLine(90, 0x4488ff, '90°E')
+  addLonLine(-90, 0x4488ff, '90°W')
+  addLonLine(180, 0x4488ff, '180°')
 
 
   /* ── Compute target positions ── */
@@ -330,7 +323,7 @@ export function MapProjectionModule(scene, params, services) {
 
       // Fade sphere reference lines during unfold
       group.children.forEach(c => {
-        if (c instanceof THREE.Line && c.material.color && (c.material.color.getHex() === 0xcc3333 || c.material.color.getHex() === 0xcc8833 || c.material.color.getHex() === 0xcc6633 || c.material.color.getHex() === 0x3366cc)) {
+        if (c instanceof THREE.Line && c.material.color && (c.material.color.getHex() === 0xcc3333 || c.material.color.getHex() === 0xcc8833 || c.material.color.getHex() === 0xcc6633 || c.material.color.getHex() === 0x4488ff)) {
           c.material.opacity = 0.6 * (1 - unfold)
         }
       })
