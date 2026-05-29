@@ -144,9 +144,8 @@ onBeforeUnmount(() => { engine?.dispose(); if (autoTimer) clearInterval(autoTime
 .auto-btn:hover { background: rgba(88,166,255,0.2); }
 .scrub-labels { display: flex; justify-content: space-between; padding: 0 2px; }
 .scrub-labels { overflow-x: auto; flex-wrap: nowrap; }
-.scrub-labels { min-height: 28px; align-items: center; }
-.scrub-labels span { font-size: 12px; color: #555; cursor: pointer; padding: 0 1px; white-space: nowrap; flex-shrink: 0; transition: color .15s; line-height: 28px; }
-.scrub-labels span.active { color: #58a6ff; font-weight: 700; transform: scale(1.7); transform-origin: center bottom; }
+.scrub-labels span { font-size: 12px; color: #555; cursor: pointer; padding: 0 1px; white-space: nowrap; flex-shrink: 0; }
+.scrub-labels span.active { color: #58a6ff; font-weight: 700; }
 .era-info { margin-top: 16px; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #0a0a0f; }
 .era-info h3 { margin: 0 0 8px; font-size: 14px; }
 .era-info p { margin: 0; font-size: 12px; color: #aaa; line-height: 1.6; }
