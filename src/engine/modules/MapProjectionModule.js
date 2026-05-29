@@ -96,26 +96,46 @@ PROJ_FN.albers = PROJ_FN.bonne
 PROJ_FN.lambert_conic = PROJ_FN.bonne
 
 const PROJECTIONS = [
-  { id: 'mercator', name: '墨卡托', en: 'Mercator', cat: '圆柱', prop: '等角' },
-  { id: 'transverse_mercator', name: '横轴墨卡托', en: 'Transverse Mercator', cat: '圆柱', prop: '等角' },
-  { id: 'equirectangular', name: '等距圆柱', en: 'Equirectangular', cat: '圆柱', prop: '等距' },
-  { id: 'gall_peters', name: '高尔-彼得斯', en: 'Gall–Peters', cat: '圆柱', prop: '等积' },
-  { id: 'mollweide', name: '摩尔维德', en: 'Mollweide', cat: '伪圆柱', prop: '等积' },
-  { id: 'sinusoidal', name: '正弦曲线', en: 'Sinusoidal', cat: '伪圆柱', prop: '等积' },
-  { id: 'robinson', name: '罗宾森', en: 'Robinson', cat: '伪圆柱', prop: '折衷' },
-  { id: 'winkel_tripel', name: '温克尔三重', en: 'Winkel Tripel', cat: '伪圆柱', prop: '折衷' },
-  { id: 'goode', name: '古德分瓣', en: 'Goode Homolosine', cat: '伪圆柱', prop: '等积' },
-  { id: 'eckert4', name: '埃克特 IV', en: 'Eckert IV', cat: '伪圆柱', prop: '等积' },
-  { id: 'van_der_grinten', name: '范德格林顿', en: 'Van der Grinten', cat: '伪圆柱', prop: '折衷' },
-  { id: 'aitoff', name: '艾托夫', en: 'Aitoff', cat: '伪方位', prop: '折衷' },
-  { id: 'hammer', name: '哈默', en: 'Hammer', cat: '伪方位', prop: '等积' },
-  { id: 'orthographic', name: '正射投影', en: 'Orthographic', cat: '方位', prop: '透视', flat: false },
-  { id: 'stereographic', name: '球极平面', en: 'Stereographic', cat: '方位', prop: '等角', flat: false },
-  { id: 'gnomonic', name: '日晷投影', en: 'Gnomonic', cat: '方位', prop: '大圆直线', flat: false },
-  { id: 'azimuthal_equidistant', name: '等距方位', en: 'Azimuthal Equidistant', cat: '方位', prop: '等距', flat: false },
-  { id: 'lambert_conic', name: '兰伯特等角圆锥', en: 'Lambert Conformal Conic', cat: '圆锥', prop: '等角' },
-  { id: 'albers', name: '阿尔伯斯等积圆锥', en: 'Albers Equal-Area Conic', cat: '圆锥', prop: '等积' },
-  { id: 'bonne', name: '彭纳投影', en: 'Bonne', cat: '圆锥', prop: '等积' },
+  { id: 'mercator', name: '墨卡托', en: 'Mercator', cat: '圆柱', prop: '等角',
+    desc: '圆柱面切赤道，经纬线正交。角度无变形，高纬面积剧烈放大。航海标配，Google Maps 沿用至今。' },
+  { id: 'transverse_mercator', name: '横轴墨卡托', en: 'Transverse Mercator', cat: '圆柱', prop: '等角',
+    desc: '圆柱横置切某经线，中央经线附近变形最小。UTM 与高斯-克吕格的基础，各国大比例尺地形图首选。' },
+  { id: 'equirectangular', name: '等距圆柱', en: 'Equirectangular', cat: '圆柱', prop: '等距',
+    desc: '经纬线等距网格，最简单投影。适合快速显示全球数据，计算机纹理映射的标准方式。' },
+  { id: 'gall_peters', name: '高尔-彼得斯', en: 'Gall–Peters', cat: '圆柱', prop: '等积',
+    desc: '圆柱割线于45°，面积保真。发展中国家面积不被低估，教科文组织曾推广用于公正展示全球。' },
+  { id: 'mollweide', name: '摩尔维德', en: 'Mollweide', cat: '伪圆柱', prop: '等积',
+    desc: '椭圆外形，面积保真，中央经线为直线。全球气候带、生物群落分布图的经典选择。' },
+  { id: 'sinusoidal', name: '正弦曲线', en: 'Sinusoidal', cat: '伪圆柱', prop: '等积',
+    desc: '纬线为平行直线，面积保真。赤道无变形，适合热带地区专题图。MODIS 卫星数据即用此投影。' },
+  { id: 'robinson', name: '罗宾森', en: 'Robinson', cat: '伪圆柱', prop: '折衷',
+    desc: '查表法拟合，视觉舒适。国家地理学会曾长期用于世界全图，教科书常用。' },
+  { id: 'winkel_tripel', name: '温克尔三重', en: 'Winkel Tripel', cat: '伪圆柱', prop: '折衷',
+    desc: '等距圆柱与艾托夫的算术平均，三者折衷。国家地理学会 1998 年起的世界地图标准。' },
+  { id: 'goode', name: '古德分瓣', en: 'Goode Homolosine', cat: '伪圆柱', prop: '等积',
+    desc: '摩尔维德+正弦曲线拼接，分瓣切开海洋。面积保真，大陆完整，适合全球土地利用图。' },
+  { id: 'eckert4', name: '埃克特 IV', en: 'Eckert IV', cat: '伪圆柱', prop: '等积',
+    desc: '椭圆外形，极点映射为半长轴一半的直线。面积保真，外形美观，常用于专题世界地图。' },
+  { id: 'van_der_grinten', name: '范德格林顿', en: 'Van der Grinten', cat: '伪圆柱', prop: '折衷',
+    desc: '全球投影在正圆内。美国国家地理学会 1922-1988 年标准世界地图，现已少见。' },
+  { id: 'aitoff', name: '艾托夫', en: 'Aitoff', cat: '伪方位', prop: '折衷',
+    desc: '横轴方位等距的数学改造，椭圆形。常用于天球图与全球概览，温克尔三重的前身。' },
+  { id: 'hammer', name: '哈默', en: 'Hammer', cat: '伪方位', prop: '等积',
+    desc: '兰伯特等积方位的横向改造。面积保真，外形椭圆，适合全球人口密度等专题图。' },
+  { id: 'orthographic', name: '正射投影', en: 'Orthographic', cat: '方位', prop: '透视', flat: false,
+    desc: '从无限远处透视地球，如太空中看地球。天然直观，适合科普与标志设计，不用于量测。' },
+  { id: 'stereographic', name: '球极平面', en: 'Stereographic', cat: '方位', prop: '等角', flat: false,
+    desc: '平面切极点，从对跖点投影。角度保真，适合极地导航与地质构造分析（赤平极射投影）。' },
+  { id: 'gnomonic', name: '日晷投影', en: 'Gnomonic', cat: '方位', prop: '大圆直线', flat: false,
+    desc: '从球心投影到切平面。大圆航线变成直线，航海航空中用于规划最短路径。' },
+  { id: 'azimuthal_equidistant', name: '等距方位', en: 'Azimuthal Equidistant', cat: '方位', prop: '等距', flat: false,
+    desc: '从中心点出发距离和方位角保真。联合国会徽即用此投影，适合无线电导航与导弹射程图。' },
+  { id: 'lambert_conic', name: '兰伯特等角圆锥', en: 'Lambert Conformal Conic', cat: '圆锥', prop: '等角',
+    desc: '圆锥面割两条标准纬线，角度保真。中纬度国家（中美俄加）航空图与地形图标配。' },
+  { id: 'albers', name: '阿尔伯斯等积圆锥', en: 'Albers Equal-Area Conic', cat: '圆锥', prop: '等积',
+    desc: '圆锥面割两条标准纬线，面积保真。美国地质调查局（USGS）大陆地图标准投影。' },
+  { id: 'bonne', name: '彭纳投影', en: 'Bonne', cat: '圆锥', prop: '等积',
+    desc: '伪圆锥投影，中央经线为直线，纬线同心圆弧。面积保真，外形呈心形，适合中纬度大陆图。' },
 ]
 const CATEGORIES = [...new Set(PROJECTIONS.map(p => p.cat))]
 
@@ -209,7 +229,9 @@ export function MapProjectionModule(scene, params, services) {
           current = 'reset'; target = 0
           if (labelSystem) {
             labelSystem.clearAll(scene)
-            labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.2, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
+            labelSystem.addToGroup(group, '原始状态 · 3D 球体', new THREE.Vector3(0, R + 1.4, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
+          labelSystem.addToGroup(group, '拖拽旋转 · 滚轮缩放 · 点击投影按钮展开', new THREE.Vector3(0, R + 1.05, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
+          labelSystem.addToGroup(group, '地球是一个近似的椭球体。将球面展开为平面必然产生变形，选择投影就是选择"容忍哪种变形"。', new THREE.Vector3(0, -R - 1.0, 0), { color: '#555', fontSize: '11px', fontWeight: '400', background: 'rgba(255,255,255,0.75)', whiteSpace: 'normal', maxWidth: '400px', padding: '6px 10px' })
           }
         } else {
           current = p.projection
@@ -220,8 +242,9 @@ export function MapProjectionModule(scene, params, services) {
           const proj = PROJECTIONS.find(x => x.id === p.projection)
           if (labelSystem && proj) {
             labelSystem.clearAll(scene)
-            labelSystem.addToGroup(group, `${proj.name} · ${proj.en}`, new THREE.Vector3(0, R + 1.2, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
-            labelSystem.addToGroup(group, `${proj.cat} · ${proj.prop}${proj.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 0.85, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
+            labelSystem.addToGroup(group, `${proj.name} · ${proj.en}`, new THREE.Vector3(0, R + 1.4, 0), { color: '#333', fontSize: '16px', fontWeight: '700', background: 'rgba(255,255,255,0.85)' })
+            labelSystem.addToGroup(group, `${proj.cat} · ${proj.prop}${proj.flat === false ? ' · 3D视图' : ''}`, new THREE.Vector3(0, R + 1.05, 0), { color: '#999', fontSize: '10px', background: 'rgba(255,255,255,0.6)' })
+            labelSystem.addToGroup(group, proj.desc, new THREE.Vector3(0, -R - 1.0, 0), { color: '#555', fontSize: '11px', fontWeight: '400', background: 'rgba(255,255,255,0.75)', whiteSpace: 'normal', maxWidth: '400px', padding: '6px 10px' })
           }
         }
       }
