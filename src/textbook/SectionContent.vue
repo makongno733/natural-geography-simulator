@@ -113,13 +113,13 @@
   <SandboxApp v-else-if="showSandbox" embedded @close="showSandbox = false" />
 
   <!-- 3D 地球视图 -->
-  <Earth3D v-else-if="showEarth3D" />
+  <Earth3D v-else-if="showEarth3D" :mode="moduleMode" />
 
   <!-- 3D 土壤剖面 -->
-  <SoilProfilePage v-else-if="showSoilProfile" />
+  <SoilProfilePage v-else-if="showSoilProfile" :mode="moduleMode" />
 
   <!-- 3D 大气模型视图 -->
-  <AtmosphereViewer v-else-if="showAtmo" />
+  <AtmosphereViewer v-else-if="showAtmo" :mode="moduleMode" />
 
   <!-- 3D 水循环视图 -->
   <WaterCycleView v-else-if="showWater" @close="showWater = false" />
@@ -167,22 +167,34 @@ const showWater = ref(false)
 const showDisaster = ref(false)
 const showMindMap = ref(false)
 const isLandformChapter = computed(() =>
-  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
+  gradeId.value === '高中' && (
+    (bookId.value === '必修第一册' && chapterId.value === '第四章') ||
+    (bookId.value === '选择性必修1' && chapterId.value === '第二章')
+  )
 )
 const isDisasterChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第六章'
 )
 const isEarthChapter = computed(() =>
-  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第一章'
+  gradeId.value === '高中' && (
+    (bookId.value === '必修第一册' && chapterId.value === '第一章') ||
+    (bookId.value === '选择性必修1' && chapterId.value === '第一章')
+  )
 )
 const isAtmoChapter = computed(() =>
-  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第二章'
+  gradeId.value === '高中' && (
+    (bookId.value === '必修第一册' && chapterId.value === '第二章') ||
+    (bookId.value === '选择性必修1' && chapterId.value === '第三章')
+  )
 )
 const isSoilChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第五章'
 )
 const isWaterChapter = computed(() =>
-  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第三章'
+  gradeId.value === '高中' && (
+    (bookId.value === '必修第一册' && chapterId.value === '第三章') ||
+    (bookId.value === '选择性必修1' && chapterId.value === '第四章')
+  )
 )
 
 const chapterData = ref(null)
@@ -218,6 +230,11 @@ const mindMapBranches = computed(() => {
 const gradeLevel = computed(() => {
   if (gradeId.value === '初中') return '初中'
   return '高中'
+})
+
+const moduleMode = computed(() => {
+  if (gradeLevel.value === '初中') return 'junior'
+  return level.value || 'simple'
 })
 
 const isGrouped = computed(() => {
