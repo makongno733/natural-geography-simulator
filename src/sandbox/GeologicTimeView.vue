@@ -104,9 +104,13 @@ function selectEra(i) {
 onMounted(async () => {
   await nextTick()
   if (!canvasRef.value) return
-  engine = new BaseScene(canvasRef.value, { bg: 0x1a1a2e, mode: 'simple', lightPreset: 'sunlit', autoRotate: false, shadows: true })
-  engine.loadModule(GeologicTimeModule, { mode: 'simple', era: currentEra.value })
-  window.addEventListener('resize', () => engine.resize())
+  try {
+    engine = new BaseScene(canvasRef.value, { bg: 0x1a1a2e, mode: 'simple', lightPreset: 'sunlit' })
+    engine.loadModule(GeologicTimeModule, { mode: 'simple', era: currentEra.value })
+    window.addEventListener('resize', () => engine.resize())
+  } catch(e) {
+    console.error('3D engine failed:', e)
+  }
 })
 
 onBeforeUnmount(() => { engine?.dispose(); if (autoTimer) clearInterval(autoTimer) })
