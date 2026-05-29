@@ -14,91 +14,7 @@
       <span>{{ sectionId }}</span>
     </div>
 
-    <div v-if="hasChapter3D" class="sandbox-toggle-bar chapter3d-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showChapter3D }]"
-        @click="showChapter3D = false"
-      >课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showChapter3D }]"
-        @click="showChapter3D = true"
-      >章节3D总览</button>
-      <span class="chapter3d-hint">{{ chapter3DRecipe.title }} · {{ chapter3DRecipe.subtitle }}</span>
-    </div>
-
-    <!-- 3D 沙盘切换（第四章地貌专用） -->
-    <div v-if="!showChapter3D && isLandformChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showSandbox }]"
-        @click="showSandbox = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showSandbox }]"
-        @click="showSandbox = true"
-      >🏔 3D 沙盘</button>
-    </div>
-
-    <!-- 3D 地球切换（第一章宇宙中的地球专用） -->
-    <div v-if="!showChapter3D && isEarthChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showEarth3D }]"
-        @click="showEarth3D = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showEarth3D }]"
-        @click="showEarth3D = true"
-      >🌍 3D 地球探索</button>
-    </div>
-
-    <!-- 3D 土壤剖面切换（第五章植被与土壤专用） -->
-    <div v-if="!showChapter3D && isSoilChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showSoilProfile }]"
-        @click="showSoilProfile = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showSoilProfile }]"
-        @click="showSoilProfile = true"
-      >🧪 3D 土壤剖面</button>
-    </div>
-
-    <!-- 3D 灾害模拟（第六章自然灾害专用） -->
-    <div v-if="!showChapter3D && isDisasterChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showDisaster }]"
-        @click="showDisaster = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showDisaster }]"
-        @click="showDisaster = true"
-      >🌀 3D 灾害模拟</button>
-    </div>
-
-    <!-- 3D 大气模型切换（第二章地球上的大气专用） -->
-    <div v-if="!showChapter3D && isAtmoChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showAtmo }]"
-        @click="showAtmo = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showAtmo }]"
-        @click="showAtmo = true"
-      >🌍 3D 大气模型</button>
-    </div>
-
-    <!-- 3D 水循环切换（第三章地球上的水专用） -->
-    <div v-if="!showChapter3D && isWaterChapter" class="sandbox-toggle-bar">
-      <button
-        :class="['sandbox-toggle', { active: !showWater }]"
-        @click="showWater = false"
-      >📖 课文</button>
-      <button
-        :class="['sandbox-toggle', { active: showWater }]"
-        @click="showWater = true"
-      >💧 3D 水循环</button>
-    </div>
-
-    <template v-if="!showChapter3D && !showSandbox && !showEarth3D && !showSoilProfile && !showAtmo && !showWater && !showDisaster">
+    <template v-if="!showMindMap && !showSandbox && !showEarth3D && !showSoilProfile && !showAtmo && !showWater && !showDisaster">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -124,7 +40,7 @@
             <p>{{ classroomSummary }}</p>
           </div>
           <div class="brief-actions">
-            <button v-if="hasChapter3D" class="primary-action" @click="showChapter3D = true">打开章节3D</button>
+            <button v-if="isGrouped" class="primary-action" @click="showMindMap = true">打开思维导图</button>
             <button v-if="isEarthChapter" class="ghost-action" @click="showEarth3D = true">专项地球模型</button>
             <button v-if="isAtmoChapter" class="ghost-action" @click="showAtmo = true">专项大气模型</button>
             <button v-if="isWaterChapter" class="ghost-action" @click="showWater = true">专项水循环</button>
@@ -183,11 +99,14 @@
     </div>
   </template>
 
-  <!-- 通用章节 3D 总览 -->
-  <Chapter3DViewer
-    v-else-if="showChapter3D && chapter3DRecipe"
-    :recipe="chapter3DRecipe"
-    @close="showChapter3D = false"
+  <!-- 思维导图视图 -->
+  <MindMapViewer
+    v-else-if="showMindMap && isGrouped"
+    :conceptDefinitions="conceptDefinitions"
+    :sectionTitle="sectionData?.title || ''"
+    :chapterTitle="chapterData?.title || ''"
+    :gradeLevel="gradeLevel"
+    @close="showMindMap = false"
   />
 
   <!-- 3D 沙盘视图 -->
@@ -221,13 +140,12 @@ import { ref, computed, watch, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
-import { getChapter3DRecipe } from './data/chapter3dRegistry.js'
 
 const SandboxApp = defineAsyncComponent(() => import('../sandbox/SandboxApp.vue'))
 const Earth3D = defineAsyncComponent(() => import('../sandbox/Earth3D.vue'))
 const SoilProfilePage = defineAsyncComponent(() => import('../soil-profile/SoilProfilePage.vue'))
 const AtmosphereViewer = defineAsyncComponent(() => import('./components/AtmosphereViewer.vue'))
-const Chapter3DViewer = defineAsyncComponent(() => import('./components/Chapter3DViewer.vue'))
+const MindMapViewer = defineAsyncComponent(() => import('./components/MindMapViewer.vue'))
 const WaterCycleView = defineAsyncComponent(() => import('../engine/WaterCycleView.vue'))
 const DisasterSandbox = defineAsyncComponent(() => import('../sandbox/DisasterSandbox.vue'))
 
@@ -243,7 +161,7 @@ const showSoilProfile = ref(false)
 const showAtmo = ref(false)
 const showWater = ref(false)
 const showDisaster = ref(false)
-const showChapter3D = ref(false)
+const showMindMap = ref(false)
 const isLandformChapter = computed(() =>
   gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第四章'
 )
@@ -266,36 +184,30 @@ const isWaterChapter = computed(() =>
 const chapterData = ref(null)
 const sectionData = ref(null)
 
-const chapter3DRecipe = computed(() => getChapter3DRecipe({
-  grade: gradeId.value,
-  book: bookId.value,
-  chapter: chapterId.value,
-  chapterTitle: chapterData.value?.title,
-  section: sectionId.value,
-  sectionTitle: sectionData.value?.title,
-}))
-const hasChapter3D = computed(() => Boolean(chapter3DRecipe.value))
 const teachingKeyPoints = computed(() =>
   extraContent.value?.keyPoints ||
   sectionData.value?.content?.keyPoints ||
   []
 )
 const classroomSummary = computed(() => {
-  const recipe = chapter3DRecipe.value
-  const chapterTitle = chapterData.value?.title || recipe?.title || '本章'
+  const chapterTitle = chapterData.value?.title || '本章'
   const sectionTitle = sectionData.value?.title || '本节'
-  const nodes = recipe?.nodes?.slice(0, 3).join('、') || teachingKeyPoints.value.slice(0, 3).join('、') || '核心概念、过程机制、区域应用'
-  const flows = recipe?.flows?.slice(0, 2).join('、') || '地理过程与人地关系'
-  return `本节放在“${chapterTitle}”的知识框架下理解，重点抓住“${sectionTitle}”中的${nodes}，并沿着“条件—过程—结果—应用”的顺序解释${flows}。课堂上先用3D模型建立空间印象，再用思维导图完成知识收束。`
+  const conceptNames = conceptEntries.value.slice(0, 3).map(([n]) => n).join('、') || '核心概念、过程机制、区域应用'
+  return `本节放在”${chapterTitle}”的知识框架下理解，重点抓住”${sectionTitle}”中的${conceptNames}，并沿着”条件—过程—结果—应用”的顺序解释相关地理机制。课堂上先阅读概念定义建立知识框架，再用思维导图完成知识收束。`
 })
 const mindMapBranches = computed(() => {
-  const recipe = chapter3DRecipe.value
+  if (isGrouped.value && conceptDefinitions.value) {
+    return Object.entries(conceptDefinitions.value).map(([group, concepts]) => ({
+      title: group,
+      items: Object.keys(concepts).slice(0, 6)
+    })).filter(b => b.items.length)
+  }
   const fallbackPoints = teachingKeyPoints.value.slice(0, 4)
   return [
-    { title: '核心概念', items: recipe?.nodes?.slice(0, 4) || fallbackPoints },
-    { title: '过程机制', items: recipe?.flows?.slice(0, 4) || fallbackPoints },
-    { title: '空间层次', items: recipe?.layers?.slice(0, 4) || [chapterData.value?.title, sectionData.value?.title].filter(Boolean) },
-    { title: '判读迁移', items: recipe?.metrics?.slice(0, 4) || ['读图', '解释', '迁移'] },
+    { title: '核心概念', items: fallbackPoints },
+    { title: '过程机制', items: fallbackPoints },
+    { title: '空间层次', items: [chapterData.value?.title, sectionData.value?.title].filter(Boolean) },
+    { title: '判读迁移', items: ['读图', '解释', '迁移'] },
   ].filter(branch => branch.items?.length)
 })
 
@@ -342,7 +254,7 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   showAtmo.value = false
   showWater.value = false
   showDisaster.value = false
-  showChapter3D.value = false
+  showMindMap.value = false
   loadedContent.value = null
 
   const [chapter, section, content] = await Promise.all([
@@ -577,54 +489,6 @@ const nextSection = computed(() => {
   white-space: pre-line;
 }
 
-.sandbox-toggle-bar {
-  max-width: 1100px;
-  margin: 0 auto 10px;
-  padding: 0 20px;
-  display: flex;
-  gap: 2px;
-}
-.sandbox-toggle {
-  border: 1px solid rgba(100, 122, 63, 0.38);
-  border-radius: 6px 6px 0 0;
-  padding: 6px 16px;
-  font-size: 13px;
-  background: rgba(246, 250, 228, 0.76);
-  color: var(--button-green-ink);
-  cursor: pointer;
-  transition: all 0.15s;
-  border-bottom: 1px solid transparent;
-  margin-bottom: -1px;
-}
-.sandbox-toggle.active {
-  background: linear-gradient(180deg, rgba(230, 239, 200, 0.98), rgba(203, 219, 157, 0.94));
-  border-bottom-color: rgba(230, 239, 200, 0.98);
-  color: var(--button-green-ink);
-  font-weight: 600;
-}
-.sandbox-toggle:hover:not(.active) {
-  background: rgba(220, 232, 184, 0.76);
-}
-.sandbox-toggle:not(button) {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-.chapter3d-toggle-bar {
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-}
-.chapter3d-hint {
-  min-width: 0;
-  overflow: hidden;
-  color: #7d5a4b;
-  font-size: 12px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  padding-left: 8px;
-}
-
 @media (max-width: 960px) {
   .content-layout { grid-template-columns: 180px 1fr; gap: 14px; }
   .lesson-brief {
@@ -648,13 +512,6 @@ const nextSection = computed(() => {
   .content-layout { grid-template-columns: 1fr; }
   .mindmap-branches {
     grid-template-columns: 1fr;
-  }
-  .chapter3d-toggle-bar {
-    flex-wrap: wrap;
-  }
-  .chapter3d-hint {
-    width: 100%;
-    padding-left: 0;
   }
 }
 </style>
