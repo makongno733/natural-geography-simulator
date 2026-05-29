@@ -45,7 +45,7 @@ function switchProj(id) {
 onMounted(async () => {
   await nextTick()
   if (!canvasRef.value) return
-  engine = new BaseScene(canvasRef.value, { bg: 0xf5f0e8, mode: 'simple', lightPreset: 'studio', labels: false, autoRotate: false, shadows: false })
+  engine = new BaseScene(canvasRef.value, { bg: 0xf5f0e8, mode: 'simple', lightPreset: 'studio', autoRotate: false, shadows: false })
   engine.loadModule(MapProjectionModule, { mode: 'simple', projection: 'reset' })
   engine.setAutoRotate(false)
   window.addEventListener('resize', () => engine.resize())
