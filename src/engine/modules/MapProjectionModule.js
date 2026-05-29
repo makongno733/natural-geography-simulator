@@ -9,23 +9,22 @@ function earthTexture(size) {
   const ctx = c.getContext('2d')
   ctx.fillStyle = '#3a7cc3'; ctx.fillRect(0, 0, c.width, c.height)
 
-  const land = (polys) => { ctx.fillStyle = '#5a9e3e'; polys.forEach(p => { ctx.beginPath(); p.forEach(([lo, la], i) => { const x = (lo + 180) / 360 * c.width; const y = (90 - la) / 180 * c.height; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) }); ctx.closePath(); ctx.fill() }) }
-  const green = (polys) => { ctx.fillStyle = '#7ab86a'; polys.forEach(p => { ctx.beginPath(); p.forEach(([lo, la], i) => { const x = (lo + 180) / 360 * c.width; const y = (90 - la) / 180 * c.height; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) }); ctx.closePath(); ctx.fill() }) }
-
-  land([[[-17,15],[10,16],[18,18],[22,16],[26,16],[30,20],[34,25],[34,30],[32,32],[28,33],[22,34],[14,34],[6,33],[0,30],[-5,27],[-12,24],[-18,22],[-25,20],[-33,18],[-35,20],[-32,17],[-25,16],[-17,15]]])
-  land([[[-10,36],[5,39],[15,44],[30,50],[45,54],[60,56],[75,57],[90,58],[105,58],[120,57],[135,54],[145,50],[150,50],[160,55],[170,60],[180,65],[180,72],[165,72],[145,70],[120,68],[95,66],[72,65],[58,62],[45,58],[32,55],[20,52],[8,48],[-3,44],[-10,36]]])
-  green([[[68,10],[72,18],[76,30],[79,35],[81,32],[80,24],[80,16],[78,12],[75,8],[70,8],[68,10]]])
-  land([[[-135,55],[-140,62],[-148,70],[-155,72],[-162,68],[-166,62],[-162,52],[-155,42],[-145,36],[-135,32],[-125,26],[-115,22],[-105,18],[-95,15],[-86,12],[-80,8],[-76,12],[-72,18],[-68,25],[-62,32],[-55,38],[-48,44],[-42,50],[-36,55],[-30,62],[-24,68],[-18,76],[-10,82],[0,86],[15,84],[30,80],[42,74],[55,67],[66,60],[76,55],[86,55],[100,50],[98,48],[86,48],[76,52],[-135,55]]])
-  land([[[-78,-2],[-72,8],[-68,2],[-60,-6],[-50,-10],[-40,-12],[-28,-18],[-18,-24],[-8,-30],[2,-36],[12,-42],[22,-48],[32,-54],[42,-58],[50,-62],[55,-68],[58,-74],[54,-76],[48,-72],[40,-68],[32,-64],[22,-60],[14,-55],[6,-50],[-2,-44],[-8,-38],[-14,-30],[-20,-22],[-28,-16],[-38,-12],[-48,-8],[-58,-4],[-68,4],[-76,4],[-78,-2]]])
-  land([[[115,-14],[118,-20],[124,-26],[132,-32],[138,-36],[142,-34],[145,-26],[148,-18],[150,-10],[152,-14],[152,-22],[148,-32],[142,-38],[135,-38],[128,-32],[120,-24],[115,-18],[115,-14]]])
-  land([[[-52,60],[-42,64],[-30,70],[-22,78],[-18,82],[-28,84],[-42,82],[-52,76],[-60,68],[-64,60],[-52,60]]])
-  land([[[130,32],[135,38],[140,42],[144,41],[144,36],[140,31],[135,30],[130,32]]])
-  land([[[44,-14],[47,-20],[48,-26],[46,-26],[43,-20],[42,-14],[44,-14]]])
-  land([[[166,-36],[170,-42],[174,-46],[176,-48],[174,-46],[170,-42],[166,-38],[166,-36]]])
-  land([[[-180,-65],[-120,-70],[-60,-76],[0,-82],[60,-76],[120,-70],[180,-65],[120,-72],[60,-78],[0,-80],[-60,-74],[-120,-68],[-180,-65]]])
-  land([[[95,0],[105,6],[115,4],[120,-4],[114,-6],[105,-4],[98,-3],[95,0]]])
-  land([[[32,29],[38,32],[45,38],[54,40],[58,36],[54,32],[46,28],[38,24],[32,26],[32,29]]])
-  land([[[-86,12],[-84,18],[-80,22],[-78,20],[-82,12],[-86,8],[-86,12]]])
+  const draw = (color) => (polys) => { ctx.fillStyle = color; polys.forEach(p => { ctx.beginPath(); p.forEach(([lo, la], i) => { const x = (lo + 180) / 360 * c.width; const y = (90 - la) / 180 * c.height; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) }); ctx.closePath(); ctx.fill() }) }
+  const L = draw('#5a9e3e'), G = draw('#7ab86a')
+  L([[[-17,15],[10,16],[18,18],[22,16],[26,16],[30,20],[34,25],[34,30],[32,32],[28,33],[22,34],[14,34],[6,33],[0,30],[-5,27],[-12,24],[-18,22],[-25,20],[-33,18],[-35,20],[-32,17],[-25,16],[-17,15]]])
+  L([[[-10,36],[5,39],[15,44],[30,50],[45,54],[60,56],[75,57],[90,58],[105,58],[120,57],[135,54],[145,50],[150,50],[160,55],[170,60],[180,65],[180,72],[165,72],[145,70],[120,68],[95,66],[72,65],[58,62],[45,58],[32,55],[20,52],[8,48],[-3,44],[-10,36]]])
+  G([[[68,10],[72,18],[76,30],[79,35],[81,32],[80,24],[80,16],[78,12],[75,8],[70,8],[68,10]]])
+  L([[[-135,55],[-140,62],[-148,70],[-155,72],[-162,68],[-166,62],[-162,52],[-155,42],[-145,36],[-135,32],[-125,26],[-115,22],[-105,18],[-95,15],[-86,12],[-80,8],[-76,12],[-72,18],[-68,25],[-62,32],[-55,38],[-48,44],[-42,50],[-36,55],[-30,62],[-24,68],[-18,76],[-10,82],[0,86],[15,84],[30,80],[42,74],[55,67],[66,60],[76,55],[86,55],[100,50],[98,48],[86,48],[76,52],[-135,55]]])
+  L([[[-78,-2],[-72,8],[-68,2],[-60,-6],[-50,-10],[-40,-12],[-28,-18],[-18,-24],[-8,-30],[2,-36],[12,-42],[22,-48],[32,-54],[42,-58],[50,-62],[55,-68],[58,-74],[54,-76],[48,-72],[40,-68],[32,-64],[22,-60],[14,-55],[6,-50],[-2,-44],[-8,-38],[-14,-30],[-20,-22],[-28,-16],[-38,-12],[-48,-8],[-58,-4],[-68,4],[-76,4],[-78,-2]]])
+  L([[[115,-14],[118,-20],[124,-26],[132,-32],[138,-36],[142,-34],[145,-26],[148,-18],[150,-10],[152,-14],[152,-22],[148,-32],[142,-38],[135,-38],[128,-32],[120,-24],[115,-18],[115,-14]]])
+  L([[[-52,60],[-42,64],[-30,70],[-22,78],[-18,82],[-28,84],[-42,82],[-52,76],[-60,68],[-64,60],[-52,60]]])
+  L([[[130,32],[135,38],[140,42],[144,41],[144,36],[140,31],[135,30],[130,32]]])
+  L([[[44,-14],[47,-20],[48,-26],[46,-26],[43,-20],[42,-14],[44,-14]]])
+  L([[[166,-36],[170,-42],[174,-46],[176,-48],[174,-46],[170,-42],[166,-38],[166,-36]]])
+  L([[[-180,-65],[-120,-70],[-60,-76],[0,-82],[60,-76],[120,-70],[180,-65],[120,-72],[60,-78],[0,-80],[-60,-74],[-120,-68],[-180,-65]]])
+  L([[[95,0],[105,6],[115,4],[120,-4],[114,-6],[105,-4],[98,-3],[95,0]]])
+  L([[[32,29],[38,32],[45,38],[54,40],[58,36],[54,32],[46,28],[38,24],[32,26],[32,29]]])
+  L([[[-86,12],[-84,18],[-80,22],[-78,20],[-82,12],[-86,8],[-86,12]]])
 
   // Ice caps
   ctx.fillStyle = 'rgba(255,255,255,0.5)'
@@ -127,64 +126,17 @@ export function MapProjectionModule(scene, params, services) {
 
   function buildFlatGrid(proj) {
     flatGridGroup.clear()
-    const fn = proj.fn || PF.equirectangular
-    const S = R * 2.2
-    const maxLat = 85 * Math.PI / 180
-    const lineMat = (color, opacity) => new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false, linewidth: 1 })
-    const fLabel = (color) => ({ color: '#' + color.toString(16).padStart(6, '0'), fontSize: '10px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '2px 5px', borderRadius: '3px' })
-
-    const latLines = [
-      { deg: 0, color: 0xcc3333, label: '0°' },
-      { deg: 23.5, color: 0xcc8833, label: '23.5°N' },
-      { deg: -23.5, color: 0xcc8833, label: '23.5°S' },
-      { deg: 66.5, color: 0xcc6633, label: '66.5°N' },
-      { deg: -66.5, color: 0xcc6633, label: '66.5°S' },
-    ]
-    latLines.forEach(({ deg, color, label }) => {
-      const lat = Math.max(-maxLat, Math.min(maxLat, deg * Math.PI / 180))
-      const pts = []
-      for (let i = 0; i <= 200; i++) {
-        const lon = (i / 200 - 0.5) * 2 * Math.PI
-        try {
-          const [px, py] = fn(lat, lon)
-          pts.push(new THREE.Vector3((px || 0) * S, (py || 0) * S * 0.55, 0))
-        } catch (_) {}
-      }
-      if (pts.length > 1) {
-        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(color, 0.4))
-        flatGridGroup.add(line)
-      }
-      if (label && labelSystem && pts.length > 10) {
-        const mid = pts[Math.floor(pts.length / 2)]
-        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0, 0.05, 0.01)), fLabel(color))
-      }
-    })
-
-    const lonLines = [
-      { deg: 0, color: 0x3366cc, label: '0°' },
-      { deg: 90, color: 0x3366cc, label: '90°E' },
-      { deg: -90, color: 0x3366cc, label: '90°W' },
-      { deg: 180, color: 0x3366cc, label: '180°' },
-    ]
-    lonLines.forEach(({ deg, color, label }) => {
-      const lon = deg * Math.PI / 180
-      const pts = []
-      for (let i = 0; i <= 100; i++) {
-        const lat = (i / 100 - 0.5) * 2 * maxLat
-        try {
-          const [px, py] = fn(lat, lon)
-          pts.push(new THREE.Vector3((px || 0) * S, (py || 0) * S * 0.55, 0))
-        } catch (_) {}
-      }
-      if (pts.length > 1) {
-        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(color, 0.4))
-        flatGridGroup.add(line)
-      }
-      if (label && labelSystem && pts.length > 5) {
-        const mid = pts[Math.floor(pts.length * 0.6)]
-        labelSystem.addToGroup(flatGridGroup, label, mid.clone().add(new THREE.Vector3(0.08, 0, 0.01)), fLabel(color))
-      }
-    })
+    const fn = proj.fn || PF.equirectangular, S = R * 2.2, mL = 85 * Math.PI / 180
+    const lM = (c) => new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.4, depthTest: false, depthWrite: false })
+    const lb = (c) => ({ color: '#' + c.toString(16).padStart(6, '0'), fontSize: '10px', fontWeight: '700', background: 'rgba(255,255,255,0.95)', padding: '2px 5px', borderRadius: '3px' })
+    const add = (pts, color, label, off) => {
+      if (pts.length < 2) return
+      flatGridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lM(color)))
+      if (label && labelSystem) { const m = pts[Math.floor(pts.length * 0.55)]; labelSystem.addToGroup(flatGridGroup, label, m.clone().add(off || new THREE.Vector3(0, 0.05, 0)), lb(color)) }
+    }
+    const latCols = { 0: 0xcc3333, 23.5: 0xcc8833, '-23.5': 0xcc8833, 66.5: 0xcc6633, '-66.5': 0xcc6633 }
+    ;[0, 23.5, -23.5, 66.5, -66.5].forEach(d => { const la = Math.max(-mL, Math.min(mL, d * Math.PI / 180)), p = []; for (let i = 0; i <= 160; i++) { try { const [x, y] = fn(la, (i / 160 - 0.5) * 2 * Math.PI); p.push(new THREE.Vector3((x || 0) * S, (y || 0) * S * 0.55, 0)) } catch (_) {} }; add(p, latCols[String(d)], d === 0 ? '0°' : `${Math.abs(d)}°${d > 0 ? 'N' : 'S'}`) })
+    ;[0, 90, -90, 180].forEach(d => { const lo = d * Math.PI / 180, p = []; for (let i = 0; i <= 100; i++) { try { const [x, y] = fn((i / 100 - 0.5) * 2 * mL, lo); p.push(new THREE.Vector3((x || 0) * S, (y || 0) * S * 0.55, 0)) } catch (_) {} }; add(p, 0x3366cc, d === 0 ? '0°' : `${Math.abs(d)}°${d > 0 ? 'E' : 'W'}`, new THREE.Vector3(0.08, 0, 0)) })
   }
 
   // ── Lat/lon reference lines on sphere ──
