@@ -138,9 +138,10 @@ export function GeologicTimeModule(scene,params,services){
 
   scene.background=new THREE.Color(0x0a0a14)
 
-  // Transparent ocean plane (large, no square edges visible)
-  const oceanGeo=new THREE.CircleGeometry(R*1.2,128)
-  const ocean=new THREE.Mesh(oceanGeo,new THREE.MeshStandardMaterial({color:0x2266aa,roughness:.2,metalness:.1,transparent:true,opacity:.7,depthWrite:false}))
+  // Transparent ocean — large blue disc with subtle animation
+  const oceanGeo=new THREE.CircleGeometry(R*1.3,128)
+  const oceanMat=new THREE.MeshBasicMaterial({color:0x3377cc,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide})
+  const ocean=new THREE.Mesh(oceanGeo,oceanMat)
   ocean.rotation.x=-Math.PI/2;ocean.position.y=-.35;group.add(ocean)
 
   // Terrain (built once)
@@ -153,8 +154,13 @@ export function GeologicTimeModule(scene,params,services){
   const atmoMat=new THREE.MeshBasicMaterial({color:0x88ccff,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false})
   const atmo=new THREE.Mesh(atmoGeo,atmoMat);atmo.position.y=.3;group.add(atmo)
 
-  // Cloud particles
-  const cloudPts=new THREE.Points(new THREE.BufferGeometry(),new THREE.PointsMaterial({color:0xffffff,size:.06,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}))
+  // Cloud particles — pre-allocate with initial data
+  const cloudGeo=new THREE.BufferGeometry()
+  const initClouds=new Float32Array(300*3)
+  for(let i=0;i<300;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2,rr=R*.8+Math.random()*.4;initClouds[i*3]=rr*Math.sin(phi)*Math.cos(theta);initClouds[i*3+1]=rr*Math.cos(phi)+.3;initClouds[i*3+2]=rr*Math.sin(phi)*Math.sin(theta)}
+  cloudGeo.setAttribute('position',new THREE.BufferAttribute(initClouds,3))
+  const cloudMat=new THREE.PointsMaterial({color:0xffffff,size:.08,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false})
+  const cloudPts=new THREE.Points(cloudGeo,cloudMat)
   group.add(cloudPts)
 
   // Cross-section wedge
@@ -179,6 +185,10 @@ export function GeologicTimeModule(scene,params,services){
     labelSystem.addToGroup(group,`${e.eon}/${e.era} · ${e.start}—${e.end===0?'今':e.end} Ma`,new THREE.Vector3(0,2.85,0),{color:'#aaa',fontSize:'11px',background:'rgba(0,0,0,0.5)',padding:'3px 10px',borderRadius:'4px'})
     labelSystem.addToGroup(group,e.desc,new THREE.Vector3(0,-3.5,0),{color:'#ddd',fontSize:'13px',background:'rgba(0,0,0,0.65)',padding:'8px 14px',borderRadius:'6px',whiteSpace:'normal',maxWidth:'500px',lineHeight:'1.5'})
     labelSystem.addToGroup(group,'◀ 地层剖面',new THREE.Vector3(-R-.8,.5,0),{color:'#ffaa44',fontSize:'12px',fontWeight:'700',background:'rgba(0,0,0,0.6)'})
+    // Ocean + cloud evolution summary
+    const oceanDesc=eraIdx<2?'海洋尚未形成':eraIdx<5?'海洋富铁呈绿色，逐渐氧化':eraIdx<15?'全球海洋，温暖浅海广布':'现代洋流体系形成'
+    const cloudDesc=eraIdx<2?'无水无云，大气为H₂/He/CH₄':eraIdx<5?'水汽云出现，大气仍缺氧':eraIdx<10?'云量增加，氧气上升':'现代云层与水循环'
+    labelSystem.addToGroup(group,`🌊 海: ${oceanDesc}\n☁️ 云: ${cloudDesc}`,new THREE.Vector3(-R-.8,-1.4,0),{color:'#88ccff',fontSize:'11px',background:'rgba(0,0,0,0.55)',padding:'6px 10px',borderRadius:'4px',whiteSpace:'pre-line',lineHeight:'1.4'})
   }
   updateLabels()
 
@@ -188,9 +198,40 @@ export function GeologicTimeModule(scene,params,services){
       if(p.era!==undefined&&p.era!==eraIdx){fromIdx=eraIdx;eraIdx=p.era;transT=0;impacts.visible=eraIdx===N-1;rings.forEach((r,i)=>{r.material.opacity=i===eraIdx?0.8:0.12});updateLabels()}
     },
     update(dt){
-      if(transT<1){transT=Math.min(1,transT+dt*2);const pr=eraParams(fromIdx,eraIdx,transT);updateCounter++;if(updateCounter%3===0)updateTerrainColors(terrainGeo,pr);if(updateCounter%6===0){atmo.material.color.setHSL(pr.atmoHue,.6,pr.atmoLight);atmo.material.opacity=pr.atmoOp;const cc=Math.floor(pr.cloudOp*600);if(cloudPts.geometry.attributes.position){const cp=cloudPts.geometry.attributes.position;if(cp.count!==cc){const np=new Float32Array(cc*3);for(let i=0;i<cc;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2,rr=R*.9+Math.random()*.5;np[i*3]=rr*Math.sin(phi)*Math.cos(theta);np[i*3+1]=rr*Math.cos(phi)+.3;np[i*3+2]=rr*Math.sin(phi)*Math.sin(theta)}cloudPts.geometry.setAttribute('position',new THREE.BufferAttribute(np,3))}}else{const np=new Float32Array(cc*3);for(let i=0;i<cc;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2,rr=R*.9+Math.random()*.5;np[i*3]=rr*Math.sin(phi)*Math.cos(theta);np[i*3+1]=rr*Math.cos(phi)+.3;np[i*3+2]=rr*Math.sin(phi)*Math.sin(theta)}cloudPts.geometry.setAttribute('position',new THREE.BufferAttribute(np,3))}terrainMesh.material.roughness=pr.roughness;}}
+      updateCounter++
+      if(transT<1){
+        transT=Math.min(1,transT+dt*2)
+        const pr=eraParams(fromIdx,eraIdx,transT)
+        // Update terrain colors every 3 frames
+        if(updateCounter%3===0)updateTerrainColors(terrainGeo,pr)
+        // Update atmo + clouds every 8 frames
+        if(updateCounter%8===0){
+          atmo.material.color.setHSL(pr.atmoHue,.6,pr.atmoLight)
+          atmo.material.opacity=pr.atmoOp
+          // Cloud density changes with era
+          const count=Math.floor(pr.cloudOp*800)
+          const cp=cloudPts.geometry.attributes.position
+          if(cp.count!==count&&count>0){
+            const np=new Float32Array(count*3)
+            for(let i=0;i<count;i++){
+              const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2,rr=R*.8+Math.random()*.5
+              np[i*3]=rr*Math.sin(phi)*Math.cos(theta)
+              np[i*3+1]=rr*Math.cos(phi)+.3
+              np[i*3+2]=rr*Math.sin(phi)*Math.sin(theta)
+            }
+            cloudPts.geometry.setAttribute('position',new THREE.BufferAttribute(np,3))
+          }
+          cloudMat.opacity=.15+pr.cloudOp*.7
+          terrainMesh.material.roughness=pr.roughness
+          // Ocean color shifts with era
+          oceanMat.color.setRGB(.15+pr.landFrac*.1,.35+pr.landFrac*.15,.55+pr.landFrac*.2)
+          oceanMat.opacity=.3+pr.landFrac*.4
+        }
+      }
+      // Animate human impact dots
       impacts.children.forEach(c=>{if(c.material?.blending===THREE.AdditiveBlending)c.material.opacity=.3+Math.sin(Date.now()*.003)*.15})
-      cloudPts.rotation.y+=dt*.02
+      // Rotate clouds slowly
+      cloudPts.rotation.y+=dt*.015
     },
     dispose(){},
   }
