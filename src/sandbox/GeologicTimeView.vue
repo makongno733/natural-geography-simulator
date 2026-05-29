@@ -134,9 +134,9 @@ onBeforeUnmount(() => { engine?.dispose(); if (autoTimer) clearInterval(autoTime
 .tl-name { font-size: 13px; color: #ddd; font-weight: 600; }
 .tl-en { font-size: 10px; color: #666; flex: 1; }
 .tl-time { font-size: 10px; color: #888; }
-.time-scrubber { padding: 10px 16px 2px; }
-.scrub-row { display: flex; gap: 8px; align-items: center; }
-.scrubber { flex: 1; accent-color: #58a6ff; height: 4px; cursor: pointer; }
+.time-scrubber { padding: 10px 16px 8px; }
+.scrub-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.scrubber { flex: 1; accent-color: #58a6ff; height: 6px; cursor: pointer; }
 .auto-btn {
   padding: 4px 10px; border: 1px solid #58a6ff; border-radius: 4px;
   background: rgba(88,166,255,0.1); color: #58a6ff; font-size: 14px; cursor: pointer;
