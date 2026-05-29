@@ -11,6 +11,7 @@ const SectionContent = () => import('./textbook/SectionContent.vue')
 const Earth3D = () => import('./sandbox/Earth3D.vue')
 const DisasterSandbox = () => import('./sandbox/DisasterSandbox.vue')
 const MapProjectionView = () => import('./sandbox/MapProjectionView.vue')
+const GeologicTimeView = () => import('./sandbox/GeologicTimeView.vue')
 
 const ChapterRedirect = {
   name: 'ChapterRedirect',
@@ -43,6 +44,7 @@ const routes = [
   { path: '/earth3d', name: 'earth3d', component: Earth3D },
   { path: '/disasters', name: 'disasters', component: DisasterSandbox },
   { path: '/map', name: 'map', component: MapProjectionView },
+  { path: '/geo', name: 'geo', component: GeologicTimeView },
   { path: '/textbook', redirect: '/' },
   { path: '/:grade', name: 'grade', component: BookSelect },
   { path: '/:grade/:book', name: 'book', component: ChapterList },
