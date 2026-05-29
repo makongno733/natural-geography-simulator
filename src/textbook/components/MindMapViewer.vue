@@ -131,6 +131,7 @@ const svgH = computed(() => totalH.value)
   max-width: 960px;
   margin: 0 auto;
   padding: 10px 16px 24px;
+  overflow: hidden;
 }
 .mindmap-topbar {
   text-align: center;
@@ -154,7 +155,14 @@ const svgH = computed(() => totalH.value)
     linear-gradient(135deg, #f7fafd 0%, #eef5fa 40%, #e6f0f7 100%);
   box-shadow: inset 0 0 60px rgba(150,180,210,0.06), 0 2px 12px rgba(100,140,170,0.08);
   padding: 20px 16px 16px;
-  overflow-x: auto;
+  overflow: hidden;
 }
-.mindmap-svg { width: 100%; min-width: 620px; display: block; }
+.mindmap-svg { width: 100%; display: block; }
+@media (max-width: 720px) {
+  .mindmap-shell { padding: 6px 8px 16px; }
+  .mindmap-topbar-title { font-size: 16px; }
+  .mindmap-topbar-close { position: static; display: block; margin-top: 6px; }
+  .mindmap-paper { padding: 10px 6px; overflow-x: auto; }
+  .mindmap-svg { min-width: 520px; }
+}
 </style>

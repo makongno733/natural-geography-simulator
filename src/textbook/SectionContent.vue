@@ -129,7 +129,10 @@
 
   </div>
 
-  <div v-if="!sectionData" class="page-shell not-found">
+  <div v-if="loading" class="page-shell not-found">
+    <p>加载中...</p>
+  </div>
+  <div v-else-if="!sectionData" class="page-shell not-found">
     <p>未找到该节内容</p>
     <router-link to="/">返回首页</router-link>
   </div>
@@ -155,6 +158,7 @@ const bookId = computed(() => route.params.book)
 const chapterId = computed(() => route.params.chapter)
 const sectionId = computed(() => route.params.section)
 
+const loading = ref(true)
 const showSandbox = ref(false)
 const showEarth3D = ref(false)
 const showSoilProfile = ref(false)
@@ -256,6 +260,7 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   showDisaster.value = false
   showMindMap.value = false
   loadedContent.value = null
+  loading.value = true
 
   const [chapter, section, content] = await Promise.all([
     getChapter(gradeId.value, bookId.value, chapterId.value),
@@ -265,8 +270,8 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
 
   chapterData.value = chapter
   sectionData.value = section
-
   loadedContent.value = content
+  loading.value = false
 }, { immediate: true })
 
 const prevSection = computed(() => {
