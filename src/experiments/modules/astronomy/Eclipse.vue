@@ -88,8 +88,26 @@ export default {
 }
 
 class EclipseEngine extends ExperimentEngine {
+  _createStars() {
+    const starsGeo = new THREE.BufferGeometry()
+    const count = 100
+    const positions = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const r = 25 + Math.random() * 5
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+      positions[i * 3 + 2] = r * Math.cos(phi)
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.9 })
+    this._stars = new THREE.Points(starsGeo, starsMat)
+    this.scene.add(this._stars)
+  }
+
   setupScene() {
-    this.scene.background = new THREE.Color(0x050510)
+    this.scene.background = new THREE.Color(0x000011)
     this.scene.fog = null
 
     // Remove base warm ambient, replace with cool space lighting
@@ -100,36 +118,68 @@ class EclipseEngine extends ExperimentEngine {
     const ambient = new THREE.AmbientLight(0x334466, 1.5)
     this.scene.add(ambient)
 
-    const sunGeo = new THREE.SphereGeometry(3, 64, 64)
+    // Deep space starfield
+    this._createStars()
+
+    // Sun - HUGE radius 5.0, positioned far left at x=-25
+    const sunGeo = new THREE.SphereGeometry(5.0, 64, 64)
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 })
     this.sun = new THREE.Mesh(sunGeo, sunMat)
-    this.sun.position.set(-18, 0, 0)
+    this.sun.position.set(-25, 0, 0)
     this.scene.add(this.sun)
 
-    const sunLight = new THREE.PointLight(0xfff8e8, 150, 80)
+    // Sun corona - large transparent gold sphere
+    const coronaGeo = new THREE.SphereGeometry(6.5, 32, 32)
+    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.04 })
+    this._sunCorona = new THREE.Mesh(coronaGeo, coronaMat)
+    this._sunCorona.position.copy(this.sun.position)
+    this.scene.add(this._sunCorona)
+
+    // Powerful point light at sun
+    const sunLight = new THREE.PointLight(0xfff8e8, 250, 120)
     sunLight.position.copy(this.sun.position)
     this.scene.add(sunLight)
 
-    const earthGeo = new THREE.SphereGeometry(1.2, 32, 32)
-    const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })
+    // Earth - radius 2.5, at origin, blue with atmosphere glow
+    const earthGeo = new THREE.SphereGeometry(2.5, 32, 32)
+    const earthMat = new THREE.MeshStandardMaterial({
+      color: 0x42a5f5, roughness: 0.3,
+      emissive: 0x001133, emissiveIntensity: 0.3,
+    })
     this.earth = new THREE.Mesh(earthGeo, earthMat)
     this.earth.position.set(0, 0, 0)
     this.scene.add(this.earth)
 
-    const moonGeo = new THREE.SphereGeometry(0.45, 32, 32)
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.7 })
+    // Earth atmosphere glow - transparent blue shell
+    const atmoGeo = new THREE.SphereGeometry(3.0, 32, 32)
+    const atmoMat = new THREE.MeshBasicMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.08 })
+    this._earthAtmo = new THREE.Mesh(atmoGeo, atmoMat)
+    this._earthAtmo.position.copy(this.earth.position)
+    this.scene.add(this._earthAtmo)
+
+    // Moon - radius 1.0, base position at x=8 (further from Earth)
+    const moonGeo = new THREE.SphereGeometry(1.0, 32, 32)
+    const moonMat = new THREE.MeshStandardMaterial({
+      color: 0xcccccc, roughness: 0.5,
+      emissive: 0x111111, emissiveIntensity: 0.2,
+    })
     this.moon = new THREE.Mesh(moonGeo, moonMat)
-    this.moon.position.set(5.5, 0, 0)
+    this.moon.position.set(8, 0, 0)
     this.scene.add(this.moon)
 
-    // Pre-allocate cone meshes once (transforms updated per frame)
-    const umbraGeo = new THREE.CylinderGeometry(0.1, 1.6, 1, 32)
-    const umbraMat = new THREE.MeshBasicMaterial({ color: 0x000011, transparent: true, opacity: 0.7 })
+    // Umbra cone - DRAMATICALLY visible, dark purple/black, high opacity
+    const umbraGeo = new THREE.CylinderGeometry(0.3, 3.0, 1, 32)
+    const umbraMat = new THREE.MeshBasicMaterial({
+      color: 0x0a0020, transparent: true, opacity: 0.8,
+    })
     this.umbraCone = new THREE.Mesh(umbraGeo, umbraMat)
     this.scene.add(this.umbraCone)
 
-    const penumbraGeo = new THREE.CylinderGeometry(0.1, 2.4, 1, 32)
-    const penumbraMat = new THREE.MeshBasicMaterial({ color: 0x111133, transparent: true, opacity: 0.35 })
+    // Penumbra cone - even bigger, dark purple, medium opacity
+    const penumbraGeo = new THREE.CylinderGeometry(0.3, 4.5, 1, 32)
+    const penumbraMat = new THREE.MeshBasicMaterial({
+      color: 0x0a0020, transparent: true, opacity: 0.4,
+    })
     this.penumbraCone = new THREE.Mesh(penumbraGeo, penumbraMat)
     this.scene.add(this.penumbraCone)
 
@@ -137,22 +187,26 @@ class EclipseEngine extends ExperimentEngine {
     this.alignment = 1.0
     this.auto = false
     this._animT = 0
+    this._flashTimer = 0
 
     this._updateCones()
 
-    // Sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(-18, 4.5, 0), '#ffcc00', 48, 3.5))
-    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 2, 0), '#42a5f5', 39, 2.7))
-    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(-9, 1, 0), '#ffd54f', 36, 3))
-    this._moonLabel = this._makeLabel('月球', new THREE.Vector3(5.5, 1, 0), '#cccccc', 36, 2.4)
+    // Sprite labels - HUGE font 52, scale 4.5
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(-25, 7.5, 0), '#ffcc00', 52, 4.5))
+    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 5, 0), '#42a5f5', 52, 4.5))
+    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(-13, 2.5, 0), '#ffd54f', 48, 4.0))
+    this._moonLabel = this._makeLabel('月球', new THREE.Vector3(8, 2.5, 0), '#ffffff', 52, 4.5)
     this.scene.add(this._moonLabel)
-    this._umbraLabel = this._makeLabel('本影', new THREE.Vector3(2.5, 1.5, 0), '#ffffff', 30, 2.1)
+    this._umbraLabel = this._makeLabel('本影', new THREE.Vector3(4, 2.5, 0), '#ff4444', 48, 3.5)
     this.scene.add(this._umbraLabel)
-    this._penumbraLabel = this._makeLabel('半影', new THREE.Vector3(2.5, 2.5, 0), '#aaaaaa', 30, 2.4)
+    this._penumbraLabel = this._makeLabel('半影', new THREE.Vector3(4, 4.5, 0), '#ff8888', 48, 3.5)
     this.scene.add(this._penumbraLabel)
 
-    this.camera.position.set(0, 6, 12)
-    this.controls.target.set(-2, 0, 0)
+    // "TO SCALE" disclaimer
+    this.scene.add(this._makeLabel('示意图（非真实比例）', new THREE.Vector3(0, -7, 0), '#666666', 32, 3.0))
+
+    this.camera.position.set(0, 8, 16)
+    this.controls.target.set(0, 0, 2)
   }
 
   _updateCones() {
@@ -160,11 +214,12 @@ class EclipseEngine extends ExperimentEngine {
 
     if (this.eclipseType === 'lunar-total') {
       // Earth casts shadow on Moon (Moon moves +X with alignment)
-      this.moon.position.set(5.5 * align, 0, 0)
+      this.moon.position.set(8 * align, 0, 0)
 
       const dist = this.moon.position.x - this.earth.position.x
+      // Cone starts at Earth's surface facing the Moon
       this.umbraCone.position.copy(this.earth.position)
-      this.umbraCone.position.x += 1.2
+      this.umbraCone.position.x += 2.5
       this.umbraCone.rotation.z = 0
       this.umbraCone.scale.set(1, dist, 1)
       this.umbraCone.visible = align > 0.15
@@ -175,32 +230,34 @@ class EclipseEngine extends ExperimentEngine {
       this.penumbraCone.visible = align > 0.1
     } else if (this.eclipseType === 'solar-total') {
       // Moon casts shadow on Earth (Moon moves -X with alignment)
-      this.moon.position.set(-5.5 * align, 0, 0)
+      this.moon.position.set(-8 * align, 0, 0)
 
       const dist = this.earth.position.x - this.moon.position.x
+      // Cone starts at Moon's surface facing Earth
       this.umbraCone.position.copy(this.moon.position)
-      this.umbraCone.position.x += 0.45
+      this.umbraCone.position.x += 1.0
       this.umbraCone.rotation.z = Math.PI
-      this.umbraCone.scale.set(1, dist * 0.3, 1)
+      this.umbraCone.scale.set(1, dist * 0.4, 1)
       this.umbraCone.visible = align > 0.1
 
       this.penumbraCone.position.copy(this.umbraCone.position)
       this.penumbraCone.rotation.z = Math.PI
-      this.penumbraCone.scale.set(1, dist * 0.5, 1)
+      this.penumbraCone.scale.set(1, dist * 0.6, 1)
       this.penumbraCone.visible = align > 0.05
     } else if (this.eclipseType === 'solar-annular') {
-      this.moon.position.set(-5.5 * align, 0, 0)
+      this.moon.position.set(-8 * align, 0, 0)
 
       const dist = this.earth.position.x - this.moon.position.x
+      // Umbra cone does NOT reach Earth (shorter scale)
       this.umbraCone.position.copy(this.moon.position)
-      this.umbraCone.position.x += 0.45
+      this.umbraCone.position.x += 1.0
       this.umbraCone.rotation.z = Math.PI
-      this.umbraCone.scale.set(1, dist * 0.15, 1)
+      this.umbraCone.scale.set(1, dist * 0.2, 1)
       this.umbraCone.visible = align > 0.3
 
       this.penumbraCone.position.copy(this.umbraCone.position)
       this.penumbraCone.rotation.z = Math.PI
-      this.penumbraCone.scale.set(1, dist * 0.7, 1)
+      this.penumbraCone.scale.set(1, dist * 0.8, 1)
       this.penumbraCone.visible = align > 0.05
     }
   }
@@ -213,14 +270,31 @@ class EclipseEngine extends ExperimentEngine {
       if (this._vm) this._vm.alignment = alignPct
       this._updateCones()
     }
+
+    // Flash/glow effect when alignment is near perfect
+    if (this.alignment > 0.99 && this.sun && this.sun.material) {
+      this._flashTimer += dt
+      const flash = 1.0 + 0.3 * Math.sin(this._flashTimer * 8) * Math.sin(this._flashTimer * 8)
+      this.sun.material.color.setRGB(1.0 * flash, 0.85 * flash, 0.1 * flash)
+      if (this._sunCorona && this._sunCorona.material) {
+        this._sunCorona.material.opacity = 0.04 + 0.02 * Math.abs(Math.sin(this._flashTimer * 8))
+      }
+    } else if (this.sun && this.sun.material) {
+      this._flashTimer = 0
+      this.sun.material.color.set(0xffcc00)
+      if (this._sunCorona && this._sunCorona.material) {
+        this._sunCorona.material.opacity = 0.04
+      }
+    }
+
     if (this._moonLabel) {
-      this._moonLabel.position.copy(this.moon.position).add(new THREE.Vector3(0, 0.5, 0))
+      this._moonLabel.position.copy(this.moon.position).add(new THREE.Vector3(0, 1.8, 0))
     }
     if (this._umbraLabel) {
-      this._umbraLabel.position.copy(this.umbraCone.position).add(new THREE.Vector3(0.3, 0.4, 0))
+      this._umbraLabel.position.copy(this.umbraCone.position).add(new THREE.Vector3(0.5, 0.8, 0))
     }
     if (this._penumbraLabel) {
-      this._penumbraLabel.position.copy(this.penumbraCone.position).add(new THREE.Vector3(0.3, 0.8, 0))
+      this._penumbraLabel.position.copy(this.penumbraCone.position).add(new THREE.Vector3(0.5, 1.5, 0))
     }
   }
 
@@ -256,7 +330,7 @@ class EclipseEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.ec-canvas-wrap { flex: 1; min-height: 460px; background: #050510; position: relative; }
+.ec-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; }
 .lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lock-btn:hover { background: rgba(255,255,255,1); }
 .ec-canvas-wrap canvas { width: 100%; height: 100%; display: block; }

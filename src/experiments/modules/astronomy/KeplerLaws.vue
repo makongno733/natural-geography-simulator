@@ -79,8 +79,26 @@ export default {
 }
 
 class KeplerLawsEngine extends ExperimentEngine {
+  _createStars() {
+    const starsGeo = new THREE.BufferGeometry()
+    const count = 100
+    const positions = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const r = 25 + Math.random() * 5
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+      positions[i * 3 + 2] = r * Math.cos(phi)
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.9 })
+    this._stars = new THREE.Points(starsGeo, starsMat)
+    this.scene.add(this._stars)
+  }
+
   setupScene() {
-    this.scene.background = new THREE.Color(0x0a0a1a)
+    this.scene.background = new THREE.Color(0x000011)
     this.scene.fog = null
 
     // Remove base warm ambient, replace with cool space lighting
@@ -91,17 +109,37 @@ class KeplerLawsEngine extends ExperimentEngine {
     const ambient = new THREE.AmbientLight(0x334466, 1.5)
     this.scene.add(ambient)
 
-    this.sunGeo = new THREE.SphereGeometry(1.8, 64, 64)
+    // Deep space starfield
+    this._createStars()
+
+    // Sun at focus - HUGE, radius 3.5, intense golden glow
+    this.sunGeo = new THREE.SphereGeometry(3.5, 64, 64)
     this.sun = new THREE.Mesh(this.sunGeo, new THREE.MeshBasicMaterial({ color: 0xffcc00 }))
     this.scene.add(this.sun)
 
-    const sunLight = new THREE.PointLight(0xfff8e8, 80, 50)
+    // Sun corona - large transparent gold sphere
+    const coronaGeo = new THREE.SphereGeometry(4.5, 32, 32)
+    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.05 })
+    this._sunCorona = new THREE.Mesh(coronaGeo, coronaMat)
+    this.scene.add(this._sunCorona)
+
+    // Bright point light at sun
+    const sunLight = new THREE.PointLight(0xfff8e8, 120, 80)
     sunLight.position.set(0, 0, 0)
     this.scene.add(sunLight)
 
-    this.planetGeo = new THREE.SphereGeometry(0.5, 32, 32)
-    this.planet = new THREE.Mesh(this.planetGeo, new THREE.MeshStandardMaterial({ color: 0x66bb6a, roughness: 0.4 }))
+    // Planet - radius 1.0, bright blue/teal with emissive glow
+    this.planetGeo = new THREE.SphereGeometry(1.0, 32, 32)
+    this.planet = new THREE.Mesh(this.planetGeo, new THREE.MeshStandardMaterial({
+      color: 0x00bcd4, roughness: 0.2, emissive: 0x004466, emissiveIntensity: 0.6,
+    }))
     this.scene.add(this.planet)
+
+    // Small moon orbiting planet
+    const moonGeo = new THREE.SphereGeometry(0.15, 16, 16)
+    const moonMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.5 })
+    this._moon = new THREE.Mesh(moonGeo, moonMat)
+    this.scene.add(this._moon)
 
     this.ellipseLine = null
 
@@ -111,14 +149,17 @@ class KeplerLawsEngine extends ExperimentEngine {
     for (let i = 0; i < this._maxSectors; i++) {
       const geo = new THREE.BufferGeometry()
       geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3))
-      const mat = new THREE.MeshBasicMaterial({ color: 0xff6600, side: THREE.DoubleSide, transparent: true, opacity: 0.3 })
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xffd700, side: THREE.DoubleSide,
+        transparent: true, opacity: 0.4,
+      })
       const mesh = new THREE.Mesh(geo, mat)
       mesh.visible = false
       this.scene.add(mesh)
       this.areaSectors.push(mesh)
     }
 
-    this.semiMajor = 8
+    this.semiMajor = 12
     this.ecc = 0.5
     this.meanAnomaly = 0
     this.trail = []
@@ -127,15 +168,23 @@ class KeplerLawsEngine extends ExperimentEngine {
     this._rebuildEllipse()
     this._makeMarkers()
 
-    // Sprite labels
-    this.scene.add(this._makeLabel('太阳 (焦点)', new THREE.Vector3(0, 2.8, 0), '#ffcc00', 48, 3.5))
-    this.scene.add(this._makeLabel('椭圆轨道', new THREE.Vector3(5, 2, 5), '#888888', 36, 3))
-    this._sectorLabel = this._makeLabel('等面积扇形', new THREE.Vector3(this.focusOffset + 4, 2, 3), '#ff9800', 33, 2.4)
+    // Sprite labels - HUGE font 48-52, scale 3.5-5.0
+    this.scene.add(this._makeLabel('太阳 (焦点)', new THREE.Vector3(0, 5.5, 0), '#ffcc00', 52, 5.0))
+    this.scene.add(this._makeLabel('椭圆轨道', new THREE.Vector3(7, 4, 8), '#ffffff', 48, 4.5))
+    this._sectorLabel = this._makeLabel('等面积扇形', new THREE.Vector3(this.focusOffset + 5, 3, 4), '#ffd700', 48, 4.0)
     this.scene.add(this._sectorLabel)
-    this._planetLabel = this._makeLabel('行星', new THREE.Vector3(Math.cos(0) * this.semiMajor + this.focusOffset, 0.8, Math.sin(0) * this.semiMajor * Math.sqrt(1 - this.ecc * this.ecc)), '#66bb6a', 36, 2.4)
+    this._planetLabel = this._makeLabel('行星',
+      new THREE.Vector3(Math.cos(0) * this.semiMajor + this.focusOffset, 1.5, Math.sin(0) * this.semiMajor * Math.sqrt(1 - this.ecc * this.ecc)),
+      '#00bcd4', 48, 4.0)
     this.scene.add(this._planetLabel)
 
-    this.camera.position.set(0, 10, 14)
+    // Dynamic eccentricity label - shows current e value and orbit type
+    this._eccLabel = this._makeLabel('', new THREE.Vector3(-9, 8, 0), '#ffffff', 48, 4.0)
+    this.scene.add(this._eccLabel)
+    this._updateEccLabel()
+
+    // Camera - pulled back to see the huge orbit
+    this.camera.position.set(0, 14, 18)
     this.controls.target.set(0, 0, 0)
   }
 
@@ -155,12 +204,16 @@ class KeplerLawsEngine extends ExperimentEngine {
       const theta = (i / n) * Math.PI * 2
       pts.push(new THREE.Vector3(a * Math.cos(theta) + c, 0, b * Math.sin(theta)))
     }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts)
-    this.ellipseLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xb8a57a, transparent: true, opacity: 0.5 }))
+    // TubeGeometry for thick, visible orbit line
+    const curve = new THREE.CatmullRomCurve3(pts, true)
+    const geo = new THREE.TubeGeometry(curve, 200, 0.04, 8, true)
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.65 })
+    this.ellipseLine = new THREE.Mesh(geo, mat)
     this.scene.add(this.ellipseLine)
 
     this.focusOffset = c
     this.sun.position.set(this.focusOffset, 0, 0)
+    if (this._sunCorona) this._sunCorona.position.copy(this.sun.position)
   }
 
   _makeMarkers() {
@@ -168,31 +221,49 @@ class KeplerLawsEngine extends ExperimentEngine {
     const e = this.ecc
     const c = a * e
 
-    // Remove old labels if they exist
+    // Remove old labels
     if (this._periLabel) { this.scene.remove(this._periLabel); this._sprites = this._sprites.filter(s => s !== this._periLabel); this._periLabel = null }
     if (this._aphLabel) { this.scene.remove(this._aphLabel); this._sprites = this._sprites.filter(s => s !== this._aphLabel); this._aphLabel = null }
 
-    const periGeo = new THREE.SphereGeometry(0.3, 16, 16)
+    // Perihelion marker - red glowing sphere, radius 0.5
+    const periGeo = new THREE.SphereGeometry(0.5, 16, 16)
     const periMat = new THREE.MeshBasicMaterial({ color: 0xef5350 })
     this.periMarker = new THREE.Mesh(periGeo, periMat)
     this.periMarker.position.set(a + c, 0, 0)
     this.scene.add(this.periMarker)
 
-    const aphGeo = new THREE.SphereGeometry(0.3, 16, 16)
+    // Aphelion marker - blue glowing sphere, radius 0.5
+    const aphGeo = new THREE.SphereGeometry(0.5, 16, 16)
     const aphMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 })
     this.aphMarker = new THREE.Mesh(aphGeo, aphMat)
     this.aphMarker.position.set(-a + c, 0, 0)
     this.scene.add(this.aphMarker)
 
-    this._periLabel = this._makeLabel('近日点', this.periMarker.position.clone().add(new THREE.Vector3(0.4, 1.2, 0)), '#ff6b6b', 33, 2.4)
+    this._periLabel = this._makeLabel('近日点', this.periMarker.position.clone().add(new THREE.Vector3(0.5, 1.8, 0)), '#ff6b6b', 52, 4.0)
     this.scene.add(this._periLabel)
-    this._aphLabel = this._makeLabel('远日点', this.aphMarker.position.clone().add(new THREE.Vector3(-0.4, 1.2, 0)), '#64b5f6', 33, 2.4)
+    this._aphLabel = this._makeLabel('远日点', this.aphMarker.position.clone().add(new THREE.Vector3(-0.5, 1.8, 0)), '#64b5f6', 52, 4.0)
     this.scene.add(this._aphLabel)
   }
 
   _removeMarkers() {
     if (this.periMarker) { this.scene.remove(this.periMarker); this.periMarker.geometry.dispose(); this.periMarker.material.dispose(); this.periMarker = null }
     if (this.aphMarker) { this.scene.remove(this.aphMarker); this.aphMarker.geometry.dispose(); this.aphMarker.material.dispose(); this.aphMarker = null }
+  }
+
+  _updateEccLabel() {
+    if (!this._eccLabel) return
+    let desc = '椭圆轨道'
+    if (this.ecc < 0.15) desc = '圆轨道'
+    else if (this.ecc > 0.75) desc = '彗星轨道'
+    const pos = this._eccLabel.position.clone()
+    this.scene.remove(this._eccLabel)
+    this._sprites = this._sprites.filter(s => s !== this._eccLabel)
+    if (this._eccLabel.material) {
+      if (this._eccLabel.material.map) this._eccLabel.material.map.dispose()
+      this._eccLabel.material.dispose()
+    }
+    this._eccLabel = this._makeLabel('e = ' + this.ecc.toFixed(2) + '  ' + desc, pos, '#ffffff', 48, 4.0)
+    this.scene.add(this._eccLabel)
   }
 
   _updateSectors() {
@@ -219,8 +290,9 @@ class KeplerLawsEngine extends ExperimentEngine {
       positions.needsUpdate = true
 
       sector.geometry.computeVertexNormals()
-      sector.material.color.setHSL(0.33 - (i / n) * 0.2, 0.8, 0.5)
-      sector.material.opacity = 0.2 + i * 0.08
+      // Gold gradient from focus outward - clearly shows "equal area in equal time"
+      sector.material.color.setHSL(0.13, 0.9, 0.5 + i * 0.05)
+      sector.material.opacity = 0.25 + i * 0.06
       sector.visible = true
     }
   }
@@ -258,8 +330,18 @@ class KeplerLawsEngine extends ExperimentEngine {
     const pos = this._planetPos(this.meanAnomaly, this.ecc)
     this.planet.position.set(pos.x, 0, pos.z)
 
+    // Moon orbits the planet 5x faster for visual drama
+    if (this._moon) {
+      const moonAngle = this.meanAnomaly * 5
+      this._moon.position.set(
+        pos.x + Math.cos(moonAngle) * 1.8,
+        0,
+        pos.z + Math.sin(moonAngle) * 1.8,
+      )
+    }
+
     if (this._planetLabel) {
-      this._planetLabel.position.copy(this.planet.position).add(new THREE.Vector3(0, 0.5, 0))
+      this._planetLabel.position.copy(this.planet.position).add(new THREE.Vector3(0, 1.5, 0))
     }
 
     this.trail.push(this.planet.position.clone())
@@ -275,6 +357,7 @@ class KeplerLawsEngine extends ExperimentEngine {
       this._updateSectors()
       this._rebuildEllipse()
       this._makeMarkers()
+      this._updateEccLabel()
       this.meanAnomaly = 0
       this.trail = []
       this._vm.eccentricity = parseFloat(this.ecc.toFixed(2))
@@ -299,7 +382,7 @@ class KeplerLawsEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.kl-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; position: relative; }
+.kl-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; }
 .lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lock-btn:hover { background: rgba(255,255,255,1); }
 .kl-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
