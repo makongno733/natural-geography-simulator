@@ -187,7 +187,7 @@ class CoriolisEngine extends ExperimentEngine {
 
     // === WATER PARTICLES ===
     this._particles = []
-    this._spawn(this.particleCount)
+    this._createArrows()
 
     // === LABELS ===
     this._sprites = []
@@ -253,36 +253,45 @@ class CoriolisEngine extends ExperimentEngine {
 
   _makeFlowArrow() {
     const g = new THREE.Group()
-    const shaftGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6)
-    const shaft = new THREE.Mesh(shaftGeo, new THREE.MeshStandardMaterial({ color: 0x1565c0, emissive: 0x1565c0, emissiveIntensity: 0.3 }))
-    shaft.position.y = 0.1
+    const shaftGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 6)
+    const shaft = new THREE.Mesh(shaftGeo, new THREE.MeshStandardMaterial({ color: 0x1565c0, emissive: 0x1565c0, emissiveIntensity: 0.4 }))
+    shaft.position.y = 0.15
     g.add(shaft)
-    const headGeo = new THREE.ConeGeometry(0.1, 0.2, 6)
-    const head = new THREE.Mesh(headGeo, new THREE.MeshStandardMaterial({ color: 0x1565c0, emissive: 0x1565c0, emissiveIntensity: 0.4 }))
-    head.position.y = 0.35
+    const headGeo = new THREE.ConeGeometry(0.14, 0.28, 6)
+    const head = new THREE.Mesh(headGeo, new THREE.MeshStandardMaterial({ color: 0x1565c0, emissive: 0x1565c0, emissiveIntensity: 0.5 }))
+    head.position.y = 0.5
     g.add(head)
     g.userData = { angle: Math.random() * Math.PI * 2, radius: 4 + Math.random() * 2 }
     return g
   }
 
-  _spawn(count) {
-    this._particles.forEach(p => {
-      this.scene.remove(p)
-      if (p.material) p.material.dispose()
-      if (p.geometry) p.geometry.dispose()
+  _createArrows() {
+    // Dispose old arrows
+    this._particles.forEach(a => {
+      a.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
+      this.scene.remove(a)
     })
     this._particles = []
-    const geo = new THREE.SphereGeometry(0.07, 6, 6)
-    for (let i = 0; i < count; i++) {
-      const depth = Math.random()
-      const mat = new THREE.MeshBasicMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.6 + depth * 0.4 })
-      const dot = new THREE.Mesh(geo, mat)
+
+    for (let i = 0; i < this.particleCount; i++) {
+      const group = new THREE.Group()
+      // shaft
+      const shaftGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.25, 6)
+      const shaftMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, emissive: 0x1565c0, emissiveIntensity: 0.3, roughness: 0.3 })
+      group.add(new THREE.Mesh(shaftGeo, shaftMat))
+      // head
+      const headGeo = new THREE.ConeGeometry(0.08, 0.14, 6)
+      const headMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, emissive: 0x1565c0, emissiveIntensity: 0.5, roughness: 0.2 })
+      const head = new THREE.Mesh(headGeo, headMat)
+      head.position.y = 0.18
+      group.add(head)
+
       const angle = Math.random() * Math.PI * 2
       const radius = 2.0 + Math.random() * 5.0
-      dot.position.set(Math.cos(angle) * radius, 0.06 + Math.random() * 0.04, Math.sin(angle) * radius)
-      dot.userData = { angle, radius, speed: 0.3 + Math.random() * 0.7, phase: Math.random() * Math.PI * 2 }
-      this.scene.add(dot)
-      this._particles.push(dot)
+      group.position.set(Math.cos(angle) * radius, 0.07 + Math.random() * 0.05, Math.sin(angle) * radius)
+      group.userData = { angle, radius, speed: 0.3 + Math.random() * 0.7 }
+      this.scene.add(group)
+      this._particles.push(group)
     }
   }
 
@@ -303,23 +312,39 @@ class CoriolisEngine extends ExperimentEngine {
       // Color gradient - darker blue closer to center
     }
 
-    // Animate water particles flowing toward well with Coriolis deflection
-    for (const dot of this._particles) {
-      dot.userData.radius -= dt * 0.25 * speed * dot.userData.speed
-      if (dot.userData.radius < 0.55) {
-        // Particle reached the well - respawn at edge
-        dot.userData.radius = 4.5 + Math.random() * 2.5
-        dot.userData.angle = Math.random() * Math.PI * 2
+    // Animate water arrows flowing toward well with Coriolis deflection
+    for (const arrow of this._particles) {
+      arrow.userData.radius -= dt * 0.25 * speed * arrow.userData.speed
+      if (arrow.userData.radius < 0.55) {
+        arrow.userData.radius = 4.5 + Math.random() * 2.5
+        arrow.userData.angle = Math.random() * Math.PI * 2
       }
-      // Coriolis deflection increases as particle gets closer to center
-      const deflection = coriolisSign * speed * 0.9 / (dot.userData.radius + 0.3)
-      dot.userData.angle += dt * deflection
-      dot.position.x = Math.cos(dot.userData.angle) * dot.userData.radius
-      dot.position.z = Math.sin(dot.userData.angle) * dot.userData.radius
-      dot.position.y = 0.06 + (1 / (dot.userData.radius + 0.5)) * 0.04
-      // Color: lighter blue far away, darker near center
-      const t = Math.max(0, (dot.userData.radius - 0.5) / 6)
-      dot.material.opacity = 0.4 + t * 0.5
+      // Coriolis deflection
+      const deflection = coriolisSign * speed * 0.9 / (arrow.userData.radius + 0.3)
+      arrow.userData.angle += dt * deflection
+      arrow.position.x = Math.cos(arrow.userData.angle) * arrow.userData.radius
+      arrow.position.z = Math.sin(arrow.userData.angle) * arrow.userData.radius
+      arrow.position.y = 0.07 + (1 / (arrow.userData.radius + 0.5)) * 0.03
+
+      // Point arrow in the flow direction (tangent to spiral)
+      const tangent = new THREE.Vector3(-Math.sin(arrow.userData.angle), 0, Math.cos(arrow.userData.angle))
+      if (coriolisSign < 0) tangent.negate()
+      // Slight inward component
+      tangent.add(new THREE.Vector3(-Math.cos(arrow.userData.angle) * 0.3, 0, -Math.sin(arrow.userData.angle) * 0.3))
+      tangent.normalize()
+      // Make arrow look in the tangent direction
+      const up = new THREE.Vector3(0, 1, 0)
+      const quat = new THREE.Quaternion()
+      quat.setFromUnitVectors(up, tangent)
+      arrow.setRotationFromQuaternion(quat)
+
+      // Color gets darker near center
+      const t = Math.max(0, (arrow.userData.radius - 0.5) / 6)
+      arrow.children.forEach(c => {
+        if (c.material && c.material.color) {
+          c.material.color.setHSL(0.58, 0.9, 0.3 + t * 0.4)
+        }
+      })
     }
 
     // Pulse well water
@@ -335,7 +360,7 @@ class CoriolisEngine extends ExperimentEngine {
       this.hemisphere = hemisphere
       this._updateHemiLabel()
     }
-    if (particleCount !== undefined) this._spawn(particleCount)
+    if (particleCount !== undefined) { this.particleCount = particleCount; this._createArrows() }
   }
 
   _updateHemiLabel() {
@@ -361,6 +386,9 @@ class CoriolisEngine extends ExperimentEngine {
     }
     if (this._buildings) {
       this._buildings.forEach(b => b.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() }))
+    }
+    if (this._particles) {
+      this._particles.forEach(a => a.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() }))
     }
     if (this._wellGroup) {
       this._wellGroup.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
