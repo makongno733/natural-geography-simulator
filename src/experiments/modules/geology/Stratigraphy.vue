@@ -20,6 +20,9 @@
     </aside>
     <div class="sg-canvas-wrap">
       <canvas ref="cvs"></canvas>
+      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
+        {{ locked ? '🔒' : '🔓' }}
+      </button>
       <div class="sg-labels" v-show="showLabels">
         <span class="sg-label" style="top:20%;left:55%">叠置原理 ↑</span>
         <span class="sg-label" style="top:55%;left:15%">水平原理 →</span>
@@ -40,7 +43,7 @@ import * as THREE from 'three'
 export default {
   name: 'Stratigraphy',
   data() { return {
-    showLabels: true, showUnconformity: true,
+    showLabels: true, showUnconformity: true, locked: true,
     guideActive: false,
     guideText: '',
     _guideTexts: [
@@ -53,12 +56,13 @@ export default {
   mounted() {
     this._e = new StratigraphyEngine()
     this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => this._e.init(this.$refs.cvs))
+    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
     window.addEventListener('resize', this._onResize)
   },
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
+    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
     onParam() { this._e.setParams({ showLabels: this.showLabels, showUnconformity: this.showUnconformity }) },
     toggleGuide() {
       this.guideActive = !this.guideActive
@@ -226,6 +230,8 @@ class StratigraphyEngine extends ExperimentEngine {
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .sg-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
+.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lock-btn:hover { background: rgba(255,255,255,1); }
 .sg-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 .sg-labels { position: absolute; inset: 0; pointer-events: none; }
 .sg-label {
@@ -249,7 +255,28 @@ class StratigraphyEngine extends ExperimentEngine {
 
 @media (max-width: 720px) {
   .sg-layout { flex-direction: column; }
-  .sg-panel { width: 100%; border-right: 0; border-bottom: 1px solid var(--brown-light); flex-direction: row; flex-wrap: wrap; gap: 8px; }
-  .sg-canvas-wrap { min-height: 320px; }
+  .sg-panel {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--brown-light);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .sg-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
+  .sg-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
+  .sg-panel button { font-size: 12px; padding: 5px 8px; }
+  .sg-canvas-wrap { min-height: 280px; }
+  .guide-text-box { width: 100%; font-size: 11px; }
+  .sg-hint { font-size: 10px; }
+  .preset-row { width: 100%; }
+  .preset-btn { font-size: 10px; padding: 4px 6px; }
+  .exp-desc { padding: 10px 14px; margin-top: 12px; }
+  .exp-desc h4 { font-size: 13px; }
+  .exp-desc p { font-size: 13px; line-height: 1.6; }
+  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
 }
 </style>

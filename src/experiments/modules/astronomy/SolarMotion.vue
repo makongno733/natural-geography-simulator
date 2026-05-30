@@ -29,6 +29,9 @@
     </aside>
     <div class="sm-canvas-wrap">
       <canvas ref="cvs"></canvas>
+      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
+        {{ locked ? '🔒' : '🔓' }}
+      </button>
     </div>
   </div>
   <div class="exp-desc">
@@ -46,7 +49,7 @@ const seasonDeclination = { spring: 0, summer: 23.5, autumn: 0, winter: -23.5 }
 export default {
   name: 'SolarMotion',
   data() { return {
-    latitude: 30, season: 'spring', auto: false, maxAlt: 60, activePreset: '',
+    latitude: 30, season: 'spring', auto: false, maxAlt: 60, activePreset: '', locked: true,
     guideActive: false,
     guideText: '',
     _guideTexts: [
@@ -60,12 +63,13 @@ export default {
     this._e = new SolarMotionEngine()
     this._e._vm = this
     this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => this._e.init(this.$refs.cvs))
+    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
     window.addEventListener('resize', this._onResize)
   },
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
+    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
     onParam() {
       this.maxAlt = Math.max(0, 90 - this.latitude + seasonDeclination[this.season])
       this._e.setParams({ latitude: this.latitude, season: this.season })
@@ -316,7 +320,9 @@ class SolarMotionEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.sm-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
+.sm-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; position: relative; }
+.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lock-btn:hover { background: rgba(255,255,255,1); }
 .sm-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 
 .exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
@@ -325,7 +331,28 @@ class SolarMotionEngine extends ExperimentEngine {
 
 @media (max-width: 720px) {
   .sm-layout { flex-direction: column; }
-  .sm-panel { width: 100%; border-right: 0; border-bottom: 1px solid var(--brown-light); flex-direction: row; flex-wrap: wrap; gap: 8px; }
-  .sm-canvas-wrap { min-height: 320px; }
+  .sm-panel {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--brown-light);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .sm-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
+  .sm-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
+  .sm-panel button { font-size: 12px; padding: 5px 8px; }
+  .sm-canvas-wrap { min-height: 280px; }
+  .guide-text-box { width: 100%; font-size: 11px; }
+  .sm-hint { font-size: 10px; }
+  .preset-row { width: 100%; }
+  .preset-btn { font-size: 10px; padding: 4px 6px; }
+  .exp-desc { padding: 10px 14px; margin-top: 12px; }
+  .exp-desc h4 { font-size: 13px; }
+  .exp-desc p { font-size: 13px; line-height: 1.6; }
+  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
 }
 </style>

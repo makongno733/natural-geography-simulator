@@ -22,6 +22,9 @@
     </aside>
     <div class="fm-canvas-wrap">
       <canvas ref="cvs"></canvas>
+      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
+        {{ locked ? '🔒' : '🔓' }}
+      </button>
     </div>
   </div>
   <div class="exp-desc">
@@ -37,7 +40,7 @@ import * as THREE from 'three'
 export default {
   name: 'FaultModel',
   data() { return {
-    displacement: 0,
+    displacement: 0, locked: true,
     guideActive: false,
     guideText: '',
     _guideTexts: [
@@ -50,12 +53,13 @@ export default {
   mounted() {
     this._e = new FaultModelEngine()
     this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => this._e.init(this.$refs.cvs))
+    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
     window.addEventListener('resize', this._onResize)
   },
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
+    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
     compress() { this.displacement = Math.min(3, this.displacement + 0.3); this.onParam() },
     extend() { this.displacement = Math.max(-3, this.displacement - 0.3); this.onParam() },
     preset(type) {
@@ -75,7 +79,7 @@ export default {
         this.guideText = ''
       }
     },
-    reset() { this.displacement = 0; this._e.dispose(); this.$nextTick(() => { this._e = new FaultModelEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs) }) },
+    reset() { this.displacement = 0; this._e.dispose(); this.$nextTick(() => { this._e = new FaultModelEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false }) },
   },
 }
 
@@ -193,7 +197,9 @@ class FaultModelEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.fm-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
+.fm-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
+.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lock-btn:hover { background: rgba(255,255,255,1); }
 .fm-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
@@ -205,7 +211,27 @@ class FaultModelEngine extends ExperimentEngine {
 
 @media (max-width: 720px) {
   .fm-layout { flex-direction: column; }
-  .fm-panel { width: 100%; border-right: 0; border-bottom: 1px solid var(--brown-light); flex-direction: row; flex-wrap: wrap; gap: 8px; }
-  .fm-canvas-wrap { min-height: 320px; }
+  .fm-panel {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--brown-light);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .fm-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
+  .fm-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
+  .fm-panel button { font-size: 12px; padding: 5px 8px; }
+  .fm-canvas-wrap { min-height: 280px; }
+  .guide-text-box { width: 100%; font-size: 11px; }
+  .fm-hint { font-size: 10px; }
+  .preset-row { width: 100%; }
+  .preset-btn { font-size: 10px; padding: 4px 6px; }
+  .exp-desc { padding: 10px 14px; margin-top: 12px; }
+  .exp-desc h4 { font-size: 13px; }
+  .exp-desc p { font-size: 13px; line-height: 1.6; }
 }
 </style>
