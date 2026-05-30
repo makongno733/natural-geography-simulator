@@ -226,6 +226,22 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this._hotLabel = this._sprites[0]
     this._coldLabel = this._sprites[1]
 
+    // Pressure display sprites (4 corners)
+    this._pressureSprites = []
+    // Hot side ground (低压) - left bottom, on back face z=2.2
+    this._pressureSprites.push(this._makePressureLabel('1010 hPa', new THREE.Vector3(-3.8, -2.4, 2.2), '#e53935'))
+    // Hot side high (高压) - left top
+    this._pressureSprites.push(this._makePressureLabel('1016 hPa', new THREE.Vector3(-3.8, 2.2, 2.2), '#e53935'))
+    // Cold side ground (高压) - right bottom
+    this._pressureSprites.push(this._makePressureLabel('1014 hPa', new THREE.Vector3(3.8, -2.4, 2.2), '#1e88e5'))
+    // Cold side high (低压) - right top
+    this._pressureSprites.push(this._makePressureLabel('1011 hPa', new THREE.Vector3(3.8, 2.2, 2.2), '#1e88e5'))
+    // Store references for update
+    this._pHotLow = this._pressureSprites[0]
+    this._pHotHigh = this._pressureSprites[1]
+    this._pColdLow = this._pressureSprites[2]
+    this._pColdHigh = this._pressureSprites[3]
+
     // 3D arrows
     this._arrows = []
     this._createArrows()
@@ -277,6 +293,47 @@ class ThermalCirculationEngine extends ExperimentEngine {
     sprite.material.map = new THREE.CanvasTexture(canvas)
     sprite.material.map.minFilter = THREE.LinearFilter
     sprite.material.needsUpdate = true
+  }
+
+  _makePressureLabel(text, position, color) {
+    const canvas = document.createElement('canvas')
+    canvas.width = 256; canvas.height = 80
+    const ctx = canvas.getContext('2d')
+    // Background pill
+    ctx.fillStyle = 'rgba(255,255,255,0.88)'
+    ctx.fillRect(10, 8, 236, 64)
+    ctx.strokeStyle = color
+    ctx.lineWidth = 2.5
+    ctx.strokeRect(10, 8, 236, 64)
+    // Text
+    ctx.fillStyle = color
+    ctx.font = 'bold 26px "Noto Serif SC", monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText(text, 128, 50)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.minFilter = THREE.LinearFilter
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(position)
+    sprite.scale.set(2.4, 0.75, 1)
+    this.scene.add(sprite)
+    return sprite
+  }
+
+  _updatePressureLabels() {
+    if (!this._pressureSprites) return
+    const diff = this.tempDiff / 5 // 0.2 - 2
+    const base = 1013
+    // Hot side: surface heats → low pressure; aloft accumulates → high pressure
+    const hotLow = Math.round(base - diff * 4)
+    const hotHigh = Math.round(base + diff * 3)
+    // Cold side: surface cools → high pressure; aloft drains → low pressure
+    const coldLow = Math.round(base + diff * 2)
+    const coldHigh = Math.round(base - diff * 2)
+    this._updateSpriteText(this._pHotLow, `${hotLow} hPa`, '#e53935')
+    this._updateSpriteText(this._pHotHigh, `${hotHigh} hPa`, '#e53935')
+    this._updateSpriteText(this._pColdLow, `${coldLow} hPa`, '#1e88e5')
+    this._updateSpriteText(this._pColdHigh, `${coldHigh} hPa`, '#1e88e5')
   }
 
   _makeLabel(text, position, color = '#333333', fontSize = 32) {
@@ -388,6 +445,14 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this.riseColumn.material.opacity = 0.03 + diff * 0.08
     this.sinkColumn.material.opacity = 0.03 + diff * 0.08
 
+    // Update pressure labels (throttle to every ~0.5s)
+    if (!this._lastPressureUpdate) this._lastPressureUpdate = 0
+    this._lastPressureUpdate += dt
+    if (this._lastPressureUpdate > 0.5) {
+      this._lastPressureUpdate = 0
+      this._updatePressureLabels()
+    }
+
     // Animate arrows along their segments
     // The convection loop: segment 0 (rise) → 1 (top) → 2 (sink) → 3 (bottom) → 0
     for (const arrow of this._arrows) {
@@ -455,7 +520,10 @@ class ThermalCirculationEngine extends ExperimentEngine {
 
   dispose() {
     if (this._sprites) {
-      this._sprites.forEach(s => { s.material.map.dispose(); s.material.dispose() })
+      this._sprites.forEach(s => { if (s.material.map) s.material.map.dispose(); s.material.dispose() })
+    }
+    if (this._pressureSprites) {
+      this._pressureSprites.forEach(s => { if (s.material.map) s.material.map.dispose(); s.material.dispose() })
     }
     if (this._arrows) {
       this._arrows.forEach(a => {
