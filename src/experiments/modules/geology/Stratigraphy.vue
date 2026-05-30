@@ -31,10 +31,11 @@ export default {
   mounted() {
     this._e = new StratigraphyEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ showLabels: this.showLabels, showUnconformity: this.showUnconformity }) },
     resetView() { this._e.resetCamera() },
   },
@@ -43,6 +44,8 @@ export default {
 class StratigraphyEngine extends ExperimentEngine {
   setupScene() {
     const tiltAngle = 0.35
+
+    this.strataGroup = new THREE.Group()
 
     // Lower tilted layers (2 layers)
     this.lowerLayers = []
@@ -55,7 +58,7 @@ class StratigraphyEngine extends ExperimentEngine {
       layer.position.set(0, y, 0)
       layer.rotation.z = tiltAngle
       layer.castShadow = true; layer.receiveShadow = true
-      this.scene.add(layer)
+      this.strataGroup.add(layer)
       this.lowerLayers.push(layer)
     })
 
@@ -68,7 +71,7 @@ class StratigraphyEngine extends ExperimentEngine {
     })
     this.unconformity = new THREE.Mesh(unconformityGeo, unconformityMat)
     this.unconformity.position.y = -0.55
-    this.scene.add(this.unconformity)
+    this.strataGroup.add(this.unconformity)
 
     // Erosion surface edge line
     const edgeGeo = new THREE.RingGeometry(2.4, 2.5, 64)
@@ -76,7 +79,7 @@ class StratigraphyEngine extends ExperimentEngine {
     const edgeMat = new THREE.MeshBasicMaterial({ color: 0x8b4513, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
     this.erosionEdge = new THREE.Mesh(edgeGeo, edgeMat)
     this.erosionEdge.position.y = -0.54
-    this.scene.add(this.erosionEdge)
+    this.strataGroup.add(this.erosionEdge)
 
     // Upper horizontal layers (3 layers)
     this.upperLayers = []
@@ -88,7 +91,7 @@ class StratigraphyEngine extends ExperimentEngine {
       const layer = new THREE.Mesh(geo, mat)
       layer.position.set(0, y, 0)
       layer.castShadow = true; layer.receiveShadow = true
-      this.scene.add(layer)
+      this.strataGroup.add(layer)
       this.upperLayers.push(layer)
     })
 
@@ -98,14 +101,16 @@ class StratigraphyEngine extends ExperimentEngine {
     this.intrusion = new THREE.Mesh(intrusionGeo, intrusionMat)
     this.intrusion.position.set(1.5, -0.9, 0)
     this.intrusion.castShadow = true
-    this.scene.add(this.intrusion)
+    this.strataGroup.add(this.intrusion)
 
     // Small horizontal sill branching from intrusion
     const sillGeo = new THREE.BoxGeometry(1.2, 0.12, 1.5)
     const sillMat = new THREE.MeshStandardMaterial({ color: 0x4a3728, roughness: 0.3, metalness: 0.2 })
     this.sill = new THREE.Mesh(sillGeo, sillMat)
     this.sill.position.set(2.0, -1.0, 0)
-    this.scene.add(this.sill)
+    this.strataGroup.add(this.sill)
+
+    this.scene.add(this.strataGroup)
 
     // Ground plane
     const groundGeo = new THREE.PlaneGeometry(10, 10)
@@ -121,7 +126,7 @@ class StratigraphyEngine extends ExperimentEngine {
   }
 
   update(dt) {
-    // Slowly rotate for visual interest when idle
+    if (this.strataGroup) this.strataGroup.rotation.y += dt * 0.15
   }
 
   resetCamera() {

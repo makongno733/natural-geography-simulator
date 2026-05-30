@@ -36,10 +36,11 @@ export default {
     this._e = new SolarMotionEngine()
     this._e._vm = this
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() {
       this.maxAlt = Math.max(0, 90 - this.latitude + seasonDeclination[this.season])
       this._e.setParams({ latitude: this.latitude, season: this.season })
@@ -51,6 +52,15 @@ export default {
 class SolarMotionEngine extends ExperimentEngine {
   setupScene() {
     this.scene.background = new THREE.Color(0x0a0a1a)
+    this.scene.fog = null
+
+    // Remove base warm ambient, replace with cool space lighting
+    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
+    if (existingAmbient) {
+      this.scene.remove(existingAmbient)
+    }
+    const ambient = new THREE.AmbientLight(0x334466, 1.5)
+    this.scene.add(ambient)
 
     this.domeRadius = 6
     const domeGeo = new THREE.SphereGeometry(this.domeRadius, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2)
@@ -90,9 +100,6 @@ class SolarMotionEngine extends ExperimentEngine {
 
     const sunLight = new THREE.PointLight(0xfff8e8, 15, 20)
     this.sunMesh.add(sunLight)
-
-    const ambient = new THREE.AmbientLight(0x333355, 0.8)
-    this.scene.add(ambient)
 
     this.latitude = 30
     this.declination = 0

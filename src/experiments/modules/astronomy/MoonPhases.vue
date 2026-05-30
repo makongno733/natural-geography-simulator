@@ -26,10 +26,11 @@ export default {
     this._e = new MoonPhasesEngine()
     this._e._vm = this
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ moonAngle: this.moonAngle * Math.PI / 180 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
   },
@@ -67,11 +68,21 @@ class MoonPhasesEngine extends ExperimentEngine {
     this.camera.position.set(0, 4, 6)
     this.controls.target.set(0, 0, 1)
     this.scene.background = new THREE.Color(0x0a0a1a)
+    this.scene.fog = null
+
+    // Remove base warm ambient, replace with cool space lighting
+    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
+    if (existingAmbient) {
+      this.scene.remove(existingAmbient)
+    }
+    const ambient = new THREE.AmbientLight(0x334466, 1.5)
+    this.scene.add(ambient)
   }
 
   update(dt) {
     if (this.auto) {
       this.moonAngle += dt * 0.4
+      if (this.moonAngle > Math.PI * 100) this.moonAngle -= Math.PI * 2 * 50
       this._vm.moonAngle = Math.round((this.moonAngle * 180 / Math.PI) % 360)
       this._vm.phaseName = phaseNames[Math.round(this.moonAngle / (Math.PI / 4)) % 8]
     }

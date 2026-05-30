@@ -93,7 +93,11 @@ class ThermalCirculationEngine extends ExperimentEngine {
   }
 
   _spawn(count) {
-    this._particles.forEach(p => this.scene.remove(p))
+    this._particles.forEach(p => {
+      this.scene.remove(p)
+      if (p.material) p.material.dispose()
+      if (p.geometry) p.geometry.dispose()
+    })
     this._particles = []
     const geo = new THREE.SphereGeometry(0.07, 4, 4)
     for (let i = 0; i < count; i++) {

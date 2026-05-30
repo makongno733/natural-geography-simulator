@@ -49,10 +49,11 @@ export default {
     this._e = new SeasonsEngine()
     this._e._vm = this
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ orbitAngle: this.orbitAngle * Math.PI / 180 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
     near(deg) { return Math.abs(((this.orbitAngle % 360 + 360) % 360) - deg) < 10 },
@@ -62,6 +63,15 @@ export default {
 class SeasonsEngine extends ExperimentEngine {
   setupScene() {
     this.scene.background = new THREE.Color(0x0a0a1a)
+    this.scene.fog = null
+
+    // Remove base warm ambient, replace with cool space lighting
+    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
+    if (existingAmbient) {
+      this.scene.remove(existingAmbient)
+    }
+    const ambient = new THREE.AmbientLight(0x334466, 1.5)
+    this.scene.add(ambient)
 
     const sunGeo = new THREE.SphereGeometry(1.5, 32, 32)
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
@@ -71,9 +81,6 @@ class SeasonsEngine extends ExperimentEngine {
     const sunLight = new THREE.PointLight(0xfff8e8, 60, 40)
     sunLight.position.copy(sun.position)
     this.scene.add(sunLight)
-
-    const ambient = new THREE.AmbientLight(0x444466, 1.2)
-    this.scene.add(ambient)
 
     const orbitGeo = new THREE.TorusGeometry(6, 0.06, 16, 128)
     const orbitRing = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xb8a57a, transparent: true, opacity: 0.35 }))

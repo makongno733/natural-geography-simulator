@@ -29,10 +29,11 @@ export default {
     this._e = new EclipseEngine()
     this._e._vm = this
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ eclipseType: this.eclipseType, alignment: this.alignment / 100 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
   },
@@ -41,6 +42,15 @@ export default {
 class EclipseEngine extends ExperimentEngine {
   setupScene() {
     this.scene.background = new THREE.Color(0x050510)
+    this.scene.fog = null
+
+    // Remove base warm ambient, replace with cool space lighting
+    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
+    if (existingAmbient) {
+      this.scene.remove(existingAmbient)
+    }
+    const ambient = new THREE.AmbientLight(0x334466, 1.5)
+    this.scene.add(ambient)
 
     const sunGeo = new THREE.SphereGeometry(2, 32, 32)
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
@@ -51,9 +61,6 @@ class EclipseEngine extends ExperimentEngine {
     const sunLight = new THREE.PointLight(0xfff8e8, 80, 50)
     sunLight.position.copy(this.sun.position)
     this.scene.add(sunLight)
-
-    const ambient = new THREE.AmbientLight(0x222244, 0.6)
-    this.scene.add(ambient)
 
     const earthGeo = new THREE.SphereGeometry(0.5, 32, 32)
     const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })

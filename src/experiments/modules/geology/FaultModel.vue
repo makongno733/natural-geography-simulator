@@ -27,10 +27,11 @@ export default {
   mounted() {
     this._e = new FaultModelEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     compress() { this.displacement = Math.min(3, this.displacement + 0.3); this.onParam() },
     extend() { this.displacement = Math.max(-3, this.displacement - 0.3); this.onParam() },
     onParam() { this._e.setParams({ displacement: this.displacement }) },

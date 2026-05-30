@@ -24,10 +24,11 @@ export default {
   mounted() {
     this._e = new GroundwaterEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ pumpRate: this.pumpRate, recharge: this.recharge }) },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new GroundwaterEngine(); this._e.init(this.$refs.cvs) }) },
   },
@@ -77,11 +78,15 @@ class GroundwaterEngine extends ExperimentEngine {
   update(dt) {
     const pr = this.pumpRate / 5
     const rc = this.recharge / 5
-    const wtY = 0.4 - pr * 0.8 + rc * 0.6
-    this.waterTable.position.y = wtY
-    const coneScale = 1 + pr * 2
-    this.cone.scale.set(coneScale, 0.3, coneScale)
-    this.cone.position.y = wtY
+    const targetY = 0.4 - pr * 0.8 + rc * 0.6
+    const currentY = this.waterTable.position.y
+    this.waterTable.position.y += (targetY - currentY) * Math.min(dt * 3, 1)
+
+    const targetConeScale = 1 + pr * 2
+    const currentConeX = this.cone.scale.x
+    const newScale = currentConeX + (targetConeScale - currentConeX) * Math.min(dt * 3, 1)
+    this.cone.scale.set(newScale, 0.3, newScale)
+    this.cone.position.y = this.waterTable.position.y
     this.coneMat.opacity = 0.1 + pr * 0.3
   }
 

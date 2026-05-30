@@ -23,10 +23,11 @@ export default {
     this._e = new KeplerLawsEngine()
     this._e._vm = this
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ eccentricity: this.eccentricity }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
   },
@@ -35,6 +36,15 @@ export default {
 class KeplerLawsEngine extends ExperimentEngine {
   setupScene() {
     this.scene.background = new THREE.Color(0x0a0a1a)
+    this.scene.fog = null
+
+    // Remove base warm ambient, replace with cool space lighting
+    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
+    if (existingAmbient) {
+      this.scene.remove(existingAmbient)
+    }
+    const ambient = new THREE.AmbientLight(0x334466, 1.5)
+    this.scene.add(ambient)
 
     this.sunGeo = new THREE.SphereGeometry(0.5, 32, 32)
     this.sun = new THREE.Mesh(this.sunGeo, new THREE.MeshBasicMaterial({ color: 0xffd54f }))
@@ -43,9 +53,6 @@ class KeplerLawsEngine extends ExperimentEngine {
     const sunLight = new THREE.PointLight(0xfff8e8, 30, 25)
     sunLight.position.set(0, 0, 0)
     this.scene.add(sunLight)
-
-    const ambient = new THREE.AmbientLight(0x333355, 1.0)
-    this.scene.add(ambient)
 
     this.planetGeo = new THREE.SphereGeometry(0.2, 16, 16)
     this.planet = new THREE.Mesh(this.planetGeo, new THREE.MeshStandardMaterial({ color: 0x66bb6a, roughness: 0.4 }))

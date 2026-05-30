@@ -29,10 +29,11 @@ export default {
   mounted() {
     this._e = new CoriolisEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ rotationSpeed: this.rotationSpeed, hemisphere: this.hemisphere, particleCount: this.particleCount }) },
     setHemi(h) { this.hemisphere = h; this.onParam() },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new CoriolisEngine(); this._e.init(this.$refs.cvs) }) },
@@ -69,7 +70,11 @@ class CoriolisEngine extends ExperimentEngine {
   }
 
   _spawn(count) {
-    this._particles.forEach(p => this.scene.remove(p))
+    this._particles.forEach(p => {
+      this.scene.remove(p)
+      if (p.material) p.material.dispose()
+      if (p.geometry) p.geometry.dispose()
+    })
     this._particles = []
     const geo = new THREE.SphereGeometry(0.08, 6, 6)
     for (let i = 0; i < count; i++) {

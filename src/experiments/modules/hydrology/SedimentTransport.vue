@@ -27,10 +27,11 @@ export default {
   mounted() {
     this._e = new SedimentTransportEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ velocity: this.velocity / 10 }) },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new SedimentTransportEngine(); this._e.init(this.$refs.cvs) }) },
   },

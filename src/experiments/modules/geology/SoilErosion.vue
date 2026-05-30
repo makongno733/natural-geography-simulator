@@ -28,10 +28,11 @@ export default {
   mounted() {
     this._e = new SoilErosionEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ rainIntensity: this.rainIntensity, slopeAngle: this.slopeAngle }) },
     reset() {
       this.rainIntensity = 5; this.slopeAngle = 20
@@ -174,7 +175,11 @@ class SoilErosionEngine extends ExperimentEngine {
   }
 
   _spawnDrops() {
-    this._drops.forEach(d => this.scene.remove(d.mesh))
+    this._drops.forEach(d => {
+      this.scene.remove(d.mesh)
+      if (d.mesh.material) d.mesh.material.dispose()
+      if (d.mesh.geometry) d.mesh.geometry.dispose()
+    })
     this._drops = []
     const count = this.rainIntensity * 8
     const geo = new THREE.SphereGeometry(0.05, 4, 4)
@@ -193,7 +198,15 @@ class SoilErosionEngine extends ExperimentEngine {
   }
 
   update(dt) {
-    if (this.rainIntensity === 0) return
+    // Always lerp puddle colors back toward clean when rain is light
+    if (this.rainIntensity < 0.5) {
+      const bareCol = this.puddleBare.material.color
+      bareCol.lerp(new THREE.Color(0xc8a96e), dt * 0.5)
+      const vegCol = this.puddleVeg.material.color
+      vegCol.lerp(new THREE.Color(0x5c8a8a), dt * 0.5)
+    }
+
+    if (this.rainIntensity === 0 || !this._drops) return
     const angleRad = THREE.MathUtils.degToRad(this.slopeAngle)
     const speed = 2 + this.rainIntensity * 0.4
 
@@ -242,14 +255,6 @@ class SoilErosionEngine extends ExperimentEngine {
           d.turbid = true
         }
       }
-    }
-
-    // Slowly restore puddle color
-    if (this.rainIntensity === 0) {
-      const bareCol = this.puddleBare.material.color
-      bareCol.lerp(new THREE.Color(0xc8a96e), dt * 0.5)
-      const vegCol = this.puddleVeg.material.color
-      vegCol.lerp(new THREE.Color(0x87ceeb), dt * 0.5)
     }
   }
 

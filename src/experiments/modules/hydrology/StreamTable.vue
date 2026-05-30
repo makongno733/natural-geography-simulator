@@ -24,10 +24,11 @@ export default {
   mounted() {
     this._e = new StreamTableEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
-    window.addEventListener('resize', () => this._e?.resize())
+    window.addEventListener('resize', this._onResize)
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', () => this._e?.resize()) },
+  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
+    _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) },
     reset() {
       this._e.dispose()
@@ -78,7 +79,11 @@ class StreamTableEngine extends ExperimentEngine {
   }
 
   _spawnDrops(count) {
-    this._drops.forEach(d => this.scene.remove(d))
+    this._drops.forEach(d => {
+      this.scene.remove(d)
+      if (d.material) d.material.dispose()
+      if (d.geometry) d.geometry.dispose()
+    })
     this._drops = []
     const geo = new THREE.SphereGeometry(0.06, 4, 4)
     for (let i = 0; i < count; i++) {
