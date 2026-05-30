@@ -59,7 +59,19 @@ class KeplerLawsEngine extends ExperimentEngine {
     this.scene.add(this.planet)
 
     this.ellipseLine = null
+
+    // Pre-allocate sector meshes (geometry updated per frame, not recreated)
     this.areaSectors = []
+    this._maxSectors = 10
+    for (let i = 0; i < this._maxSectors; i++) {
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3))
+      const mat = new THREE.MeshBasicMaterial({ color: 0xff6600, side: THREE.DoubleSide, transparent: true, opacity: 0.3 })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.visible = false
+      this.scene.add(mesh)
+      this.areaSectors.push(mesh)
+    }
 
     this.semiMajor = 5
     this.ecc = 0.5
@@ -121,13 +133,34 @@ class KeplerLawsEngine extends ExperimentEngine {
     if (this.aphMarker) { this.scene.remove(this.aphMarker); this.aphMarker.geometry.dispose(); this.aphMarker.material.dispose(); this.aphMarker = null }
   }
 
-  _clearSectors() {
+  _updateSectors() {
+    // Hide all pool sectors first
     for (const s of this.areaSectors) {
-      this.scene.remove(s)
-      s.geometry.dispose()
-      s.material.dispose()
+      s.visible = false
     }
-    this.areaSectors = []
+
+    if (this.trail.length < 3) return
+
+    const sunPos = new THREE.Vector3(this.focusOffset, 0, 0)
+    const trail = this.trail
+    const n = Math.min(trail.length - 2, this._maxSectors - 1)
+
+    for (let i = 0; i < n; i++) {
+      const p1 = trail[trail.length - 3 - i]
+      const p2 = trail[trail.length - 2 - i]
+      const sector = this.areaSectors[i]
+
+      const positions = sector.geometry.attributes.position
+      positions.setXYZ(0, sunPos.x, sunPos.y, sunPos.z)
+      positions.setXYZ(1, p1.x, p1.y, p1.z)
+      positions.setXYZ(2, p2.x, p2.y, p2.z)
+      positions.needsUpdate = true
+
+      sector.geometry.computeVertexNormals()
+      sector.material.color.setHSL(0.33 - (i / n) * 0.2, 0.8, 0.5)
+      sector.material.opacity = 0.2 + i * 0.08
+      sector.visible = true
+    }
   }
 
   _solveKepler(M, e) {
@@ -163,39 +196,17 @@ class KeplerLawsEngine extends ExperimentEngine {
     const pos = this._planetPos(this.meanAnomaly, this.ecc)
     this.planet.position.set(pos.x, 0, pos.z)
 
-    const sunPos = new THREE.Vector3(this.focusOffset, 0, 0)
     this.trail.push(this.planet.position.clone())
     if (this.trail.length > 100) this.trail.shift()
 
-    this._clearSectors()
-    if (this.trail.length >= 3) {
-      const step = Math.max(1, Math.floor(this.trail.length / 12))
-      for (let i = 0; i < this.trail.length - step; i += step) {
-        const j = Math.min(i + step, this.trail.length - 1)
-        if (j - i < 2) continue
-        const pts = [sunPos, this.trail[i], this.trail[j]]
-        const geo = new THREE.BufferGeometry()
-        const verts = new Float32Array([
-          pts[0].x, pts[0].y, pts[0].z,
-          pts[1].x, pts[1].y, pts[1].z,
-          pts[2].x, pts[2].y, pts[2].z,
-        ])
-        geo.setAttribute('position', new THREE.BufferAttribute(verts, 3))
-        const hue = 0.33 - (i / this.trail.length) * 0.2
-        const color = new THREE.Color().setHSL(hue, 0.8, 0.5)
-        const mat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.35, depthTest: false })
-        const mesh = new THREE.Mesh(geo, mat)
-        this.scene.add(mesh)
-        this.areaSectors.push(mesh)
-      }
-    }
+    this._updateSectors()
   }
 
   setParams({ eccentricity }) {
     if (eccentricity !== undefined && Math.abs(eccentricity - this.ecc) > 0.001) {
       this.ecc = Math.max(0, Math.min(0.9, eccentricity))
       this._removeMarkers()
-      this._clearSectors()
+      this._updateSectors()
       this._rebuildEllipse()
       this._makeMarkers()
       this.meanAnomaly = 0
