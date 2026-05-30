@@ -1,17 +1,32 @@
-<script setup>
-import { ref } from 'vue'
-const current = ref(0)
-</script>
+<template></template>
 <script>
 export const steps = [
-  { title: '实验介绍', content: '本实验内容正在准备中，敬请期待。', highlight: '请关注后续更新' }
+  {
+    title: '准备材料',
+    content: '准备一个透明塑料瓶（带盖）、少量温水、一根火柴（或一支香）。实验在安全环境下进行，注意防火。',
+    highlight: '温水提供水汽，火柴提供凝结核（烟尘颗粒）。',
+  },
+  {
+    title: '引入水汽和凝结核',
+    content: '向瓶中倒入少量温水（约 2-3 cm 深），轻轻摇晃使瓶壁湿润。点燃火柴，吹灭后迅速将带烟的火柴头伸入瓶中，让烟尘进入瓶内，然后拧紧瓶盖。',
+    highlight: '烟尘颗粒是云滴形成的必要条件——它们作为凝结核，水汽分子可以在其表面聚集。',
+  },
+  {
+    title: '加压——压缩升温',
+    content: '用手用力挤压瓶身（或扭转瓶身使其变形）。这一步增加了瓶内气压，空气被压缩后温度升高（绝热压缩），瓶内相对湿度降低，云消失。',
+    highlight: '绝热压缩：PV = nRT，体积减小 → 温度升高 → 饱和水汽压升高 → 相对湿度下降。',
+  },
+  {
+    title: '释压——膨胀降温，云形成',
+    content: '快速松开手，让瓶子回弹。瓶内空气绝热膨胀，温度骤降，相对湿度迅速达到 100% 以上（过饱和），水汽在烟尘颗粒上凝结成微小水滴——可见的"云"出现了！',
+    highlight: '绝热膨胀是大气中云形成的主要机制。空气上升 → 气压降低 → 膨胀冷却 → 水汽凝结 → 云。',
+  },
+  {
+    title: '重复观察',
+    content: '反复挤压和释放几次，观察云的反复出现和消失。每次挤压（加压升温）时云消失，释放（减压降温）时云重新形成。这模拟了大气中空气上升降温成云的过程。',
+    highlight: '在真实大气中，湿空气团上升时经历绝热膨胀冷却，当温度降到露点以下时，水汽在气溶胶颗粒上凝结，形成云。干绝热递减率约 10°C/km，湿绝热递减率约 6°C/km。',
+  },
 ]
+
+export default { name: 'CloudBottle' }
 </script>
-<template>
-  <div class="tutorial-placeholder">
-    <p>{{ steps[0]?.content }}</p>
-  </div>
-</template>
-<style scoped>
-.tutorial-placeholder { text-align: center; padding: 40px; color: var(--muted); }
-</style>

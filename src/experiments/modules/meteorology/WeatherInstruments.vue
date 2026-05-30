@@ -1,17 +1,27 @@
-<script setup>
-import { ref } from 'vue'
-const current = ref(0)
-</script>
+<template></template>
 <script>
 export const steps = [
-  { title: '实验介绍', content: '本实验内容正在准备中，敬请期待。', highlight: '请关注后续更新' }
+  {
+    title: '气球气压计',
+    content: '将一个气球剪开，绷紧覆盖在广口瓶的瓶口上，用橡皮筋扎紧。将一根吸管的一端粘在气球膜中央，另一端作为指针。当大气压变化时，气球膜会凹陷或凸起，带动吸管指针上下偏移。气压升高 → 膜凹陷 → 指针上翘；气压降低 → 膜凸起 → 指针下垂。',
+    highlight: '气压变化引起密闭瓶内外的压力差，使弹性膜变形。标准大气压 = 1013.25 hPa。',
+  },
+  {
+    title: '乒乓球风速计',
+    content: '将一个乒乓球用细线悬挂在量角器的中心点。风吹动乒乓球，使细线偏离垂直方向。测量偏角 θ，风速 v ≈ √(mg·tanθ / (0.5·ρ·Cd·A))。偏角越大，风速越大。可以用已知风速校准。',
+    highlight: '风对球的拖曳力与风速的平方成正比。蒲福风级将风速分为 0-12 级。',
+  },
+  {
+    title: '简易雨量计',
+    content: '取一个直筒透明容器（如量筒），在上方放置一个漏斗（确保漏斗边缘水平）。将装置放在开阔处。降雨后读取收集的水深。雨量 = 收集水体体积 / 漏斗口面积。1 mm 降雨量 = 每平方米 1 升水。',
+    highlight: '标准雨量计口径 20 cm，安装高度 0.7 m（中国标准）。降水强度：小雨 < 10 mm/h，暴雨 > 50 mm/h。',
+  },
+  {
+    title: '风向标',
+    content: '在吸管一端剪出一个箭头形尾翼，另一端加配重（橡皮泥），中间用大头针垂直穿过作为转轴。将大头针插在铅笔顶端的橡皮上。放在风中，箭头指向风吹来的方向。风的命名以来向为准（如北风 = 从北向南吹）。',
+    highlight: '风向用 16 方位或 0-360° 表示。气象站标准高度 10 m。',
+  },
 ]
+
+export default { name: 'WeatherInstruments' }
 </script>
-<template>
-  <div class="tutorial-placeholder">
-    <p>{{ steps[0]?.content }}</p>
-  </div>
-</template>
-<style scoped>
-.tutorial-placeholder { text-align: center; padding: 40px; color: var(--muted); }
-</style>
