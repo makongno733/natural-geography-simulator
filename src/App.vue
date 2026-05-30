@@ -3,6 +3,9 @@
     <header class="app-header">
       <router-link to="/" class="app-title">中学地理教学系统</router-link>
       <p class="app-subtitle">人教版 · 初中 / 高中</p>
+      <nav class="app-nav">
+        <router-link to="/experiments" class="nav-link">地学实验</router-link>
+      </nav>
     </header>
     <router-view />
   </div>
@@ -73,6 +76,17 @@ const isHome = computed(() => route.path === '/')
   font-size: 14px;
   font-family: "Noto Serif SC", "Songti SC", serif;
 }
+.app-nav { margin-top: 2px; display: flex; gap: 16px; justify-content: center; }
+.nav-link {
+  font-size: 14px;
+  color: #8f7652;
+  text-decoration: none;
+  padding: 2px 10px;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+}
+.nav-link:hover { color: var(--red); background: rgba(158, 36, 38, 0.06); }
+.nav-link.router-link-exact-active { color: var(--red); font-weight: 600; }
 @media (max-width: 1120px) {
   .home-mode .app-title {
     font-size: clamp(48px, 10.5vw, 112px);

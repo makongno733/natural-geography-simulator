@@ -12,6 +12,9 @@ const Earth3D = () => import('./sandbox/Earth3D.vue')
 const DisasterSandbox = () => import('./sandbox/DisasterSandbox.vue')
 const MapProjectionView = () => import('./sandbox/MapProjectionView.vue')
 const GeologicTimeView = () => import('./sandbox/GeologicTimeView.vue')
+const ExperimentsHome = () => import('./experiments/ExperimentsHome.vue')
+const ExperimentCategory = () => import('./experiments/ExperimentCategory.vue')
+const ExperimentView = () => import('./experiments/ExperimentView.vue')
 
 const ChapterRedirect = {
   name: 'ChapterRedirect',
@@ -46,6 +49,9 @@ const routes = [
   { path: '/map', name: 'map', component: MapProjectionView },
   { path: '/geo', name: 'geo', component: GeologicTimeView },
   { path: '/textbook', redirect: '/' },
+  { path: '/experiments', name: 'experiments', component: ExperimentsHome },
+  { path: '/experiments/:category', name: 'experiment-category', component: ExperimentCategory },
+  { path: '/experiments/:category/:experiment', name: 'experiment-view', component: ExperimentView },
   { path: '/:grade', name: 'grade', component: BookSelect },
   { path: '/:grade/:book', name: 'book', component: ChapterList },
   { path: '/:grade/:book/:chapter', name: 'chapter', component: ChapterRedirect },
