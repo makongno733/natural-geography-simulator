@@ -1,5 +1,3 @@
-<template></template>
-<script>
 const steps = [
   {
     title: '准备实验材料',
@@ -112,4 +110,3 @@ const steps = [
   },
 ]
 export default { name: "Infiltration", steps }
-</script>

@@ -1,5 +1,3 @@
-<template></template>
-<script>
 const steps = [
   {
     title: '观察颜色和光泽',
@@ -109,4 +107,3 @@ const steps = [
 ]
 
 export default { name: "MineralID", steps }
-</script>

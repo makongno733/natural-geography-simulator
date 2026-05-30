@@ -95,8 +95,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   display: flex;
   justify-content: center;
 }
-.illustration-svg { max-width: 100%; }
-.illustration-svg :deep(svg) { max-width: 100%; height: auto; }
+.illustration-svg { max-width: 100%; min-height: 100px; }
+.illustration-svg :deep(svg) { display: block; max-width: 100%; height: auto; min-height: 100px; }
 .tutorial-content { font-size: 15px; line-height: 1.8; color: var(--ink); margin-bottom: 14px; }
 .tutorial-highlight {
   background: linear-gradient(90deg, rgba(158, 36, 38, 0.08), transparent);

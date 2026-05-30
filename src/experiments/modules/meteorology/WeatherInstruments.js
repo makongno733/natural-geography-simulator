@@ -1,5 +1,3 @@
-<template></template>
-<script>
 const steps = [
   {
     title: '气球气压计',
@@ -87,4 +85,3 @@ const steps = [
 ]
 
 export default { name: "WeatherInstruments", steps }
-</script>

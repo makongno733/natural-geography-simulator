@@ -1,5 +1,3 @@
-<template></template>
-<script>
 const steps = [
   {
     title: '布置勘探网格',
@@ -129,4 +127,3 @@ const steps = [
 ]
 
 export default { name: "PotatoCore", steps }
-</script>

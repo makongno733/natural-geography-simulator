@@ -1,5 +1,3 @@
-<template></template>
-<script>
 const steps = [
   {
     title: '搭建微型水循环系统',
@@ -106,4 +104,3 @@ const steps = [
   },
 ]
 export default { name: "WaterCycle", steps }
-</script>

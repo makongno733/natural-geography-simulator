@@ -25,7 +25,7 @@ const modules = [
     type: 'tutorial',
     description: '通过简单的瓶子和火柴，演示云的形成过程——凝结核、绝热膨胀与降温凝结。',
     concepts: ['云形成', '凝结核', '绝热膨胀', '露点'],
-    component: () => import('./meteorology/CloudBottle.vue'),
+    component: () => import('./meteorology/CloudBottle.js'),
   },
   {
     id: 'weather-instruments',
@@ -34,7 +34,7 @@ const modules = [
     type: 'tutorial',
     description: '了解气压计、风速计、雨量计等气象仪器的制作方法和测量原理。',
     concepts: ['气压计', '风速计', '雨量计', '气象观测'],
-    component: () => import('./meteorology/WeatherInstruments.vue'),
+    component: () => import('./meteorology/WeatherInstruments.js'),
   },
 
   // -- 水文学实验 --
@@ -63,7 +63,7 @@ const modules = [
     type: 'tutorial',
     description: '比较不同土壤类型、植被覆盖和坡度条件下的下渗与地表径流差异。',
     concepts: ['下渗', '地表径流', '土壤类型', '植被覆盖'],
-    component: () => import('./hydrology/Infiltration.vue'),
+    component: () => import('./hydrology/Infiltration.js'),
   },
   {
     id: 'water-cycle',
@@ -72,7 +72,7 @@ const modules = [
     type: 'tutorial',
     description: '用密封袋模拟微型水循环系统，观察蒸发、凝结、降水、汇集的完整过程。',
     concepts: ['蒸发', '凝结', '降水', '水循环'],
-    component: () => import('./hydrology/WaterCycle.vue'),
+    component: () => import('./hydrology/WaterCycle.js'),
   },
   {
     id: 'sediment-transport',
@@ -110,7 +110,7 @@ const modules = [
     type: 'tutorial',
     description: '学习使用莫氏硬度计、条痕板、放大镜和稀酸鉴别常见矿物。',
     concepts: ['莫氏硬度', '条痕', '光泽', '解理', '碳酸盐反应'],
-    component: () => import('./geology/MineralID.vue'),
+    component: () => import('./geology/MineralID.js'),
   },
   {
     id: 'potato-core',
@@ -119,7 +119,7 @@ const modules = [
     type: 'tutorial',
     description: '模拟钻孔勘探过程——在不同位置取样，根据岩心数据推断地下矿产分布。',
     concepts: ['岩心取样', '钻孔勘探', '三维建模', '矿产勘探'],
-    component: () => import('./geology/PotatoCore.vue'),
+    component: () => import('./geology/PotatoCore.js'),
   },
   {
     id: 'soil-erosion',

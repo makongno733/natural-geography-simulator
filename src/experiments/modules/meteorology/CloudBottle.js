@@ -1,5 +1,3 @@
-<template></template>
-<script>
 const steps = [
   {
     title: '准备材料',
@@ -114,4 +112,3 @@ const steps = [
 ]
 
 export default { name: "CloudBottle", steps }
-</script>
