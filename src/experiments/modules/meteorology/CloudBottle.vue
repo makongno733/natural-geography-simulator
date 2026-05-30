@@ -70,31 +70,11 @@ export const steps = [
     title: '释压——膨胀降温，云形成',
     content: '快速松开手，让瓶子回弹。瓶内空气绝热膨胀，温度骤降，相对湿度迅速达到 100% 以上（过饱和），水汽在烟尘颗粒上凝结成微小水滴——可见的"云"出现了！',
     highlight: '绝热膨胀是大气中云形成的主要机制。空气上升 → 气压降低 → 膨胀冷却 → 水汽凝结 → 云。',
-    illustration: `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
-  <rect x="90" y="30" width="110" height="150" rx="12" fill="rgba(200,220,240,0.5)" stroke="#3a8f5a" stroke-width="2.5"/>
-  <path d="M60 105 L85 105" stroke="#3a8f5a" stroke-width="3" marker-end="url(#arrowOutLeft)"/>
-  <path d="M230 105 L255 105" stroke="#3a8f5a" stroke-width="3" marker-end="url(#arrowOutRight)"/>
-  <defs>
-    <marker id="arrowOutLeft" markerWidth="8" markerHeight="8" refX="0" refY="4" orient="auto">
-      <path d="M8,0 L0,4 L8,8 Z" fill="#3a8f5a"/>
-    </marker>
-    <marker id="arrowOutRight" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 Z" fill="#3a8f5a"/>
-    </marker>
-  </defs>
-  <circle cx="120" cy="80" r="5" fill="rgba(255,255,255,0.9)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="145" cy="65" r="6" fill="rgba(255,255,255,0.85)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="155" cy="90" r="5" fill="rgba(255,255,255,0.9)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="135" cy="95" r="7" fill="rgba(255,255,255,0.8)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="165" cy="75" r="4" fill="rgba(255,255,255,0.85)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="125" cy="55" r="5" fill="rgba(255,255,255,0.9)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="150" cy="50" r="6" fill="rgba(255,255,255,0.8)" stroke="#b8d4e3" stroke-width="1"/>
-  <circle cx="170" cy="60" r="4" fill="rgba(255,255,255,0.85)" stroke="#b8d4e3" stroke-width="1"/>
-  <text x="145" y="120" text-anchor="middle" font-size="16" fill="#3a8f5a" font-weight="700">膨胀</text>
-  <text x="145" y="140" text-anchor="middle" font-size="11" fill="#3a8f5a">V↑ T↓ RH↑</text>
-  <text x="145" y="16" text-anchor="middle" font-size="12" fill="#3a8f5a" font-weight="700">☁ 云形成！</text>
-  <text x="200" y="200" text-anchor="middle" font-size="13" fill="#302820">释压→膨胀冷却→过饱和→水汽凝结成云</text>
-</svg>`,
+    illustration: `<div style="text-align:center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b6/Condensation_core_containing_bottle_with_adiabatic_expansion.JPG"
+       alt="瓶中云实验" style="max-width:100%;max-height:300px;border-radius:8px" />
+  <p style="font-size:12px;color:#888;margin-top:4px">图片来源：Wikipedia (Yonoodle, CC BY-SA 3.0)</p>
+</div>`,
   },
   {
     title: '重复观察',
