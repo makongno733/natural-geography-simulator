@@ -1,6 +1,6 @@
 <template></template>
 <script>
-export const steps = [
+const steps = [
   {
     title: '搭建微型水循环系统',
     content: '在一个大碗中倒入约 1/3 的温水（可加几滴食用色素便于观察）。在碗中央放一个小杯子（空杯，用于收集"降水"）。用保鲜膜密封碗口，在保鲜膜中央（小杯正上方）放一颗石子或硬币，使膜略微下凹。',
@@ -105,5 +105,5 @@ export const steps = [
 </svg>`,
   },
 ]
-export default { name: 'WaterCycle' }
+export default { name: "WaterCycle", steps }
 </script>

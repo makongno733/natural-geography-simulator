@@ -1,6 +1,6 @@
 <template></template>
 <script>
-export const steps = [
+const steps = [
   {
     title: '准备材料',
     content: '准备一个透明塑料瓶（带盖）、少量温水、一根火柴。实验在安全环境下进行，注意防火。',
@@ -113,5 +113,5 @@ export const steps = [
   },
 ]
 
-export default { name: 'CloudBottle' }
+export default { name: "CloudBottle", steps }
 </script>

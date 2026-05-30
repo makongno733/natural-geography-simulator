@@ -1,6 +1,6 @@
 <template></template>
 <script>
-export const steps = [
+const steps = [
   {
     title: '观察颜色和光泽',
     content: '在自然光下观察矿物标本的直观属性——颜色和光泽。颜色是矿物对可见光选择性吸收的结果，可分为自色（矿物固有成分决定）、他色（杂质致色）和假色（表面氧化膜或干涉）。光泽描述矿物表面对光的反射能力，常见类型包括：金属光泽（如黄铁矿）、半金属光泽、金刚光泽（如金刚石）、玻璃光泽（如石英）、油脂光泽、珍珠光泽、丝绢光泽和土状光泽。',
@@ -108,5 +108,5 @@ export const steps = [
   },
 ]
 
-export default { name: 'MineralID' }
+export default { name: "MineralID", steps }
 </script>

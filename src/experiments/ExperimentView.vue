@@ -71,7 +71,7 @@ async function loadContent() {
   if (exp.value.type === '3d') {
     expComponent.value = defineAsyncComponent(() => Promise.resolve(mod.default || mod))
   } else {
-    tutorialSteps.value = mod.steps || mod.default?.steps || []
+    tutorialSteps.value = mod.default?.steps || mod.steps || []
   }
 }
 

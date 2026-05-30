@@ -1,6 +1,6 @@
 <template></template>
 <script>
-export const steps = [
+const steps = [
   {
     title: '气球气压计',
     content: '将气球剪开，绷紧覆盖在广口瓶口，用橡皮筋扎紧。吸管一端粘在气球膜中央，另一端作指针。气压变化使气球膜变形，带动指针偏移。气压↑→膜凹陷→指针上翘；气压↓→膜凸起→指针下垂。',
@@ -86,5 +86,5 @@ export const steps = [
   },
 ]
 
-export default { name: 'WeatherInstruments' }
+export default { name: "WeatherInstruments", steps }
 </script>

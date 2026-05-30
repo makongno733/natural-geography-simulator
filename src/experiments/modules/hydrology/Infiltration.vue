@@ -1,6 +1,6 @@
 <template></template>
 <script>
-export const steps = [
+const steps = [
   {
     title: '准备实验材料',
     content: '准备 3 个浅盘（或切开的塑料瓶底部），分别装入：干燥沙土、普通园土、种草皮的有植被土。每个盘下方放一个收集容器。准备一个洒水壶模拟降雨。',
@@ -111,5 +111,5 @@ export const steps = [
 </svg>`,
   },
 ]
-export default { name: 'Infiltration' }
+export default { name: "Infiltration", steps }
 </script>

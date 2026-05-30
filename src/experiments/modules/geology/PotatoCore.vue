@@ -1,6 +1,6 @@
 <template></template>
 <script>
-export const steps = [
+const steps = [
   {
     title: '布置勘探网格',
     content: '在地表按一定间距布置勘探网格，标记采样点位。网格间距根据勘探精度要求确定——区域性普查可用较大间距（如 200-500 m），详查阶段需加密至 50-100 m。\n\n本实验中，将土豆视为"地下岩体"，在其表面用牙签或标记笔画出网格线，纵横各 4-5 条，形成 16-25 个网格交点。每个交点即为一个钻孔位置。记录每个孔位的坐标（行号、列号），建立采样定位系统。',
@@ -128,5 +128,5 @@ export const steps = [
   },
 ]
 
-export default { name: 'PotatoCore' }
+export default { name: "PotatoCore", steps }
 </script>
