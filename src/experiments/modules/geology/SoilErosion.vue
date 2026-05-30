@@ -25,6 +25,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验对比裸露坡面与植被坡面在水土流失方面的差异：降雨粒子从上方落下，在裸露坡面形成浑浊径流（含泥沙），植被坡面径流清澈。调节降雨强度和坡度观察侵蚀加剧——植被覆盖是减少水土流失最有效的自然措施。</p>
+  </div>
 </template>
 
 <script>
@@ -103,8 +107,6 @@ class SoilErosionEngine extends ExperimentEngine {
     this.vegPatch.receiveShadow = true
     this.scene.add(this.vegPatch)
 
-    this._applySlope()
-
     // Vegetation cylinders on right patch
     this.plants = []
     const stemGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8)
@@ -136,6 +138,8 @@ class SoilErosionEngine extends ExperimentEngine {
     this.puddleVeg = new THREE.Mesh(puddleGeo, puddleMatVeg)
     this.puddleVeg.position.set(2.5, 0.03, patchLength / 2 + 0.3)
     this.scene.add(this.puddleVeg)
+
+    this._applySlope()
 
     // Rain drops pool
     this._drops = []
@@ -340,6 +344,10 @@ class SoilErosionEngine extends ExperimentEngine {
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .se-layout { flex-direction: column; }

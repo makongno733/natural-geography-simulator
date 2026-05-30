@@ -11,6 +11,11 @@
       <label>月球位置 (旋转角度)</label>
       <input type="range" min="0" max="360" v-model.number="moonAngle" @input="onParam" />
       <div class="mp-phase-label">当前月相：<strong>{{ phaseName }}</strong></div>
+      <div class="earth-view">
+        <div class="earth-view-label">🌍 地球观测视角</div>
+        <div class="moon-disk" :style="moonPhaseStyle"></div>
+        <div class="earth-view-phase">{{ phaseName }}</div>
+      </div>
       <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
       <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
         {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
@@ -21,6 +26,10 @@
     <div class="mp-canvas-wrap">
       <canvas ref="cvs"></canvas>
     </div>
+  </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验从空间视角展示月相变化的几何原理：太阳光从右侧照射，月球绕地球公转，我们从地球视角看到月球被照亮面的不同比例。拖动月球位置或点击预设观察新月、上弦月、满月、下弦月的形成——月相取决于日月地三者的相对位置。</p>
   </div>
 </template>
 
@@ -43,6 +52,20 @@ export default {
       '上弦月和下弦月时看到月球的一半亮面',
     ],
   } },
+  computed: {
+    moonPhaseStyle() {
+      const deg = ((this.moonAngle % 360) + 360) % 360
+      let pct
+      if (deg <= 180) {
+        pct = deg / 180 * 100
+      } else {
+        pct = (360 - deg) / 180 * 100
+      }
+      return {
+        background: `linear-gradient(90deg, #e8e8e8 ${pct}%, #333 ${pct}%)`
+      }
+    },
+  },
   mounted() {
     this._e = new MoonPhasesEngine()
     this._e._vm = this
@@ -174,6 +197,15 @@ class MoonPhasesEngine extends ExperimentEngine {
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .preset-btn:hover { background: var(--button-green); }
 .preset-btn.active:hover { background: var(--red); }
+
+.earth-view { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; background: #0a0a1a; border-radius: 8px; margin-top: 8px; }
+.earth-view-label { font-size: 12px; color: #ccc; }
+.moon-disk { width: 80px; height: 80px; border-radius: 50%; background: #e8e8e8; transition: all 0.3s; }
+.earth-view-phase { font-size: 13px; color: #ffd54f; font-weight: 600; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .mp-layout { flex-direction: column; }

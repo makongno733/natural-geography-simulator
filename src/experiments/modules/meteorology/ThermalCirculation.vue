@@ -25,6 +25,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验展示热力环流的形成机制：左侧热源加热空气→空气膨胀上升→高空向冷源流动→冷源处空气收缩下沉→地面从冷区流回热区，形成闭合环流。拖动热源温差滑块改变环流强度，观察粒子运动轨迹和颜色变化（暖色=上升，冷色=下沉）。</p>
+  </div>
 </template>
 
 <script>
@@ -215,6 +219,10 @@ class ThermalCirculationEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .tc-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .tc-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .tc-layout { flex-direction: column; }

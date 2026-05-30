@@ -7,7 +7,7 @@ export class ExperimentEngine {
     this.camera = null
     this.renderer = null
     this.controls = null
-    this.clock = null
+    this.timer = null
     this.animationId = null
     this._canvas = null
     this._sprites = []
@@ -34,14 +34,14 @@ export class ExperimentEngine {
     this.renderer.setSize(width, height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.shadowMap.type = THREE.PCFShadowMap
 
     this.controls = new OrbitControls(this.camera, canvas)
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.08
 
     this._addLights()
-    this.clock = new THREE.Clock()
+    this.timer = new THREE.Timer()
     this.setupScene()
     this._animate()
   }
@@ -82,8 +82,8 @@ export class ExperimentEngine {
   }
 
   _animate() {
-    const dt = Math.min(this.clock.getDelta(), 0.1)
-    const elapsed = this.clock.elapsedTime
+    const dt = Math.min(this.timer.getDelta(), 0.1)
+    const elapsed = this.timer.elapsed
     this.update(dt, elapsed)
     if (this._guidedMode) {
       this._guideTimer += dt

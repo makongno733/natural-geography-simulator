@@ -26,6 +26,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验展示日月食的形成几何条件：太阳-地球-月球三者接近直线排列（朔望）时才可能发生食。月全食时地球本影投射到月球；日全食时月球本影投射到地球表面；日环食时月球距地球较远，本影锥未能到达地表，形成光环。观察本影与半影锥的几何关系。</p>
+  </div>
 </template>
 
 <script>
@@ -250,6 +254,10 @@ class EclipseEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .ec-canvas-wrap { flex: 1; min-height: 460px; background: #050510; }
 .ec-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .ec-layout { flex-direction: column; }

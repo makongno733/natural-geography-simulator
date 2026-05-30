@@ -23,6 +23,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验模拟流水地貌的发育过程：蓝色水滴从上游沿坡面流向下游，侵蚀地表、搬运泥沙、在下游沉积。调节坡度增加流速和侵蚀力，增大流量模拟洪水事件。观察曲流发育和冲积扇形成——这是自然界河流塑造地表的基本过程。</p>
+  </div>
 </template>
 
 <script>
@@ -184,6 +188,10 @@ class StreamTableEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .st-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .st-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .st-layout { flex-direction: column; }

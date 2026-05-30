@@ -15,7 +15,7 @@
     <component :is="expComponent" v-if="expComponent && exp?.type === '3d'" />
 
     <!-- Tutorial experiment: TutorialTemplate with steps -->
-    <TutorialTemplate v-if="exp?.type === 'tutorial'" :steps="tutorialSteps" />
+    <TutorialTemplate v-if="exp?.type === 'tutorial' && tutorialSteps.length" :steps="tutorialSteps" />
 
     <section class="ev-concepts" v-if="exp?.concepts?.length">
       <h4>涉及知识点</h4>
@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, defineAsyncComponent } from 'vue'
+import { computed, ref, watch, shallowRef, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import modules, { categoryLabels, getRelatedExperiments } from './modules/index.js'
 import TutorialTemplate from './components/TutorialTemplate.vue'
@@ -58,7 +58,7 @@ const related = computed(() => {
   return getRelatedExperiments(exp.value.id, 4)
 })
 
-const expComponent = ref(null)
+const expComponent = shallowRef(null)
 const tutorialSteps = ref([])
 
 async function loadContent() {

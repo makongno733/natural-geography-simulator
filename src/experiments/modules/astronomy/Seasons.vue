@@ -27,6 +27,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验展示四季成因：地球绕日公转过程中，23.5°的地轴倾角保持不变，导致太阳直射点在南北回归线之间移动。夏至时北半球倾向太阳（昼长夜短），冬至时南半球倾向太阳。春分和秋分时太阳直射赤道，全球昼夜等长。</p>
+  </div>
 </template>
 
 <script>
@@ -212,6 +216,10 @@ class SeasonsEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .se-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .se-layout { flex-direction: column; }

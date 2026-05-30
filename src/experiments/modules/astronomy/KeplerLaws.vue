@@ -19,6 +19,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验可视化开普勒行星运动三大定律：第一定律——行星沿椭圆轨道运动，太阳位于焦点；第二定律——行星与太阳连线在相等时间内扫过相等面积（近日点速度快，远日点速度慢）；第三定律——轨道周期的平方与半长轴的立方成正比。调节离心率对比近圆轨道与彗星轨道。</p>
+  </div>
 </template>
 
 <script>
@@ -293,6 +297,10 @@ class KeplerLawsEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .kl-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .kl-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .kl-layout { flex-direction: column; }

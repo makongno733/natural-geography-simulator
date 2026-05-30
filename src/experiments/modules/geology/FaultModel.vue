@@ -24,6 +24,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验模拟地壳水平挤压和拉张作用下的构造变形：四层岩层（砂岩、页岩、石灰岩、基岩）在两壁之间受挤压形成褶皱和逆断层，受拉张形成正断层和地堑。位移越大变形越显著，接近活塞的岩层变形最强。这是理解造山带和裂谷盆地形成机制的经典模型。</p>
+  </div>
 </template>
 
 <script>
@@ -194,6 +198,10 @@ class FaultModelEngine extends ExperimentEngine {
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .fm-layout { flex-direction: column; }

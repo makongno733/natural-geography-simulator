@@ -26,6 +26,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验演示Hjulstrom曲线揭示的流水搬运规律：不同粒径颗粒（黏土、粉砂、砂、砾石）在不同流速下经历侵蚀、搬运和沉积。低速时颗粒沉降堆积，中速时砂粒搬运活跃，高速洪水可搬运砾石。这是理解河流地貌发育和水力工程的核心原理。</p>
+  </div>
 </template>
 
 <script>
@@ -160,6 +164,10 @@ class SedimentTransportEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .st2-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .st2-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .st2-layout { flex-direction: column; }

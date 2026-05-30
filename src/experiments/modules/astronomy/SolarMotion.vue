@@ -31,6 +31,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验模拟不同纬度、不同季节的太阳周日视运动轨迹：太阳在天穹上的弧形路径随纬度和季节变化。北半球夏至太阳高度角最高、昼最长，冬至最低、昼最短。地面竖杆的影子长度和方向随太阳位置实时变化。切换预设对比北京与赤道的差异。</p>
+  </div>
 </template>
 
 <script>
@@ -314,6 +318,10 @@ class SolarMotionEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .sm-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .sm-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .sm-layout { flex-direction: column; }

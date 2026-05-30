@@ -29,6 +29,10 @@
       <canvas ref="cvs"></canvas>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验模拟旋转地球上流体的科里奥利力效应：旋转圆盘代表地球自转，中心冰柱模拟两极低温，红色粒子从外围向内运动时受地转偏向力作用发生偏转。切换南北半球观察偏转方向反转——北半球右偏（逆时针螺旋），南半球左偏（顺时针螺旋）。</p>
+  </div>
 </template>
 
 <script>
@@ -231,6 +235,10 @@ class CoriolisEngine extends ExperimentEngine {
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .cor-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .cor-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .cor-layout { flex-direction: column; }

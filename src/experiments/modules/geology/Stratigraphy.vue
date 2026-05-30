@@ -27,6 +27,10 @@
       </div>
     </div>
   </div>
+  <div class="exp-desc">
+    <h4>实验说明</h4>
+    <p>本实验展示地层学三大基本原理（Steno定律）：叠置原理——下层老、上层新；水平原理——地层原始沉积时近水平；穿插关系——侵入体切割的地层比侵入体更老。观察不整合面（倾斜层与水平层的界面）和岩体侵入关系，理解相对定年方法。</p>
+  </div>
 </template>
 
 <script>
@@ -238,6 +242,10 @@ class StratigraphyEngine extends ExperimentEngine {
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
+.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
+.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
 
 @media (max-width: 720px) {
   .sg-layout { flex-direction: column; }
