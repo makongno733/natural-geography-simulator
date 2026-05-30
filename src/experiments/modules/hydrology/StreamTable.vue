@@ -21,6 +21,9 @@
     </aside>
     <div class="st-canvas-wrap">
       <canvas ref="cvs"></canvas>
+      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
+        {{ locked ? '🔒' : '🔓' }}
+      </button>
     </div>
   </div>
   <div class="exp-desc">
@@ -36,7 +39,7 @@ import * as THREE from 'three'
 export default {
   name: 'StreamTable',
   data() { return {
-    slope: 8, flowRate: 5, currentPreset: null,
+    slope: 8, flowRate: 5, currentPreset: null, locked: true,
     guideActive: false,
     guideText: '',
     _guideTexts: [
@@ -54,12 +57,13 @@ export default {
   mounted() {
     this._e = new StreamTableEngine()
     this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => this._e.init(this.$refs.cvs))
+    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
     window.addEventListener('resize', this._onResize)
   },
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
+    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
     onParam() { this.currentPreset = null; this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) },
     applyPreset(p) {
       this.currentPreset = p.label
@@ -79,7 +83,7 @@ export default {
     },
     reset() {
       this._e.dispose()
-      this.$nextTick(() => { this._e = new StreamTableEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs); this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) })
+      this.$nextTick(() => { this._e = new StreamTableEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs); this._e.setParams({ slope: this.slope, flowRate: this.flowRate }); if (this.locked) this._e.controls.enabled = false })
     },
   },
 }
@@ -216,8 +220,10 @@ class StreamTableEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.st-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
+.st-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
 .st-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lock-btn:hover { background: rgba(255,255,255,1); }
 
 .exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
 .exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
