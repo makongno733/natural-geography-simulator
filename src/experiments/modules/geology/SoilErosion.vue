@@ -1,6 +1,11 @@
 <template>
   <div class="se-layout">
     <aside class="se-panel">
+      <div class="preset-row">
+        <button class="preset-btn" :class="{ active: rainIntensity === 3 && slopeAngle === 10 }" @click="preset('light')">小雨</button>
+        <button class="preset-btn" :class="{ active: rainIntensity === 8 && slopeAngle === 20 }" @click="preset('heavy')">暴雨</button>
+        <button class="preset-btn" :class="{ active: rainIntensity === 10 && slopeAngle === 25 }" @click="preset('extreme')">暴雨+裸露</button>
+      </div>
       <label>降雨强度 <span>{{ rainIntensity }}</span></label>
       <input type="range" min="0" max="10" step="1" v-model.number="rainIntensity" @input="onParam" />
       <label>坡度 <span>{{ slopeAngle }}°</span></label>
@@ -34,6 +39,12 @@ export default {
   methods: {
     _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ rainIntensity: this.rainIntensity, slopeAngle: this.slopeAngle }) },
+    preset(type) {
+      if (type === 'light') { this.rainIntensity = 3; this.slopeAngle = 10 }
+      else if (type === 'heavy') { this.rainIntensity = 8; this.slopeAngle = 20 }
+      else if (type === 'extreme') { this.rainIntensity = 10; this.slopeAngle = 25 }
+      this.onParam()
+    },
     reset() {
       this.rainIntensity = 5; this.slopeAngle = 20
       this._e.dispose()
@@ -120,33 +131,37 @@ class SoilErosionEngine extends ExperimentEngine {
     divider.position.set(0, 0.01, 0)
     this.scene.add(divider)
 
-    // Labels
-    const labelGeo = new THREE.PlaneGeometry(1.2, 0.3)
-    this._makeLabel('裸露土壤', -2.5, 0.5, -2.5)
-    this._makeLabel('植被覆盖', 2.5, 0.5, -2.5)
+    // Sprite labels
+    this._sprites = []
+    this._sprites.push(this._makeLabel('裸露坡面', new THREE.Vector3(-2.5, 1.0, -2.5), '#8b4513', 28, 2.2))
+    this._sprites.push(this._makeLabel('植被坡面', new THREE.Vector3(2.5, 1.0, -2.5), '#2e7d32', 28, 2.2))
+    this._sprites.push(this._makeLabel('降雨', new THREE.Vector3(0, 4.2, -3), '#1976d2', 24, 2))
+    this._rainSprite = this._sprites[this._sprites.length - 1]
+    this._sprites.push(this._makeLabel('清澈径流', new THREE.Vector3(2.5, 0.3, 4), '#2e7d32', 22, 1.8))
+    this._turbidSprite = this._makeLabel('浑浊径流', new THREE.Vector3(-2.5, 0.3, 4), '#8b4513', 22, 1.8)
+    this._turbidSprite.visible = this.rainIntensity > 0
+    this._sprites.push(this._turbidSprite)
+    this._sprites.forEach(s => this.scene.add(s))
 
     this.camera.position.set(2, 5, 7)
     this.controls.target.set(0, -0.1, 0.5)
   }
 
-  _makeLabel(text, x, y, z) {
+  _makeLabel(text, position, color = '#333333', fontSize = 28, scale = 2.5) {
     const canvas = document.createElement('canvas')
-    canvas.width = 256; canvas.height = 64
+    canvas.width = 512; canvas.height = 128
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = 'rgba(0,0,0,0.7)'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = '#fff'
-    ctx.font = 'bold 28px sans-serif'
+    ctx.fillStyle = color
+    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(text, 128, 32)
+    ctx.fillText(text, 256, 64)
     const tex = new THREE.CanvasTexture(canvas)
     tex.minFilter = THREE.LinearFilter
-    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthTest: false })
-    const label = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.3), mat)
-    label.position.set(x, y, z)
-    label.renderOrder = 999
-    this.scene.add(label)
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(position)
+    sprite.scale.set(scale, scale * 0.25, 1)
+    return sprite
   }
 
   _applySlope() {
@@ -204,6 +219,14 @@ class SoilErosionEngine extends ExperimentEngine {
       bareCol.lerp(new THREE.Color(0xc8a96e), dt * 0.5)
       const vegCol = this.puddleVeg.material.color
       vegCol.lerp(new THREE.Color(0x5c8a8a), dt * 0.5)
+    }
+
+    // Dynamic sprite visibility
+    if (this._turbidSprite) {
+      this._turbidSprite.visible = this.rainIntensity > 0
+    }
+    if (this._rainSprite) {
+      this._rainSprite.visible = this.rainIntensity > 0
     }
 
     if (this.rainIntensity === 0 || !this._drops) return
@@ -286,6 +309,9 @@ class SoilErosionEngine extends ExperimentEngine {
 .se-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .se-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 
 @media (max-width: 720px) {
   .se-layout { flex-direction: column; }

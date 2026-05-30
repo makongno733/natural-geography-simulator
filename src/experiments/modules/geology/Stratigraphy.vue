@@ -1,6 +1,10 @@
 <template>
   <div class="sg-layout">
     <aside class="sg-panel">
+      <div class="preset-row">
+        <button class="preset-btn" :class="{ active: showLabels }" @click="showLabels = true; onParam()">显示全部标注</button>
+        <button class="preset-btn" :class="{ active: !showLabels }" @click="showLabels = false; onParam()">隐藏标注</button>
+      </div>
       <label class="sg-toggle">
         <input type="checkbox" v-model="showLabels" @change="onParam" /> 显示标注
       </label>
@@ -112,6 +116,23 @@ class StratigraphyEngine extends ExperimentEngine {
 
     this.scene.add(this.strataGroup)
 
+    // Sprite labels (added to scene, not strataGroup, so they don't rotate)
+    this._sprites = []
+    const strataLabels = [
+      { text: '地层 1 (最新)', y: 0.82, color: '#e0cfa5' },
+      { text: '地层 2', y: 0.27, color: '#d4b896' },
+      { text: '地层 3', y: -0.22, color: '#c8a96e' },
+      { text: '地层 4', y: -0.7, color: '#8b7355' },
+      { text: '地层 5 (最老)', y: -1.1, color: '#7a6652' },
+    ]
+    strataLabels.forEach(({ text, y, color }) => {
+      this._sprites.push(this._makeLabel(text, new THREE.Vector3(3.0, y, 0), color, 26, 2.2))
+    })
+    this._sprites.push(this._makeLabel('不整合面', new THREE.Vector3(-2.8, -0.6, 0), '#c0392b', 24, 2.2))
+    this._sprites.push(this._makeLabel('侵入体 (穿插关系)', new THREE.Vector3(1.5, 0.4, 0), '#e67e22', 22, 2))
+    this._sprites.push(this._makeLabel('岩床', new THREE.Vector3(3.0, -1.0, 0), '#e67e22', 24, 1.8))
+    this._sprites.forEach(s => this.scene.add(s))
+
     // Ground plane
     const groundGeo = new THREE.PlaneGeometry(10, 10)
     groundGeo.rotateX(-Math.PI / 2)
@@ -135,10 +156,30 @@ class StratigraphyEngine extends ExperimentEngine {
     this.controls.update()
   }
 
+  _makeLabel(text, position, color = '#333333', fontSize = 28, scale = 2.5) {
+    const canvas = document.createElement('canvas')
+    canvas.width = 512; canvas.height = 128
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = color
+    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
+    ctx.textAlign = 'center'
+    ctx.fillText(text, 256, 64)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.minFilter = THREE.LinearFilter
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(position)
+    sprite.scale.set(scale, scale * 0.25, 1)
+    return sprite
+  }
+
   setParams({ showLabels, showUnconformity }) {
+    if (showLabels !== undefined && this._sprites) {
+      this._sprites.forEach(s => { s.visible = showLabels })
+    }
     if (showUnconformity !== undefined) {
-      this.unconformity.visible = showUnconformity
-      this.erosionEdge.visible = showUnconformity
+      if (this.unconformity) this.unconformity.visible = showUnconformity
+      if (this.erosionEdge) this.erosionEdge.visible = showUnconformity
     }
   }
 }
@@ -166,6 +207,9 @@ class StratigraphyEngine extends ExperimentEngine {
   border: 1px solid var(--red);
   white-space: nowrap;
 }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 
 @media (max-width: 720px) {
   .sg-layout { flex-direction: column; }
