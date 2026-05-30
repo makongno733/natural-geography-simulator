@@ -102,40 +102,40 @@ class SeasonsEngine extends ExperimentEngine {
     const ambient = new THREE.AmbientLight(0x334466, 1.5)
     this.scene.add(ambient)
 
-    const sunGeo = new THREE.SphereGeometry(1.5, 32, 32)
+    const sunGeo = new THREE.SphereGeometry(3.0, 32, 32)
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
     const sun = new THREE.Mesh(sunGeo, sunMat)
     this.scene.add(sun)
 
-    const sunLight = new THREE.PointLight(0xfff8e8, 60, 40)
+    const sunLight = new THREE.PointLight(0xfff8e8, 90, 60)
     sunLight.position.copy(sun.position)
     this.scene.add(sunLight)
 
-    const orbitGeo = new THREE.TorusGeometry(6, 0.06, 16, 128)
+    const orbitGeo = new THREE.TorusGeometry(10, 0.06, 16, 128)
     const orbitRing = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xb8a57a, transparent: true, opacity: 0.35 }))
     this.scene.add(orbitRing)
 
     this.orbitAngle = 0
     this.auto = false
-    this.orbitRadius = 6
+    this.orbitRadius = 10
     this.tiltAngle = 23.5 * Math.PI / 180
 
     this.earthGroup = new THREE.Group()
     this.scene.add(this.earthGroup)
 
-    const earthGeo = new THREE.SphereGeometry(0.5, 32, 32)
+    const earthGeo = new THREE.SphereGeometry(1.2, 32, 32)
     const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })
     this.earth = new THREE.Mesh(earthGeo, earthMat)
     this.earthGroup.add(this.earth)
 
-    const axisLen = 1.4
-    const axisGeo = new THREE.CylinderGeometry(0.06, 0.06, axisLen, 8)
+    const axisLen = 2.5
+    const axisGeo = new THREE.CylinderGeometry(0.12, 0.12, axisLen, 8)
     const axisMat = new THREE.MeshStandardMaterial({ color: 0xff8a65 })
     const axis = new THREE.Mesh(axisGeo, axisMat)
     axis.position.y = 0
     this.earthGroup.add(axis)
 
-    const nubGeo = new THREE.SphereGeometry(0.12, 8, 8)
+    const nubGeo = new THREE.SphereGeometry(0.18, 8, 8)
     const nNorth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0xff5252 }))
     nNorth.position.y = axisLen / 2
     this.earthGroup.add(nNorth)
@@ -152,8 +152,8 @@ class SeasonsEngine extends ExperimentEngine {
       { a: Math.PI * 1.5, label: '冬至 12.22', color: '#64b5f6' },
     ]
     for (const m of markerPositions) {
-      const pos = new THREE.Vector3(Math.cos(m.a) * 6, 1.2, Math.sin(m.a) * 6)
-      this.scene.add(this._makeLabel(m.label, pos, m.color, 22, 2))
+      const pos = new THREE.Vector3(Math.cos(m.a) * 10, 1.5, Math.sin(m.a) * 10)
+      this.scene.add(this._makeLabel(m.label, pos, m.color, 24, 3))
       const dotGeo = new THREE.SphereGeometry(0.15, 8, 8)
       const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: m.color }))
       dot.position.copy(pos)
@@ -161,16 +161,16 @@ class SeasonsEngine extends ExperimentEngine {
     }
 
     // Additional sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(0, 2, 0), '#ffd54f', 28, 2))
-    this._earthLabel = this._makeLabel('地球', new THREE.Vector3(6, 1, 0), '#42a5f5', 26, 1.8)
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(0, 3.5, 0), '#ffd54f', 30, 2.5))
+    this._earthLabel = this._makeLabel('地球', new THREE.Vector3(10, 1.5, 0), '#42a5f5', 28, 2.5)
     this.scene.add(this._earthLabel)
-    this.scene.add(this._makeLabel('地轴 23.5°', new THREE.Vector3(1.5, 2.2, 0), '#ff6b6b', 22, 1.6))
-    this._northLabel = this._makeLabel('北半球', new THREE.Vector3(0.8, 1.2, 0), '#ff5252', 20, 1.2)
+    this.scene.add(this._makeLabel('地轴 23.5°', new THREE.Vector3(2, 3.0, 0), '#ff6b6b', 24, 2))
+    this._northLabel = this._makeLabel('北半球', new THREE.Vector3(0.8, 2.0, 0), '#ff5252', 22, 1.8)
     this.scene.add(this._northLabel)
-    this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0.8, -0.8, 0), '#448aff', 20, 1.2)
+    this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0.8, -1.6, 0), '#448aff', 22, 1.8)
     this.scene.add(this._southLabel)
 
-    this.camera.position.set(3, 9, 13)
+    this.camera.position.set(0, 12, 18)
     this.controls.target.set(0, 0, 0)
   }
 
@@ -184,9 +184,9 @@ class SeasonsEngine extends ExperimentEngine {
     const a = this.orbitAngle
     this.earthGroup.position.set(Math.cos(a) * this.orbitRadius, 0, Math.sin(a) * this.orbitRadius)
     const ep = this.earthGroup.position
-    if (this._earthLabel) this._earthLabel.position.copy(ep).add(new THREE.Vector3(0, 1, 0))
-    if (this._northLabel) this._northLabel.position.copy(ep).add(new THREE.Vector3(0, 1.4, 0))
-    if (this._southLabel) this._southLabel.position.copy(ep).add(new THREE.Vector3(0, -1, 0))
+    if (this._earthLabel) this._earthLabel.position.copy(ep).add(new THREE.Vector3(0, 1.5, 0))
+    if (this._northLabel) this._northLabel.position.copy(ep).add(new THREE.Vector3(0, 2.2, 0))
+    if (this._southLabel) this._southLabel.position.copy(ep).add(new THREE.Vector3(0, -1.8, 0))
   }
 
   setParams({ orbitAngle }) {

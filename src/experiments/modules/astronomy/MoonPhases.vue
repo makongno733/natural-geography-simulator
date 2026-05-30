@@ -105,43 +105,43 @@ export default {
 
 class MoonPhasesEngine extends ExperimentEngine {
   setupScene() {
-    const sunGeo = new THREE.SphereGeometry(1, 32, 32)
+    const sunGeo = new THREE.SphereGeometry(2.5, 32, 32)
     const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
     const sun = new THREE.Mesh(sunGeo, sunMat)
-    sun.position.set(10, 0, 0)
+    sun.position.set(15, 0, 0)
     this.scene.add(sun)
 
-    this.sunLight = new THREE.PointLight(0xfff8e8, 50, 30)
+    this.sunLight = new THREE.PointLight(0xfff8e8, 80, 50)
     this.sunLight.position.copy(sun.position)
     this.scene.add(this.sunLight)
 
-    const earthGeo = new THREE.SphereGeometry(0.5, 32, 32)
+    const earthGeo = new THREE.SphereGeometry(1.0, 32, 32)
     const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })
     this.earth = new THREE.Mesh(earthGeo, earthMat)
     this.scene.add(this.earth)
 
-    const moonGeo = new THREE.SphereGeometry(0.15, 16, 16)
+    const moonGeo = new THREE.SphereGeometry(0.35, 16, 16)
     const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.7 })
     this.moon = new THREE.Mesh(moonGeo, moonMat)
-    this.moon.position.set(0, 0, 2)
+    this.moon.position.set(0, 0, 4)
     this.scene.add(this.moon)
 
-    const orbitGeo = new THREE.TorusGeometry(2, 0.02, 16, 64)
+    const orbitGeo = new THREE.TorusGeometry(4, 0.02, 16, 64)
     const orbitLine = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xb8a57a, transparent: true, opacity: 0.4 }))
     this.scene.add(orbitLine)
 
     // Sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(10, 1.3, 0), '#ffd54f', 28, 2))
-    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 0.8, 0), '#42a5f5', 28, 2))
-    this.scene.add(this._makeLabel('月球轨道', new THREE.Vector3(0, 0.5, 2.4), '#888888', 24, 2))
-    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(5, 0.6, 0), '#ffd54f', 24, 2))
-    this._phaseSprite = this._makeLabel('新月', new THREE.Vector3(0, 1, 2), '#ffffff', 26, 1.8)
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(15, 3.0, 0), '#ffd54f', 28, 2.5))
+    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 1.3, 0), '#42a5f5', 28, 2.5))
+    this.scene.add(this._makeLabel('月球轨道', new THREE.Vector3(0, 0.5, 4.4), '#888888', 24, 2.5))
+    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(7.5, 0.8, 0), '#ffd54f', 24, 2.5))
+    this._phaseSprite = this._makeLabel('新月', new THREE.Vector3(0, 1.5, 4), '#ffffff', 26, 2.5)
     this.scene.add(this._phaseSprite)
 
     this.moonAngle = 0
     this.auto = false
-    this.camera.position.set(0, 4, 6)
-    this.controls.target.set(0, 0, 1)
+    this.camera.position.set(0, 6, 10)
+    this.controls.target.set(0, 0, 2)
     this.scene.background = new THREE.Color(0x0a0a1a)
     this.scene.fog = null
 
@@ -162,10 +162,10 @@ class MoonPhasesEngine extends ExperimentEngine {
       this._vm.phaseName = phaseNames[Math.round(this.moonAngle / (Math.PI / 4)) % 8]
     }
     const a = this.moonAngle
-    this.moon.position.set(Math.cos(a) * 2, 0, Math.sin(a) * 2)
+    this.moon.position.set(Math.cos(a) * 4, 0, Math.sin(a) * 4)
     this.moon.lookAt(this.earth.position)
     if (this._phaseSprite) {
-      this._phaseSprite.position.copy(this.moon.position).add(new THREE.Vector3(0, 0.5, 0))
+      this._phaseSprite.position.copy(this.moon.position).add(new THREE.Vector3(0, 0.8, 0))
       this._phaseSprite.material.map.needsUpdate = true
     }
     const idx = Math.round(a / (Math.PI / 4)) % 8
