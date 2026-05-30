@@ -11,8 +11,7 @@
       </div>
       <label>热源温差 <span>{{ tempDiff }}</span></label>
       <input type="range" min="1" max="10" v-model.number="tempDiff" @input="onParam" />
-      <label>箭头密度 <span>{{ arrowDensity }}</span></label>
-      <input type="range" min="1" max="5" step="1" v-model.number="arrowDensity" @input="onParam" />
+
       <button @click="togglePause">{{ paused ? '▶ 播放' : '⏸ 暂停' }}</button>
       <button @click="reset">↺ 重置</button>
       <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
@@ -39,7 +38,7 @@ export default {
   name: 'ThermalCirculation',
   data() {
     return {
-      tempDiff: 7, arrowDensity: 4, paused: false,
+      tempDiff: 7, paused: false,
       activePreset: '海陆风',
       guideActive: false,
       guideText: '',
@@ -50,8 +49,8 @@ export default {
         '高空与近地面气流方向相反，形成闭合环流',
       ],
       presets: [
-        { name: '海陆风', label: '🌊 海陆风', tempDiff: 7, arrowDensity: 4 },
-        { name: '山谷风', label: '⛰ 山谷风', tempDiff: 5, arrowDensity: 3 },
+        { name: '海陆风', label: '🌊 海陆风', tempDiff: 7 },
+        { name: '山谷风', label: '⛰ 山谷风', tempDiff: 5 },
       ],
     }
   },
@@ -69,12 +68,11 @@ export default {
   methods: {
     _onResize() { this._e?.resize() },
     togglePause() { this.paused = !this.paused; this._e.paused = this.paused },
-    onParam() { this.activePreset = null; this._e.setParams({ tempDiff: this.tempDiff, arrowDensity: this.arrowDensity }) },
+    onParam() { this.activePreset = null; this._e.setParams({ tempDiff: this.tempDiff }) },
     applyPreset(p) {
       this.activePreset = p.name
       this.tempDiff = p.tempDiff
-      this.arrowDensity = p.arrowDensity
-      this._e.setParams({ tempDiff: this.tempDiff, arrowDensity: this.arrowDensity, sceneMode: p.name })
+      this._e.setParams({ tempDiff: this.tempDiff, sceneMode: p.name })
     },
     toggleGuide() {
       this.guideActive = !this.guideActive
@@ -101,7 +99,6 @@ export default {
 class ThermalCirculationEngine extends ExperimentEngine {
   setupScene() {
     this.tempDiff = 7
-    this.arrowDensity = 4
     this.paused = false
     this.sceneMode = '海陆风'
 
@@ -396,11 +393,9 @@ class ThermalCirculationEngine extends ExperimentEngine {
     })
     this._arrows = []
 
-    const den = this.arrowDensity
-    const perRow = den + 2
-    const perRise = den + 3
-    // Extra arrows for surface flow (sea breeze) — this is the key visible process
-    const perSurface = den + 5
+    const perRow = 5
+    const perRise = 6
+    const perSurface = 9
 
     for (let zIdx = 0; zIdx < perRow; zIdx++) {
       const z = (zIdx - (perRow - 1) / 2) * 1.1
@@ -532,12 +527,8 @@ class ThermalCirculationEngine extends ExperimentEngine {
     })
   }
 
-  setParams({ tempDiff, arrowDensity, sceneMode }) {
+  setParams({ tempDiff, sceneMode }) {
     if (tempDiff !== undefined) this.tempDiff = tempDiff
-    if (arrowDensity !== undefined) {
-      this.arrowDensity = arrowDensity
-      this._createArrows()
-    }
     if (sceneMode !== undefined && sceneMode !== this.sceneMode) {
       this.sceneMode = sceneMode
       this._updateTerrain()
