@@ -9,15 +9,15 @@
           @click="applyPreset(p)"
         >{{ p.label }}</button>
       </div>
-      <label>旋转速度 <span>{{ rotationSpeed }}</span></label>
-      <input type="range" min="0" max="10" v-model.number="rotationSpeed" @input="onParam" />
+      <label>漩涡强度 <span>{{ rotationSpeed }}</span></label>
+      <input type="range" min="1" max="10" v-model.number="rotationSpeed" @input="onParam" />
       <label>半球</label>
       <div class="cor-toggle">
         <button :class="{ active: hemisphere === 'north' }" @click="setHemi('north')">北半球</button>
         <button :class="{ active: hemisphere === 'south' }" @click="setHemi('south')">南半球</button>
       </div>
-      <label>粒子数量 <span>{{ particleCount }}</span></label>
-      <input type="range" min="30" max="150" v-model.number="particleCount" @input="onParam" />
+      <label>水流密度 <span>{{ particleCount }}</span></label>
+      <input type="range" min="40" max="200" step="10" v-model.number="particleCount" @input="onParam" />
       <button @click="reset">↺ 重置</button>
       <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
         {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
@@ -31,7 +31,7 @@
   </div>
   <div class="exp-desc">
     <h4>实验说明</h4>
-    <p>本实验模拟旋转地球上流体的科里奥利力效应：旋转圆盘代表地球自转，中心冰柱模拟两极低温，红色粒子从外围向内运动时受地转偏向力作用发生偏转。切换南北半球观察偏转方向反转——北半球右偏（逆时针螺旋），南半球左偏（顺时针螺旋）。</p>
+    <p>本实验以洪水淹没陆地、水井吞水为场景，展示科里奥利力效应：洪水从四周向中心水井汇聚时，受地球自转影响（地转偏向力），水流路径发生偏转——北半球向右偏（逆时针漩涡），南半球向左偏（顺时针漩涡）。漩涡越靠近井口旋转越快，模拟气旋和洋流中科里奥利力的作用。切换半球观察偏转方向反转。</p>
   </div>
 </template>
 
@@ -43,20 +43,19 @@ export default {
   name: 'Coriolis',
   data() {
     return {
-      rotationSpeed: 5, hemisphere: 'north', particleCount: 80,
-      activePreset: null,
-      guideActive: false,
-      guideText: '',
+      rotationSpeed: 5, hemisphere: 'north', particleCount: 120,
+      activePreset: '北半球气旋',
+      guideActive: false, guideText: '',
       _guideTexts: [
-        '地转偏向力：旋转体系中运动的物体发生偏转',
-        '北半球：运动物体向右偏转，形成气旋逆时针旋转',
-        '南半球：运动物体向左偏转，形成气旋顺时针旋转',
-        '偏转强度与旋转速度和纬度有关',
+        '洪水从四周向水井汇聚，受地转偏向力形成漩涡',
+        '北半球：水流向右偏转，形成逆时针漩涡（俯视）',
+        '南半球：水流向左偏转，形成顺时针漩涡（俯视）',
+        '越靠近井口，旋转速度越快——角动量守恒',
       ],
       presets: [
-        { name: '北半球气旋', label: '北半球气旋', rotationSpeed: 7, hemisphere: 'north', particleCount: 100 },
-        { name: '南半球气旋', label: '南半球气旋', rotationSpeed: 7, hemisphere: 'south', particleCount: 100 },
-        { name: '弱旋转', label: '弱旋转', rotationSpeed: 2, hemisphere: null, particleCount: 50 },
+        { name: '北半球气旋', label: '🌪 北半球气旋', rotationSpeed: 7, hemisphere: 'north', particleCount: 150 },
+        { name: '南半球气旋', label: '🌀 南半球气旋', rotationSpeed: 7, hemisphere: 'south', particleCount: 150 },
+        { name: '弱旋转', label: '💧 弱旋转', rotationSpeed: 2, hemisphere: 'north', particleCount: 80 },
       ],
     }
   },
@@ -72,22 +71,14 @@ export default {
     onParam() { this.activePreset = null; this._e.setParams({ rotationSpeed: this.rotationSpeed, hemisphere: this.hemisphere, particleCount: this.particleCount }) },
     applyPreset(p) {
       this.activePreset = p.name
-      if (p.rotationSpeed != null) this.rotationSpeed = p.rotationSpeed
-      if (p.hemisphere != null) this.hemisphere = p.hemisphere
-      if (p.particleCount != null) this.particleCount = p.particleCount
-      this.onParam()
-      this.activePreset = p.name
+      this.rotationSpeed = p.rotationSpeed; this.hemisphere = p.hemisphere; this.particleCount = p.particleCount
+      this._e.setParams({ rotationSpeed: this.rotationSpeed, hemisphere: this.hemisphere, particleCount: this.particleCount })
     },
     setHemi(h) { this.hemisphere = h; this.onParam() },
     toggleGuide() {
       this.guideActive = !this.guideActive
-      if (this.guideActive) {
-        this._e.startGuidedMode(this._guideTexts)
-        this.guideText = this._e.getGuideText()
-      } else {
-        this._e.stopGuidedMode()
-        this.guideText = ''
-      }
+      if (this.guideActive) { this._e.startGuidedMode(this._guideTexts); this.guideText = this._e.getGuideText() }
+      else { this._e.stopGuidedMode(); this.guideText = '' }
     },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new CoriolisEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs) }) },
   },
@@ -95,36 +86,120 @@ export default {
 
 class CoriolisEngine extends ExperimentEngine {
   setupScene() {
-    const diskGeo = new THREE.CylinderGeometry(4, 4, 0.15, 48)
-    const diskMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.5, emissive: 0x222222, emissiveIntensity: 0.1 })
-    this.disk = new THREE.Mesh(diskGeo, diskMat)
-    this.scene.add(this.disk)
-
-    const rimGeo = new THREE.TorusGeometry(4, 0.08, 16, 64)
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0xb8a57a })
-    const rim = new THREE.Mesh(rimGeo, rimMat)
-    rim.rotation.x = Math.PI / 2
-    rim.position.y = 0.08
-    this.scene.add(rim)
-
-    const iceGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32)
-    const iceMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, emissive: 0x42a5f5, emissiveIntensity: 0.6, transparent: true, opacity: 0.95 })
-    this.ice = new THREE.Mesh(iceGeo, iceMat)
-    this.ice.position.y = 0.6
-    this.scene.add(this.ice)
-
     this.hemisphere = 'north'
-    this.rotationSpeed = 5
+    this.rotationSpeed = 7
+    this.particleCount = 150
+
+    // === GROUND (floodplain) ===
+    const groundSize = 14
+    const groundSegs = 64
+    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, groundSegs, groundSegs)
+    groundGeo.rotateX(-Math.PI / 2)
+    // Slight terrain undulation
+    const pos = groundGeo.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i)
+      const dist = Math.sqrt(x * x + y * y)
+      // Gentle bowl shape toward center, slight random bumps
+      let h = -0.03 * (dist / 7) + Math.sin(x * 1.5) * Math.cos(y * 1.3) * 0.06
+      // Lower center near well
+      if (dist < 1.5) h += (1.5 - dist) * 0.1
+      pos.setZ(i, h)
+    }
+    groundGeo.computeVertexNormals()
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x8bc34a, roughness: 0.8 })
+    this.ground = new THREE.Mesh(groundGeo, groundMat)
+    this.ground.receiveShadow = true
+    this.scene.add(this.ground)
+
+    // Dirt path variations - darker patches
+    for (let i = 0; i < 6; i++) {
+      const patchGeo = new THREE.CircleGeometry(0.5 + Math.random() * 1.2, 12)
+      patchGeo.rotateX(-Math.PI / 2)
+      const patchMat = new THREE.MeshStandardMaterial({ color: 0xa08060, roughness: 0.9 })
+      const patch = new THREE.Mesh(patchGeo, patchMat)
+      const a = Math.random() * Math.PI * 2
+      const r = 2.5 + Math.random() * 4
+      patch.position.set(Math.cos(a) * r, 0.02, Math.sin(a) * r)
+      this.scene.add(patch)
+    }
+
+    // === WATER FLOOD SURFACE (semi-transparent plane) ===
+    const waterGeo = new THREE.PlaneGeometry(groundSize, groundSize)
+    waterGeo.rotateX(-Math.PI / 2)
+    const waterMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.3 })
+    this.waterPlane = new THREE.Mesh(waterGeo, waterMat)
+    this.waterPlane.position.y = 0.04
+    this.scene.add(this.waterPlane)
+
+    // === CENTRAL WELL ===
+    this._wellGroup = new THREE.Group()
+    // Well rim (stone ring above ground)
+    const rimGeo = new THREE.TorusGeometry(0.55, 0.12, 12, 32)
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e, roughness: 0.6, metalness: 0.1 })
+    const rim = new THREE.Mesh(rimGeo, stoneMat)
+    rim.rotation.x = Math.PI / 2
+    rim.position.y = 0.22
+    this._wellGroup.add(rim)
+    // Well shaft (cylinder going down)
+    const shaftGeo = new THREE.CylinderGeometry(0.4, 0.42, 1.8, 24, 1, true)
+    const shaftMat = new THREE.MeshStandardMaterial({ color: 0x757575, roughness: 0.5, side: THREE.DoubleSide })
+    const shaft = new THREE.Mesh(shaftGeo, shaftMat)
+    shaft.position.y = -0.7
+    this._wellGroup.add(shaft)
+    // Dark water inside well
+    const wellWaterGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.15, 24)
+    const wellWaterMat = new THREE.MeshStandardMaterial({ color: 0x1a3a5c, roughness: 0.1, emissive: 0x0a1a2a, emissiveIntensity: 0.3 })
+    this._wellWater = new THREE.Mesh(wellWaterGeo, wellWaterMat)
+    this._wellWater.position.y = -0.35
+    this._wellGroup.add(this._wellWater)
+    this.scene.add(this._wellGroup)
+
+    // === BUILDINGS (small houses) ===
+    this._buildings = []
+    for (let i = 0; i < 5; i++) {
+      const house = this._makeHouse()
+      const a = Math.random() * Math.PI * 2
+      const r = 4 + Math.random() * 2.5
+      house.position.set(Math.cos(a) * r, 0.05, Math.sin(a) * r)
+      house.rotation.y = Math.random() * Math.PI * 2
+      this.scene.add(house)
+      this._buildings.push(house)
+    }
+
+    // === TREES ===
+    for (let i = 0; i < 20; i++) {
+      const tree = this._makeTree()
+      const a = Math.random() * Math.PI * 2
+      const r = 2 + Math.random() * 5.5
+      tree.position.set(Math.cos(a) * r, 0.05, Math.sin(a) * r)
+      this.scene.add(tree)
+      this._buildings.push(tree)
+    }
+
+    // === FLOW ARROWS (spiral indicators) ===
+    this._flowArrows = []
+    for (let i = 0; i < 6; i++) {
+      const arrow = this._makeFlowArrow()
+      this.scene.add(arrow)
+      this._flowArrows.push(arrow)
+    }
+
+    // === WATER PARTICLES ===
     this._particles = []
-    this._spawn(80)
+    this._spawn(this.particleCount)
 
-    this.camera.position.set(0, 8, 8)
-    this.controls.target.set(0, 0.3, 0)
-
+    // === LABELS ===
     this._sprites = []
-    this._sprites.push(this._makeLabel('冰柱 (冷中心)', new THREE.Vector3(0, 1.6, 0), '#1a5276'))
-    this._sprites.push(this._makeLabel('↻ 旋转方向', new THREE.Vector3(4.8, 0.3, 0), '#1a5276'))
-    this._hemiLabel = this._makeLabel('北半球: 右偏', new THREE.Vector3(0, 2.5, 0), '#1a5276')
+    this._sprites.push(this._makeLabel('水井', new THREE.Vector3(0, 0.8, 0.8), '#37474f', 30))
+    this._sprites.push(this._makeLabel('洪水', new THREE.Vector3(5.5, 0.4, 5.5), '#1565c0', 28))
+    this._sprites.push(this._makeLabel('洪水', new THREE.Vector3(-5.5, 0.4, -5.5), '#1565c0', 28))
+    this._hemiSprite = this._makeLabel('北半球：逆时针漩涡 ↺', new THREE.Vector3(0, 2.0, -5), '#c0392b', 28)
+
+    // Camera
+    this.camera.position.set(5, 10, 9)
+    this.controls.target.set(0, 0, 0)
+    this.controls.maxPolarAngle = Math.PI / 2.2
   }
 
   _makeLabel(text, position, color = '#333333', fontSize = 32) {
@@ -145,14 +220,49 @@ class CoriolisEngine extends ExperimentEngine {
     return sprite
   }
 
-  _updateHemiLabel() {
-    if (this._hemiLabel) {
-      this.scene.remove(this._hemiLabel)
-      this._hemiLabel.material.map.dispose()
-      this._hemiLabel.material.dispose()
-    }
-    const text = this.hemisphere === 'north' ? '北半球: 右偏' : '南半球: 左偏'
-    this._hemiLabel = this._makeLabel(text, new THREE.Vector3(0, 2.5, 0), '#1a5276')
+  _makeHouse() {
+    const g = new THREE.Group()
+    // Walls
+    const bodyGeo = new THREE.BoxGeometry(0.35, 0.35, 0.35)
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xefebe9, roughness: 0.7 })
+    const body = new THREE.Mesh(bodyGeo, bodyMat)
+    body.position.y = 0.25
+    g.add(body)
+    // Roof
+    const roofGeo = new THREE.ConeGeometry(0.3, 0.25, 4)
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.6 })
+    const roof = new THREE.Mesh(roofGeo, roofMat)
+    roof.position.y = 0.48
+    roof.rotation.y = Math.PI / 4
+    g.add(roof)
+    return g
+  }
+
+  _makeTree() {
+    const g = new THREE.Group()
+    const trunkGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.4, 6)
+    const trunk = new THREE.Mesh(trunkGeo, new THREE.MeshStandardMaterial({ color: 0x6d4c41, roughness: 0.8 }))
+    trunk.position.y = 0.18
+    g.add(trunk)
+    const crownGeo = new THREE.ConeGeometry(0.2, 0.45, 7)
+    const crown = new THREE.Mesh(crownGeo, new THREE.MeshStandardMaterial({ color: 0x4caf50 + Math.floor(Math.random() * 3) * 0x010000, roughness: 0.5 }))
+    crown.position.y = 0.5
+    g.add(crown)
+    return g
+  }
+
+  _makeFlowArrow() {
+    const g = new THREE.Group()
+    const shaftGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6)
+    const shaft = new THREE.Mesh(shaftGeo, new THREE.MeshStandardMaterial({ color: 0x1565c0, emissive: 0x1565c0, emissiveIntensity: 0.3 }))
+    shaft.position.y = 0.1
+    g.add(shaft)
+    const headGeo = new THREE.ConeGeometry(0.1, 0.2, 6)
+    const head = new THREE.Mesh(headGeo, new THREE.MeshStandardMaterial({ color: 0x1565c0, emissive: 0x1565c0, emissiveIntensity: 0.4 }))
+    head.position.y = 0.35
+    g.add(head)
+    g.userData = { angle: Math.random() * Math.PI * 2, radius: 4 + Math.random() * 2 }
+    return g
   }
 
   _spawn(count) {
@@ -162,14 +272,15 @@ class CoriolisEngine extends ExperimentEngine {
       if (p.geometry) p.geometry.dispose()
     })
     this._particles = []
-    const geo = new THREE.SphereGeometry(0.08, 8, 8)
+    const geo = new THREE.SphereGeometry(0.07, 6, 6)
     for (let i = 0; i < count; i++) {
-      const mat = new THREE.MeshBasicMaterial({ color: 0xe53935 })
+      const depth = Math.random()
+      const mat = new THREE.MeshBasicMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.6 + depth * 0.4 })
       const dot = new THREE.Mesh(geo, mat)
       const angle = Math.random() * Math.PI * 2
-      const radius = 2 + Math.random() * 1.8
-      dot.position.set(Math.cos(angle) * radius, 0.15, Math.sin(angle) * radius)
-      dot.userData = { angle, radius, phase: Math.random() * Math.PI * 2 }
+      const radius = 2.0 + Math.random() * 5.0
+      dot.position.set(Math.cos(angle) * radius, 0.06 + Math.random() * 0.04, Math.sin(angle) * radius)
+      dot.userData = { angle, radius, speed: 0.3 + Math.random() * 0.7, phase: Math.random() * Math.PI * 2 }
       this.scene.add(dot)
       this._particles.push(dot)
     }
@@ -177,35 +288,82 @@ class CoriolisEngine extends ExperimentEngine {
 
   update(dt) {
     const speed = this.rotationSpeed / 5
-    this.disk.rotation.y += dt * speed * 1.2
-    this.ice.rotation.y += dt * speed * 1.2
     const coriolisSign = this.hemisphere === 'north' ? 1 : -1
+
+    // Animate flow arrows (orbit around well)
+    for (const arrow of this._flowArrows) {
+      arrow.userData.angle += dt * coriolisSign * speed * 0.6 / (arrow.userData.radius + 0.2)
+      const a = arrow.userData.angle
+      const r = arrow.userData.radius
+      arrow.position.set(Math.cos(a) * r, 0.15, Math.sin(a) * r)
+      // Arrow points tangent to the circle
+      const tangent = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a))
+      if (coriolisSign < 0) tangent.negate()
+      arrow.lookAt(arrow.position.clone().add(tangent))
+      // Color gradient - darker blue closer to center
+    }
+
+    // Animate water particles flowing toward well with Coriolis deflection
     for (const dot of this._particles) {
-      dot.userData.radius -= dt * 0.15 * speed
-      if (dot.userData.radius < 0.6) dot.userData.radius = 3.5
-      dot.userData.angle += dt * coriolisSign * speed * 1.8 / (dot.userData.radius + 0.3)
+      dot.userData.radius -= dt * 0.25 * speed * dot.userData.speed
+      if (dot.userData.radius < 0.55) {
+        // Particle reached the well - respawn at edge
+        dot.userData.radius = 4.5 + Math.random() * 2.5
+        dot.userData.angle = Math.random() * Math.PI * 2
+      }
+      // Coriolis deflection increases as particle gets closer to center
+      const deflection = coriolisSign * speed * 0.9 / (dot.userData.radius + 0.3)
+      dot.userData.angle += dt * deflection
       dot.position.x = Math.cos(dot.userData.angle) * dot.userData.radius
       dot.position.z = Math.sin(dot.userData.angle) * dot.userData.radius
-      const t = (dot.userData.radius - 0.5) / 3
-      dot.material.color.setHSL(0.0 + t * 0.15, 1, 0.3 + t * 0.4)
+      dot.position.y = 0.06 + (1 / (dot.userData.radius + 0.5)) * 0.04
+      // Color: lighter blue far away, darker near center
+      const t = Math.max(0, (dot.userData.radius - 0.5) / 6)
+      dot.material.opacity = 0.4 + t * 0.5
     }
+
+    // Pulse well water
+    this._wellWater.material.emissiveIntensity = 0.2 + Math.sin(this.clock ? this.clock.elapsed * 3 : 0) * 0.15
+
+    // Water plane subtle animation
+    this.waterPlane.material.opacity = 0.25 + Math.sin(Date.now() * 0.001) * 0.05
   }
 
   setParams({ rotationSpeed, hemisphere, particleCount }) {
     if (rotationSpeed !== undefined) this.rotationSpeed = rotationSpeed
-    if (hemisphere !== undefined) {
-      if (this.hemisphere !== hemisphere) { this.hemisphere = hemisphere; this._updateHemiLabel() }
+    if (hemisphere !== undefined && this.hemisphere !== hemisphere) {
+      this.hemisphere = hemisphere
+      this._updateHemiLabel()
     }
     if (particleCount !== undefined) this._spawn(particleCount)
   }
 
+  _updateHemiLabel() {
+    if (this._hemiSprite) {
+      this.scene.remove(this._hemiSprite)
+      this._hemiSprite.material.map.dispose()
+      this._hemiSprite.material.dispose()
+    }
+    const text = this.hemisphere === 'north' ? '北半球：逆时针漩涡 ↺' : '南半球：顺时针漩涡 ↻'
+    this._hemiSprite = this._makeLabel(text, new THREE.Vector3(0, 2.0, -5), '#c0392b', 28)
+  }
+
   dispose() {
     if (this._sprites) {
-      this._sprites.forEach(s => { s.material.map.dispose(); s.material.dispose() })
+      this._sprites.forEach(s => { if (s.material.map) s.material.map.dispose(); s.material.dispose() })
     }
-    if (this._hemiLabel) {
-      this._hemiLabel.material.map.dispose()
-      this._hemiLabel.material.dispose()
+    if (this._hemiSprite) {
+      if (this._hemiSprite.material.map) this._hemiSprite.material.map.dispose()
+      this._hemiSprite.material.dispose()
+    }
+    if (this._flowArrows) {
+      this._flowArrows.forEach(a => a.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() }))
+    }
+    if (this._buildings) {
+      this._buildings.forEach(b => b.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() }))
+    }
+    if (this._wellGroup) {
+      this._wellGroup.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
     }
     super.dispose()
   }
@@ -222,18 +380,14 @@ class CoriolisEngine extends ExperimentEngine {
 .cor-toggle button.active { background: var(--red); color: #fff; border-color: var(--red); }
 .cor-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .cor-panel button:hover { background: var(--button-green); }
-.preset-btn {
-  padding: 3px 8px; border: 1px solid var(--brown); border-radius: 4px;
-  background: var(--cream); color: var(--ink); cursor: pointer;
-  font-family: inherit; font-size: 11px;
-}
+.preset-btn { padding: 3px 8px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; }
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .cor-presets { display: flex; gap: 4px; flex-wrap: wrap; }
 .cor-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.cor-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
+.cor-canvas-wrap { flex: 1; min-height: 460px; background: #e8f5e9; }
 .cor-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 
 .exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
