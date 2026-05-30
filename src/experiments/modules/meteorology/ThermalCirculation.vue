@@ -1,6 +1,14 @@
 <template>
   <div class="tc-layout">
     <aside class="tc-panel">
+      <div class="tc-presets">
+        <button
+          v-for="p in presets"
+          :key="p.name"
+          :class="['preset-btn', { active: activePreset === p.name }]"
+          @click="applyPreset(p)"
+        >{{ p.label }}</button>
+      </div>
       <label>热源温差 <span>{{ tempDiff }}</span></label>
       <input type="range" min="1" max="10" v-model.number="tempDiff" @input="onParam" />
       <label>粒子数量 <span>{{ particleCount }}</span></label>
@@ -22,7 +30,15 @@ import * as THREE from 'three'
 export default {
   name: 'ThermalCirculation',
   data() {
-    return { tempDiff: 5, particleCount: 200, paused: false }
+    return {
+      tempDiff: 5, particleCount: 200, paused: false,
+      activePreset: '自由调节',
+      presets: [
+        { name: '海陆风', label: '海陆风', tempDiff: 7, particleCount: 200 },
+        { name: '山谷风', label: '山谷风', tempDiff: 3, particleCount: 100 },
+        { name: '自由调节', label: '自由调节', tempDiff: null, particleCount: null },
+      ],
+    }
   },
   mounted() {
     this._e = new ThermalCirculationEngine()
@@ -37,7 +53,15 @@ export default {
   methods: {
     _onResize() { this._e?.resize() },
     togglePause() { this.paused = !this.paused; this._e.paused = this.paused },
-    onParam() { this._e.setParams({ tempDiff: this.tempDiff, particleCount: this.particleCount }) },
+    onParam() { this.activePreset = null; this._e.setParams({ tempDiff: this.tempDiff, particleCount: this.particleCount }) },
+    applyPreset(p) {
+      this.activePreset = p.name
+      if (p.tempDiff != null) this.tempDiff = p.tempDiff
+      if (p.particleCount != null) this.particleCount = p.particleCount
+      this.onParam()
+      // restore activePreset since onParam clears it
+      this.activePreset = p.name
+    },
     reset() {
       this._e.dispose()
       this.$nextTick(() => { this._e = new ThermalCirculationEngine(); this._e.tempDiff = this.tempDiff; this._e.init(this.$refs.cvs) })
@@ -67,8 +91,11 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this.coldPlate.position.set(3.6, -2, 0)
     this.scene.add(this.coldPlate)
 
-    this._addLabel('热源', -3.6, -1.6, 1.8, '#e53935')
-    this._addLabel('冷源', 3.6, -1.6, 1.8, '#1e88e5')
+    this._sprites = []
+    this._sprites.push(this._makeLabel('热源 🔥', new THREE.Vector3(-3.6, -0.8, 2), '#c0392b'))
+    this._sprites.push(this._makeLabel('冷源 ❄️', new THREE.Vector3(3.6, -0.8, 2), '#2471a3'))
+    this._sprites.push(this._makeLabel('高空', new THREE.Vector3(0, 1.8, 2), '#666666'))
+    this._sprites.push(this._makeLabel('地面', new THREE.Vector3(0, -2.2, 2), '#666666'))
 
     this._particles = []
     this._spawn(150)
@@ -77,19 +104,22 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this.controls.target.set(0, 0, 0)
   }
 
-  _addLabel(text, x, y, z, color) {
+  _makeLabel(text, position, color = '#333333', fontSize = 32) {
     const canvas = document.createElement('canvas')
-    canvas.width = 256; canvas.height = 64
+    canvas.width = 512; canvas.height = 128
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = color
-    ctx.font = 'bold 28px sans-serif'
-    ctx.fillText(text, 10, 40)
+    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
+    ctx.textAlign = 'center'
+    ctx.fillText(text, 256, 64)
     const tex = new THREE.CanvasTexture(canvas)
-    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true })
-    const sprite = new THREE.Sprite(spriteMat)
-    sprite.position.set(x, y, z)
-    sprite.scale.set(2, 0.5, 1)
+    tex.minFilter = THREE.LinearFilter
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(position)
+    sprite.scale.set(3, 0.75, 1)
     this.scene.add(sprite)
+    return sprite
   }
 
   _spawn(count) {
@@ -132,6 +162,13 @@ class ThermalCirculationEngine extends ExperimentEngine {
     if (tempDiff !== undefined) this.tempDiff = tempDiff
     if (particleCount !== undefined) this._spawn(particleCount)
   }
+
+  dispose() {
+    if (this._sprites) {
+      this._sprites.forEach(s => { s.material.map.dispose(); s.material.dispose() })
+    }
+    super.dispose()
+  }
 }
 </script>
 
@@ -142,6 +179,13 @@ class ThermalCirculationEngine extends ExperimentEngine {
 .tc-panel input[type="range"] { width: 100%; accent-color: var(--red); }
 .tc-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .tc-panel button:hover { background: var(--button-green); }
+.preset-btn {
+  padding: 3px 8px; border: 1px solid var(--brown); border-radius: 4px;
+  background: var(--cream); color: var(--ink); cursor: pointer;
+  font-family: inherit; font-size: 11px;
+}
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.tc-presets { display: flex; gap: 4px; flex-wrap: wrap; }
 .tc-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .tc-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .tc-canvas-wrap canvas { width: 100%; height: 100%; display: block; }

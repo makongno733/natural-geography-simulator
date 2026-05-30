@@ -1,6 +1,14 @@
 <template>
   <div class="cor-layout">
     <aside class="cor-panel">
+      <div class="cor-presets">
+        <button
+          v-for="p in presets"
+          :key="p.name"
+          :class="['preset-btn', { active: activePreset === p.name }]"
+          @click="applyPreset(p)"
+        >{{ p.label }}</button>
+      </div>
       <label>旋转速度 <span>{{ rotationSpeed }}</span></label>
       <input type="range" min="0" max="10" v-model.number="rotationSpeed" @input="onParam" />
       <label>半球</label>
@@ -25,7 +33,17 @@ import * as THREE from 'three'
 
 export default {
   name: 'Coriolis',
-  data() { return { rotationSpeed: 5, hemisphere: 'north', particleCount: 80 } },
+  data() {
+    return {
+      rotationSpeed: 5, hemisphere: 'north', particleCount: 80,
+      activePreset: null,
+      presets: [
+        { name: '北半球气旋', label: '北半球气旋', rotationSpeed: 7, hemisphere: 'north', particleCount: 100 },
+        { name: '南半球气旋', label: '南半球气旋', rotationSpeed: 7, hemisphere: 'south', particleCount: 100 },
+        { name: '弱旋转', label: '弱旋转', rotationSpeed: 2, hemisphere: null, particleCount: 50 },
+      ],
+    }
+  },
   mounted() {
     this._e = new CoriolisEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
@@ -34,7 +52,15 @@ export default {
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
-    onParam() { this._e.setParams({ rotationSpeed: this.rotationSpeed, hemisphere: this.hemisphere, particleCount: this.particleCount }) },
+    onParam() { this.activePreset = null; this._e.setParams({ rotationSpeed: this.rotationSpeed, hemisphere: this.hemisphere, particleCount: this.particleCount }) },
+    applyPreset(p) {
+      this.activePreset = p.name
+      if (p.rotationSpeed != null) this.rotationSpeed = p.rotationSpeed
+      if (p.hemisphere != null) this.hemisphere = p.hemisphere
+      if (p.particleCount != null) this.particleCount = p.particleCount
+      this.onParam()
+      this.activePreset = p.name
+    },
     setHemi(h) { this.hemisphere = h; this.onParam() },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new CoriolisEngine(); this._e.init(this.$refs.cvs) }) },
   },
@@ -67,6 +93,39 @@ class CoriolisEngine extends ExperimentEngine {
 
     this.camera.position.set(0, 8, 8)
     this.controls.target.set(0, 0.3, 0)
+
+    this._sprites = []
+    this._sprites.push(this._makeLabel('冰柱 (冷中心)', new THREE.Vector3(0, 1.6, 0), '#1a5276'))
+    this._sprites.push(this._makeLabel('↻ 旋转方向', new THREE.Vector3(4.8, 0.3, 0), '#1a5276'))
+    this._hemiLabel = this._makeLabel('北半球: 右偏', new THREE.Vector3(0, 2.5, 0), '#1a5276')
+  }
+
+  _makeLabel(text, position, color = '#333333', fontSize = 32) {
+    const canvas = document.createElement('canvas')
+    canvas.width = 512; canvas.height = 128
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = color
+    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
+    ctx.textAlign = 'center'
+    ctx.fillText(text, 256, 64)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.minFilter = THREE.LinearFilter
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(position)
+    sprite.scale.set(3, 0.75, 1)
+    this.scene.add(sprite)
+    return sprite
+  }
+
+  _updateHemiLabel() {
+    if (this._hemiLabel) {
+      this.scene.remove(this._hemiLabel)
+      this._hemiLabel.material.map.dispose()
+      this._hemiLabel.material.dispose()
+    }
+    const text = this.hemisphere === 'north' ? '北半球: 右偏' : '南半球: 左偏'
+    this._hemiLabel = this._makeLabel(text, new THREE.Vector3(0, 2.5, 0), '#1a5276')
   }
 
   _spawn(count) {
@@ -107,8 +166,21 @@ class CoriolisEngine extends ExperimentEngine {
 
   setParams({ rotationSpeed, hemisphere, particleCount }) {
     if (rotationSpeed !== undefined) this.rotationSpeed = rotationSpeed
-    if (hemisphere !== undefined) this.hemisphere = hemisphere
+    if (hemisphere !== undefined) {
+      if (this.hemisphere !== hemisphere) { this.hemisphere = hemisphere; this._updateHemiLabel() }
+    }
     if (particleCount !== undefined) this._spawn(particleCount)
+  }
+
+  dispose() {
+    if (this._sprites) {
+      this._sprites.forEach(s => { s.material.map.dispose(); s.material.dispose() })
+    }
+    if (this._hemiLabel) {
+      this._hemiLabel.material.map.dispose()
+      this._hemiLabel.material.dispose()
+    }
+    super.dispose()
   }
 }
 </script>
@@ -123,6 +195,13 @@ class CoriolisEngine extends ExperimentEngine {
 .cor-toggle button.active { background: var(--red); color: #fff; border-color: var(--red); }
 .cor-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .cor-panel button:hover { background: var(--button-green); }
+.preset-btn {
+  padding: 3px 8px; border: 1px solid var(--brown); border-radius: 4px;
+  background: var(--cream); color: var(--ink); cursor: pointer;
+  font-family: inherit; font-size: 11px;
+}
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.cor-presets { display: flex; gap: 4px; flex-wrap: wrap; }
 .cor-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .cor-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .cor-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
