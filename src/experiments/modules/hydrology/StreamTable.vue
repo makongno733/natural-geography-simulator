@@ -40,7 +40,7 @@ export default {
 class StreamTableEngine extends ExperimentEngine {
   setupScene() {
     const size = 8
-    const segments = 64
+    const segments = 96
     const geo = new THREE.PlaneGeometry(size, size, segments, segments)
     geo.rotateX(-Math.PI / 2)
     const pos = geo.attributes.position
@@ -85,9 +85,10 @@ class StreamTableEngine extends ExperimentEngine {
       if (d.geometry) d.geometry.dispose()
     })
     this._drops = []
-    const geo = new THREE.SphereGeometry(0.06, 4, 4)
+    const geo = new THREE.SphereGeometry(0.06, 6, 6)
     for (let i = 0; i < count; i++) {
-      const mat = new THREE.MeshBasicMaterial({ color: 0x42a5f5 })
+      const hue = 0.55 + (i / count) * 0.1
+      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(hue, 0.9, 0.6) })
       const drop = new THREE.Mesh(geo, mat)
       drop.position.set((Math.random() - 0.5) * 6, 0.5, -3.5 + Math.random() * 1)
       drop.userData = { speed: 0.5 + Math.random() * 1.5 }

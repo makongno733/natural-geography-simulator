@@ -43,7 +43,7 @@ export default {
 class CoriolisEngine extends ExperimentEngine {
   setupScene() {
     const diskGeo = new THREE.CylinderGeometry(4, 4, 0.15, 48)
-    const diskMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.7 })
+    const diskMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.5, emissive: 0x222222, emissiveIntensity: 0.1 })
     this.disk = new THREE.Mesh(diskGeo, diskMat)
     this.scene.add(this.disk)
 
@@ -54,8 +54,8 @@ class CoriolisEngine extends ExperimentEngine {
     rim.position.y = 0.08
     this.scene.add(rim)
 
-    const iceGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.2, 24)
-    const iceMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, emissive: 0x42a5f5, emissiveIntensity: 0.3, transparent: true, opacity: 0.85 })
+    const iceGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32)
+    const iceMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, emissive: 0x42a5f5, emissiveIntensity: 0.6, transparent: true, opacity: 0.95 })
     this.ice = new THREE.Mesh(iceGeo, iceMat)
     this.ice.position.y = 0.6
     this.scene.add(this.ice)
@@ -76,7 +76,7 @@ class CoriolisEngine extends ExperimentEngine {
       if (p.geometry) p.geometry.dispose()
     })
     this._particles = []
-    const geo = new THREE.SphereGeometry(0.08, 6, 6)
+    const geo = new THREE.SphereGeometry(0.08, 8, 8)
     for (let i = 0; i < count; i++) {
       const mat = new THREE.MeshBasicMaterial({ color: 0xe53935 })
       const dot = new THREE.Mesh(geo, mat)

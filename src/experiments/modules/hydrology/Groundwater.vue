@@ -37,10 +37,10 @@ export default {
 class GroundwaterEngine extends ExperimentEngine {
   setupScene() {
     const layers = [
-      { y: 1.2, h: 0.6, color: 0xc8a96e },
-      { y: 0.5, h: 0.7, color: 0xd4b896 },
-      { y: -0.3, h: 0.8, color: 0x9e8c7a },
-      { y: -1.2, h: 0.9, color: 0x8b7355 },
+      { y: 1.2, h: 0.6, color: 0xe8c97a },
+      { y: 0.5, h: 0.7, color: 0xc4a46c },
+      { y: -0.3, h: 0.8, color: 0x8b7355 },
+      { y: -1.2, h: 0.9, color: 0x5c4a3a },
     ]
     layers.forEach(({ y, h, color }) => {
       const geo = new THREE.BoxGeometry(8, h, 3)
@@ -52,18 +52,18 @@ class GroundwaterEngine extends ExperimentEngine {
 
     const wtGeo = new THREE.PlaneGeometry(8, 3)
     wtGeo.rotateX(-Math.PI / 2)
-    const wtMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+    const wtMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.6, side: THREE.DoubleSide, emissive: 0x2266aa, emissiveIntensity: 0.3 })
     this.waterTable = new THREE.Mesh(wtGeo, wtMat)
     this.waterTable.position.y = 0.4
     this.scene.add(this.waterTable)
 
     const wellGeo = new THREE.CylinderGeometry(0.12, 0.12, 3, 16)
-    const wellMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.4 })
+    const wellMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.3, emissive: 0x333333, emissiveIntensity: 0.3 })
     this.well = new THREE.Mesh(wellGeo, wellMat)
     this.well.position.set(0, 0, 0)
     this.scene.add(this.well)
 
-    const coneGeo = new THREE.SphereGeometry(0.3, 16, 16)
+    const coneGeo = new THREE.SphereGeometry(0.3, 32, 32)
     this.coneMat = new THREE.MeshBasicMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.25 })
     this.cone = new THREE.Mesh(coneGeo, this.coneMat)
     this.cone.position.set(0, 0.4, 0)

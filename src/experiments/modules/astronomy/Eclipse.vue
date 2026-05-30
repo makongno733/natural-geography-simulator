@@ -74,103 +74,75 @@ class EclipseEngine extends ExperimentEngine {
     this.moon.position.set(3, 0, 0)
     this.scene.add(this.moon)
 
-    this.umbraCone = null
-    this.penumbraCone = null
+    // Pre-allocate cone meshes once (transforms updated per frame)
+    const umbraGeo = new THREE.CylinderGeometry(0.05, 0.8, 1, 16)
+    const umbraMat = new THREE.MeshBasicMaterial({ color: 0x000011, transparent: true, opacity: 0.7 })
+    this.umbraCone = new THREE.Mesh(umbraGeo, umbraMat)
+    this.scene.add(this.umbraCone)
+
+    const penumbraGeo = new THREE.CylinderGeometry(0.05, 1.2, 1, 16)
+    const penumbraMat = new THREE.MeshBasicMaterial({ color: 0x111133, transparent: true, opacity: 0.35 })
+    this.penumbraCone = new THREE.Mesh(penumbraGeo, penumbraMat)
+    this.scene.add(this.penumbraCone)
 
     this.eclipseType = 'lunar-total'
     this.alignment = 1.0
     this.auto = false
     this._animT = 0
 
-    this._rebuildCones()
+    this._updateCones()
 
     this.camera.position.set(0, 3, 7)
     this.controls.target.set(-2, 0, 0)
   }
 
-  _clearCones() {
-    if (this.umbraCone) {
-      this.scene.remove(this.umbraCone)
-      this.umbraCone.geometry.dispose()
-      this.umbraCone.material.dispose()
-      this.umbraCone = null
-    }
-    if (this.penumbraCone) {
-      this.scene.remove(this.penumbraCone)
-      this.penumbraCone.geometry.dispose()
-      this.penumbraCone.material.dispose()
-      this.penumbraCone = null
-    }
-  }
-
-  _rebuildCones() {
-    this._clearCones()
+  _updateCones() {
+    const align = this.alignment
 
     if (this.eclipseType === 'lunar-total') {
-      this.moon.position.set(3 * this.alignment, 0, 0)
-      const earthR = 0.5
-      const distToMoon = 3 * this.alignment
-      const umbraLen = Math.max(0.3, distToMoon - earthR * 0.3)
-      const umbraTipR = Math.max(0.01, earthR * 0.15 * (1 - (umbraLen - 0.3) / 3))
+      // Earth casts shadow on Moon (Moon moves +X with alignment)
+      this.moon.position.set(3 * align, 0, 0)
 
-      const uGeo = new THREE.CylinderGeometry(umbraTipR, earthR, umbraLen, 16, 4)
-      uGeo.rotateZ(-Math.PI / 2)
-      const uMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.7, depthTest: true })
-      this.umbraCone = new THREE.Mesh(uGeo, uMat)
-      this.umbraCone.position.set(earthR + umbraLen / 2, 0, 0)
-      this.scene.add(this.umbraCone)
+      const dist = this.moon.position.x - this.earth.position.x
+      this.umbraCone.position.copy(this.earth.position)
+      this.umbraCone.position.x += 0.5
+      this.umbraCone.rotation.z = 0
+      this.umbraCone.scale.set(1, dist, 1)
+      this.umbraCone.visible = align > 0.15
 
-      const penumbraLen = umbraLen * 1.6
-      const penTipR = earthR * 0.5
-      const pGeo = new THREE.CylinderGeometry(penTipR, earthR * 1.4, penumbraLen, 16, 4)
-      pGeo.rotateZ(-Math.PI / 2)
-      const pMat = new THREE.MeshBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.3, depthTest: true })
-      this.penumbraCone = new THREE.Mesh(pGeo, pMat)
-      this.penumbraCone.position.set(earthR + penumbraLen / 2, 0, 0)
-      this.scene.add(this.penumbraCone)
+      this.penumbraCone.position.copy(this.umbraCone.position)
+      this.penumbraCone.rotation.z = 0
+      this.penumbraCone.scale.set(1, dist * 1.2, 1)
+      this.penumbraCone.visible = align > 0.1
     } else if (this.eclipseType === 'solar-total') {
-      this.moon.position.set(-3 * this.alignment, 0, 0)
-      const moonR = 0.15
-      const distToEarth = 3 * this.alignment
-      const umbraLen = Math.max(0.2, distToEarth - moonR * 0.3)
-      const umbraTipR = Math.max(0.005, moonR * 0.1)
+      // Moon casts shadow on Earth (Moon moves -X with alignment)
+      this.moon.position.set(-3 * align, 0, 0)
 
-      const uGeo = new THREE.CylinderGeometry(umbraTipR, moonR, umbraLen, 16, 4)
-      uGeo.rotateZ(-Math.PI / 2)
-      const uMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.7, depthTest: true })
-      this.umbraCone = new THREE.Mesh(uGeo, uMat)
-      this.umbraCone.position.set(this.moon.position.x + moonR + umbraLen / 2, 0, 0)
-      this.scene.add(this.umbraCone)
+      const dist = this.earth.position.x - this.moon.position.x
+      this.umbraCone.position.copy(this.moon.position)
+      this.umbraCone.position.x += 0.15
+      this.umbraCone.rotation.z = Math.PI
+      this.umbraCone.scale.set(1, dist * 0.3, 1)
+      this.umbraCone.visible = align > 0.1
 
-      const penumbraLen = umbraLen * 1.6
-      const penTipR = moonR * 0.5
-      const pGeo = new THREE.CylinderGeometry(penTipR, moonR * 1.6, penumbraLen, 16, 4)
-      pGeo.rotateZ(-Math.PI / 2)
-      const pMat = new THREE.MeshBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.3, depthTest: true })
-      this.penumbraCone = new THREE.Mesh(pGeo, pMat)
-      this.penumbraCone.position.set(this.moon.position.x + moonR + penumbraLen / 2, 0, 0)
-      this.scene.add(this.penumbraCone)
+      this.penumbraCone.position.copy(this.umbraCone.position)
+      this.penumbraCone.rotation.z = Math.PI
+      this.penumbraCone.scale.set(1, dist * 0.5, 1)
+      this.penumbraCone.visible = align > 0.05
     } else if (this.eclipseType === 'solar-annular') {
-      this.moon.position.set(-3 * this.alignment, 0, 0)
-      const moonR = 0.15
-      const umbraLen = 1.8
-      const umbraTipR = moonR * 0.55
+      this.moon.position.set(-3 * align, 0, 0)
 
-      const uGeo = new THREE.CylinderGeometry(umbraTipR, moonR, umbraLen, 16, 4)
-      uGeo.rotateZ(-Math.PI / 2)
-      const uMat = new THREE.MeshBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.5, depthTest: true })
-      this.umbraCone = new THREE.Mesh(uGeo, uMat)
-      this.umbraCone.position.set(this.moon.position.x + moonR + umbraLen / 2, 0, 0)
-      this.scene.add(this.umbraCone)
+      const dist = this.earth.position.x - this.moon.position.x
+      this.umbraCone.position.copy(this.moon.position)
+      this.umbraCone.position.x += 0.15
+      this.umbraCone.rotation.z = Math.PI
+      this.umbraCone.scale.set(1, dist * 0.15, 1)
+      this.umbraCone.visible = align > 0.3
 
-      const penumbraLen = umbraLen * 1.3
-      const penTipR = moonR * 0.9
-      const pGeo = new THREE.CylinderGeometry(penTipR, moonR * 1.6, penumbraLen, 16, 4)
-      pGeo.rotateZ(-Math.PI / 2)
-      const pMat = new THREE.MeshBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.3, depthTest: true })
-      this.penumbraCone = new THREE.Mesh(pGeo, pMat)
-      this.penumbraCone.position.set(this.moon.position.x + moonR + penumbraLen / 2, 0, 0)
-      this.scene.add(this.penumbraCone)
+      this.penumbraCone.position.copy(this.umbraCone.position)
+      this.penumbraCone.rotation.z = Math.PI
+      this.penumbraCone.scale.set(1, dist * 0.7, 1)
+      this.penumbraCone.visible = align > 0.05
     }
   }
 
@@ -180,7 +152,7 @@ class EclipseEngine extends ExperimentEngine {
       this.alignment = 0.5 + 0.5 * Math.sin(this._animT)
       const alignPct = Math.round(this.alignment * 100)
       if (this._vm) this._vm.alignment = alignPct
-      this._rebuildCones()
+      this._updateCones()
     }
   }
 
@@ -194,7 +166,7 @@ class EclipseEngine extends ExperimentEngine {
       this.alignment = alignment
       changed = true
     }
-    if (changed) this._rebuildCones()
+    if (changed) this._updateCones()
   }
 }
 </script>

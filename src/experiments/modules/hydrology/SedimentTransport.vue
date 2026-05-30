@@ -47,14 +47,14 @@ class SedimentTransportEngine extends ExperimentEngine {
 
     this.sediments = []
     const grainTypes = [
-      { size: 0.06, color: 0xbdbdbd, label: 'clay', criticalErosion: 2, criticalDeposit: 0.1 },
-      { size: 0.12, color: 0xa1887f, label: 'silt', criticalErosion: 1.5, criticalDeposit: 0.3 },
-      { size: 0.2, color: 0xffcc80, label: 'sand', criticalErosion: 1, criticalDeposit: 0.5 },
-      { size: 0.35, color: 0x8d6e63, label: 'gravel', criticalErosion: 0.8, criticalDeposit: 1 },
+      { size: 0.04, color: 0xbdbdbd, label: 'clay', criticalErosion: 2, criticalDeposit: 0.1 },
+      { size: 0.14, color: 0xa1887f, label: 'silt', criticalErosion: 1.5, criticalDeposit: 0.3 },
+      { size: 0.28, color: 0xffcc80, label: 'sand', criticalErosion: 1, criticalDeposit: 0.5 },
+      { size: 0.5, color: 0x8d6e63, label: 'gravel', criticalErosion: 0.8, criticalDeposit: 1 },
     ]
     grainTypes.forEach((gt) => {
       for (let i = 0; i < 8; i++) {
-        const geo = new THREE.SphereGeometry(gt.size, 8, 8)
+        const geo = new THREE.SphereGeometry(gt.size, 12, 12)
         const mat = new THREE.MeshStandardMaterial({ color: gt.color, roughness: 0.6 })
         const grain = new THREE.Mesh(geo, mat)
         grain.position.set((Math.random() - 0.5) * 7, -0.9, (Math.random() - 0.5) * 1.5)

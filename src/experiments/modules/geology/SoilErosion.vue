@@ -49,7 +49,7 @@ class SoilErosionEngine extends ExperimentEngine {
 
     const patchWidth = 3.5
     const patchLength = 5
-    const segments = 32
+    const segments = 48
 
     // Bare soil patch (left)
     const bareGeo = new THREE.PlaneGeometry(patchWidth, patchLength, segments, segments)
@@ -71,8 +71,8 @@ class SoilErosionEngine extends ExperimentEngine {
 
     // Vegetation cylinders on right patch
     this.plants = []
-    const stemGeo = new THREE.CylinderGeometry(0.04, 0.05, 0.4, 6)
-    const leafGeo = new THREE.SphereGeometry(0.15, 6, 4)
+    const stemGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8)
+    const leafGeo = new THREE.SphereGeometry(0.22, 8, 8)
     for (let i = 0; i < 80; i++) {
       const plantGroup = new THREE.Group()
       const stem = new THREE.Mesh(stemGeo, new THREE.MeshStandardMaterial({ color: 0x4a7c3f, roughness: 0.7 }))
@@ -181,7 +181,7 @@ class SoilErosionEngine extends ExperimentEngine {
       if (d.mesh.geometry) d.mesh.geometry.dispose()
     })
     this._drops = []
-    const count = this.rainIntensity * 8
+    const count = this.rainIntensity * 15
     const geo = new THREE.SphereGeometry(0.05, 4, 4)
     for (let i = 0; i < count; i++) {
       const side = Math.random() < 0.5 ? -2.5 : 2.5

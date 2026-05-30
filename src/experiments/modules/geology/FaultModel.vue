@@ -41,7 +41,7 @@ export default {
 
 class FaultModelEngine extends ExperimentEngine {
   setupScene() {
-    const layerColors = [0xc8a96e, 0xd4b896, 0x9e8c7a, 0x8b7355]
+    const layerColors = [0xe8c97a, 0xc4a46c, 0x8b7355, 0x5c4a3a]
     this.layers = []
     this._origPositions = []
     layerColors.forEach((color, i) => {
@@ -57,7 +57,7 @@ class FaultModelEngine extends ExperimentEngine {
     })
 
     const wallGeo = new THREE.BoxGeometry(0.15, 4, 3.2)
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.4 })
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.3, emissive: 0x333333, emissiveIntensity: 0.3 })
     this.wall = new THREE.Mesh(wallGeo, wallMat)
     this.wall.position.set(3, 0, 0)
     this.scene.add(this.wall)

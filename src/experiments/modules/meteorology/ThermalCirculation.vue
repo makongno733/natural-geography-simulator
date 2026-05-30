@@ -22,7 +22,7 @@ import * as THREE from 'three'
 export default {
   name: 'ThermalCirculation',
   data() {
-    return { tempDiff: 5, particleCount: 150, paused: false }
+    return { tempDiff: 5, particleCount: 200, paused: false }
   },
   mounted() {
     this._e = new ThermalCirculationEngine()
@@ -52,17 +52,17 @@ class ThermalCirculationEngine extends ExperimentEngine {
 
     const boxGeo = new THREE.BoxGeometry(8, 4, 4)
     const boxEdges = new THREE.EdgesGeometry(boxGeo)
-    const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({ color: 0x8f7652, transparent: true, opacity: 0.35 }))
+    const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({ color: 0x8f7652, transparent: true, opacity: 0.55 }))
     this.scene.add(boxLine)
 
     const hotGeo = new THREE.BoxGeometry(1, 0.15, 3)
-    this.hotMat = new THREE.MeshStandardMaterial({ color: 0xe53935, emissive: 0xe53935, emissiveIntensity: 0.5 })
+    this.hotMat = new THREE.MeshStandardMaterial({ color: 0xe53935, emissive: 0xe53935, emissiveIntensity: 0.7 })
     this.hotPlate = new THREE.Mesh(hotGeo, this.hotMat)
     this.hotPlate.position.set(-3.6, -2, 0)
     this.scene.add(this.hotPlate)
 
     const coldGeo = new THREE.BoxGeometry(1, 0.15, 3)
-    this.coldMat = new THREE.MeshStandardMaterial({ color: 0x1e88e5, emissive: 0x1e88e5, emissiveIntensity: 0.3 })
+    this.coldMat = new THREE.MeshStandardMaterial({ color: 0x1e88e5, emissive: 0x1e88e5, emissiveIntensity: 0.5 })
     this.coldPlate = new THREE.Mesh(coldGeo, this.coldMat)
     this.coldPlate.position.set(3.6, -2, 0)
     this.scene.add(this.coldPlate)
@@ -99,7 +99,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
       if (p.geometry) p.geometry.dispose()
     })
     this._particles = []
-    const geo = new THREE.SphereGeometry(0.07, 4, 4)
+    const geo = new THREE.SphereGeometry(0.07, 8, 8)
     for (let i = 0; i < count; i++) {
       const mat = new THREE.MeshBasicMaterial({ color: 0x888888 })
       const dot = new THREE.Mesh(geo, mat)
