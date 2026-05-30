@@ -143,14 +143,11 @@ export class ExperimentEngine {
     this._guideTexts = guideTexts || ['观察场景中的关键元素', '调整参数观察变化', '注意不同条件的影响']
     this._guideIndex = 0
     this._guideTimer = 0
-    this.controls.autoRotate = true
-    this.controls.autoRotateSpeed = 0.4
     if (this._onGuideChange) this._onGuideChange(this._guideTexts[0])
   }
 
   stopGuidedMode() {
     this._guidedMode = false
-    this.controls.autoRotate = false
   }
 
   getGuideText() {
