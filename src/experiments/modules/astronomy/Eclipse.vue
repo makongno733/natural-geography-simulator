@@ -16,6 +16,10 @@
       <label>对齐度 <span>{{ alignment.toFixed(0) }}%</span></label>
       <input type="range" min="0" max="100" v-model.number="alignment" @input="onParam" />
       <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="ec-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="ec-canvas-wrap">
@@ -30,10 +34,21 @@ import * as THREE from 'three'
 
 export default {
   name: 'Eclipse',
-  data() { return { eclipseType: 'lunar-total', alignment: 100, auto: false, activePreset: 'lunar' } },
+  data() { return {
+    eclipseType: 'lunar-total', alignment: 100, auto: false, activePreset: 'lunar',
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '日食发生在朔日，月球位于太阳和地球之间',
+      '月食发生在望日，地球位于太阳和月球之间',
+      '本影区完全遮挡阳光，半影区部分遮挡阳光',
+      '日环食：月球距地球较远，不能完全遮住太阳',
+    ],
+  } },
   mounted() {
     this._e = new EclipseEngine()
     this._e._vm = this
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -42,6 +57,16 @@ export default {
     _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ eclipseType: this.eclipseType, alignment: this.alignment / 100 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     setPreset(key) {
       this.activePreset = key
       if (key === 'auto') { this.autoPlay(); return }
@@ -220,6 +245,9 @@ class EclipseEngine extends ExperimentEngine {
 .ec-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .ec-panel button:hover { background: var(--button-green); }
 .ec-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .ec-canvas-wrap { flex: 1; min-height: 460px; background: #050510; }
 .ec-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

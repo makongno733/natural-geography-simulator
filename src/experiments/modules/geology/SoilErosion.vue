@@ -15,6 +15,10 @@
         <div class="se-legend-item"><span class="se-dot veg"></span> 植被覆盖</div>
       </div>
       <button @click="reset">↺ 重置</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="se-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="se-canvas-wrap">
@@ -29,9 +33,20 @@ import * as THREE from 'three'
 
 export default {
   name: 'SoilErosion',
-  data() { return { rainIntensity: 5, slopeAngle: 20 } },
+  data() { return {
+    rainIntensity: 5, slopeAngle: 20,
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '降雨强度越大，土壤侵蚀越严重',
+      '坡度越大，径流速度越快，侵蚀力越强',
+      '植被覆盖能有效减少水土流失',
+      '对比裸露坡面与植被坡面的径流差异',
+    ],
+  } },
   mounted() {
     this._e = new SoilErosionEngine()
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -45,10 +60,20 @@ export default {
       else if (type === 'extreme') { this.rainIntensity = 10; this.slopeAngle = 25 }
       this.onParam()
     },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     reset() {
       this.rainIntensity = 5; this.slopeAngle = 20
       this._e.dispose()
-      this.$nextTick(() => { this._e = new SoilErosionEngine(); this._e.init(this.$refs.cvs); this._e.setParams({ rainIntensity: 5, slopeAngle: 20 }) })
+      this.$nextTick(() => { this._e = new SoilErosionEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs); this._e.setParams({ rainIntensity: 5, slopeAngle: 20 }) })
     },
   },
 }
@@ -307,6 +332,9 @@ class SoilErosionEngine extends ExperimentEngine {
 .se-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .se-panel button:hover { background: var(--button-green); }
 .se-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .se-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }

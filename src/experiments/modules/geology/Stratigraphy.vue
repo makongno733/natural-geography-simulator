@@ -12,6 +12,10 @@
         <input type="checkbox" v-model="showUnconformity" @change="onParam" /> 显示不整合面
       </label>
       <button @click="resetView">↺ 重置视角</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="sg-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="sg-canvas-wrap">
@@ -31,9 +35,20 @@ import * as THREE from 'three'
 
 export default {
   name: 'Stratigraphy',
-  data() { return { showLabels: true, showUnconformity: true } },
+  data() { return {
+    showLabels: true, showUnconformity: true,
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '叠置原理：下层岩层年代老于上层岩层',
+      '水平原理：岩层原始沉积时呈水平状态',
+      '穿插关系：侵入体年代晚于被其切穿的岩层',
+      '不整合面代表沉积间断或侵蚀时期',
+    ],
+  } },
   mounted() {
     this._e = new StratigraphyEngine()
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -41,6 +56,16 @@ export default {
   methods: {
     _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ showLabels: this.showLabels, showUnconformity: this.showUnconformity }) },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     resetView() { this._e.resetCamera() },
   },
 }
@@ -193,6 +218,9 @@ class StratigraphyEngine extends ExperimentEngine {
 .sg-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .sg-panel button:hover { background: var(--button-green); }
 .sg-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .sg-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
 .sg-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 .sg-labels { position: absolute; inset: 0; pointer-events: none; }

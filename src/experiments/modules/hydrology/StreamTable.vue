@@ -13,6 +13,10 @@
       <label>水流量 <span>{{ flowRate }}</span></label>
       <input type="range" min="1" max="10" v-model.number="flowRate" @input="onParam" />
       <button @click="reset">↺ 重置地形</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="st-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="st-canvas-wrap">
@@ -29,6 +33,14 @@ export default {
   name: 'StreamTable',
   data() { return {
     slope: 8, flowRate: 5, currentPreset: null,
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '流水对地表进行侵蚀、搬运和沉积三种作用',
+      '坡度增大时流速加快，侵蚀能力增强',
+      '观察上游 V 形谷和下游沉积扇的形成',
+      '曲流发育：凹岸侵蚀，凸岸沉积',
+    ],
     presets: [
       { label: '缓坡小河', slope: 4, flowRate: 3 },
       { label: '陡坡急流', slope: 15, flowRate: 8 },
@@ -37,6 +49,7 @@ export default {
   } },
   mounted() {
     this._e = new StreamTableEngine()
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -50,9 +63,19 @@ export default {
       this.flowRate = p.flowRate
       this._e.setParams({ slope: p.slope, flowRate: p.flowRate })
     },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     reset() {
       this._e.dispose()
-      this.$nextTick(() => { this._e = new StreamTableEngine(); this._e.init(this.$refs.cvs); this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) })
+      this.$nextTick(() => { this._e = new StreamTableEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs); this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) })
     },
   },
 }
@@ -156,6 +179,9 @@ class StreamTableEngine extends ExperimentEngine {
 .preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .st-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .st-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .st-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

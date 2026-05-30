@@ -12,6 +12,10 @@
       <input type="range" min="0" max="360" v-model.number="moonAngle" @input="onParam" />
       <div class="mp-phase-label">当前月相：<strong>{{ phaseName }}</strong></div>
       <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="mp-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="mp-canvas-wrap">
@@ -28,10 +32,21 @@ const phaseNames = ['新月', '蛾眉月(盈)', '上弦月', '盈凸月', '满�
 
 export default {
   name: 'MoonPhases',
-  data() { return { moonAngle: 0, auto: false, phaseName: '新月', activePreset: 'new' } },
+  data() { return {
+    moonAngle: 0, auto: false, phaseName: '新月', activePreset: 'new',
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '月球绕地球公转时，被太阳照亮的部分不断变化',
+      '新月时月球位于太阳和地球之间，看不到亮面',
+      '满月时地球位于太阳和月球之间，看到整个亮面',
+      '上弦月和下弦月时看到月球的一半亮面',
+    ],
+  } },
   mounted() {
     this._e = new MoonPhasesEngine()
     this._e._vm = this
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -40,6 +55,16 @@ export default {
     _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ moonAngle: this.moonAngle * Math.PI / 180 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     setPreset(key) {
       this.activePreset = key
       if (key === 'auto') { this.autoPlay(); return }
@@ -138,6 +163,9 @@ class MoonPhasesEngine extends ExperimentEngine {
 .mp-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .mp-panel button:hover { background: var(--button-green); }
 .mp-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .mp-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .mp-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

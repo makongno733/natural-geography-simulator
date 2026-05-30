@@ -11,6 +11,11 @@ export class ExperimentEngine {
     this.animationId = null
     this._canvas = null
     this._sprites = []
+    this._guidedMode = false
+    this._guideTexts = []
+    this._guideIndex = 0
+    this._guideTimer = 0
+    this._onGuideChange = null
   }
 
   init(canvas) {
@@ -80,6 +85,16 @@ export class ExperimentEngine {
     const dt = Math.min(this.clock.getDelta(), 0.1)
     const elapsed = this.clock.elapsedTime
     this.update(dt, elapsed)
+    if (this._guidedMode) {
+      this._guideTimer += dt
+      if (this._guideTimer > 6) {
+        this._guideTimer = 0
+        this._guideIndex = (this._guideIndex + 1) % this._guideTexts.length
+        if (this._onGuideChange) {
+          this._onGuideChange(this._guideTexts[this._guideIndex])
+        }
+      }
+    }
     this.controls.update()
     this.renderer.render(this.scene, this.camera)
     this.animationId = requestAnimationFrame(() => this._animate())
@@ -121,6 +136,25 @@ export class ExperimentEngine {
         }
       })
     }
+  }
+
+  startGuidedMode(guideTexts) {
+    this._guidedMode = true
+    this._guideTexts = guideTexts || ['观察场景中的关键元素', '调整参数观察变化', '注意不同条件的影响']
+    this._guideIndex = 0
+    this._guideTimer = 0
+    this.controls.autoRotate = true
+    this.controls.autoRotateSpeed = 0.4
+    if (this._onGuideChange) this._onGuideChange(this._guideTexts[0])
+  }
+
+  stopGuidedMode() {
+    this._guidedMode = false
+    this.controls.autoRotate = false
+  }
+
+  getGuideText() {
+    return this._guideTexts[this._guideIndex] || ''
   }
 
   // -- subclass overrides --

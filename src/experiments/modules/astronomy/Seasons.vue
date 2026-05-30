@@ -17,6 +17,10 @@
         <span :class="{ active: near(270) }">冬至 270°</span>
       </div>
       <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="se-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="se-canvas-wrap">
@@ -33,10 +37,21 @@ const seasonNames = ['春分', '夏至', '秋分', '冬至']
 
 export default {
   name: 'Seasons',
-  data() { return { orbitAngle: 0, auto: false, seasonLabel: '春分', activePreset: 'spring' } },
+  data() { return {
+    orbitAngle: 0, auto: false, seasonLabel: '春分', activePreset: 'spring',
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '地轴倾角 23.5° 是四季形成的根本原因',
+      '夏至时太阳直射北回归线，北半球昼长夜短',
+      '冬至时太阳直射南回归线，北半球昼短夜长',
+      '春分和秋分时太阳直射赤道，全球昼夜等长',
+    ],
+  } },
   mounted() {
     this._e = new SeasonsEngine()
     this._e._vm = this
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -46,6 +61,16 @@ export default {
     onParam() { this._e.setParams({ orbitAngle: this.orbitAngle * Math.PI / 180 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
     near(deg) { return Math.abs(((this.orbitAngle % 360 + 360) % 360) - deg) < 10 },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     setPreset(key) {
       this.activePreset = key
       if (this.auto) { this.auto = false; this._e.auto = false }
@@ -182,6 +207,9 @@ class SeasonsEngine extends ExperimentEngine {
 .se-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .se-panel button:hover { background: var(--button-green); }
 .se-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .se-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

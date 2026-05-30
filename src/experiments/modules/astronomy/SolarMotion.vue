@@ -21,6 +21,10 @@
         <strong>{{ maxAlt.toFixed(1) }}°</strong>
       </div>
       <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="sm-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="sm-canvas-wrap">
@@ -37,10 +41,21 @@ const seasonDeclination = { spring: 0, summer: 23.5, autumn: 0, winter: -23.5 }
 
 export default {
   name: 'SolarMotion',
-  data() { return { latitude: 30, season: 'spring', auto: false, maxAlt: 60, activePreset: '' } },
+  data() { return {
+    latitude: 30, season: 'spring', auto: false, maxAlt: 60, activePreset: '',
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '太阳每天从东方升起、西方落下，形成周日视运动',
+      '正午太阳高度角 = 90° - 纬度 + 太阳赤纬',
+      '纬度越高，太阳视运动轨迹越倾斜',
+      '夏至日北半球太阳高度角最大，冬至日最小',
+    ],
+  } },
   mounted() {
     this._e = new SolarMotionEngine()
     this._e._vm = this
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -52,6 +67,16 @@ export default {
       this._e.setParams({ latitude: this.latitude, season: this.season })
     },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     setPreset(key) {
       this.activePreset = key
       if (this.auto) { this.auto = false; this._e.auto = false }
@@ -284,6 +309,9 @@ class SolarMotionEngine extends ExperimentEngine {
 .sm-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .sm-panel button:hover { background: var(--button-green); }
 .sm-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .sm-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .sm-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

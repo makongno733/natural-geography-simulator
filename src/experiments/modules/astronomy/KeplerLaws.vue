@@ -9,6 +9,10 @@
       <label>离心率 <span>{{ eccentricity.toFixed(2) }}</span></label>
       <input type="range" min="0" max="0.9" step="0.01" v-model.number="eccentricity" @input="onParam" />
       <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="kl-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="kl-canvas-wrap">
@@ -23,10 +27,21 @@ import * as THREE from 'three'
 
 export default {
   name: 'KeplerLaws',
-  data() { return { eccentricity: 0.5, auto: false, activePreset: 'ellipse' } },
+  data() { return {
+    eccentricity: 0.5, auto: false, activePreset: 'ellipse',
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '第一定律：行星轨道为椭圆，太阳位于一个焦点上',
+      '第二定律：行星与太阳连线在相等时间内扫过相等面积',
+      '第三定律：轨道周期的平方与半长轴的立方成正比',
+      '观察近日点速度快、远日点速度慢的变化',
+    ],
+  } },
   mounted() {
     this._e = new KeplerLawsEngine()
     this._e._vm = this
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -35,6 +50,16 @@ export default {
     _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ eccentricity: this.eccentricity }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
     setPreset(key) {
       this.activePreset = key
       if (this.auto) { this.auto = false; this._e.auto = false }
@@ -263,6 +288,9 @@ class KeplerLawsEngine extends ExperimentEngine {
 .kl-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .kl-panel button:hover { background: var(--button-green); }
 .kl-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .kl-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; }
 .kl-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

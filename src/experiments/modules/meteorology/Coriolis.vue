@@ -19,6 +19,10 @@
       <label>粒子数量 <span>{{ particleCount }}</span></label>
       <input type="range" min="30" max="150" v-model.number="particleCount" @input="onParam" />
       <button @click="reset">↺ 重置</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="cor-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="cor-canvas-wrap">
@@ -37,6 +41,14 @@ export default {
     return {
       rotationSpeed: 5, hemisphere: 'north', particleCount: 80,
       activePreset: null,
+      guideActive: false,
+      guideText: '',
+      _guideTexts: [
+        '地转偏向力：旋转体系中运动的物体发生偏转',
+        '北半球：运动物体向右偏转，形成气旋逆时针旋转',
+        '南半球：运动物体向左偏转，形成气旋顺时针旋转',
+        '偏转强度与旋转速度和纬度有关',
+      ],
       presets: [
         { name: '北半球气旋', label: '北半球气旋', rotationSpeed: 7, hemisphere: 'north', particleCount: 100 },
         { name: '南半球气旋', label: '南半球气旋', rotationSpeed: 7, hemisphere: 'south', particleCount: 100 },
@@ -46,6 +58,7 @@ export default {
   },
   mounted() {
     this._e = new CoriolisEngine()
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -62,7 +75,17 @@ export default {
       this.activePreset = p.name
     },
     setHemi(h) { this.hemisphere = h; this.onParam() },
-    reset() { this._e.dispose(); this.$nextTick(() => { this._e = new CoriolisEngine(); this._e.init(this.$refs.cvs) }) },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
+    reset() { this._e.dispose(); this.$nextTick(() => { this._e = new CoriolisEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs) }) },
   },
 }
 
@@ -203,6 +226,9 @@ class CoriolisEngine extends ExperimentEngine {
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .cor-presets { display: flex; gap: 4px; flex-wrap: wrap; }
 .cor-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .cor-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .cor-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

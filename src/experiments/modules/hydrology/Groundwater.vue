@@ -13,6 +13,10 @@
       <label>降雨补给 <span>{{ recharge }}</span></label>
       <input type="range" min="0" max="10" v-model.number="recharge" @input="onParam" />
       <button @click="reset">↺ 重置</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="gw-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="gw-canvas-wrap">
@@ -29,6 +33,14 @@ export default {
   name: 'Groundwater',
   data() { return {
     pumpRate: 3, recharge: 4, currentPreset: '正常',
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '含水层是地下水的储集空间，通常为砂层或砾石层',
+      '隔水层阻止地下水向下渗透，如黏土层',
+      '过度抽水会形成降水漏斗，导致地下水位下降',
+      '降雨补给使地下水位回升，维持水量平衡',
+    ],
     presets: [
       { label: '正常', pumpRate: 3, recharge: 4 },
       { label: '过度抽水', pumpRate: 9, recharge: 2 },
@@ -37,6 +49,7 @@ export default {
   } },
   mounted() {
     this._e = new GroundwaterEngine()
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -50,7 +63,17 @@ export default {
       this.recharge = p.recharge
       this._e.setParams({ pumpRate: p.pumpRate, recharge: p.recharge })
     },
-    reset() { this._e.dispose(); this.$nextTick(() => { this._e = new GroundwaterEngine(); this._e.init(this.$refs.cvs) }) },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
+    reset() { this._e.dispose(); this.$nextTick(() => { this._e = new GroundwaterEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs) }) },
   },
 }
 
@@ -143,6 +166,9 @@ class GroundwaterEngine extends ExperimentEngine {
 .preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
 .preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .gw-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .gw-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .gw-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 

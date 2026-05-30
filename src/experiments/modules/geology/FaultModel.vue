@@ -14,6 +14,10 @@
       <label>位移 <span>{{ displacement.toFixed(1) }}</span></label>
       <input type="range" min="-3" max="3" step="0.1" v-model.number="displacement" @input="onParam" />
       <button @click="reset">↺ 重置</button>
+      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
+        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      </button>
+      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
       <p class="fm-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
     <div class="fm-canvas-wrap">
@@ -28,9 +32,20 @@ import * as THREE from 'three'
 
 export default {
   name: 'FaultModel',
-  data() { return { displacement: 0 } },
+  data() { return {
+    displacement: 0,
+    guideActive: false,
+    guideText: '',
+    _guideTexts: [
+      '挤压应力使岩层弯曲变形，形成褶皱和逆断层',
+      '拉张应力使岩层断裂分离，形成正断层和地堑',
+      '观察挤压时岩层增厚、褶皱发育的过程',
+      '观察拉张时断层形成、岩块下陷的过程',
+    ],
+  } },
   mounted() {
     this._e = new FaultModelEngine()
+    this._e._onGuideChange = (text) => { this.guideText = text }
     this.$nextTick(() => this._e.init(this.$refs.cvs))
     window.addEventListener('resize', this._onResize)
   },
@@ -46,7 +61,17 @@ export default {
       this.onParam()
     },
     onParam() { this._e.setParams({ displacement: this.displacement }) },
-    reset() { this.displacement = 0; this._e.dispose(); this.$nextTick(() => { this._e = new FaultModelEngine(); this._e.init(this.$refs.cvs) }) },
+    toggleGuide() {
+      this.guideActive = !this.guideActive
+      if (this.guideActive) {
+        this._e.startGuidedMode(this._guideTexts)
+        this.guideText = this._e.getGuideText()
+      } else {
+        this._e.stopGuidedMode()
+        this.guideText = ''
+      }
+    },
+    reset() { this.displacement = 0; this._e.dispose(); this.$nextTick(() => { this._e = new FaultModelEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs) }) },
   },
 }
 
@@ -161,6 +186,9 @@ class FaultModelEngine extends ExperimentEngine {
 .fm-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .fm-panel button:hover { background: var(--button-green); }
 .fm-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
+.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
+.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
+.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
 .fm-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .fm-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
