@@ -91,7 +91,7 @@ export default {
 
 class SeasonsEngine extends ExperimentEngine {
   setupScene() {
-    this.scene.background = new THREE.Color(0x0a0a1a)
+    this.scene.background = new THREE.Color(0x000011)
     this.scene.fog = null
 
     // Remove base warm ambient, replace with cool space lighting
@@ -102,44 +102,56 @@ class SeasonsEngine extends ExperimentEngine {
     const ambient = new THREE.AmbientLight(0x334466, 1.5)
     this.scene.add(ambient)
 
-    const sunGeo = new THREE.SphereGeometry(3.0, 32, 32)
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
+    const sunGeo = new THREE.SphereGeometry(5.0, 64, 64)
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 })
     const sun = new THREE.Mesh(sunGeo, sunMat)
     this.scene.add(sun)
 
-    const sunLight = new THREE.PointLight(0xfff8e8, 90, 60)
+    const coronaGeo = new THREE.SphereGeometry(6.5, 32, 32)
+    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.06 })
+    const corona = new THREE.Mesh(coronaGeo, coronaMat)
+    corona.position.copy(sun.position)
+    this.scene.add(corona)
+
+    const sunLight = new THREE.PointLight(0xfff8e8, 150, 80)
     sunLight.position.copy(sun.position)
     this.scene.add(sunLight)
 
-    const orbitGeo = new THREE.TorusGeometry(10, 0.06, 16, 128)
-    const orbitRing = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xb8a57a, transparent: true, opacity: 0.35 }))
+    const orbitGeo = new THREE.TorusGeometry(14, 0.08, 16, 128)
+    const orbitRing = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.5 }))
+    orbitRing.rotation.x = 0.05
     this.scene.add(orbitRing)
 
     this.orbitAngle = 0
     this.auto = false
-    this.orbitRadius = 10
+    this.orbitRadius = 14
     this.tiltAngle = 23.5 * Math.PI / 180
 
     this.earthGroup = new THREE.Group()
     this.scene.add(this.earthGroup)
 
-    const earthGeo = new THREE.SphereGeometry(1.2, 32, 32)
-    const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })
+    const earthGeo = new THREE.SphereGeometry(2.5, 64, 64)
+    const earthMat = new THREE.MeshPhongMaterial({ color: 0x1a6fc4, specular: 0x5599ff, shininess: 25 })
     this.earth = new THREE.Mesh(earthGeo, earthMat)
     this.earthGroup.add(this.earth)
 
-    const axisLen = 2.5
-    const axisGeo = new THREE.CylinderGeometry(0.12, 0.12, axisLen, 8)
-    const axisMat = new THREE.MeshStandardMaterial({ color: 0xff8a65 })
+    const atmoGeo = new THREE.TorusGeometry(2.7, 0.08, 16, 64)
+    const atmoMat = new THREE.MeshBasicMaterial({ color: 0x448aff, transparent: true, opacity: 0.3 })
+    const atmoRing = new THREE.Mesh(atmoGeo, atmoMat)
+    this.earthGroup.add(atmoRing)
+
+    const axisLen = 4.5
+    const axisGeo = new THREE.CylinderGeometry(0.2, 0.2, axisLen, 8)
+    const axisMat = new THREE.MeshStandardMaterial({ color: 0xff0000 })
     const axis = new THREE.Mesh(axisGeo, axisMat)
     axis.position.y = 0
     this.earthGroup.add(axis)
 
-    const nubGeo = new THREE.SphereGeometry(0.18, 8, 8)
-    const nNorth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0xff5252 }))
+    const nubGeo = new THREE.SphereGeometry(0.3, 8, 8)
+    const nNorth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0xff0000 }))
     nNorth.position.y = axisLen / 2
     this.earthGroup.add(nNorth)
-    const nSouth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0x448aff }))
+    const nSouth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0x0066ff }))
     nSouth.position.y = -axisLen / 2
     this.earthGroup.add(nSouth)
 
@@ -152,26 +164,39 @@ class SeasonsEngine extends ExperimentEngine {
       { a: Math.PI * 1.5, label: '冬至 12.22', color: '#64b5f6' },
     ]
     for (const m of markerPositions) {
-      const pos = new THREE.Vector3(Math.cos(m.a) * 10, 1.5, Math.sin(m.a) * 10)
-      this.scene.add(this._makeLabel(m.label, pos, m.color, 24, 3))
-      const dotGeo = new THREE.SphereGeometry(0.15, 8, 8)
+      const pos = new THREE.Vector3(Math.cos(m.a) * 14, 1.5, Math.sin(m.a) * 14)
+      this.scene.add(this._makeLabel(m.label, pos, m.color, 48, 4.0))
+      const dotGeo = new THREE.SphereGeometry(0.25, 8, 8)
       const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: m.color }))
       dot.position.copy(pos)
       this.scene.add(dot)
     }
 
     // Additional sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(0, 3.5, 0), '#ffd54f', 30, 2.5))
-    this._earthLabel = this._makeLabel('地球', new THREE.Vector3(10, 1.5, 0), '#42a5f5', 28, 2.5)
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(0, 5.8, 0), '#ffcc00', 64, 4.0))
+    this._earthLabel = this._makeLabel('地球', new THREE.Vector3(14, 3.0, 0), '#448aff', 64, 4.0)
     this.scene.add(this._earthLabel)
-    this.scene.add(this._makeLabel('地轴 23.5°', new THREE.Vector3(2, 3.0, 0), '#ff6b6b', 24, 2))
-    this._northLabel = this._makeLabel('北半球', new THREE.Vector3(0.8, 2.0, 0), '#ff5252', 22, 1.8)
+    this.scene.add(this._makeLabel('地轴 23.5°', new THREE.Vector3(3, 5.0, 0), '#ff0000', 48, 3.0))
+    this._northLabel = this._makeLabel('北半球', new THREE.Vector3(0, 3.5, 0), '#ff0000', 48, 3.0)
     this.scene.add(this._northLabel)
-    this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0.8, -1.6, 0), '#448aff', 22, 1.8)
+    this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0, -3.0, 0), '#0066ff', 48, 3.0)
     this.scene.add(this._southLabel)
 
-    this.camera.position.set(0, 12, 18)
+    this.camera.position.set(0, 16, 22)
     this.controls.target.set(0, 0, 0)
+
+    const starsGeo = new THREE.BufferGeometry()
+    const starsCount = 60
+    const starsPositions = new Float32Array(starsCount * 3)
+    for (let i = 0; i < starsCount * 3; i += 3) {
+      starsPositions[i] = (Math.random() - 0.5) * 50
+      starsPositions[i + 1] = (Math.random() - 0.5) * 40
+      starsPositions[i + 2] = (Math.random() - 0.5) * 30
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3))
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 })
+    const stars = new THREE.Points(starsGeo, starsMat)
+    this.scene.add(stars)
   }
 
   update(dt) {
@@ -185,8 +210,8 @@ class SeasonsEngine extends ExperimentEngine {
     this.earthGroup.position.set(Math.cos(a) * this.orbitRadius, 0, Math.sin(a) * this.orbitRadius)
     const ep = this.earthGroup.position
     if (this._earthLabel) this._earthLabel.position.copy(ep).add(new THREE.Vector3(0, 1.5, 0))
-    if (this._northLabel) this._northLabel.position.copy(ep).add(new THREE.Vector3(0, 2.2, 0))
-    if (this._southLabel) this._southLabel.position.copy(ep).add(new THREE.Vector3(0, -1.8, 0))
+    if (this._northLabel) this._northLabel.position.copy(ep).add(new THREE.Vector3(0, 3.5, 0))
+    if (this._southLabel) this._southLabel.position.copy(ep).add(new THREE.Vector3(0, -3.0, 0))
   }
 
   setParams({ orbitAngle }) {
@@ -218,7 +243,7 @@ class SeasonsEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.se-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; position: relative; }
+.se-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; }
 .lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lock-btn:hover { background: rgba(255,255,255,1); }
 .se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }

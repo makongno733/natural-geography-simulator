@@ -105,45 +105,64 @@ export default {
 
 class MoonPhasesEngine extends ExperimentEngine {
   setupScene() {
-    const sunGeo = new THREE.SphereGeometry(2.5, 32, 32)
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
+    const sunGeo = new THREE.SphereGeometry(4.0, 64, 64)
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd700 })
     const sun = new THREE.Mesh(sunGeo, sunMat)
-    sun.position.set(15, 0, 0)
+    sun.position.set(20, 0, 0)
     this.scene.add(sun)
 
-    this.sunLight = new THREE.PointLight(0xfff8e8, 80, 50)
+    const coronaGeo = new THREE.SphereGeometry(5.0, 32, 32)
+    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.08 })
+    const corona = new THREE.Mesh(coronaGeo, coronaMat)
+    corona.position.copy(sun.position)
+    this.scene.add(corona)
+
+    this.sunLight = new THREE.PointLight(0xfff8e8, 150, 60)
     this.sunLight.position.copy(sun.position)
     this.scene.add(this.sunLight)
 
-    const earthGeo = new THREE.SphereGeometry(1.0, 32, 32)
-    const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })
+    const earthGeo = new THREE.SphereGeometry(2.0, 64, 64)
+    const earthMat = new THREE.MeshPhongMaterial({ color: 0x1a6fc4, specular: 0x5599ff, shininess: 30 })
     this.earth = new THREE.Mesh(earthGeo, earthMat)
     this.scene.add(this.earth)
 
-    const moonGeo = new THREE.SphereGeometry(0.35, 16, 16)
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.7 })
+    const moonGeo = new THREE.SphereGeometry(0.7, 32, 32)
+    const moonMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.6 })
     this.moon = new THREE.Mesh(moonGeo, moonMat)
-    this.moon.position.set(0, 0, 4)
+    this.moon.position.set(0, 0, 6)
     this.scene.add(this.moon)
 
-    const orbitGeo = new THREE.TorusGeometry(4, 0.02, 16, 64)
-    const orbitLine = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xb8a57a, transparent: true, opacity: 0.4 }))
+    const orbitGeo = new THREE.TorusGeometry(6, 0.06, 16, 128)
+    const orbitLine = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.6 }))
     this.scene.add(orbitLine)
 
     // Sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(15, 3.0, 0), '#ffd54f', 28, 2.5))
-    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 1.3, 0), '#42a5f5', 28, 2.5))
-    this.scene.add(this._makeLabel('月球轨道', new THREE.Vector3(0, 0.5, 4.4), '#888888', 24, 2.5))
-    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(7.5, 0.8, 0), '#ffd54f', 24, 2.5))
-    this._phaseSprite = this._makeLabel('新月', new THREE.Vector3(0, 1.5, 4), '#ffffff', 26, 2.5)
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(20, 4.5, 0), '#ffd700', 64, 4.0))
+    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 2.5, 0), '#448aff', 64, 4.0))
+    this.scene.add(this._makeLabel('月球轨道', new THREE.Vector3(0, 0.8, 6.5), '#ffffff', 64, 4.0))
+    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(10, 0.8, 0), '#ffd700', 64, 4.0))
+    this._phaseSprite = this._makeLabel('新月', new THREE.Vector3(0, 2.0, 0), '#ffffff', 52, 5.0)
     this.scene.add(this._phaseSprite)
 
     this.moonAngle = 0
     this.auto = false
-    this.camera.position.set(0, 6, 10)
-    this.controls.target.set(0, 0, 2)
-    this.scene.background = new THREE.Color(0x0a0a1a)
+    this.camera.position.set(0, 8, 14)
+    this.controls.target.set(0, 0, 3)
+    this.scene.background = new THREE.Color(0x000011)
     this.scene.fog = null
+
+    const starsGeo = new THREE.BufferGeometry()
+    const starsCount = 50
+    const starsPositions = new Float32Array(starsCount * 3)
+    for (let i = 0; i < starsCount * 3; i += 3) {
+      starsPositions[i] = (Math.random() - 0.5) * 40
+      starsPositions[i + 1] = (Math.random() - 0.5) * 30
+      starsPositions[i + 2] = (Math.random() - 0.5) * 20
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3))
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 })
+    const stars = new THREE.Points(starsGeo, starsMat)
+    this.scene.add(stars)
 
     // Remove base warm ambient, replace with cool space lighting
     const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
@@ -162,7 +181,7 @@ class MoonPhasesEngine extends ExperimentEngine {
       this._vm.phaseName = phaseNames[Math.round(this.moonAngle / (Math.PI / 4)) % 8]
     }
     const a = this.moonAngle
-    this.moon.position.set(Math.cos(a) * 4, 0, Math.sin(a) * 4)
+    this.moon.position.set(Math.cos(a) * 6, 0, Math.sin(a) * 6)
     this.moon.lookAt(this.earth.position)
     if (this._phaseSprite) {
       this._phaseSprite.position.copy(this.moon.position).add(new THREE.Vector3(0, 0.8, 0))
@@ -193,7 +212,7 @@ class MoonPhasesEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.mp-canvas-wrap { flex: 1; min-height: 460px; background: #0a0a1a; position: relative; }
+.mp-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; }
 .lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lock-btn:hover { background: rgba(255,255,255,1); }
 .mp-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
@@ -204,9 +223,9 @@ class MoonPhasesEngine extends ExperimentEngine {
 .preset-btn:hover { background: var(--button-green); }
 .preset-btn.active:hover { background: var(--red); }
 
-.earth-view { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; background: #0a0a1a; border-radius: 8px; margin-top: 8px; }
+.earth-view { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; background: #000011; border-radius: 8px; margin-top: 8px; }
 .earth-view-label { font-size: 12px; color: #ccc; }
-.moon-disk { width: 80px; height: 80px; border-radius: 50%; background: #e8e8e8; transition: all 0.3s; }
+.moon-disk { width: 120px; height: 120px; border-radius: 50%; background: #e8e8e8; transition: all 0.3s; }
 .earth-view-phase { font-size: 13px; color: #ffd54f; font-weight: 600; }
 
 .exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
