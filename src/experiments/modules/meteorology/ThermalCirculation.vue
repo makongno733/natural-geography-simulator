@@ -12,7 +12,6 @@
       <label>热源温差 <span>{{ tempDiff }}</span></label>
       <input type="range" min="1" max="10" v-model.number="tempDiff" @input="onParam" />
 
-      <button @click="togglePause">{{ paused ? '▶ 播放' : '⏸ 暂停' }}</button>
       <button @click="reset">↺ 重置</button>
       <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
         {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
@@ -41,7 +40,7 @@ export default {
   name: 'ThermalCirculation',
   data() {
     return {
-      tempDiff: 7, paused: false, locked: false,
+      tempDiff: 7, locked: false,
       activePreset: '海陆风',
       guideActive: false,
       guideText: '',
@@ -73,7 +72,6 @@ export default {
   },
   methods: {
     _onResize() { this._e?.resize() },
-    togglePause() { this.paused = !this.paused; this._e.paused = this.paused },
     toggleLock() {
       this.locked = !this.locked
       if (this._e && this._e.controls) {
