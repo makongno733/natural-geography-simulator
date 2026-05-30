@@ -91,15 +91,15 @@ class KeplerLawsEngine extends ExperimentEngine {
     const ambient = new THREE.AmbientLight(0x334466, 1.5)
     this.scene.add(ambient)
 
-    this.sunGeo = new THREE.SphereGeometry(0.5, 32, 32)
-    this.sun = new THREE.Mesh(this.sunGeo, new THREE.MeshBasicMaterial({ color: 0xffd54f }))
+    this.sunGeo = new THREE.SphereGeometry(1.8, 64, 64)
+    this.sun = new THREE.Mesh(this.sunGeo, new THREE.MeshBasicMaterial({ color: 0xffcc00 }))
     this.scene.add(this.sun)
 
-    const sunLight = new THREE.PointLight(0xfff8e8, 30, 25)
+    const sunLight = new THREE.PointLight(0xfff8e8, 80, 50)
     sunLight.position.set(0, 0, 0)
     this.scene.add(sunLight)
 
-    this.planetGeo = new THREE.SphereGeometry(0.2, 16, 16)
+    this.planetGeo = new THREE.SphereGeometry(0.5, 32, 32)
     this.planet = new THREE.Mesh(this.planetGeo, new THREE.MeshStandardMaterial({ color: 0x66bb6a, roughness: 0.4 }))
     this.scene.add(this.planet)
 
@@ -118,7 +118,7 @@ class KeplerLawsEngine extends ExperimentEngine {
       this.areaSectors.push(mesh)
     }
 
-    this.semiMajor = 5
+    this.semiMajor = 8
     this.ecc = 0.5
     this.meanAnomaly = 0
     this.trail = []
@@ -128,14 +128,14 @@ class KeplerLawsEngine extends ExperimentEngine {
     this._makeMarkers()
 
     // Sprite labels
-    this.scene.add(this._makeLabel('太阳 (焦点)', new THREE.Vector3(0, 1, 0), '#ffd54f', 24, 2))
-    this.scene.add(this._makeLabel('椭圆轨道', new THREE.Vector3(3, 1.2, 3.2), '#888888', 24, 2))
-    this._sectorLabel = this._makeLabel('等面积扇形', new THREE.Vector3(this.focusOffset + 2, 1, 1.5), '#ff9800', 22, 1.6)
+    this.scene.add(this._makeLabel('太阳 (焦点)', new THREE.Vector3(0, 2.8, 0), '#ffcc00', 48, 3.5))
+    this.scene.add(this._makeLabel('椭圆轨道', new THREE.Vector3(5, 2, 5), '#888888', 36, 3))
+    this._sectorLabel = this._makeLabel('等面积扇形', new THREE.Vector3(this.focusOffset + 4, 2, 3), '#ff9800', 33, 2.4)
     this.scene.add(this._sectorLabel)
-    this._planetLabel = this._makeLabel('行星', new THREE.Vector3(Math.cos(0) * this.semiMajor + this.focusOffset, 0.5, Math.sin(0) * this.semiMajor * Math.sqrt(1 - this.ecc * this.ecc)), '#66bb6a', 24, 1.6)
+    this._planetLabel = this._makeLabel('行星', new THREE.Vector3(Math.cos(0) * this.semiMajor + this.focusOffset, 0.8, Math.sin(0) * this.semiMajor * Math.sqrt(1 - this.ecc * this.ecc)), '#66bb6a', 36, 2.4)
     this.scene.add(this._planetLabel)
 
-    this.camera.position.set(0, 8, 8)
+    this.camera.position.set(0, 10, 14)
     this.controls.target.set(0, 0, 0)
   }
 
@@ -172,21 +172,21 @@ class KeplerLawsEngine extends ExperimentEngine {
     if (this._periLabel) { this.scene.remove(this._periLabel); this._sprites = this._sprites.filter(s => s !== this._periLabel); this._periLabel = null }
     if (this._aphLabel) { this.scene.remove(this._aphLabel); this._sprites = this._sprites.filter(s => s !== this._aphLabel); this._aphLabel = null }
 
-    const periGeo = new THREE.SphereGeometry(0.1, 8, 8)
+    const periGeo = new THREE.SphereGeometry(0.3, 16, 16)
     const periMat = new THREE.MeshBasicMaterial({ color: 0xef5350 })
     this.periMarker = new THREE.Mesh(periGeo, periMat)
     this.periMarker.position.set(a + c, 0, 0)
     this.scene.add(this.periMarker)
 
-    const aphGeo = new THREE.SphereGeometry(0.1, 8, 8)
+    const aphGeo = new THREE.SphereGeometry(0.3, 16, 16)
     const aphMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 })
     this.aphMarker = new THREE.Mesh(aphGeo, aphMat)
     this.aphMarker.position.set(-a + c, 0, 0)
     this.scene.add(this.aphMarker)
 
-    this._periLabel = this._makeLabel('近日点', this.periMarker.position.clone().add(new THREE.Vector3(0.3, 0.7, 0)), '#ff6b6b', 22, 1.6)
+    this._periLabel = this._makeLabel('近日点', this.periMarker.position.clone().add(new THREE.Vector3(0.4, 1.2, 0)), '#ff6b6b', 33, 2.4)
     this.scene.add(this._periLabel)
-    this._aphLabel = this._makeLabel('远日点', this.aphMarker.position.clone().add(new THREE.Vector3(-0.3, 0.7, 0)), '#64b5f6', 22, 1.6)
+    this._aphLabel = this._makeLabel('远日点', this.aphMarker.position.clone().add(new THREE.Vector3(-0.4, 1.2, 0)), '#64b5f6', 33, 2.4)
     this.scene.add(this._aphLabel)
   }
 

@@ -100,35 +100,35 @@ class EclipseEngine extends ExperimentEngine {
     const ambient = new THREE.AmbientLight(0x334466, 1.5)
     this.scene.add(ambient)
 
-    const sunGeo = new THREE.SphereGeometry(2, 32, 32)
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd54f })
+    const sunGeo = new THREE.SphereGeometry(3, 64, 64)
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 })
     this.sun = new THREE.Mesh(sunGeo, sunMat)
-    this.sun.position.set(-10, 0, 0)
+    this.sun.position.set(-18, 0, 0)
     this.scene.add(this.sun)
 
-    const sunLight = new THREE.PointLight(0xfff8e8, 80, 50)
+    const sunLight = new THREE.PointLight(0xfff8e8, 150, 80)
     sunLight.position.copy(this.sun.position)
     this.scene.add(sunLight)
 
-    const earthGeo = new THREE.SphereGeometry(0.5, 32, 32)
+    const earthGeo = new THREE.SphereGeometry(1.2, 32, 32)
     const earthMat = new THREE.MeshStandardMaterial({ color: 0x42a5f5, roughness: 0.5 })
     this.earth = new THREE.Mesh(earthGeo, earthMat)
     this.earth.position.set(0, 0, 0)
     this.scene.add(this.earth)
 
-    const moonGeo = new THREE.SphereGeometry(0.15, 16, 16)
+    const moonGeo = new THREE.SphereGeometry(0.45, 32, 32)
     const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.7 })
     this.moon = new THREE.Mesh(moonGeo, moonMat)
-    this.moon.position.set(3, 0, 0)
+    this.moon.position.set(5.5, 0, 0)
     this.scene.add(this.moon)
 
     // Pre-allocate cone meshes once (transforms updated per frame)
-    const umbraGeo = new THREE.CylinderGeometry(0.05, 0.8, 1, 16)
+    const umbraGeo = new THREE.CylinderGeometry(0.1, 1.6, 1, 32)
     const umbraMat = new THREE.MeshBasicMaterial({ color: 0x000011, transparent: true, opacity: 0.7 })
     this.umbraCone = new THREE.Mesh(umbraGeo, umbraMat)
     this.scene.add(this.umbraCone)
 
-    const penumbraGeo = new THREE.CylinderGeometry(0.05, 1.2, 1, 16)
+    const penumbraGeo = new THREE.CylinderGeometry(0.1, 2.4, 1, 32)
     const penumbraMat = new THREE.MeshBasicMaterial({ color: 0x111133, transparent: true, opacity: 0.35 })
     this.penumbraCone = new THREE.Mesh(penumbraGeo, penumbraMat)
     this.scene.add(this.penumbraCone)
@@ -141,17 +141,17 @@ class EclipseEngine extends ExperimentEngine {
     this._updateCones()
 
     // Sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(-10, 2.5, 0), '#ffd54f', 28, 2))
-    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 0.8, 0), '#42a5f5', 26, 1.8))
-    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(-5, 0.6, 0), '#ffd54f', 24, 2))
-    this._moonLabel = this._makeLabel('月球', new THREE.Vector3(3, 0.6, 0), '#cccccc', 24, 1.6)
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(-18, 4.5, 0), '#ffcc00', 48, 3.5))
+    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 2, 0), '#42a5f5', 39, 2.7))
+    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(-9, 1, 0), '#ffd54f', 36, 3))
+    this._moonLabel = this._makeLabel('月球', new THREE.Vector3(5.5, 1, 0), '#cccccc', 36, 2.4)
     this.scene.add(this._moonLabel)
-    this._umbraLabel = this._makeLabel('本影', new THREE.Vector3(1.5, 1, 0), '#ffffff', 20, 1.4)
+    this._umbraLabel = this._makeLabel('本影', new THREE.Vector3(2.5, 1.5, 0), '#ffffff', 30, 2.1)
     this.scene.add(this._umbraLabel)
-    this._penumbraLabel = this._makeLabel('半影', new THREE.Vector3(1.5, 1.5, 0), '#aaaaaa', 20, 1.6)
+    this._penumbraLabel = this._makeLabel('半影', new THREE.Vector3(2.5, 2.5, 0), '#aaaaaa', 30, 2.4)
     this.scene.add(this._penumbraLabel)
 
-    this.camera.position.set(0, 3, 7)
+    this.camera.position.set(0, 6, 12)
     this.controls.target.set(-2, 0, 0)
   }
 
@@ -160,11 +160,11 @@ class EclipseEngine extends ExperimentEngine {
 
     if (this.eclipseType === 'lunar-total') {
       // Earth casts shadow on Moon (Moon moves +X with alignment)
-      this.moon.position.set(3 * align, 0, 0)
+      this.moon.position.set(5.5 * align, 0, 0)
 
       const dist = this.moon.position.x - this.earth.position.x
       this.umbraCone.position.copy(this.earth.position)
-      this.umbraCone.position.x += 0.5
+      this.umbraCone.position.x += 1.2
       this.umbraCone.rotation.z = 0
       this.umbraCone.scale.set(1, dist, 1)
       this.umbraCone.visible = align > 0.15
@@ -175,11 +175,11 @@ class EclipseEngine extends ExperimentEngine {
       this.penumbraCone.visible = align > 0.1
     } else if (this.eclipseType === 'solar-total') {
       // Moon casts shadow on Earth (Moon moves -X with alignment)
-      this.moon.position.set(-3 * align, 0, 0)
+      this.moon.position.set(-5.5 * align, 0, 0)
 
       const dist = this.earth.position.x - this.moon.position.x
       this.umbraCone.position.copy(this.moon.position)
-      this.umbraCone.position.x += 0.15
+      this.umbraCone.position.x += 0.45
       this.umbraCone.rotation.z = Math.PI
       this.umbraCone.scale.set(1, dist * 0.3, 1)
       this.umbraCone.visible = align > 0.1
@@ -189,11 +189,11 @@ class EclipseEngine extends ExperimentEngine {
       this.penumbraCone.scale.set(1, dist * 0.5, 1)
       this.penumbraCone.visible = align > 0.05
     } else if (this.eclipseType === 'solar-annular') {
-      this.moon.position.set(-3 * align, 0, 0)
+      this.moon.position.set(-5.5 * align, 0, 0)
 
       const dist = this.earth.position.x - this.moon.position.x
       this.umbraCone.position.copy(this.moon.position)
-      this.umbraCone.position.x += 0.15
+      this.umbraCone.position.x += 0.45
       this.umbraCone.rotation.z = Math.PI
       this.umbraCone.scale.set(1, dist * 0.15, 1)
       this.umbraCone.visible = align > 0.3
