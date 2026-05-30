@@ -146,8 +146,11 @@ class MoonPhasesEngine extends ExperimentEngine {
 
     this.moonAngle = 0
     this.auto = false
+    this.camera.fov = 55; this.camera.updateProjectionMatrix()
     this.camera.position.set(0, 8, 14)
-    this.controls.target.set(0, 0, 3)
+    this.controls.target.set(0, 0, 0)
+    this.controls.minDistance = 5
+    this.controls.maxDistance = 30
     this.scene.background = new THREE.Color(0x000011)
     this.scene.fog = null
 
@@ -212,10 +215,10 @@ class MoonPhasesEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.mp-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; }
+.mp-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; overflow: hidden; }
 .lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lock-btn:hover { background: rgba(255,255,255,1); }
-.mp-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.mp-canvas-wrap canvas { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
 
 .preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }

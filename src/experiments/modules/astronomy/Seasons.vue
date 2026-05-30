@@ -182,7 +182,10 @@ class SeasonsEngine extends ExperimentEngine {
     this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0, -3.0, 0), '#0066ff', 48, 3.0)
     this.scene.add(this._southLabel)
 
+    this.camera.fov = 55; this.camera.updateProjectionMatrix()
     this.camera.position.set(0, 16, 22)
+    this.controls.minDistance = 5
+    this.controls.maxDistance = 30
     this.controls.target.set(0, 0, 0)
 
     const starsGeo = new THREE.BufferGeometry()
@@ -243,10 +246,10 @@ class SeasonsEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.se-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; }
+.se-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; overflow: hidden; }
 .lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lock-btn:hover { background: rgba(255,255,255,1); }
-.se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.se-canvas-wrap canvas { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
 
 .exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
 .exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
