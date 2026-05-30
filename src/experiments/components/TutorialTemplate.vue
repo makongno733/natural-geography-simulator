@@ -12,8 +12,8 @@
     </div>
     <div class="tutorial-main">
       <h3 class="tutorial-step-title">{{ steps[current].title }}</h3>
-      <div class="tutorial-image" v-if="steps[current].image">
-        <img :src="steps[current].image" :alt="steps[current].title" />
+      <div class="tutorial-illustration" v-if="steps[current].illustration">
+        <div v-html="steps[current].illustration" class="illustration-svg"></div>
       </div>
       <div class="tutorial-content">{{ steps[current].content }}</div>
       <div class="tutorial-highlight" v-if="steps[current].highlight">
@@ -86,8 +86,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .step-dot.done { background: var(--button-green-strong); border-color: var(--button-green-deep); color: var(--button-green-ink); }
 .tutorial-main { flex: 1; min-width: 0; }
 .tutorial-step-title { font-size: 20px; font-weight: 700; color: var(--ink); margin: 0 0 14px; }
-.tutorial-image { margin-bottom: 14px; }
-.tutorial-image img { max-width: 100%; border-radius: var(--radius-box); border: 1px solid var(--brown-light); }
+.tutorial-illustration {
+  margin-bottom: 14px;
+  background: rgba(255,255,255,0.6);
+  border-radius: var(--radius-box);
+  border: 1px solid var(--brown-light);
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+.illustration-svg { max-width: 100%; }
+.illustration-svg :deep(svg) { max-width: 100%; height: auto; }
 .tutorial-content { font-size: 15px; line-height: 1.8; color: var(--ink); margin-bottom: 14px; }
 .tutorial-highlight {
   background: linear-gradient(90deg, rgba(158, 36, 38, 0.08), transparent);
