@@ -22,6 +22,9 @@
     </aside>
     <div class="tc-canvas-wrap">
       <canvas ref="cvs"></canvas>
+      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
+        {{ locked ? '🔒' : '🔓' }}
+      </button>
     </div>
   </div>
   <div class="exp-desc">
@@ -38,7 +41,7 @@ export default {
   name: 'ThermalCirculation',
   data() {
     return {
-      tempDiff: 7, paused: false,
+      tempDiff: 7, paused: false, locked: false,
       activePreset: '海陆风',
       guideActive: false,
       guideText: '',
@@ -58,7 +61,10 @@ export default {
     this._e = new ThermalCirculationEngine()
     this._e.tempDiff = this.tempDiff
     this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => this._e.init(this.$refs.cvs))
+    this.$nextTick(() => {
+      this._e.init(this.$refs.cvs)
+      if (this.locked) this._e.controls.enabled = false
+    })
     window.addEventListener('resize', this._onResize)
   },
   beforeUnmount() {
@@ -68,6 +74,12 @@ export default {
   methods: {
     _onResize() { this._e?.resize() },
     togglePause() { this.paused = !this.paused; this._e.paused = this.paused },
+    toggleLock() {
+      this.locked = !this.locked
+      if (this._e && this._e.controls) {
+        this._e.controls.enabled = !this.locked
+      }
+    },
     onParam() { this.activePreset = null; this._e.setParams({ tempDiff: this.tempDiff }) },
     applyPreset(p) {
       this.activePreset = p.name
@@ -91,6 +103,7 @@ export default {
         this._e.tempDiff = this.tempDiff
         this._e._onGuideChange = (text) => { this.guideText = text }
         this._e.init(this.$refs.cvs)
+        if (this.locked) this._e.controls.enabled = false
       })
     },
   },
@@ -393,9 +406,9 @@ class ThermalCirculationEngine extends ExperimentEngine {
     })
     this._arrows = []
 
-    const perRow = 5
-    const perRise = 6
-    const perSurface = 9
+    const perRow = 3
+    const perRise = 3
+    const perSurface = 5
 
     for (let zIdx = 0; zIdx < perRow; zIdx++) {
       const z = (zIdx - (perRow - 1) / 2) * 1.1
@@ -584,8 +597,16 @@ class ThermalCirculationEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.tc-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
+.tc-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
 .tc-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.lock-btn {
+  position: absolute; top: 12px; right: 12px; z-index: 10;
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1px solid var(--brown); background: rgba(255,255,255,0.85);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition);
+}
+.lock-btn:hover { background: rgba(255,255,255,1); }
 
 .exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
 .exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }

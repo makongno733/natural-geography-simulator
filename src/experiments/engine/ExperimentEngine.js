@@ -41,7 +41,7 @@ export class ExperimentEngine {
     this.controls.dampingFactor = 0.08
 
     this._addLights()
-    this.timer = new THREE.Timer()
+    this.timer = new THREE.Clock()
     this.setupScene()
     this._animate()
   }
@@ -83,7 +83,7 @@ export class ExperimentEngine {
 
   _animate() {
     const dt = Math.min(this.timer.getDelta(), 0.1)
-    const elapsed = this.timer.elapsed
+    const elapsed = this.timer.elapsedTime
     this.update(dt, elapsed)
     if (this._guidedMode) {
       this._guideTimer += dt
