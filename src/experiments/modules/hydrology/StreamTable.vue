@@ -116,6 +116,19 @@ class StreamTableEngine extends ExperimentEngine {
     grid.position.y = -0.1
     this.scene.add(grid)
 
+    // Water channel indicator (subtle blue line in the depression)
+    const channelGeo = new THREE.PlaneGeometry(0.3, 8)
+    channelGeo.rotateX(-Math.PI / 2)
+    const channelMat = new THREE.MeshBasicMaterial({
+      color: 0x42a5f5,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+    })
+    const channel = new THREE.Mesh(channelGeo, channelMat)
+    channel.position.set(0, 0.01, 0)
+    this.scene.add(channel)
+
     this.slope = 8
     this.flowRate = 5
     this._drops = []
@@ -134,23 +147,36 @@ class StreamTableEngine extends ExperimentEngine {
   _spawnDrops(count) {
     this._drops.forEach(d => {
       this.scene.remove(d)
-      if (d.material) d.material.dispose()
       if (d.geometry) d.geometry.dispose()
+      if (d.material) d.material.dispose()
     })
     this._drops = []
-    const geo = new THREE.SphereGeometry(0.06, 6, 6)
+    // Flattened ellipsoids = water beads on surface (visible thickness)
+    const geo = new THREE.SphereGeometry(1, 8, 8)
     for (let i = 0; i < count; i++) {
-      const hue = 0.55 + (i / count) * 0.1
-      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(hue, 0.9, 0.6) })
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(0.55 + Math.random() * 0.08, 0.8, 0.4 + Math.random() * 0.3),
+        roughness: 0.2,
+        metalness: 0.1,
+        emissive: new THREE.Color().setHSL(0.56, 0.7, 0.1),
+        emissiveIntensity: 0.2,
+        transparent: true,
+        opacity: 0.85,
+      })
       const drop = new THREE.Mesh(geo, mat)
-      drop.position.set((Math.random() - 0.5) * 6, 0.5, -3.5 + Math.random() * 1)
-      drop.userData = { speed: 0.5 + Math.random() * 1.5 }
+      drop.position.set((Math.random() - 0.5) * 6, 0.08, -3.5 + Math.random() * 1)
+      // Scale to look like a water bead on surface (flat bottom, rounded top)
+      drop.scale.set(0.1, 0.04, 0.1)
+      drop.userData = {
+        speed: 0.5 + Math.random() * 1.5,
+        baseScale: 0.07 + Math.random() * 0.06,
+      }
       this.scene.add(drop)
       this._drops.push(drop)
     }
   }
 
-  update(dt) {
+  update(dt, elapsed) {
     const s = this.slope / 10
     const f = this.flowRate / 5
     for (const drop of this._drops) {
@@ -162,6 +188,10 @@ class StreamTableEngine extends ExperimentEngine {
       }
       drop.position.x = Math.max(-3.8, Math.min(3.8, drop.position.x))
       drop.position.y = -0.15 + drop.position.z * 0.03 + Math.sin(drop.position.x * 1.2) * 0.05
+      // Flowing water pulse effect
+      drop.scale.x = drop.userData.baseScale + Math.sin(elapsed * 8 + drop.userData.speed) * 0.02
+      drop.scale.z = drop.scale.x
+      drop.scale.y = drop.userData.baseScale * 0.35
     }
   }
 
