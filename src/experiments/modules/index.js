@@ -193,4 +193,19 @@ export const categoryIcons = {
   astronomy: '🔭',
 }
 
+export function getRelatedExperiments(currentId, limit = 4) {
+  const current = modules.find(m => m.id === currentId)
+  if (!current) return []
+
+  return modules
+    .filter(m => m.id !== currentId)
+    .map(m => {
+      const sharedConcepts = m.concepts.filter(c => current.concepts.includes(c))
+      return { ...m, sharedCount: sharedConcepts.length, sharedConcepts }
+    })
+    .filter(m => m.sharedCount > 0)
+    .sort((a, b) => b.sharedCount - a.sharedCount)
+    .slice(0, limit)
+}
+
 export default modules
