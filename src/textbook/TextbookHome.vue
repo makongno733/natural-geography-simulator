@@ -72,10 +72,11 @@
 .card-experiments .card-title { color: #c62828; }
 
 @media (max-width: 720px) {
-  .home-shell { padding: 20px 14px 28px; }
-  .card-grid { gap: 14px; }
-  .card { width: 150px; padding: 20px 14px 16px; }
-  .card-title { font-size: 18px; }
+  .home-shell { padding: 16px 10px 24px; }
+  .card-grid { gap: 10px; }
+  .card { width: 140px; padding: 16px 10px 14px; }
+  .card-title { font-size: 16px; }
   .card-icon { font-size: 28px; }
+  .card-desc { font-size: 10px; }
 }
 </style>

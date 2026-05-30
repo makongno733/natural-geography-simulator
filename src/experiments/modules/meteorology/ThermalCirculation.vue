@@ -717,8 +717,28 @@ class ThermalCirculationEngine extends ExperimentEngine {
 
 @media (max-width: 720px) {
   .tc-layout { flex-direction: column; }
-  .tc-panel { width: 100%; border-right: 0; border-bottom: 1px solid var(--brown-light); flex-direction: row; flex-wrap: wrap; gap: 8px; }
-  .tc-panel label { flex: 1; min-width: 120px; }
-  .tc-canvas-wrap { min-height: 320px; }
+  .tc-panel {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--brown-light);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .tc-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
+  .tc-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
+  .tc-panel button { font-size: 12px; padding: 5px 8px; }
+  .tc-canvas-wrap { min-height: 280px; }
+  .guide-text-box { width: 100%; font-size: 11px; }
+  .tc-hint { font-size: 10px; }
+  .tc-presets { width: 100%; }
+  .preset-btn { font-size: 10px; padding: 4px 6px; }
+  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
+  .exp-desc { padding: 10px 14px; margin-top: 12px; }
+  .exp-desc h4 { font-size: 13px; }
+  .exp-desc p { font-size: 13px; line-height: 1.6; }
 }
 </style>

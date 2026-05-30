@@ -124,9 +124,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .tutorial-progress { font-size: 13px; color: var(--muted); }
 
 @media (max-width: 640px) {
-  .tutorial { flex-direction: column; gap: 16px; }
+  .tutorial { flex-direction: column; gap: 12px; }
   .tutorial-step-indicators { flex-direction: row; gap: 4px; overflow-x: auto; padding-bottom: 8px; }
   .step-dot:not(:last-child) { margin-bottom: 0; margin-right: 18px; }
   .step-dot:not(:last-child)::after { top: 50%; left: 32px; width: 16px; height: 2px; transform: translateY(-50%); }
+  .tutorial-step-title { font-size: 17px; }
+  .tutorial-content { font-size: 14px; line-height: 1.7; }
+  .btn-nav { font-size: 13px; padding: 8px 12px; }
 }
 </style>

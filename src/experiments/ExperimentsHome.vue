@@ -64,10 +64,13 @@ const categories = [
 .exp-card-astronomy .exp-card-title { color: #4527a0; }
 
 @media (max-width: 720px) {
-  .exp-home { padding: 20px 14px 28px; }
-  .exp-grid { gap: 14px; }
-  .exp-card { width: 150px; padding: 20px 14px 16px; }
-  .exp-card-icon { font-size: 32px; }
-  .exp-card-title { font-size: 17px; }
+  .exp-home { padding: 16px 10px 24px; }
+  .exp-heading { font-size: 24px; }
+  .exp-lead { font-size: 13px; margin-bottom: 20px; }
+  .exp-grid { gap: 10px; }
+  .exp-card { width: 140px; padding: 16px 10px 14px; }
+  .exp-card-icon { font-size: 28px; }
+  .exp-card-title { font-size: 16px; }
+  .exp-card-desc { font-size: 10px; }
 }
 </style>

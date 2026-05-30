@@ -107,4 +107,10 @@ watch(() => exp.value?.id, loadContent, { immediate: true })
 .related-card:hover { box-shadow: var(--shadow-hover); }
 .related-name { font-size: 14px; font-weight: 600; color: var(--ink); }
 .related-shared { font-size: 11px; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .ev-shell { padding: 12px 12px 28px; }
+  .ev-breadcrumb { font-size: 11px; }
+  .ev-title { font-size: 20px; }
+}
 </style>

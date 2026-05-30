@@ -79,4 +79,14 @@ const experiments = computed(() => modules.filter(m => m.category === category.v
   background: rgba(158, 36, 38, 0.07);
   color: var(--red);
 }
+
+@media (max-width: 720px) {
+  .cat-page { padding: 16px 12px 28px; }
+  .cat-breadcrumb { font-size: 11px; }
+  .cat-title { font-size: 22px; }
+  .exp-item { padding: 12px 14px; }
+  .exp-item-name { font-size: 16px; padding-right: 60px; }
+  .exp-item-desc { font-size: 12px; }
+  .exp-badge { top: 10px; right: 10px; font-size: 10px; }
+}
 </style>

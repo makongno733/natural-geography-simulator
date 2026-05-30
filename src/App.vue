@@ -112,5 +112,7 @@ const isHome = computed(() => route.path === '/')
     padding-top: 22vh;
     padding-bottom: 28px;
   }
+  .app-nav { gap: 8px; }
+  .nav-link { font-size: 12px; padding: 2px 6px; }
 }
 </style>
