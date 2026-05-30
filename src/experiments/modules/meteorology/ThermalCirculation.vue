@@ -252,6 +252,10 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this._pColdLow = this._pressureSprites[2]
     this._pColdHigh = this._pressureSprites[3]
 
+    // === ISOBARIC SURFACES ===
+    this._isobars = []
+    this._createIsobars()
+
     // 3D arrows
     this._arrows = []
     this._createArrows()
@@ -262,8 +266,9 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this.camera.position.set(0, dist * Math.sin(angle), dist * Math.cos(angle))
     this.controls.target.set(0, 0, 0)
 
-    // Initialize pressure display
+    // Initialize pressure display and isobars
     this._updatePressureLabels()
+    this._updateIsobars()
   }
 
   _makeTree() {
@@ -339,6 +344,100 @@ class ThermalCirculationEngine extends ExperimentEngine {
     sprite.scale.set(2.4, 0.75, 1)
     this.scene.add(sprite)
     return sprite
+  }
+
+  _createIsobars() {
+    // Dispose old isobars
+    if (this._isobars) {
+      this._isobars.forEach(ib => {
+        ib.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
+        this.scene.remove(ib)
+      })
+    }
+    this._isobars = []
+
+    // 3 isobaric surfaces at different pressure levels
+    const levels = [
+      { baseY: -1.0, color: 0xe57373, label: '1005 hPa', opacity: 0.3 },
+      { baseY: 0.15, color: 0xffb74d, label: '1010 hPa', opacity: 0.3 },
+      { baseY: 1.2,  color: 0x64b5f6, label: '1015 hPa', opacity: 0.3 },
+    ]
+
+    levels.forEach((level) => {
+      const width = 7.6
+      const depth = 3.8
+      const segX = 48
+      const geo = new THREE.PlaneGeometry(width, depth, segX, 1)
+      geo.rotateX(-Math.PI / 2)
+
+      // Store original positions for animation
+      this._isoBaseY = this._isoBaseY || {}
+      this._isoBaseY[level.label] = level.baseY
+
+      const mat = new THREE.MeshBasicMaterial({
+        color: level.color,
+        transparent: true,
+        opacity: level.opacity,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      })
+
+      const ribbon = new THREE.Mesh(geo, mat)
+      ribbon.position.set(0, level.baseY, 0)
+      ribbon.renderOrder = 1
+      ribbon.userData = { baseY: level.baseY, label: level.label }
+      this.scene.add(ribbon)
+      this._isobars.push(ribbon)
+
+      // Label sprite for this isobar
+      const labelSprite = this._makePressureLabel(
+        level.label,
+        new THREE.Vector3(0, level.baseY + 0.15, 2.2),
+        '#' + level.color.toString(16).padStart(6, '0')
+      )
+      labelSprite.userData = { baseY: level.baseY, label: level.label }
+      this._isobars.push(labelSprite)
+    })
+  }
+
+  _updateIsobars() {
+    if (!this._isobars) return
+    const diff = this.tempDiff / 5 // 0.2 - 2
+
+    for (const ib of this._isobars) {
+      if (!ib.userData || ib.userData.label === undefined) continue
+
+      const baseY = ib.userData.baseY
+      // Amplitude decreases with height (lower isobars curve more)
+      const amp = (1.5 - baseY * 0.4) * diff * 0.6
+
+      if (ib.isSprite) {
+        // Update label position
+        const midY = baseY - amp * 0.1
+        ib.position.set(0, midY + 0.15, 2.2)
+        // Update text
+        const pBase = 1013
+        const pOffset = Math.round((baseY + 0.5) * 2)
+        const pValue = Math.round(pBase + pOffset * diff * 0.4)
+        this._updateSpriteText(ib, `${pValue} hPa`, '#' + ib.material.map ? '#e57373' : '#64b5f6')
+      } else if (ib.geometry && ib.geometry.attributes && ib.geometry.attributes.position) {
+        // Update ribbon vertices
+        const pos = ib.geometry.attributes.position
+        const arr = pos.array
+        for (let i = 0; i < pos.count; i++) {
+          const x = arr[i * 3]
+          // Convert x from [-3.8, 3.8] to normalized [-1, 1] for the curve
+          const t = x / 3.8
+          // Isobar curves DOWN from hot (left) to cold (right)
+          // y_displacement = -amp * t (linear) with slight cubic smoothing
+          const displacement = -amp * t + amp * 0.15 * Math.sin(t * Math.PI)
+          arr[i * 3 + 1] = displacement
+        }
+        pos.needsUpdate = true
+        ib.geometry.computeVertexNormals()
+        ib.position.y = baseY
+      }
+    }
   }
 
   _updatePressureLabels() {
@@ -481,6 +580,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
     if (this._lastPressureUpdate > 0.5) {
       this._lastPressureUpdate = 0
       this._updatePressureLabels()
+      this._updateIsobars()
     }
 
     // Animate arrows along their segments
@@ -554,6 +654,11 @@ class ThermalCirculationEngine extends ExperimentEngine {
     }
     if (this._pressureSprites) {
       this._pressureSprites.forEach(s => { if (s.material.map) s.material.map.dispose(); s.material.dispose() })
+    }
+    if (this._isobars) {
+      this._isobars.forEach(ib => {
+        ib.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
+      })
     }
     if (this._arrows) {
       this._arrows.forEach(a => {
