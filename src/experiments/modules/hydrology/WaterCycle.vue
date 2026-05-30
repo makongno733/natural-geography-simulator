@@ -1,17 +1,26 @@
-<script setup>
-import { ref } from 'vue'
-const current = ref(0)
-</script>
+<template></template>
 <script>
 export const steps = [
-  { title: '实验介绍', content: '本实验内容正在准备中，敬请期待。', highlight: '请关注后续更新' }
+  {
+    title: '搭建微型水循环系统',
+    content: '在一个大碗中倒入约 1/3 的温水（可加几滴食用色素便于观察）。在碗中央放一个小杯子（空杯，用于收集"降水"）。用保鲜膜密封碗口，在保鲜膜中央（小杯正上方）放一颗石子或硬币，使膜略微下凹。',
+    highlight: '这个封闭系统包含了水循环的全部要素：碗中的水 = 海洋/地表水，保鲜膜 = 大气层，小杯 = 陆地/湖泊。',
+  },
+  {
+    title: '阳光照射——蒸发开始',
+    content: '将装置放在阳光充足的窗台或台灯下。温水在光照下蒸发，水汽上升。观察保鲜膜内侧逐渐出现雾气（小水滴）——这是蒸发和凝结过程。',
+    highlight: '太阳辐射是水循环的驱动力。全球每年约 577,000 km³ 的水通过蒸发进入大气。',
+  },
+  {
+    title: '凝结与"降水"',
+    content: '随着蒸发继续，保鲜膜上的雾气聚集成越来越大的水滴。当水滴足够大时，它们沿保鲜膜斜坡滑向中央（石子压低处），滴入小杯中。这就是"降水"——凝结的水滴大到足以克服重力下落。',
+    highlight: '云滴直径约 10-20 μm，雨滴直径约 0.5-5 mm。一滴雨滴包含约 100 万个云滴。',
+  },
+  {
+    title: '观察与总结',
+    content: '等待 1-2 小时后，观察小杯中收集到的水量。这演示了蒸发→凝结→降水→收集的完整水循环。碗中的"海洋"水减少，小杯中的"陆地淡水"增加。真实水循环中，水还可以通过径流和地下水回流到海洋。',
+    highlight: '水循环是地球系统中连接大气圈、水圈、岩石圈和生物圈的核心过程。水在大气中的平均停留时间约 9 天，在地下水中可达数百年。',
+  },
 ]
+export default { name: 'WaterCycle' }
 </script>
-<template>
-  <div class="tutorial-placeholder">
-    <p>{{ steps[0]?.content }}</p>
-  </div>
-</template>
-<style scoped>
-.tutorial-placeholder { text-align: center; padding: 40px; color: var(--muted); }
-</style>

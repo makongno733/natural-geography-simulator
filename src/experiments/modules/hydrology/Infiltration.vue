@@ -1,17 +1,26 @@
-<script setup>
-import { ref } from 'vue'
-const current = ref(0)
-</script>
+<template></template>
 <script>
 export const steps = [
-  { title: '实验介绍', content: '本实验内容正在准备中，敬请期待。', highlight: '请关注后续更新' }
+  {
+    title: '准备实验材料',
+    content: '准备 3 个浅盘（或切开的塑料瓶底部），分别装入：干燥沙土、普通园土、种草皮的有植被土。每个盘下方放一个收集容器。准备一个洒水壶模拟降雨。',
+    highlight: '三个盘的表面积和土层厚度应尽量一致，以控制变量。',
+  },
+  {
+    title: '模拟降雨',
+    content: '用洒水壶从相同高度、以相同速率向三个盘均匀洒水（模拟等量降雨）。观察水在三个盘表面的行为：沙土盘水迅速下渗，园土盘部分下渗部分形成水洼，草皮盘水被植被拦截缓慢下渗。',
+    highlight: '下渗速率取决于土壤孔隙度、有机质含量和植被根系通道。沙土孔隙大但持水性差，黏土孔隙小但持水性强。',
+  },
+  {
+    title: '测量径流与下渗量',
+    content: '收集每个盘下方的渗透水和表面的径流水，用量筒测量体积。计算：径流系数 = 径流量 / 总降雨量。典型结果：裸土径流系数 0.5-0.7，草地 0.1-0.3，沙土接近 0。',
+    highlight: '植被覆盖是最有效的水土保持措施——根系增加土壤孔隙度，茎叶截留降雨、减缓雨滴动能。',
+  },
+  {
+    title: '坡度对比（可选扩展）',
+    content: '将园土盘分别倾斜不同角度（5°、15°、30°），重复降雨。坡度越大，地表径流越多、下渗越少。这也解释了为什么陡坡山地更容易发生水土流失和山洪。',
+    highlight: '坡度每增加 10°，径流系数约增加 0.1-0.15。梯田是坡地农业中减少水土流失的有效工程措施。',
+  },
 ]
+export default { name: 'Infiltration' }
 </script>
-<template>
-  <div class="tutorial-placeholder">
-    <p>{{ steps[0]?.content }}</p>
-  </div>
-</template>
-<style scoped>
-.tutorial-placeholder { text-align: center; padding: 40px; color: var(--muted); }
-</style>
