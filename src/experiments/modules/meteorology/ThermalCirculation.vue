@@ -221,8 +221,8 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this._sprites.push(this._makeLabel('海洋 🧊', new THREE.Vector3(3.8, -0.5, 2.2), '#2471a3', 36))
     this._sprites.push(this._makeLabel('上升气流', new THREE.Vector3(-2.6, 0.8, 2.2), '#ff6e40', 28))
     this._sprites.push(this._makeLabel('下沉气流', new THREE.Vector3(2.6, 0.8, 2.2), '#448aff', 28))
-    this._sprites.push(this._makeLabel('高空流向 →', new THREE.Vector3(0, 2.1, 2.2), '#888888', 26))
-    this._sprites.push(this._makeLabel('← 地面流向', new THREE.Vector3(0, -2.3, 2.2), '#888888', 26))
+    this._sprites.push(this._makeLabel('高空：陆地 → 海洋', new THREE.Vector3(0, 2.1, 2.2), '#e67e22', 24))
+    this._sprites.push(this._makeLabel('地面：海洋 → 陆地（海风）', new THREE.Vector3(0, -2.3, 2.2), '#2196f3', 24))
     this._hotLabel = this._sprites[0]
     this._coldLabel = this._sprites[1]
 
@@ -281,6 +281,14 @@ class ThermalCirculationEngine extends ExperimentEngine {
     const coldText = isSeaBreeze ? '海洋 🧊' : '山谷 🧊'
     this._updateSpriteText(this._hotLabel, hotText, '#c0392b')
     this._updateSpriteText(this._coldLabel, coldText, '#2471a3')
+    // Update flow labels
+    if (isSeaBreeze) {
+      this._updateSpriteText(this._sprites[4], '高空：陆地 → 海洋', '#e67e22')
+      this._updateSpriteText(this._sprites[5], '地面：海洋 → 陆地（海风）', '#2196f3')
+    } else {
+      this._updateSpriteText(this._sprites[4], '高空：山峰 → 山谷', '#e67e22')
+      this._updateSpriteText(this._sprites[5], '地面：山谷 → 山峰（谷风）', '#2196f3')
+    }
   }
 
   _updateSpriteText(sprite, text, color) {
@@ -388,49 +396,59 @@ class ThermalCirculationEngine extends ExperimentEngine {
     })
     this._arrows = []
 
-    const density = this.arrowDensity
-    // Number of arrows per row (z-direction spread)
-    const perRow = density + 2
-    // Number of arrows per segment
-    const perSegment = density + 3
+    const den = this.arrowDensity
+    const perRow = den + 2
+    const perRise = den + 3
+    // Extra arrows for surface flow (sea breeze) — this is the key visible process
+    const perSurface = den + 5
 
-    // Create arrows distributed along the 4 segments of the convection loop
     for (let zIdx = 0; zIdx < perRow; zIdx++) {
       const z = (zIdx - (perRow - 1) / 2) * 1.1
 
-      for (let i = 0; i < perSegment; i++) {
-        const t = (i + 0.5) / perSegment // 0..1 position along segment
+      // Segment 0: Rising over hot source (陆地上空上升)
+      for (let i = 0; i < perRise; i++) {
+        const t = (i + 0.5) / perRise
+        const arrow = this._createArrow(0xff5722)
+        arrow.position.set(-3.8, -1.8 + t * 3.4, z)
+        arrow.userData = { segment: 0, z, phase: t, speed: 0.1 + Math.random() * 0.05 }
+        this.scene.add(arrow)
+        this._arrows.push(arrow)
+      }
 
-        // Segment 1: Rising over hot plate (x=-3.8, y from -1.8 to 1.6)
-        const riseArrow = this._createArrow(0xff6e40)
-        riseArrow.position.set(-3.8, -1.8 + t * 3.4, z)
-        riseArrow.userData = { segment: 0, z, phase: t, speed: 0.12 + Math.random() * 0.06 }
-        this.scene.add(riseArrow)
-        this._arrows.push(riseArrow)
+      // Segment 1: High-altitude flow 陆地→海洋 (hot→cold, left→right)
+      for (let i = 0; i < perRise; i++) {
+        const t = (i + 0.5) / perRise
+        const arrow = this._createArrow(0xe67e22)
+        arrow.rotation.z = -Math.PI / 2
+        arrow.position.set(-3.8 + t * 7.6, 1.6, z)
+        arrow.userData = { segment: 1, z, phase: t, speed: 0.12 + Math.random() * 0.06 }
+        this.scene.add(arrow)
+        this._arrows.push(arrow)
+      }
 
-        // Segment 2: Top flow left→right (y=1.6, x from -3.8 to 3.8)
-        const topArrow = this._createArrow(0xff8a65)
-        topArrow.rotation.z = -Math.PI / 2
-        topArrow.position.set(-3.8 + t * 7.6, 1.6, z)
-        topArrow.userData = { segment: 1, z, phase: t, speed: 0.15 + Math.random() * 0.08 }
-        this.scene.add(topArrow)
-        this._arrows.push(topArrow)
+      // Segment 2: Sinking over cold source (海洋上空下沉)
+      for (let i = 0; i < perRise; i++) {
+        const t = (i + 0.5) / perRise
+        const arrow = this._createArrow(0x1976d2)
+        arrow.rotation.z = Math.PI
+        arrow.position.set(3.8, 1.6 - t * 3.4, z)
+        arrow.userData = { segment: 2, z, phase: t, speed: 0.1 + Math.random() * 0.05 }
+        this.scene.add(arrow)
+        this._arrows.push(arrow)
+      }
 
-        // Segment 3: Sinking over cold plate (x=3.8, y from 1.6 to -1.8)
-        const sinkArrow = this._createArrow(0x448aff)
-        sinkArrow.rotation.z = Math.PI
-        sinkArrow.position.set(3.8, 1.6 - t * 3.4, z)
-        sinkArrow.userData = { segment: 2, z, phase: t, speed: 0.12 + Math.random() * 0.06 }
-        this.scene.add(sinkArrow)
-        this._arrows.push(sinkArrow)
-
-        // Segment 4: Bottom flow right→left (y=-1.8, x from 3.8 to -3.8)
-        const botArrow = this._createArrow(0x82b1ff)
-        botArrow.rotation.z = Math.PI / 2
-        botArrow.position.set(3.8 - t * 7.6, -1.8, z)
-        botArrow.userData = { segment: 3, z, phase: t, speed: 0.15 + Math.random() * 0.08 }
-        this.scene.add(botArrow)
-        this._arrows.push(botArrow)
+      // Segment 3: Surface sea breeze 海洋→陆地 (cold→hot, right→left) — MAIN EVENT
+      for (let i = 0; i < perSurface; i++) {
+        const t = (i + 0.5) / perSurface
+        // Brighter blue for the sea breeze — this is what students need to see
+        const arrow = this._createArrow(0x2196f3)
+        arrow.rotation.z = Math.PI / 2
+        arrow.position.set(3.8 - t * 7.6, -1.82, z)
+        arrow.userData = { segment: 3, z, phase: t, speed: 0.18 + Math.random() * 0.1 }
+        // Make surface arrows slightly bigger
+        arrow.scale.setScalar(1.25)
+        this.scene.add(arrow)
+        this._arrows.push(arrow)
       }
     }
   }
