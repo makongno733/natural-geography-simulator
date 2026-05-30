@@ -361,14 +361,14 @@ class ThermalCirculationEngine extends ExperimentEngine {
     const group = new THREE.Group()
 
     // Shaft
-    const shaftGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.55, 8)
+    const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8)
     const shaftMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.3 })
     const shaft = new THREE.Mesh(shaftGeo, shaftMat)
     shaft.position.y = 0.15
     group.add(shaft)
 
     // Head
-    const headGeo = new THREE.ConeGeometry(0.14, 0.28, 8)
+    const headGeo = new THREE.ConeGeometry(0.16, 0.3, 8)
     const headMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5, roughness: 0.2, metalness: 0.3 })
     const head = new THREE.Mesh(headGeo, headMat)
     head.position.y = 0.52
@@ -404,7 +404,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
         // Segment 1: Rising over hot plate (x=-3.8, y from -1.8 to 1.6)
         const riseArrow = this._createArrow(0xff6e40)
         riseArrow.position.set(-3.8, -1.8 + t * 3.4, z)
-        riseArrow.userData = { segment: 0, z, phase: t, speed: 0.02 }
+        riseArrow.userData = { segment: 0, z, phase: t, speed: 0.12 + Math.random() * 0.06 }
         this.scene.add(riseArrow)
         this._arrows.push(riseArrow)
 
@@ -412,7 +412,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
         const topArrow = this._createArrow(0xff8a65)
         topArrow.rotation.z = -Math.PI / 2
         topArrow.position.set(-3.8 + t * 7.6, 1.6, z)
-        topArrow.userData = { segment: 1, z, phase: t, speed: 0.03 }
+        topArrow.userData = { segment: 1, z, phase: t, speed: 0.15 + Math.random() * 0.08 }
         this.scene.add(topArrow)
         this._arrows.push(topArrow)
 
@@ -420,7 +420,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
         const sinkArrow = this._createArrow(0x448aff)
         sinkArrow.rotation.z = Math.PI
         sinkArrow.position.set(3.8, 1.6 - t * 3.4, z)
-        sinkArrow.userData = { segment: 2, z, phase: t, speed: 0.02 }
+        sinkArrow.userData = { segment: 2, z, phase: t, speed: 0.12 + Math.random() * 0.06 }
         this.scene.add(sinkArrow)
         this._arrows.push(sinkArrow)
 
@@ -428,7 +428,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
         const botArrow = this._createArrow(0x82b1ff)
         botArrow.rotation.z = Math.PI / 2
         botArrow.position.set(3.8 - t * 7.6, -1.8, z)
-        botArrow.userData = { segment: 3, z, phase: t, speed: 0.03 }
+        botArrow.userData = { segment: 3, z, phase: t, speed: 0.15 + Math.random() * 0.08 }
         this.scene.add(botArrow)
         this._arrows.push(botArrow)
       }
@@ -438,7 +438,8 @@ class ThermalCirculationEngine extends ExperimentEngine {
   update(dt) {
     if (this.paused) return
     const diff = this.tempDiff / 5 // 0.2 - 2
-    const speed = diff * 1.8
+    const speed = diff * 3.5
+    this._flowTime = (this._flowTime || 0) + dt * speed
 
     // Update hot/cold plate glow
     this.hotMat.emissiveIntensity = 0.3 + diff * 1.0
@@ -495,6 +496,10 @@ class ThermalCirculationEngine extends ExperimentEngine {
         const h = 0.55 + (1 - t) * 0.05
         this._setArrowColor(arrow, h, 0.75, 0.3 + t * 0.35)
       }
+
+      // Pulse scale for flowing effect
+      const pulse = 1 + Math.sin(this._flowTime * 3 + arrow.userData.phase * 10) * 0.15
+      arrow.scale.setScalar(pulse)
     }
   }
 
