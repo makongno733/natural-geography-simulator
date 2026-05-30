@@ -1,6 +1,12 @@
 <template>
   <div class="se-layout">
     <aside class="se-panel">
+      <div class="preset-row">
+        <button class="preset-btn" :class="{ active: activePreset === 'spring' }" @click="setPreset('spring')">春分</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'summer' }" @click="setPreset('summer')">夏至</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'autumn' }" @click="setPreset('autumn')">秋分</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'winter' }" @click="setPreset('winter')">冬至</button>
+      </div>
       <label>公转位置 <span>{{ orbitAngle }}°</span></label>
       <input type="range" min="0" max="360" v-model.number="orbitAngle" @input="onParam" />
       <div class="se-season-label">当前节气：<strong>{{ seasonLabel }}</strong></div>
@@ -25,26 +31,9 @@ import * as THREE from 'three'
 
 const seasonNames = ['春分', '夏至', '秋分', '冬至']
 
-function makeLabel(text, color) {
-  const cvs = document.createElement('canvas')
-  cvs.width = 128; cvs.height = 64
-  const ctx = cvs.getContext('2d')
-  ctx.fillStyle = color || '#ffffff'
-  ctx.font = 'bold 28px sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(text, 64, 32)
-  const tex = new THREE.CanvasTexture(cvs)
-  tex.minFilter = THREE.LinearFilter
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
-  const sprite = new THREE.Sprite(mat)
-  sprite.scale.set(2, 1, 1)
-  return sprite
-}
-
 export default {
   name: 'Seasons',
-  data() { return { orbitAngle: 0, auto: false, seasonLabel: '春分' } },
+  data() { return { orbitAngle: 0, auto: false, seasonLabel: '春分', activePreset: 'spring' } },
   mounted() {
     this._e = new SeasonsEngine()
     this._e._vm = this
@@ -57,6 +46,13 @@ export default {
     onParam() { this._e.setParams({ orbitAngle: this.orbitAngle * Math.PI / 180 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
     near(deg) { return Math.abs(((this.orbitAngle % 360 + 360) % 360) - deg) < 10 },
+    setPreset(key) {
+      this.activePreset = key
+      if (this.auto) { this.auto = false; this._e.auto = false }
+      const angles = { spring: 0, summer: 90, autumn: 180, winter: 270 }
+      this.orbitAngle = angles[key]
+      this.onParam()
+    },
   },
 }
 
@@ -117,20 +113,29 @@ class SeasonsEngine extends ExperimentEngine {
     this.earthGroup.rotation.x = this.tiltAngle
 
     const markerPositions = [
-      { a: 0, label: '春分', color: '#81c784' },
-      { a: Math.PI / 2, label: '夏至', color: '#ef5350' },
-      { a: Math.PI, label: '秋分', color: '#ffb74d' },
-      { a: Math.PI * 1.5, label: '冬至', color: '#64b5f6' },
+      { a: 0, label: '春分 3.21', color: '#81c784' },
+      { a: Math.PI / 2, label: '夏至 6.21', color: '#ef5350' },
+      { a: Math.PI, label: '秋分 9.23', color: '#ffb74d' },
+      { a: Math.PI * 1.5, label: '冬至 12.22', color: '#64b5f6' },
     ]
     for (const m of markerPositions) {
-      const sprite = makeLabel(m.label, m.color)
-      sprite.position.set(Math.cos(m.a) * 6, 1.2, Math.sin(m.a) * 6)
-      this.scene.add(sprite)
+      const pos = new THREE.Vector3(Math.cos(m.a) * 6, 1.2, Math.sin(m.a) * 6)
+      this.scene.add(this._makeLabel(m.label, pos, m.color, 22, 2))
       const dotGeo = new THREE.SphereGeometry(0.15, 8, 8)
       const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: m.color }))
-      dot.position.copy(sprite.position)
+      dot.position.copy(pos)
       this.scene.add(dot)
     }
+
+    // Additional sprite labels
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(0, 2, 0), '#ffd54f', 28, 2))
+    this._earthLabel = this._makeLabel('地球', new THREE.Vector3(6, 1, 0), '#42a5f5', 26, 1.8)
+    this.scene.add(this._earthLabel)
+    this.scene.add(this._makeLabel('地轴 23.5°', new THREE.Vector3(1.5, 2.2, 0), '#ff6b6b', 22, 1.6))
+    this._northLabel = this._makeLabel('北半球', new THREE.Vector3(0.8, 1.2, 0), '#ff5252', 20, 1.2)
+    this.scene.add(this._northLabel)
+    this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0.8, -0.8, 0), '#448aff', 20, 1.2)
+    this.scene.add(this._southLabel)
 
     this.camera.position.set(3, 9, 13)
     this.controls.target.set(0, 0, 0)
@@ -145,6 +150,10 @@ class SeasonsEngine extends ExperimentEngine {
     }
     const a = this.orbitAngle
     this.earthGroup.position.set(Math.cos(a) * this.orbitRadius, 0, Math.sin(a) * this.orbitRadius)
+    const ep = this.earthGroup.position
+    if (this._earthLabel) this._earthLabel.position.copy(ep).add(new THREE.Vector3(0, 1, 0))
+    if (this._northLabel) this._northLabel.position.copy(ep).add(new THREE.Vector3(0, 1.4, 0))
+    if (this._southLabel) this._southLabel.position.copy(ep).add(new THREE.Vector3(0, -1, 0))
   }
 
   setParams({ orbitAngle }) {
@@ -158,7 +167,12 @@ class SeasonsEngine extends ExperimentEngine {
 
 <style scoped>
 .se-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.se-panel { width: 200px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
+.se-panel { width: 210px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.preset-btn:hover { background: var(--button-green); }
+.preset-btn.active:hover { background: var(--red); }
 .se-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
 .se-panel input[type="range"] { width: 100%; accent-color: var(--red); }
 .se-season-label { font-size: 15px; color: var(--ink); text-align: center; padding: 8px; background: rgba(158,36,38,0.06); border-radius: var(--radius-sm); }

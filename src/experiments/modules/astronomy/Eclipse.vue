@@ -1,6 +1,12 @@
 <template>
   <div class="ec-layout">
     <aside class="ec-panel">
+      <div class="preset-row">
+        <button class="preset-btn" :class="{ active: activePreset === 'lunar' }" @click="setPreset('lunar')">月全食</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'solar' }" @click="setPreset('solar')">日全食</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'annular' }" @click="setPreset('annular')">日环食</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'auto' }" @click="setPreset('auto')">自动演示</button>
+      </div>
       <label>食类型</label>
       <select v-model="eclipseType" @change="onParam">
         <option value="lunar-total">月全食</option>
@@ -24,7 +30,7 @@ import * as THREE from 'three'
 
 export default {
   name: 'Eclipse',
-  data() { return { eclipseType: 'lunar-total', alignment: 100, auto: false } },
+  data() { return { eclipseType: 'lunar-total', alignment: 100, auto: false, activePreset: 'lunar' } },
   mounted() {
     this._e = new EclipseEngine()
     this._e._vm = this
@@ -36,6 +42,15 @@ export default {
     _onResize() { this._e?.resize() },
     onParam() { this._e.setParams({ eclipseType: this.eclipseType, alignment: this.alignment / 100 }) },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    setPreset(key) {
+      this.activePreset = key
+      if (key === 'auto') { this.autoPlay(); return }
+      if (this.auto) { this.auto = false; this._e.auto = false }
+      const types = { lunar: 'lunar-total', solar: 'solar-total', annular: 'solar-annular' }
+      this.eclipseType = types[key]
+      this.alignment = 100
+      this._e.setParams({ eclipseType: this.eclipseType, alignment: 1.0 })
+    },
   },
 }
 
@@ -91,6 +106,17 @@ class EclipseEngine extends ExperimentEngine {
     this._animT = 0
 
     this._updateCones()
+
+    // Sprite labels
+    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(-10, 2.5, 0), '#ffd54f', 28, 2))
+    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 0.8, 0), '#42a5f5', 26, 1.8))
+    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(-5, 0.6, 0), '#ffd54f', 24, 2))
+    this._moonLabel = this._makeLabel('月球', new THREE.Vector3(3, 0.6, 0), '#cccccc', 24, 1.6)
+    this.scene.add(this._moonLabel)
+    this._umbraLabel = this._makeLabel('本影', new THREE.Vector3(1.5, 1, 0), '#ffffff', 20, 1.4)
+    this.scene.add(this._umbraLabel)
+    this._penumbraLabel = this._makeLabel('半影', new THREE.Vector3(1.5, 1.5, 0), '#aaaaaa', 20, 1.6)
+    this.scene.add(this._penumbraLabel)
 
     this.camera.position.set(0, 3, 7)
     this.controls.target.set(-2, 0, 0)
@@ -154,6 +180,15 @@ class EclipseEngine extends ExperimentEngine {
       if (this._vm) this._vm.alignment = alignPct
       this._updateCones()
     }
+    if (this._moonLabel) {
+      this._moonLabel.position.copy(this.moon.position).add(new THREE.Vector3(0, 0.5, 0))
+    }
+    if (this._umbraLabel) {
+      this._umbraLabel.position.copy(this.umbraCone.position).add(new THREE.Vector3(0.3, 0.4, 0))
+    }
+    if (this._penumbraLabel) {
+      this._penumbraLabel.position.copy(this.penumbraCone.position).add(new THREE.Vector3(0.3, 0.8, 0))
+    }
   }
 
   setParams({ eclipseType, alignment }) {
@@ -173,7 +208,12 @@ class EclipseEngine extends ExperimentEngine {
 
 <style scoped>
 .ec-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.ec-panel { width: 200px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
+.ec-panel { width: 210px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.preset-btn:hover { background: var(--button-green); }
+.preset-btn.active:hover { background: var(--red); }
 .ec-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
 .ec-panel input[type="range"] { width: 100%; accent-color: var(--red); }
 .ec-panel select { padding: 4px 8px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); font-family: inherit; font-size: 13px; }

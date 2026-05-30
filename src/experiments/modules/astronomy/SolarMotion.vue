@@ -1,6 +1,12 @@
 <template>
   <div class="sm-layout">
     <aside class="sm-panel">
+      <div class="preset-row">
+        <button class="preset-btn" :class="{ active: activePreset === 'bj_summer' }" @click="setPreset('bj_summer')">北京·夏至</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'bj_winter' }" @click="setPreset('bj_winter')">北京·冬至</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'eq_spring' }" @click="setPreset('eq_spring')">赤道·春分</button>
+        <button class="preset-btn" :class="{ active: activePreset === 'np_summer' }" @click="setPreset('np_summer')">北极·夏至</button>
+      </div>
       <label>纬度 <span>{{ latitude }}°{{ latitude >= 0 ? 'N' : 'S' }}</span></label>
       <input type="range" min="-90" max="90" v-model.number="latitude" @input="onParam" />
       <label>季节</label>
@@ -31,7 +37,7 @@ const seasonDeclination = { spring: 0, summer: 23.5, autumn: 0, winter: -23.5 }
 
 export default {
   name: 'SolarMotion',
-  data() { return { latitude: 30, season: 'spring', auto: false, maxAlt: 60 } },
+  data() { return { latitude: 30, season: 'spring', auto: false, maxAlt: 60, activePreset: '' } },
   mounted() {
     this._e = new SolarMotionEngine()
     this._e._vm = this
@@ -46,6 +52,23 @@ export default {
       this._e.setParams({ latitude: this.latitude, season: this.season })
     },
     autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    setPreset(key) {
+      this.activePreset = key
+      if (this.auto) { this.auto = false; this._e.auto = false }
+      const presets = {
+        bj_summer: { latitude: 40, season: 'summer' },
+        bj_winter: { latitude: 40, season: 'winter' },
+        eq_spring: { latitude: 0, season: 'spring' },
+        np_summer: { latitude: 90, season: 'summer' },
+      }
+      const p = presets[key]
+      if (p) {
+        this.latitude = p.latitude
+        this.season = p.season
+        this.maxAlt = Math.max(0, 90 - this.latitude + (seasonDeclination[this.season] || 0))
+        this._e.setParams({ latitude: this.latitude, season: this.season })
+      }
+    },
   },
 }
 
@@ -108,6 +131,17 @@ class SolarMotionEngine extends ExperimentEngine {
     this.auto = false
 
     this._drawArcPath()
+
+    // Sprite labels
+    this.scene.add(this._makeLabel('天穹', new THREE.Vector3(0, this.domeRadius + 0.5, 0), '#ffffff', 26, 2))
+    this.scene.add(this._makeLabel('影子', new THREE.Vector3(0.8, 0.2, 0.8), '#888888', 22, 1.4))
+    this.scene.add(this._makeLabel('北', new THREE.Vector3(0, 0.3, -6.3), '#ffffff', 24, 1.5))
+    this.scene.add(this._makeLabel('南', new THREE.Vector3(0, 0.3, 6.3), '#ffffff', 24, 1.5))
+    this.scene.add(this._makeLabel('东', new THREE.Vector3(6.3, 0.3, 0), '#ffffff', 24, 1.5))
+    this.scene.add(this._makeLabel('西', new THREE.Vector3(-6.3, 0.3, 0), '#ffffff', 24, 1.5))
+    this.scene.add(this._makeLabel('地平线', new THREE.Vector3(-4, 0.3, 5.5), '#aaaaaa', 20, 1.2))
+    this._sunLabel = this._makeLabel('太阳', new THREE.Vector3(0, 5, 0), '#ffd54f', 24, 1.6)
+    this.scene.add(this._sunLabel)
 
     this.camera.position.set(0, 5, 10)
     this.controls.target.set(0, 2, 0)
@@ -193,6 +227,9 @@ class SolarMotionEngine extends ExperimentEngine {
       R * Math.sin(alt),
       -R * Math.cos(alt) * Math.sin(az)
     )
+    if (this._sunLabel) {
+      this._sunLabel.position.copy(this.sunMesh.position).add(new THREE.Vector3(0, 0.5, 0))
+    }
 
     const sunXZ = new THREE.Vector2(this.sunMesh.position.x, this.sunMesh.position.z)
     const len = sunXZ.length()
@@ -233,7 +270,12 @@ class SolarMotionEngine extends ExperimentEngine {
 
 <style scoped>
 .sm-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.sm-panel { width: 200px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
+.sm-panel { width: 210px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.preset-btn:hover { background: var(--button-green); }
+.preset-btn.active:hover { background: var(--red); }
 .sm-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
 .sm-panel input[type="range"] { width: 100%; accent-color: var(--red); }
 .sm-panel select { padding: 4px 8px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); font-family: inherit; font-size: 13px; }
