@@ -251,6 +251,9 @@ class ThermalCirculationEngine extends ExperimentEngine {
     const dist = 11
     this.camera.position.set(0, dist * Math.sin(angle), dist * Math.cos(angle))
     this.controls.target.set(0, 0, 0)
+
+    // Initialize pressure display
+    this._updatePressureLabels()
   }
 
   _makeTree() {
@@ -446,7 +449,7 @@ class ThermalCirculationEngine extends ExperimentEngine {
     this.sinkColumn.material.opacity = 0.03 + diff * 0.08
 
     // Update pressure labels (throttle to every ~0.5s)
-    if (!this._lastPressureUpdate) this._lastPressureUpdate = 0
+    if (this._lastPressureUpdate === undefined) this._lastPressureUpdate = 0
     this._lastPressureUpdate += dt
     if (this._lastPressureUpdate > 0.5) {
       this._lastPressureUpdate = 0
