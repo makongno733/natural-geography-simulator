@@ -10,6 +10,7 @@ export class ExperimentEngine {
     this.clock = null
     this.animationId = null
     this._canvas = null
+    this._sprites = []
   }
 
   init(canvas) {
@@ -56,6 +57,25 @@ export class ExperimentEngine {
     this.scene.add(sun)
   }
 
+  _makeLabel(text, position, color = '#333333', fontSize = 28, scale = 2.5) {
+    const canvas = document.createElement('canvas')
+    canvas.width = 512; canvas.height = 128
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = color
+    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
+    ctx.textAlign = 'center'
+    ctx.fillText(text, 256, 64)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.minFilter = THREE.LinearFilter
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(position)
+    sprite.scale.set(scale, scale * 0.25, 1)
+    this.scene.add(sprite)
+    this._sprites.push(sprite)
+    return sprite
+  }
+
   _animate() {
     const dt = Math.min(this.clock.getDelta(), 0.1)
     const elapsed = this.clock.elapsedTime
@@ -78,13 +98,24 @@ export class ExperimentEngine {
     cancelAnimationFrame(this.animationId)
     if (this.controls) this.controls.dispose()
     if (this.renderer) this.renderer.dispose()
+    for (const sprite of this._sprites) {
+      if (sprite.material) {
+        if (sprite.material.map) sprite.material.map.dispose()
+        sprite.material.dispose()
+      }
+    }
+    this._sprites = []
     if (this.scene) {
       this.scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose()
         if (obj.material) {
           if (Array.isArray(obj.material)) {
-            obj.material.forEach(m => m.dispose())
+            obj.material.forEach(m => {
+              if (m.map) m.map.dispose()
+              m.dispose()
+            })
           } else {
+            if (obj.material.map) obj.material.map.dispose()
             obj.material.dispose()
           }
         }

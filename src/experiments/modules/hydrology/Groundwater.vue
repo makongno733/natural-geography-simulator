@@ -1,6 +1,13 @@
 <template>
   <div class="gw-layout">
     <aside class="gw-panel">
+      <div class="preset-row">
+        <button
+          v-for="p in presets" :key="p.label"
+          class="preset-btn" :class="{ active: currentPreset === p.label }"
+          @click="applyPreset(p)"
+        >{{ p.label }}</button>
+      </div>
       <label>抽水速率 <span>{{ pumpRate }}</span></label>
       <input type="range" min="0" max="10" v-model.number="pumpRate" @input="onParam" />
       <label>降雨补给 <span>{{ recharge }}</span></label>
@@ -20,7 +27,14 @@ import * as THREE from 'three'
 
 export default {
   name: 'Groundwater',
-  data() { return { pumpRate: 3, recharge: 4 } },
+  data() { return {
+    pumpRate: 3, recharge: 4, currentPreset: '正常',
+    presets: [
+      { label: '正常', pumpRate: 3, recharge: 4 },
+      { label: '过度抽水', pumpRate: 9, recharge: 2 },
+      { label: '丰水期', pumpRate: 1, recharge: 9 },
+    ],
+  } },
   mounted() {
     this._e = new GroundwaterEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
@@ -29,7 +43,13 @@ export default {
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
-    onParam() { this._e.setParams({ pumpRate: this.pumpRate, recharge: this.recharge }) },
+    onParam() { this.currentPreset = null; this._e.setParams({ pumpRate: this.pumpRate, recharge: this.recharge }) },
+    applyPreset(p) {
+      this.currentPreset = p.label
+      this.pumpRate = p.pumpRate
+      this.recharge = p.recharge
+      this._e.setParams({ pumpRate: p.pumpRate, recharge: p.recharge })
+    },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new GroundwaterEngine(); this._e.init(this.$refs.cvs) }) },
   },
 }
@@ -71,6 +91,17 @@ class GroundwaterEngine extends ExperimentEngine {
 
     this.pumpRate = 3
     this.recharge = 4
+
+    // Static layer labels
+    this._makeLabel('表土层', new THREE.Vector3(1.5, 1.8, 2), '#5c4a3a', 22, 1.8)
+    this._makeLabel('含水层 (砂层)', new THREE.Vector3(1.5, 0.8, 2), '#5c4a3a', 22, 1.8)
+    this._makeLabel('隔水层 (黏土)', new THREE.Vector3(1.5, -0.1, 2), '#5c4a3a', 20, 1.8)
+    this._makeLabel('基岩', new THREE.Vector3(1.5, -1.8, 2), '#5c4a3a', 22, 1.8)
+    this._makeLabel('抽水井', new THREE.Vector3(0.3, 1.2, 1), '#1565c0', 20, 1.5)
+    // Dynamic labels
+    this._wtLabel = this._makeLabel('水位面', new THREE.Vector3(1.5, 0.4, 0), '#1565c0', 22, 1.8)
+    this._coneLabel = this._makeLabel('降水漏斗', new THREE.Vector3(0, 0.4, -1), '#1565c0', 22, 1.8)
+
     this.camera.position.set(0, 2, 8)
     this.controls.target.set(0, 0, 0)
   }
@@ -88,6 +119,10 @@ class GroundwaterEngine extends ExperimentEngine {
     this.cone.scale.set(newScale, 0.3, newScale)
     this.cone.position.y = this.waterTable.position.y
     this.coneMat.opacity = 0.1 + pr * 0.3
+
+    // Update dynamic labels
+    if (this._wtLabel) this._wtLabel.position.set(1.5, this.waterTable.position.y, 0)
+    if (this._coneLabel) this._coneLabel.position.copy(this.cone.position).add(new THREE.Vector3(0, 0.4, -1))
   }
 
   setParams({ pumpRate, recharge }) {
@@ -104,6 +139,9 @@ class GroundwaterEngine extends ExperimentEngine {
 .gw-panel input[type="range"] { width: 100%; accent-color: var(--red); }
 .gw-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .gw-panel button:hover { background: var(--button-green); }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .gw-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .gw-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .gw-canvas-wrap canvas { width: 100%; height: 100%; display: block; }

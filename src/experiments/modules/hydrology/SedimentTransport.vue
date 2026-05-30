@@ -1,6 +1,13 @@
 <template>
   <div class="st2-layout">
     <aside class="st2-panel">
+      <div class="preset-row">
+        <button
+          v-for="p in presets" :key="p.label"
+          class="preset-btn" :class="{ active: currentPreset === p.label }"
+          @click="applyPreset(p)"
+        >{{ p.label }}</button>
+      </div>
       <label>水流速度 <span>{{ velocity.toFixed(1) }} m/s</span></label>
       <input type="range" min="0" max="50" v-model.number="velocity" @input="onParam" step="0.5" />
       <div class="st2-legend">
@@ -23,7 +30,14 @@ import * as THREE from 'three'
 
 export default {
   name: 'SedimentTransport',
-  data() { return { velocity: 5 } },
+  data() { return {
+    velocity: 5, currentPreset: null,
+    presets: [
+      { label: '静水沉积', velocity: 1 },
+      { label: '中等流速', velocity: 15 },
+      { label: '洪水搬运', velocity: 40 },
+    ],
+  } },
   mounted() {
     this._e = new SedimentTransportEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
@@ -32,7 +46,12 @@ export default {
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
-    onParam() { this._e.setParams({ velocity: this.velocity / 10 }) },
+    onParam() { this.currentPreset = null; this._e.setParams({ velocity: this.velocity / 10 }) },
+    applyPreset(p) {
+      this.currentPreset = p.label
+      this.velocity = p.velocity
+      this._e.setParams({ velocity: this.velocity / 10 })
+    },
     reset() { this._e.dispose(); this.$nextTick(() => { this._e = new SedimentTransportEngine(); this._e.init(this.$refs.cvs) }) },
   },
 }
@@ -65,6 +84,14 @@ class SedimentTransportEngine extends ExperimentEngine {
     })
 
     this.velocity = 0.5
+
+    // Flow direction and grain type labels
+    this._makeLabel('流向 →', new THREE.Vector3(1.5, -0.4, 1.5), '#1565c0', 28, 2.5)
+    this._makeLabel('黏土', new THREE.Vector3(-2.5, -0.3, 1.5), '#bdbdbd', 22, 2)
+    this._makeLabel('粉砂', new THREE.Vector3(-1.2, -0.3, 1.5), '#a1887f', 22, 2)
+    this._makeLabel('砂', new THREE.Vector3(1.2, -0.3, 1.5), '#ffcc80', 22, 2)
+    this._makeLabel('砾石', new THREE.Vector3(2.5, -0.3, 1.5), '#8d6e63', 22, 2)
+
     this.camera.position.set(0, 3, 6)
     this.controls.target.set(0, -0.8, 0)
   }
@@ -101,6 +128,9 @@ class SedimentTransportEngine extends ExperimentEngine {
 .st2-legend { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .st2-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .st2-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .st2-canvas-wrap canvas { width: 100%; height: 100%; display: block; }

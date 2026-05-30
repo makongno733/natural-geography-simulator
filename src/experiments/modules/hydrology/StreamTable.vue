@@ -1,6 +1,13 @@
 <template>
   <div class="st-layout">
     <aside class="st-panel">
+      <div class="preset-row">
+        <button
+          v-for="p in presets" :key="p.label"
+          class="preset-btn" :class="{ active: currentPreset === p.label }"
+          @click="applyPreset(p)"
+        >{{ p.label }}</button>
+      </div>
       <label>坡度 <span>{{ slope }}°</span></label>
       <input type="range" min="2" max="20" v-model.number="slope" @input="onParam" />
       <label>水流量 <span>{{ flowRate }}</span></label>
@@ -20,7 +27,14 @@ import * as THREE from 'three'
 
 export default {
   name: 'StreamTable',
-  data() { return { slope: 8, flowRate: 5 } },
+  data() { return {
+    slope: 8, flowRate: 5, currentPreset: null,
+    presets: [
+      { label: '缓坡小河', slope: 4, flowRate: 3 },
+      { label: '陡坡急流', slope: 15, flowRate: 8 },
+      { label: '洪水模式', slope: 10, flowRate: 10 },
+    ],
+  } },
   mounted() {
     this._e = new StreamTableEngine()
     this.$nextTick(() => this._e.init(this.$refs.cvs))
@@ -29,7 +43,13 @@ export default {
   beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
   methods: {
     _onResize() { this._e?.resize() },
-    onParam() { this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) },
+    onParam() { this.currentPreset = null; this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) },
+    applyPreset(p) {
+      this.currentPreset = p.label
+      this.slope = p.slope
+      this.flowRate = p.flowRate
+      this._e.setParams({ slope: p.slope, flowRate: p.flowRate })
+    },
     reset() {
       this._e.dispose()
       this.$nextTick(() => { this._e = new StreamTableEngine(); this._e.init(this.$refs.cvs); this._e.setParams({ slope: this.slope, flowRate: this.flowRate }) })
@@ -72,6 +92,12 @@ class StreamTableEngine extends ExperimentEngine {
     this.slope = 8
     this.flowRate = 5
     this._drops = []
+
+    this._makeLabel('上游 (水源)', new THREE.Vector3(0, 1, -3.5), '#2471a3', 28, 2.5)
+    this._makeLabel('下游', new THREE.Vector3(0, 0.2, 4), '#1e8449', 28, 2.5)
+    this._makeLabel('侵蚀区', new THREE.Vector3(-1.5, 0.8, -1), '#c0392b', 24, 2)
+    this._makeLabel('沉积区', new THREE.Vector3(1.5, 0.3, 2.5), '#b8860b', 24, 2)
+
     this._spawnDrops(60)
 
     this.camera.position.set(6, 7, 5)
@@ -126,6 +152,9 @@ class StreamTableEngine extends ExperimentEngine {
 .st-panel input[type="range"] { width: 100%; accent-color: var(--red); }
 .st-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
 .st-panel button:hover { background: var(--button-green); }
+.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
+.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .st-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
 .st-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); }
 .st-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
