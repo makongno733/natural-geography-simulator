@@ -1,31 +1,25 @@
 <template>
   <div class="home-shell">
-    <div class="card-grid">
-      <router-link to="/初中" class="card card-junior">
-        <div class="card-icon">📗</div>
-        <div class="card-title">初中</div>
+    <div class="hero-grid">
+      <router-link to="/初中" class="hero-card card-junior">
+        <div class="card-kicker">课程入口</div>
+        <div class="card-title">初中课程</div>
         <div class="card-desc">七年级 · 八年级</div>
       </router-link>
-      <router-link to="/高中" class="card card-senior">
-        <div class="card-icon">📘</div>
-        <div class="card-title">高中</div>
+      <router-link to="/高中" class="hero-card card-senior">
+        <div class="card-kicker">课程入口</div>
+        <div class="card-title">高中课程</div>
         <div class="card-desc">必修 · 选择性必修</div>
       </router-link>
-      <router-link to="/map" class="card card-map">
-        <div class="card-icon">🗺</div>
-        <div class="card-title">地图系统</div>
-        <div class="card-desc">投影 · 展开 · 教学</div>
-      </router-link>
-      <router-link to="/geo" class="card card-geo">
-        <div class="card-icon">🦕</div>
-        <div class="card-title">地质年代</div>
-        <div class="card-desc">46亿年 · 四大圈层</div>
-      </router-link>
-      <router-link to="/experiments" class="card card-experiments">
-        <div class="card-icon">🔬</div>
-        <div class="card-title">地学实验</div>
+      <router-link to="/experiments" class="hero-card card-experiments">
+        <div class="card-kicker">互动入口</div>
+        <div class="card-title">地理实验室</div>
         <div class="card-desc">气象 · 水文 · 地质 · 天文</div>
       </router-link>
+    </div>
+    <div class="sub-tools">
+      <router-link to="/map" class="tool-pill">地图系统</router-link>
+      <router-link to="/geo" class="tool-pill">地质年代</router-link>
     </div>
   </div>
 </template>
@@ -34,49 +28,114 @@
 </script>
 
 <style scoped>
-.home-shell { padding: 40px 20px 34px; }
-.card-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
+.home-shell {
+  padding: 30px 20px 30px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
   max-width: 920px;
   margin: 0 auto;
 }
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 180px;
+
+.hero-card {
+  display: block;
   text-decoration: none;
-  border-radius: 16px;
-  padding: 28px 20px 22px;
-  text-align: center;
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  text-align: left;
   cursor: pointer;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  border: 1px solid rgba(80, 100, 52, 0.26);
 }
-.card:hover { transform: translateY(-4px); box-shadow: 0 6px 24px rgba(0,0,0,0.14); }
-.card-junior { background: linear-gradient(180deg, #e8f5e9, #c8e6c9); border: 1px solid #a5d6a7; }
-.card-senior { background: linear-gradient(180deg, #e3f2fd, #bbdefb); border: 1px solid #90caf9; }
-.card-map { background: linear-gradient(180deg, #fff3e0, #ffe0b2); border: 1px solid #ffcc80; }
-.card-geo { background: linear-gradient(180deg, #ede7f6, #d1c4e9); border: 1px solid #b39ddb; }
-.card-experiments { background: linear-gradient(180deg, #fce4ec, #f8bbd0); border: 1px solid #f48fb1; }
-.card-icon { font-size: 36px; margin-bottom: 10px; }
-.card-title { font-size: 22px; font-weight: 700; color: #333; margin-bottom: 4px; }
-.card-desc { font-size: 12px; color: #777; }
-.card-junior .card-title { color: #2e7d32; }
-.card-senior .card-title { color: #1565c0; }
-.card-map .card-title { color: #e65100; }
-.card-geo .card-title { color: #4527a0; }
-.card-experiments .card-title { color: #c62828; }
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-junior {
+  background: linear-gradient(180deg, rgba(232, 245, 233, 0.96), rgba(200, 230, 201, 0.9));
+}
+
+.card-senior {
+  background: linear-gradient(180deg, rgba(227, 242, 253, 0.96), rgba(187, 222, 251, 0.9));
+}
+
+.card-experiments {
+  background: linear-gradient(180deg, rgba(252, 228, 236, 0.96), rgba(248, 187, 208, 0.9));
+}
+
+.card-kicker {
+  font-size: 11px;
+  color: rgba(45, 32, 26, 0.62);
+  letter-spacing: 0.08em;
+}
+
+.card-title {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.card-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(45, 32, 26, 0.78);
+}
+
+.card-junior .card-title { color: #2f6c37; }
+.card-senior .card-title { color: #1f5586; }
+.card-experiments .card-title { color: #8c2d3b; }
+
+.sub-tools {
+  margin: 14px auto 0;
+  max-width: 920px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tool-pill {
+  text-decoration: none;
+  color: var(--button-green-ink);
+  font-size: 12px;
+  border: 1px solid rgba(100, 122, 63, 0.32);
+  border-radius: 999px;
+  background: rgba(239, 247, 214, 0.9);
+  padding: 6px 12px;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.tool-pill:hover {
+  color: #fff;
+  border-color: var(--button-green-deep);
+  background: var(--button-green-deep);
+}
 
 @media (max-width: 720px) {
-  .home-shell { padding: 16px 10px 24px; }
-  .card-grid { gap: 10px; }
-  .card { width: 140px; padding: 16px 10px 14px; }
-  .card-title { font-size: 16px; }
-  .card-icon { font-size: 28px; }
-  .card-desc { font-size: 10px; }
+  .home-shell {
+    padding: 14px 10px 20px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .hero-card {
+    padding: 12px;
+  }
+
+  .card-title {
+    font-size: 19px;
+  }
+
+  .card-desc {
+    font-size: 11px;
+  }
 }
 </style>

@@ -4,6 +4,12 @@
       <router-link to="/" class="geo-back">← 返回首页</router-link>
       <h1 class="geo-title">地质年代表</h1>
       <p class="geo-sub">Geological Time Scale · 46亿年演化 · 拖动时间轴浏览</p>
+      <div class="geo-quick-controls">
+        <button class="quick-btn" @click="toggleRotate">{{ rotating ? '暂停旋转' : '自动旋转' }}</button>
+        <button class="quick-btn" @click="zoomBy(0.9)">放大</button>
+        <button class="quick-btn" @click="zoomBy(1.1)">缩小</button>
+        <button class="quick-btn" @click="resetView">复位</button>
+      </div>
       <div class="time-scrubber">
         <div class="scrub-row">
           <input type="range" min="0" :max="eras.length - 1" :value="currentEra" @input="selectEra(parseInt($event.target.value))" class="scrubber" />
@@ -79,8 +85,10 @@ import { GeologicTimeModule, ERAS } from '../engine/modules/GeologicTimeModule.j
 const canvasRef = ref(null)
 const currentEra = ref(ERAS.length - 1)
 const playing = ref(false)
+const rotating = ref(false)
 const eras = ERAS
 let engine = null, autoTimer = null
+let resizeHandler = null
 
 function toggleAuto() {
   playing.value = !playing.value
@@ -101,19 +109,42 @@ function selectEra(i) {
   if (engine) engine.setParams({ era: i })
 }
 
+function toggleRotate() {
+  rotating.value = !rotating.value
+  engine?.setAutoRotate(rotating.value)
+}
+
+function zoomBy(ratio) {
+  if (!engine?.cameraRig) return
+  const camera = engine.cameraRig.camera
+  camera.position.multiplyScalar(ratio)
+  engine.cameraRig.controls.update()
+}
+
+function resetView() {
+  rotating.value = false
+  engine?.setAutoRotate(false)
+  engine?.resetCamera('orbit')
+}
+
 onMounted(async () => {
   await nextTick()
   if (!canvasRef.value) return
   try {
     engine = new BaseScene(canvasRef.value, { bg: 0x1a1a2e, mode: 'simple', lightPreset: 'sunlit' })
     engine.loadModule(GeologicTimeModule, { mode: 'simple', era: currentEra.value })
-    window.addEventListener('resize', () => engine.resize())
+    resizeHandler = () => engine?.resize()
+    window.addEventListener('resize', resizeHandler)
   } catch(e) {
     console.error('3D engine failed:', e)
   }
 })
 
-onBeforeUnmount(() => { engine?.dispose(); if (autoTimer) clearInterval(autoTimer) })
+onBeforeUnmount(() => {
+  if (resizeHandler) window.removeEventListener('resize', resizeHandler)
+  engine?.dispose()
+  if (autoTimer) clearInterval(autoTimer)
+})
 </script>
 
 <style scoped>
@@ -122,6 +153,25 @@ onBeforeUnmount(() => { engine?.dispose(); if (autoTimer) clearInterval(autoTime
 .geo-back { color: #58a6ff; text-decoration: none; font-size: 13px; }
 .geo-title { margin: 6px 0 2px; font-size: 24px; color: #f0f0f0; }
 .geo-sub { margin: 0; font-size: 12px; color: #666; }
+.geo-quick-controls {
+  margin: 8px 0 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.quick-btn {
+  border: 1px solid rgba(88, 166, 255, 0.4);
+  border-radius: 999px;
+  background: rgba(88, 166, 255, 0.11);
+  color: #8ac0ff;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.quick-btn:hover {
+  border-color: #8ac0ff;
+  background: rgba(88, 166, 255, 0.2);
+}
 .geo-body { display: flex; height: 55vh; }
 .geo-3d { flex: 1; position: relative; overflow: hidden; }
 .geo-side { width: 320px; overflow-y: auto; padding: 12px; background: #111; border-left: 1px solid #222; }

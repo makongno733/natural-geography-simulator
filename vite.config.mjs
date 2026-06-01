@@ -1,4 +1,4 @@
-import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { compression } from 'vite-plugin-compression2';
 
@@ -14,7 +14,6 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    splitVendorChunkPlugin(),
     compression({ algorithms: ['gzip', 'brotliCompress'] })
   ],
   css: {
@@ -26,9 +25,12 @@ export default defineConfig({
     modulePreload: {
       polyfill: false
     },
+    chunkSizeWarningLimit: 650,
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('/src/textbook/data/index.js')) return 'catalog-data';
+
           if (!id.includes('node_modules')) return null;
           if (id.includes('three')) return 'vendor-three';
           if (id.includes('vue-router')) return 'vendor-vue';

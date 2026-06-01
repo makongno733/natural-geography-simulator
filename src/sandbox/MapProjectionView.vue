@@ -4,6 +4,12 @@
       <router-link to="/" class="map-back">← 返回首页</router-link>
       <h1 class="map-title">地图投影教学系统</h1>
       <p class="map-sub">点击投影类型 → 观察球体如何展开为平面地图</p>
+      <div class="map-quick-controls">
+        <button class="quick-btn" @click="toggleRotate">{{ rotating ? '暂停旋转' : '自动旋转' }}</button>
+        <button class="quick-btn" @click="zoomBy(0.9)">放大</button>
+        <button class="quick-btn" @click="zoomBy(1.1)">缩小</button>
+        <button class="quick-btn" @click="resetAll">复位</button>
+      </div>
     </div>
     <div class="map-body">
       <div ref="canvasRef" class="map-canvas"></div>
@@ -31,7 +37,9 @@ import { MapProjectionModule, PROJECTIONS, CATS } from '../engine/modules/MapPro
 
 const canvasRef = ref(null)
 const current = ref('reset')
+const rotating = ref(false)
 let engine = null
+let resizeHandler = null
 
 const categories = CATS
 
@@ -42,16 +50,40 @@ function switchProj(id) {
   if (engine) engine.setParams({ projection: id })
 }
 
+function toggleRotate() {
+  rotating.value = !rotating.value
+  engine?.setAutoRotate(rotating.value)
+}
+
+function zoomBy(ratio) {
+  if (!engine?.cameraRig) return
+  const camera = engine.cameraRig.camera
+  camera.position.multiplyScalar(ratio)
+  engine.cameraRig.controls.update()
+}
+
+function resetAll() {
+  rotating.value = false
+  current.value = 'reset'
+  engine?.setAutoRotate(false)
+  engine?.setParams({ projection: 'reset' })
+  engine?.resetCamera('orbit')
+}
+
 onMounted(async () => {
   await nextTick()
   if (!canvasRef.value) return
   engine = new BaseScene(canvasRef.value, { bg: 0xf5f0e8, mode: 'simple', lightPreset: 'studio', autoRotate: false, shadows: false })
   engine.loadModule(MapProjectionModule, { mode: 'simple', projection: 'reset' })
   engine.setAutoRotate(false)
-  window.addEventListener('resize', () => engine.resize())
+  resizeHandler = () => engine?.resize()
+  window.addEventListener('resize', resizeHandler)
 })
 
-onBeforeUnmount(() => { engine?.dispose() })
+onBeforeUnmount(() => {
+  if (resizeHandler) window.removeEventListener('resize', resizeHandler)
+  engine?.dispose()
+})
 </script>
 
 <style scoped>
@@ -60,6 +92,25 @@ onBeforeUnmount(() => { engine?.dispose() })
 .map-back { color: #8b4513; text-decoration: none; font-size: 13px; }
 .map-title { margin: 8px 0 4px; font-size: 22px; color: #333; font-weight: 700; }
 .map-sub { margin: 0; font-size: 13px; color: #999; }
+.map-quick-controls {
+  margin-top: 8px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.quick-btn {
+  border: 1px solid rgba(91, 66, 44, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #533721;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.quick-btn:hover {
+  border-color: #8e3a2d;
+  color: #8e3a2d;
+}
 .map-body { display: flex; height: calc(100vh - 120px); }
 .map-canvas { flex: 1; position: relative; overflow: hidden; min-width: 0; background: #f5f0e8; }
 .map-controls {
