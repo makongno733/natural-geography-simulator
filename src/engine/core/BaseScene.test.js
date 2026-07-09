@@ -167,4 +167,51 @@ describe('BaseScene', () => {
       modelQuality: 'low',
     })
   })
+
+  it('uses the explicit optimized module mode instead of the initial scene mode', () => {
+    resolveProfile.mockReturnValue({
+      modelId: 'chapter-3d',
+      deviceTier: 'medium',
+      networkTier: 'normal',
+      quality: 'medium',
+    })
+    loadGeneratedModel.mockReturnValue({
+      model: new Group(),
+      profile: {
+        modelId: 'chapter-3d:高中:必修第一册:第一章',
+        deviceTier: 'medium',
+        networkTier: 'normal',
+        quality: 'medium',
+      },
+    })
+
+    const scene = new BaseScene(
+      { clientWidth: 1280, clientHeight: 720 },
+      {
+        modelId: 'chapter-3d',
+        mode: 'simple',
+        labels: false,
+      },
+    )
+
+    scene.loadOptimizedModule(
+      'chapter-3d:高中:必修第一册:第一章',
+      vi.fn(() => new Group()),
+      { mode: 'professional', recipe: { title: '宇宙中的地球' } },
+    )
+
+    expect(loadGeneratedModel).toHaveBeenCalledWith(expect.objectContaining({
+      params: expect.objectContaining({
+        mode: 'professional',
+        recipe: { title: '宇宙中的地球' },
+      }),
+    }))
+    expect(scene._mode).toBe('professional')
+    expect(scene._params).toMatchObject({
+      mode: 'professional',
+      recipe: { title: '宇宙中的地球' },
+      quality: 'medium',
+      modelQuality: 'medium',
+    })
+  })
 })

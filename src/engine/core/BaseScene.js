@@ -79,6 +79,8 @@ export class BaseScene {
     }
 
     this.modelId = modelId || this.modelId
+    const mode = params.mode ?? this._mode
+    this._mode = mode
     const effectiveQuality = this.modelProfile?.quality || this.renderManager?.quality || 'medium'
     const result = modelManager.loadGeneratedModel({
       modelId: this.modelId,
@@ -86,7 +88,7 @@ export class BaseScene {
       scene: this.scene,
       params: {
         ...params,
-        mode: this._mode,
+        mode,
       },
       availableQualities: [effectiveQuality],
       context: {
@@ -99,7 +101,7 @@ export class BaseScene {
     })
 
     this.modelProfile = result.profile
-    this._params = { ...params, mode: this._mode, quality: result.profile.quality, modelQuality: result.profile.quality }
+    this._params = { ...params, mode, quality: result.profile.quality, modelQuality: result.profile.quality }
     this._attachModuleResult(result.model)
   }
 
