@@ -53,7 +53,7 @@ const { RenderManager } = await import('./RenderManager.js')
 describe('RenderManager', () => {
   beforeEach(() => {
     rendererInstance = null
-    globalThis.window = { devicePixelRatio: 2 }
+    globalThis.window = { devicePixelRatio: 3 }
   })
 
   it('preserves explicit pixelRatioCap overrides when set to zero', () => {
@@ -71,5 +71,25 @@ describe('RenderManager', () => {
 
     expect(manager.pixelRatioCap).toBe(0)
     expect(rendererInstance.setPixelRatio).toHaveBeenCalledWith(0)
+  })
+
+  it.each([
+    ['low', { antialias: false, shadows: false, pixelRatioCap: 1 }],
+    ['medium', { antialias: true, shadows: true, pixelRatioCap: 1.5 }],
+    ['high', { antialias: true, shadows: true, pixelRatioCap: 2 }],
+  ])('maps %s quality to the expected renderer settings', (quality, expected) => {
+    const manager = new RenderManager(
+      {
+        clientWidth: 1024,
+        clientHeight: 768,
+        appendChild: vi.fn(),
+      },
+      { quality },
+    )
+
+    expect(manager.pixelRatioCap).toBe(expected.pixelRatioCap)
+    expect(rendererInstance.options.antialias).toBe(expected.antialias)
+    expect(rendererInstance.shadowMap.enabled).toBe(expected.shadows)
+    expect(rendererInstance.setPixelRatio).toHaveBeenCalledWith(expected.pixelRatioCap)
   })
 })

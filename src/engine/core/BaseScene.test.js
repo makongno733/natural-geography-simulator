@@ -120,7 +120,7 @@ describe('BaseScene', () => {
     delete globalThis.cancelAnimationFrame
   })
 
-  it('keeps optimized module loading aligned with the current render quality', () => {
+  it('falls back to supported quality without extending available qualities', () => {
     resolveProfile.mockReturnValue({
       modelId: 'base-scene',
       deviceTier: 'medium',
@@ -133,7 +133,7 @@ describe('BaseScene', () => {
         modelId: 'cloud-layer',
         deviceTier: 'medium',
         networkTier: 'normal',
-        quality: 'high',
+        quality: 'low',
       },
     })
 
@@ -142,25 +142,29 @@ describe('BaseScene', () => {
       {
         modelId: 'base-scene',
         quality: 'high',
-        availableQualities: ['low', 'high'],
+        availableQualities: ['low'],
         labels: false,
       },
     )
 
     scene.loadOptimizedModule('cloud-layer', vi.fn(() => new Group()), { density: 0.8 })
 
-    expect(scene.availableQualities).toEqual(['low', 'high'])
-    expect(scene.renderManager.quality).toBe('high')
-    expect(scene.modelProfile.quality).toBe('high')
+    expect(resolveProfile).toHaveBeenCalledWith({
+      modelId: 'base-scene',
+      availableQualities: ['low'],
+    })
+    expect(scene.availableQualities).toEqual(['low'])
+    expect(scene.renderManager.quality).toBe('low')
+    expect(scene.modelProfile.quality).toBe('low')
     expect(loadGeneratedModel).toHaveBeenCalledWith(expect.objectContaining({
       modelId: 'cloud-layer',
-      availableQualities: ['high'],
+      availableQualities: ['low'],
     }))
     expect(scene._params).toMatchObject({
       density: 0.8,
       mode: 'simple',
-      quality: 'high',
-      modelQuality: 'high',
+      quality: 'low',
+      modelQuality: 'low',
     })
   })
 })
