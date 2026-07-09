@@ -42,8 +42,13 @@ function onTimeline() {
 
 onMounted(async () => {
   await nextTick()
-  engine = new BaseScene(containerRef.value, { bg: 0x1a2a3a, mode: 'simple', lightPreset: 'sunlit' })
-  engine.loadModule(WaterCycleModule, { mode: 'simple', timeline: 0 })
+  engine = new BaseScene(containerRef.value, {
+    bg: 0x1a2a3a,
+    mode: 'simple',
+    lightPreset: 'sunlit',
+    modelId: 'engine:water-cycle',
+  })
+  engine.loadOptimizedModule('engine:water-cycle', WaterCycleModule, { mode: 'simple', timeline: 0 })
 })
 
 onBeforeUnmount(() => engine?.dispose())

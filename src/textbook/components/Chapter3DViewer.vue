@@ -52,10 +52,16 @@ let engine = null
 let resizeObserver = null
 
 const visibleMetrics = computed(() => props.recipe.metrics?.slice(0, 4) || [])
+const modelId = computed(() => {
+  const grade = props.recipe.grade || '高中'
+  const book = props.recipe.book || 'unknown-book'
+  const chapter = props.recipe.chapter || props.recipe.title || 'unknown-chapter'
+  return `chapter-3d:${grade}:${book}:${chapter}`
+})
 
 function loadCurrentRecipe() {
   if (!engine || !props.recipe) return
-  engine.loadModule(ChapterConceptModule, {
+  engine.loadOptimizedModule(modelId.value, ChapterConceptModule, {
     mode: currentMode.value,
     recipe: props.recipe,
   })
@@ -83,6 +89,7 @@ onMounted(async () => {
     bg: 0x08111f,
     mode: currentMode.value,
     lightPreset: 'sunlit',
+    modelId: modelId.value,
     fov: 42,
     minDistance: 2.2,
     maxDistance: 18,
