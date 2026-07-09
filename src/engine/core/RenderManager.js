@@ -29,7 +29,7 @@ export class RenderManager {
     this.container = container
     const qualitySettings = renderSettingsForQuality(options.quality)
     this.quality = options.quality || 'medium'
-    this.pixelRatioCap = options.pixelRatioCap || qualitySettings.pixelRatioCap
+    this.pixelRatioCap = options.pixelRatioCap ?? qualitySettings.pixelRatioCap
     this.renderer = new THREE.WebGLRenderer({
       antialias: options.antialias ?? qualitySettings.antialias,
       alpha: options.alpha ?? true,

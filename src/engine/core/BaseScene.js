@@ -15,10 +15,19 @@ export class BaseScene {
     this._moduleApi = null
     this._animFrameId = null
     this.modelId = options.modelId || 'base-scene'
-    this.modelProfile = modelManager.resolveProfile({
+    this.availableQualities = [...(options.availableQualities || ['low', 'medium', 'high'])]
+    if (options.quality && !this.availableQualities.includes(options.quality)) {
+      this.availableQualities.push(options.quality)
+    }
+
+    const resolvedProfile = modelManager.resolveProfile({
       modelId: this.modelId,
-      availableQualities: options.availableQualities || ['low', 'medium', 'high'],
+      availableQualities: this.availableQualities,
     })
+    this.modelProfile = {
+      ...resolvedProfile,
+      quality: options.quality ?? resolvedProfile.quality,
+    }
 
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(options.bg || 0x0a0e27)
@@ -28,7 +37,7 @@ export class BaseScene {
 
     this.renderManager = new RenderManager(container, {
       ...options,
-      quality: options.quality || this.modelProfile.quality,
+      quality: this.modelProfile.quality,
     })
     this.cameraRig = new CameraRig(container, this.renderManager.domElement, options)
     this.renderManager.initComposer(this.scene, this.cameraRig.camera)
@@ -70,6 +79,7 @@ export class BaseScene {
     }
 
     this.modelId = modelId || this.modelId
+    const activeQuality = this.renderManager?.quality || this.modelProfile?.quality || 'medium'
     const result = modelManager.loadGeneratedModel({
       modelId: this.modelId,
       factory: moduleFactory,
@@ -78,6 +88,9 @@ export class BaseScene {
         ...params,
         mode: this._mode,
       },
+      availableQualities: this.availableQualities.includes(activeQuality)
+        ? [activeQuality]
+        : this.availableQualities,
       context: {
         labelSystem: this.labelSystem,
         lightRig: this.lightRig,
