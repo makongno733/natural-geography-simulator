@@ -82,4 +82,13 @@ describe('ModelManager', () => {
       message: 'factory failed',
     })
   })
+
+  it('keeps a bounded performance history', () => {
+    const boundedMonitor = new ModelPerformanceMonitor({ limit: 2 })
+    boundedMonitor.record({ type: 'a' })
+    boundedMonitor.record({ type: 'b' })
+    boundedMonitor.record({ type: 'c' })
+
+    expect(boundedMonitor.getEntries().map(entry => entry.type)).toEqual(['b', 'c'])
+  })
 })

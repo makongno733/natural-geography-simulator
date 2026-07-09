@@ -26,3 +26,10 @@ export class ModelPerformanceMonitor {
 }
 
 export const modelPerformanceMonitor = new ModelPerformanceMonitor()
+
+if (typeof window !== 'undefined') {
+  window.__GEO_MODEL_PERF__ = {
+    getEntries: () => modelPerformanceMonitor.getEntries(),
+    clear: () => modelPerformanceMonitor.clear(),
+  }
+}
