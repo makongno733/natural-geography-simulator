@@ -1,8 +1,14 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { modelManager } from '../../engine/optimization/modelManager.js'
 
 export class ExperimentEngine {
-  constructor() {
+  constructor(options = {}) {
+    this.modelId = options.modelId || 'experiment-3d'
+    this.modelProfile = modelManager.resolveProfile({
+      modelId: this.modelId,
+      availableQualities: options.availableQualities || ['low', 'medium', 'high'],
+    })
     this.scene = null
     this.camera = null
     this.renderer = null
@@ -30,10 +36,12 @@ export class ExperimentEngine {
     this.camera.position.set(8, 6, 12)
     this.camera.lookAt(0, 0, 0)
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+    const lowQuality = this.modelProfile.quality === 'low'
+    const pixelRatioCap = this.modelProfile.quality === 'high' ? 2 : this.modelProfile.quality === 'medium' ? 1.5 : 1
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !lowQuality })
     this.renderer.setSize(width, height)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    this.renderer.shadowMap.enabled = true
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap))
+    this.renderer.shadowMap.enabled = !lowQuality
     this.renderer.shadowMap.type = THREE.PCFShadowMap
 
     this.controls = new OrbitControls(this.camera, canvas)
@@ -42,7 +50,7 @@ export class ExperimentEngine {
 
     this._addLights()
     this.timer = new THREE.Clock()
-    this.setupScene()
+    this.setupScene({ quality: this.modelProfile.quality, modelQuality: this.modelProfile.quality })
     this._animate()
   }
 
