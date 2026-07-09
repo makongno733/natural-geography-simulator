@@ -26,7 +26,7 @@
 - Create `src/experiments/components/ExperimentGuidePanel.test.js`: unit tests guide rendering, quiz feedback, and malformed data handling.
 - Modify `src/experiments/ExperimentView.vue`: pass `exp.pedagogy` into the new guide panel and position it before knowledge tags.
 - Create or modify `src/experiments/ExperimentView.test.js`: verify the view renders the guide for both 3D and tutorial experiment metadata without breaking existing sections.
-- Modify `src/experiments/modules/index.js`: add `pedagogy` data for all 18 experiments.
+- Modify `src/experiments/modules/index.js`: add `pedagogy` data for all 19 experiments.
 - Optionally add `src/experiments/modules/pedagogy.test.js`: registry coverage checks that every experiment has minimum guide content and valid quiz answers.
 
 ---
@@ -463,7 +463,7 @@ pedagogy: {
 }
 ```
 
-Repeat the same shape for all 18 IDs currently registered in the file: `thermal-circulation`, `coriolis`, `cloud-bottle`, `weather-instruments`, `stream-table`, `groundwater`, `infiltration`, `water-cycle`, `sediment-transport`, `fault-model`, `stratigraphy`, `mineral-id`, `potato-core`, `soil-erosion`, `moon-phases`, `seasons`, `kepler-laws`, `solar-motion`, `eclipse`.
+Repeat the same shape for all 19 IDs currently registered in the file: `thermal-circulation`, `coriolis`, `cloud-bottle`, `weather-instruments`, `stream-table`, `groundwater`, `infiltration`, `water-cycle`, `sediment-transport`, `fault-model`, `stratigraphy`, `mineral-id`, `potato-core`, `soil-erosion`, `moon-phases`, `seasons`, `kepler-laws`, `solar-motion`, `eclipse`.
 
 - [ ] **Step 4: Run registry tests and commit**
 
