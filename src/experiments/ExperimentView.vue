@@ -17,6 +17,8 @@
     <!-- Tutorial experiment: TutorialTemplate with steps -->
     <TutorialTemplate v-if="exp?.type === 'tutorial' && tutorialSteps.length" :steps="tutorialSteps" />
 
+    <ExperimentGuidePanel :pedagogy="exp?.pedagogy" />
+
     <section class="ev-concepts" v-if="exp?.concepts?.length">
       <h4>涉及知识点</h4>
       <div class="concept-list">
@@ -45,6 +47,7 @@
 import { computed, ref, watch, shallowRef, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import modules, { categoryLabels, getRelatedExperiments } from './modules/index.js'
+import ExperimentGuidePanel from './components/ExperimentGuidePanel.vue'
 import TutorialTemplate from './components/TutorialTemplate.vue'
 
 const route = useRoute()
