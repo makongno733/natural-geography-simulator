@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { mount, flushPromises } from '@vue/test-utils'
-import { reactive } from 'vue'
+import { defineComponent, reactive } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const route = reactive({
@@ -66,13 +66,17 @@ vi.mock('./modules/index.js', () => {
 
 import ExperimentView from './ExperimentView.vue'
 
+const RouterLinkStub = defineComponent({
+  name: 'RouterLink',
+  props: ['to'],
+  template: '<a v-bind="$attrs"><slot /></a>'
+})
+
 function mountView() {
   return mount(ExperimentView, {
     global: {
       stubs: {
-        'router-link': {
-          template: '<a v-bind="$attrs"><slot /></a>'
-        }
+        'router-link': RouterLinkStub
       }
     }
   })
@@ -133,10 +137,45 @@ describe('ExperimentView', () => {
     await flushPromises()
     const link = wrapper.get('[data-testid="return-to-textbook"]')
     expect(link.text()).toContain('返回教材')
+    const returnLink = wrapper
+      .findAllComponents({ name: 'RouterLink' })
+      .find((routerLink) => routerLink.attributes('data-testid') === 'return-to-textbook')
+    expect(returnLink?.props('to')).toEqual({
+      name: 'section',
+      params: {
+        grade: '高中',
+        book: '必修第一册',
+        chapter: '第二章',
+        section: '第二节',
+      },
+    })
   })
 
   it('hides the return link for missing or unsupported source data', async () => {
     route.query = { fromGrade: '大学' }
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('[data-testid="return-to-textbook"]').exists()).toBe(false)
+  })
+
+  it('hides the return link for a complete source outside the curriculum link index', async () => {
+    route.query = {
+      fromGrade: '高中',
+      fromBook: '必修第一册',
+      fromChapter: '第二章',
+      fromSection: '第一节',
+    }
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('[data-testid="return-to-textbook"]').exists()).toBe(false)
+  })
+
+  it('hides the return link when one textbook source field is missing', async () => {
+    route.query = {
+      fromGrade: '高中',
+      fromBook: '必修第一册',
+      fromChapter: '第二章',
+    }
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.find('[data-testid="return-to-textbook"]').exists()).toBe(false)
