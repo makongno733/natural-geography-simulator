@@ -7,7 +7,8 @@ const route = reactive({
   params: {
     category: 'hydrology',
     experiment: 'stream-table'
-  }
+  },
+  query: {}
 })
 
 vi.mock('vue-router', () => ({
@@ -65,22 +66,27 @@ vi.mock('./modules/index.js', () => {
 
 import ExperimentView from './ExperimentView.vue'
 
+function mountView() {
+  return mount(ExperimentView, {
+    global: {
+      stubs: {
+        'router-link': {
+          template: '<a v-bind="$attrs"><slot /></a>'
+        }
+      }
+    }
+  })
+}
+
 describe('ExperimentView', () => {
   beforeEach(() => {
     route.params.category = 'hydrology'
     route.params.experiment = 'stream-table'
+    route.query = {}
   })
 
   it('renders the teaching guide after 3d content and before concepts', async () => {
-    const wrapper = mount(ExperimentView, {
-      global: {
-        stubs: {
-          'router-link': {
-            template: '<a><slot /></a>'
-          }
-        }
-      }
-    })
+    const wrapper = mountView()
 
     await flushPromises()
 
@@ -99,15 +105,7 @@ describe('ExperimentView', () => {
   it('renders the teaching guide for tutorial experiments without affecting concepts', async () => {
     route.params.experiment = 'water-cycle'
 
-    const wrapper = mount(ExperimentView, {
-      global: {
-        stubs: {
-          'router-link': {
-            template: '<a><slot /></a>'
-          }
-        }
-      }
-    })
+    const wrapper = mountView()
 
     await flushPromises()
 
@@ -122,5 +120,25 @@ describe('ExperimentView', () => {
 
     expect(html.indexOf('步骤一')).toBeLessThan(html.indexOf('学习目标'))
     expect(html.indexOf('学习目标')).toBeLessThan(html.indexOf('涉及知识点'))
+  })
+
+  it('shows an internal return link for a complete textbook source', async () => {
+    route.query = {
+      fromGrade: '高中',
+      fromBook: '必修第一册',
+      fromChapter: '第二章',
+      fromSection: '第二节',
+    }
+    const wrapper = mountView()
+    await flushPromises()
+    const link = wrapper.get('[data-testid="return-to-textbook"]')
+    expect(link.text()).toContain('返回教材')
+  })
+
+  it('hides the return link for missing or unsupported source data', async () => {
+    route.query = { fromGrade: '大学' }
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('[data-testid="return-to-textbook"]').exists()).toBe(false)
   })
 })
