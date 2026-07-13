@@ -40,6 +40,26 @@ describe('curriculum experiment links', () => {
     ).toEqual([])
   })
 
+  it('omits rejected experiment relationships while preserving the other section experiments', () => {
+    const requiredOne = getExperimentsForSection(
+      '高中', '必修第一册', '第五章', '第二节'
+    ).map((item) => item.id)
+    expect(requiredOne).not.toContain('potato-core')
+    expect(requiredOne).toEqual(expect.arrayContaining(['infiltration', 'soil-erosion']))
+
+    const electiveThreeResources = getExperimentsForSection(
+      '高中', '选择性必修3', '第二章', '第三节'
+    ).map((item) => item.id)
+    expect(electiveThreeResources).not.toContain('potato-core')
+    expect(electiveThreeResources).toEqual(expect.arrayContaining(['soil-erosion', 'infiltration']))
+
+    const electiveThreeEnvironment = getExperimentsForSection(
+      '高中', '选择性必修3', '第三章', '第二节'
+    ).map((item) => item.id)
+    expect(electiveThreeEnvironment).not.toContain('water-cycle')
+    expect(electiveThreeEnvironment).toContain('groundwater')
+  })
+
   it('supports reverse lookup and stable generated options', () => {
     const refs = getCurriculumRefsForExperiment('water-cycle')
     expect(refs).toContainEqual(expect.objectContaining({

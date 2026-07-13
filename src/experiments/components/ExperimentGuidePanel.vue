@@ -30,8 +30,8 @@
 
     <div v-if="validQuiz.length" class="guide-section">
       <h3>随堂小测</h3>
-      <div v-for="(item, quizIndex) in validQuiz" :key="item.question" class="quiz-item">
-        <p class="quiz-question">{{ item.question }}</p>
+      <fieldset v-for="(item, quizIndex) in validQuiz" :key="item.question" class="quiz-item">
+        <legend class="quiz-question">{{ item.question }}</legend>
         <div class="quiz-options">
           <button
             v-for="(option, optionIndex) in item.options"
@@ -44,11 +44,15 @@
             {{ option }}
           </button>
         </div>
-        <p v-if="selectedAnswers[quizIndex] !== undefined" class="quiz-feedback">
+        <p
+          v-if="selectedAnswers[quizIndex] !== undefined"
+          class="quiz-feedback"
+          aria-live="polite"
+        >
           <strong>{{ selectedAnswers[quizIndex] === item.answer ? '回答正确' : '再想一想' }}：</strong>
           {{ item.feedback }}
         </p>
-      </div>
+      </fieldset>
     </div>
   </section>
 </template>
@@ -183,8 +187,16 @@ function optionClass(quizIndex, optionIndex, answer) {
   margin-top: 14px;
 }
 
+.quiz-item {
+  min-width: 0;
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+}
+
 .quiz-question {
   margin: 0 0 10px;
+  padding: 0;
   font-weight: 600;
 }
 

@@ -25,7 +25,7 @@
     <!-- Tutorial experiment: TutorialTemplate with steps -->
     <TutorialTemplate v-if="exp?.type === 'tutorial' && tutorialSteps.length" :steps="tutorialSteps" />
 
-    <ExperimentGuidePanel :pedagogy="exp?.pedagogy" />
+    <ExperimentGuidePanel :key="exp?.id" :pedagogy="exp?.pedagogy" />
 
     <section class="ev-concepts" v-if="exp?.concepts?.length">
       <h4>涉及知识点</h4>
@@ -55,7 +55,7 @@
 import { computed, ref, watch, shallowRef, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import modules, { categoryLabels, getRelatedExperiments } from './modules/index.js'
-import { isLinkedCurriculumSection } from './data/curriculumLinks.js'
+import { getExperimentsForSection } from './data/curriculumLinks.js'
 import ExperimentGuidePanel from './components/ExperimentGuidePanel.vue'
 import TutorialTemplate from './components/TutorialTemplate.vue'
 
@@ -68,7 +68,8 @@ const textbookSourceRoute = computed(() => {
   const { fromGrade, fromBook, fromChapter, fromSection } = route.query
   if (!['初中', '高中'].includes(fromGrade)) return null
   if (![fromBook, fromChapter, fromSection].every((value) => typeof value === 'string' && value.length)) return null
-  if (!isLinkedCurriculumSection(fromGrade, fromBook, fromChapter, fromSection)) return null
+  if (!getExperimentsForSection(fromGrade, fromBook, fromChapter, fromSection)
+    .some((experiment) => experiment.id === exp.value?.id)) return null
   return {
     name: 'section',
     params: {
@@ -87,15 +88,19 @@ const related = computed(() => {
 
 const expComponent = shallowRef(null)
 const tutorialSteps = ref([])
+let contentRequestSequence = 0
 
 async function loadContent() {
+  const requestSequence = ++contentRequestSequence
+  const requestedExperiment = exp.value
   expComponent.value = null
   tutorialSteps.value = []
-  if (!exp.value) return
+  if (!requestedExperiment) return
 
-  const mod = await exp.value.component()
+  const mod = await requestedExperiment.component()
+  if (requestSequence !== contentRequestSequence || exp.value?.id !== requestedExperiment.id) return
 
-  if (exp.value.type === '3d') {
+  if (requestedExperiment.type === '3d') {
     expComponent.value = defineAsyncComponent(() => Promise.resolve(mod.default || mod))
   } else {
     tutorialSteps.value = mod.default?.steps || mod.steps || []

@@ -64,6 +64,38 @@ describe('ExperimentGuidePanel', () => {
     expect(wrapper.text()).toContain('较粗颗粒需要更高流速维持搬运')
   })
 
+  it('groups every quiz question with a fieldset and legend', () => {
+    const secondQuiz = {
+      question: '弯道外侧通常发生什么？',
+      options: ['侵蚀', '凝结'],
+      answer: 0,
+      feedback: '弯道外侧流速较快，侵蚀更强。'
+    }
+    const wrapper = mount(ExperimentGuidePanel, {
+      props: {
+        pedagogy: {
+          ...fullPedagogy,
+          quiz: [...fullPedagogy.quiz, secondQuiz]
+        }
+      }
+    })
+
+    const quizGroups = wrapper.findAll('fieldset.quiz-item')
+    expect(quizGroups).toHaveLength(2)
+    expect(quizGroups[0].get('legend').text()).toBe(fullPedagogy.quiz[0].question)
+    expect(quizGroups[1].get('legend').text()).toBe(secondQuiz.question)
+  })
+
+  it('announces quiz feedback through a polite live region', async () => {
+    const wrapper = mount(ExperimentGuidePanel, {
+      props: { pedagogy: fullPedagogy }
+    })
+
+    await wrapper.get('[data-testid="quiz-option-0-0"]').trigger('click')
+
+    expect(wrapper.get('.quiz-feedback').attributes('aria-live')).toBe('polite')
+  })
+
   it('does not render malformed quiz items', () => {
     const wrapper = mount(ExperimentGuidePanel, {
       props: {

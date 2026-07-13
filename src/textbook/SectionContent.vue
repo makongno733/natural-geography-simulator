@@ -291,6 +291,7 @@ const conceptEntries = computed(() => {
 })
 
 const loadedContent = ref(null)
+let sectionRequestSequence = 0
 
 const extraContent = computed(() => {
   if (!loadedContent.value) return null
@@ -303,6 +304,13 @@ const extraContent = computed(() => {
 })
 
 watch([gradeId, bookId, chapterId, sectionId], async () => {
+  const requestSequence = ++sectionRequestSequence
+  const routeSnapshot = {
+    grade: gradeId.value,
+    book: bookId.value,
+    chapter: chapterId.value,
+    section: sectionId.value,
+  }
   showSandbox.value = false
   showEarth3D.value = false
   showSoilProfile.value = false
@@ -311,15 +319,18 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   showDisaster.value = false
   showDataViz.value = false
   showMindMap.value = false
+  chapterData.value = null
+  sectionData.value = null
   loadedContent.value = null
   loading.value = true
 
   const [chapter, section, content] = await Promise.all([
-    getChapter(gradeId.value, bookId.value, chapterId.value),
-    getSection(gradeId.value, bookId.value, chapterId.value, sectionId.value),
-    loadSectionContent(gradeId.value, bookId.value, chapterId.value, sectionId.value)
+    getChapter(routeSnapshot.grade, routeSnapshot.book, routeSnapshot.chapter),
+    getSection(routeSnapshot.grade, routeSnapshot.book, routeSnapshot.chapter, routeSnapshot.section),
+    loadSectionContent(routeSnapshot.grade, routeSnapshot.book, routeSnapshot.chapter, routeSnapshot.section)
   ])
 
+  if (requestSequence !== sectionRequestSequence) return
   chapterData.value = chapter
   sectionData.value = section
   loadedContent.value = content

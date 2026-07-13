@@ -16,7 +16,7 @@ export const curriculumLinks = [
   { grade: '高中', book: '必修第一册', chapter: '第三章', section: '第三节', experimentIds: ['coriolis'] },
   { grade: '高中', book: '必修第一册', chapter: '第四章', section: '第一节', experimentIds: ['stream-table', 'sediment-transport', 'fault-model'] },
   { grade: '高中', book: '必修第一册', chapter: '第四章', section: '第二节', experimentIds: ['stratigraphy'] },
-  { grade: '高中', book: '必修第一册', chapter: '第五章', section: '第二节', experimentIds: ['potato-core', 'infiltration', 'soil-erosion'] },
+  { grade: '高中', book: '必修第一册', chapter: '第五章', section: '第二节', experimentIds: ['infiltration', 'soil-erosion'] },
 
   { grade: '高中', book: '选择性必修1', chapter: '第一章', section: '第一节', experimentIds: ['solar-motion', 'seasons', 'kepler-laws'] },
   { grade: '高中', book: '选择性必修1', chapter: '第一章', section: '第二节', experimentIds: ['solar-motion', 'seasons', 'moon-phases', 'eclipse'] },
@@ -33,8 +33,8 @@ export const curriculumLinks = [
   { grade: '高中', book: '选择性必修2', chapter: '第二章', section: '第二节', experimentIds: ['soil-erosion', 'infiltration'] },
   { grade: '高中', book: '选择性必修2', chapter: '第四章', section: '第一节', experimentIds: ['stream-table', 'sediment-transport', 'water-cycle'] },
 
-  { grade: '高中', book: '选择性必修3', chapter: '第二章', section: '第三节', experimentIds: ['soil-erosion', 'infiltration', 'potato-core'] },
-  { grade: '高中', book: '选择性必修3', chapter: '第三章', section: '第二节', experimentIds: ['groundwater', 'water-cycle'] },
+  { grade: '高中', book: '选择性必修3', chapter: '第二章', section: '第三节', experimentIds: ['soil-erosion', 'infiltration'] },
+  { grade: '高中', book: '选择性必修3', chapter: '第三章', section: '第二节', experimentIds: ['groundwater'] },
 ]
 
 const validGrades = new Set(curriculumLinks.map((link) => link.grade))
