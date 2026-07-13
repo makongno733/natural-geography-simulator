@@ -54,6 +54,11 @@
           </div>
         </section>
 
+        <RelatedExperimentsRow
+          :experiments="relatedExperiments"
+          :source="sectionSource"
+        />
+
         <section v-if="!isGrouped" class="mindmap-card">
           <div class="mindmap-center">
             <strong>{{ sectionData.title }}</strong>
@@ -149,6 +154,8 @@ import { ref, computed, watch, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
+import RelatedExperimentsRow from '../experiments/components/RelatedExperimentsRow.vue'
+import { getExperimentsForSection } from '../experiments/data/curriculumLinks.js'
 
 const SandboxApp = defineAsyncComponent(() => import('../sandbox/SandboxApp.vue'))
 const Earth3D = defineAsyncComponent(() => import('../sandbox/Earth3D.vue'))
@@ -164,6 +171,18 @@ const gradeId = computed(() => route.params.grade)
 const bookId = computed(() => route.params.book)
 const chapterId = computed(() => route.params.chapter)
 const sectionId = computed(() => route.params.section)
+const relatedExperiments = computed(() => getExperimentsForSection(
+  gradeId.value,
+  bookId.value,
+  chapterId.value,
+  sectionId.value
+))
+const sectionSource = computed(() => ({
+  grade: gradeId.value,
+  book: bookId.value,
+  chapter: chapterId.value,
+  section: sectionId.value,
+}))
 
 const loading = ref(true)
 const showSandbox = ref(false)
