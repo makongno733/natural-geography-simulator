@@ -22,7 +22,7 @@ describe('ExperimentsHome', () => {
 
     expect(wrapper.text()).toContain('19 个实验')
     expect(wrapper.text()).toContain('热力环流模拟实验')
-    expect(wrapper.text()).toContain('月相模拟实验')
+    expect(wrapper.text()).toContain('月相变化演示')
   })
 
   it('filters resources by search text', async () => {
@@ -32,6 +32,16 @@ describe('ExperimentsHome', () => {
 
     expect(wrapper.text()).toContain('水循环袋实验')
     expect(wrapper.text()).not.toContain('断层与褶皱模拟')
+  })
+
+  it('shows the registered experiment name after searching for it', async () => {
+    const wrapper = mountHome()
+
+    await wrapper.get('[data-testid="experiment-search"]').setValue('月相变化演示')
+
+    const cards = wrapper.findAll('[data-testid="experiment-card"]')
+    expect(cards).toHaveLength(1)
+    expect(cards[0].get('h2').text()).toBe('月相变化演示')
   })
 
   it('combines grade, book, category, and type filters', async () => {

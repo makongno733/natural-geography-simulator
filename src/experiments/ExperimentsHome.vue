@@ -30,7 +30,7 @@
             <span class="experiment-category">{{ categoryLabels[experiment.category] }}</span>
             <span class="experiment-type">{{ typeLabel(experiment.type) }}</span>
           </div>
-          <h2>{{ displayName(experiment) }}</h2>
+          <h2>{{ experiment.name }}</h2>
           <p class="experiment-description">{{ experiment.description }}</p>
           <ul class="experiment-concepts" aria-label="核心概念">
             <li v-for="concept in experiment.concepts" :key="concept">{{ concept }}</li>
@@ -81,12 +81,6 @@ function matchingRefs(experimentId) {
 
 function typeLabel(type) {
   return type === '3d' ? '3D 交互' : '图文教程'
-}
-
-function displayName(experiment) {
-  return experiment.id === 'moon-phases'
-    ? '月相模拟实验（月相变化演示）'
-    : experiment.name
 }
 </script>
 
