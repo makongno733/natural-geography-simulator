@@ -11,11 +11,12 @@ describe('LearningSection', () => {
     const button = wrapper.get('button')
 
     expect(button.attributes('aria-expanded')).toBe('false')
-    expect(wrapper.text()).not.toContain('知识正文')
+    expect(button.attributes('aria-controls')).toBe('core-content')
+    expect(wrapper.get('#core-content').attributes('style')).toContain('display: none')
 
     await button.trigger('click')
 
     expect(button.attributes('aria-expanded')).toBe('true')
-    expect(wrapper.text()).toContain('知识正文')
+    expect(wrapper.get('#core-content').attributes('style')).not.toContain('display: none')
   })
 })

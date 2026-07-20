@@ -21,15 +21,34 @@ const questions = [
 ]
 
 describe('PracticePanel', () => {
+  it('connects each reveal button to its own answer region', async () => {
+    const wrapper = mount(PracticePanel, { props: { questions } })
+    const buttons = wrapper.findAll('[data-reveal-answer]')
+
+    expect(buttons.map((button) => button.attributes('aria-controls'))).toEqual([
+      'practice-answer-0',
+      'practice-answer-1',
+    ])
+    expect(buttons.map((button) => button.attributes('aria-expanded'))).toEqual(['false', 'false'])
+    expect(wrapper.get('#practice-answer-0').attributes('style')).toContain('display: none')
+    expect(wrapper.get('#practice-answer-1').attributes('style')).toContain('display: none')
+
+    await buttons[1].trigger('click')
+
+    expect(buttons[0].attributes('aria-expanded')).toBe('false')
+    expect(buttons[1].attributes('aria-expanded')).toBe('true')
+    expect(wrapper.get('#practice-answer-1').attributes('style')).not.toContain('display: none')
+  })
+
   it('keeps answers hidden until requested and preserves the learner choice', async () => {
     const wrapper = mount(PracticePanel, { props: { questions } })
 
-    expect(wrapper.text()).not.toContain('地面长波辐射')
+    expect(wrapper.get('#practice-answer-0').attributes('style')).toContain('display: none')
     await wrapper.get('input[value="A"]').setValue(true)
     await wrapper.findAll('[data-reveal-answer]')[0].trigger('click')
 
-    expect(wrapper.text()).toContain('正确答案：A')
-    expect(wrapper.text()).toContain('地面长波辐射')
+    expect(wrapper.get('#practice-answer-0').text()).toContain('正确答案：A')
+    expect(wrapper.get('#practice-answer-0').text()).toContain('地面长波辐射')
     expect(wrapper.get('input[value="A"]').element.checked).toBe(true)
   })
 
@@ -38,7 +57,7 @@ describe('PracticePanel', () => {
 
     await wrapper.findAll('[data-reveal-answer]')[1].trigger('click')
 
-    expect(wrapper.text()).toContain('冷热不均导致大气垂直和水平运动')
-    expect(wrapper.text()).not.toContain('正确答案：A')
+    expect(wrapper.get('#practice-answer-1').text()).toContain('冷热不均导致大气垂直和水平运动')
+    expect(wrapper.get('#practice-answer-0').attributes('style')).toContain('display: none')
   })
 })

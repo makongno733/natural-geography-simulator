@@ -35,11 +35,17 @@ const optionValue = (option) => option.split('.')[0].trim()
         <textarea v-model="selected[index]" />
       </label>
 
-      <button type="button" data-reveal-answer @click="toggleAnswer(index)">
+      <button
+        type="button"
+        data-reveal-answer
+        :aria-controls="`practice-answer-${index}`"
+        :aria-expanded="Boolean(revealed[index])"
+        @click="toggleAnswer(index)"
+      >
         {{ revealed[index] ? '隐藏答案' : '查看答案' }}
       </button>
 
-      <div v-if="revealed[index]">
+      <div v-show="revealed[index]" :id="`practice-answer-${index}`">
         <p v-if="item.type === 'single-choice'">正确答案：{{ item.answer }}</p>
         <p v-else>参考答案：{{ item.answer }}</p>
         <p v-if="item.type === 'single-choice'">你的选择：{{ selected[index] || '未选择' }}</p>

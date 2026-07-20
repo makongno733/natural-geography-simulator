@@ -20,7 +20,7 @@ const open = ref(props.defaultOpen)
     >
       {{ title }}
     </button>
-    <div v-if="open" :id="`${id}-content`">
+    <div v-show="open" :id="`${id}-content`">
       <slot />
     </div>
   </section>
