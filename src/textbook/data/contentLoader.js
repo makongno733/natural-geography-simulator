@@ -4,6 +4,8 @@
  * - University (大学): per-section content in index.json
  * - Middle/High school: chapter + section content in content.json
  */
+import { loadStudentLearning } from './studentLearningLoader.js'
+
 const contentCache = {}
 
 export async function loadSectionContent(gradeId, bookId, chapterId, sectionId) {
@@ -28,10 +30,11 @@ export async function loadSectionContent(gradeId, bookId, chapterId, sectionId) 
   }
   const chapter = contentCache[key][chapterId]
   if (!chapter) return null
-  if (sectionId && chapter.sections && chapter.sections[sectionId]) {
-    return chapter.sections[sectionId]
-  }
-  return chapter
+  const section = sectionId && chapter.sections && chapter.sections[sectionId]
+    ? chapter.sections[sectionId]
+    : chapter
+  const studentLearning = await loadStudentLearning(gradeId, bookId, chapterId, sectionId)
+  return studentLearning ? { ...section, studentLearning } : section
 }
 
 export async function loadKeyPoints(gradeId, bookId, chapterId) {
