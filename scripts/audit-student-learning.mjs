@@ -19,10 +19,16 @@ const forbiddenPatterns = [
   '\\n',
 ]
 
+const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0
+const isNonEmptyStringArray = (value) => Array.isArray(value)
+  && value.length > 0
+  && value.every(isNonEmptyString)
+
 function isNonEmpty(value) {
-  if (typeof value === 'string') return value.trim().length > 0
+  if (isNonEmptyString(value)) return true
   if (Array.isArray(value)) return value.length > 0
-  return value !== null && typeof value === 'object' && Object.keys(value).length > 0
+  return isRecord(value) && Object.keys(value).length > 0
 }
 
 function collectStrings(value, strings = []) {
@@ -30,10 +36,14 @@ function collectStrings(value, strings = []) {
     strings.push(value)
   } else if (Array.isArray(value)) {
     value.forEach((item) => collectStrings(item, strings))
-  } else if (value !== null && typeof value === 'object') {
+  } else if (isRecord(value)) {
     Object.values(value).forEach((item) => collectStrings(item, strings))
   }
   return strings
+}
+
+function hasArrayBounds(value, min, max) {
+  return Array.isArray(value) && value.length >= min && value.length <= max
 }
 
 export function auditStudentLearning(data) {
@@ -45,21 +55,130 @@ export function auditStudentLearning(data) {
       const label = `${chapter} ${section}`
       const lesson = data?.[chapter]?.[section]
 
-      if (!lesson || typeof lesson !== 'object' || Array.isArray(lesson)) {
+      if (!isRecord(lesson)) {
         errors.push(`${label}: 缺少节次`)
         continue
       }
 
       auditedSections += 1
 
-      for (const field of ['objectives', 'overview', 'knowledgeBlocks']) {
-        if (!isNonEmpty(lesson[field])) {
-          errors.push(`${label}: 缺少非空 ${field}`)
+      if (!isNonEmptyStringArray(lesson.objectives)) {
+        errors.push(`${label}: 缺少非空 objectives`)
+      } else if (!hasArrayBounds(lesson.objectives, 2, 4)) {
+        errors.push(`${label}: objectives 必须包含 2–4 项`)
+      }
+
+      if (!isNonEmptyString(lesson.overview)) {
+        errors.push(`${label}: 缺少非空 overview`)
+      } else if (lesson.overview.length < 100 || lesson.overview.length > 180) {
+        errors.push(`${label}: overview 长度必须为 100–180 个字符`)
+      }
+
+      if (!Array.isArray(lesson.knowledgeBlocks) || lesson.knowledgeBlocks.length === 0) {
+        errors.push(`${label}: 缺少非空 knowledgeBlocks`)
+      } else {
+        if (!hasArrayBounds(lesson.knowledgeBlocks, 2, 4)) {
+          errors.push(`${label}: knowledgeBlocks 必须包含 2–4 项`)
+        }
+        lesson.knowledgeBlocks.forEach((block, index) => {
+          const blockLabel = `${label}: 第 ${index + 1} 个 knowledgeBlocks`
+          if (!isRecord(block) || !isNonEmptyString(block.title)) {
+            errors.push(`${blockLabel} 缺少非空 title`)
+          }
+          if (!isRecord(block) || !Array.isArray(block.items) || block.items.length === 0) {
+            errors.push(`${blockLabel} 缺少非空 items`)
+          } else {
+            block.items.forEach((item, itemIndex) => {
+              if (!isRecord(item) || !isNonEmptyString(item.name) || !isNonEmptyString(item.detail)) {
+                errors.push(`${blockLabel} 第 ${itemIndex + 1} 项必须包含非空 name 和 detail`)
+              }
+            })
+          }
+        })
+      }
+
+      if (Object.hasOwn(lesson, 'mechanismChains')) {
+        if (!hasArrayBounds(lesson.mechanismChains, 1, 3)) {
+          errors.push(`${label}: mechanismChains 必须为包含 1–3 项的数组`)
+        } else {
+          lesson.mechanismChains.forEach((chain, index) => {
+            if (!isRecord(chain) || !isNonEmptyString(chain.title)
+              || !Array.isArray(chain.steps) || chain.steps.length < 2
+              || !chain.steps.every(isNonEmptyString)) {
+              errors.push(`${label}: 第 ${index + 1} 个 mechanismChains 必须包含非空 title 和至少两个非空 steps`)
+            }
+          })
         }
       }
 
-      if (Object.hasOwn(lesson, 'practice') && !Array.isArray(lesson.practice)) {
+      if (Object.hasOwn(lesson, 'caseStudies')) {
+        if (!hasArrayBounds(lesson.caseStudies, 0, 2)) {
+          errors.push(`${label}: caseStudies 必须为包含 0–2 项的数组`)
+        } else {
+          lesson.caseStudies.forEach((item, index) => {
+            if (!isRecord(item) || !['title', 'context', 'question', 'conclusion'].every((field) => isNonEmptyString(item[field]))) {
+              errors.push(`${label}: 第 ${index + 1} 个 caseStudies 必须包含非空 title、context、question 和 conclusion`)
+            }
+          })
+        }
+      }
+
+      if (Object.hasOwn(lesson, 'misconceptions')) {
+        if (!hasArrayBounds(lesson.misconceptions, 1, 3)) {
+          errors.push(`${label}: misconceptions 必须为包含 1–3 项的数组`)
+        } else {
+          lesson.misconceptions.forEach((item, index) => {
+            if (!isRecord(item) || !['wrong', 'reason', 'correct'].every((field) => isNonEmptyString(item[field]))) {
+              errors.push(`${label}: 第 ${index + 1} 个 misconceptions 必须包含非空 wrong、reason 和 correct`)
+            }
+          })
+        }
+      }
+
+      if (!Array.isArray(lesson.practice)) {
         errors.push(`${label}: practice 必须为数组`)
+      } else if (lesson.practice.length === 0) {
+        errors.push(`${label}: practice 必须为非空数组`)
+      } else {
+        lesson.practice.forEach((practice, index) => {
+          const questionLabel = `${label}: 第 ${index + 1} 道练习`
+          if (!isRecord(practice)) {
+            errors.push(`${questionLabel} 必须为对象`)
+            return
+          }
+          if (!['single-choice', 'short-answer'].includes(practice.type)) {
+            errors.push(`${questionLabel} type 仅支持 single-choice 或 short-answer`)
+          }
+          for (const field of ['question', 'answer', 'explanation', 'knowledgePoint']) {
+            if (!isNonEmptyString(practice[field])) {
+              errors.push(`${questionLabel}缺少非空 ${field}`)
+            }
+          }
+          if (practice.type === 'single-choice'
+            && (!Array.isArray(practice.options) || practice.options.length < 2 || !practice.options.every(isNonEmptyString))) {
+            errors.push(`${questionLabel}的 single-choice options 必须至少包含两个非空选项`)
+          }
+        })
+      }
+
+      if (Object.hasOwn(lesson, 'memoryTips')) {
+        if (!Array.isArray(lesson.memoryTips)
+          || (lesson.memoryTips.length > 0
+            && (!hasArrayBounds(lesson.memoryTips, 1, 3) || !lesson.memoryTips.every(isNonEmptyString)))) {
+          errors.push(`${label}: memoryTips 使用时必须为包含 1–3 个非空字符串的数组`)
+        }
+      }
+
+      if (Object.hasOwn(lesson, 'answerTemplates')) {
+        if (!Array.isArray(lesson.answerTemplates)
+          || lesson.answerTemplates.some((item) => !isRecord(item)
+            || !isNonEmptyString(item.title) || !isNonEmptyString(item.template))) {
+          errors.push(`${label}: answerTemplates 使用时必须包含非空 title 和 template`)
+        }
+      }
+
+      if (!Number.isFinite(lesson.estimatedMinutes) || lesson.estimatedMinutes <= 0) {
+        errors.push(`${label}: estimatedMinutes 必须为正有限数`)
       }
 
       const hasOptionalContent = ['mechanismChains', 'caseStudies', 'misconceptions']
@@ -72,16 +191,6 @@ export function auditStudentLearning(data) {
 
       if (!isNonEmpty(lesson.memoryTips) && !isNonEmpty(lesson.answerTemplates)) {
         errors.push(`${label}: memoryTips、answerTemplates 至少一项必须非空`)
-      }
-
-      if (Array.isArray(lesson.practice)) {
-        lesson.practice.forEach((practice, index) => {
-          for (const field of ['question', 'answer', 'explanation', 'knowledgePoint']) {
-            if (!isNonEmpty(practice?.[field])) {
-              errors.push(`${label}: 第 ${index + 1} 道练习缺少非空 ${field}`)
-            }
-          }
-        })
       }
 
       for (const text of collectStrings(lesson)) {

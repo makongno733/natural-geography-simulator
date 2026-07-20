@@ -22,6 +22,15 @@ function collectStrings(value, strings = []) {
 }
 
 describe('compulsory geography student learning content', () => {
+  test('uses only supported practice question types', () => {
+    const questionTypes = Object.values(learning)
+      .flatMap((chapter) => Object.values(chapter))
+      .flatMap((lesson) => lesson.practice ?? [])
+      .map((question) => question.type)
+
+    expect(new Set(questionTypes)).toEqual(new Set(['single-choice', 'short-answer']))
+  })
+
   test('keeps GNSS positioning separate from emergency communication', () => {
     const lesson = learning.第六章.第四节
     const text = collectStrings(lesson).join('\n')

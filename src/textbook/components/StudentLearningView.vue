@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { normalizeStudentLearning } from '../utils/studentLearningSchema.js'
 import LearningSection from './LearningSection.vue'
 import MechanismChain from './MechanismChain.vue'
@@ -14,10 +14,32 @@ const props = defineProps({
 
 const emit = defineEmits(['open-tool'])
 const lesson = computed(() => normalizeStudentLearning(props.learning))
+const sectionOpen = reactive({})
+const detailSectionIds = computed(() => {
+  if (!lesson.value) return []
+  return [
+    lesson.value.mechanismChains.length && 'mechanisms',
+    lesson.value.caseStudies.length && 'cases',
+    lesson.value.misconceptions.length && 'misconceptions',
+    lesson.value.practice.length && 'practice',
+    lesson.value.memoryTips.length && 'memory',
+    lesson.value.answerTemplates.length && 'answer-templates',
+  ].filter(Boolean)
+})
+
+watch(lesson, () => {
+  Object.keys(sectionOpen).forEach((id) => delete sectionOpen[id])
+  if (lesson.value?.knowledgeBlocks.length) sectionOpen['core-knowledge'] = true
+  detailSectionIds.value.forEach((id) => { sectionOpen[id] = false })
+}, { immediate: true })
+
+const setAllSections = (open) => {
+  Object.keys(sectionOpen).forEach((id) => { sectionOpen[id] = open })
+}
 </script>
 
 <template>
-  <main v-if="lesson" class="student-learning-view" data-student-learning-view>
+  <article v-if="lesson" class="student-learning-view" data-student-learning-view>
     <header class="learning-header">
       <p class="learning-path">{{ chapterTitle }} / {{ sectionTitle }}</p>
       <p class="learning-time">约 {{ lesson.estimatedMinutes }} 分钟</p>
@@ -58,7 +80,18 @@ const lesson = computed(() => normalizeStudentLearning(props.learning))
       </button>
     </nav>
 
-    <LearningSection v-if="lesson.knowledgeBlocks.length" id="core-knowledge" title="核心知识" default-open>
+    <nav v-if="detailSectionIds.length" class="learning-section-controls" aria-label="课文展开控制">
+      <button type="button" data-expand-all @click="setAllSections(true)">全部展开</button>
+      <button type="button" data-collapse-all @click="setAllSections(false)">全部收起</button>
+    </nav>
+
+    <LearningSection
+      v-if="lesson.knowledgeBlocks.length"
+      id="core-knowledge"
+      title="核心知识"
+      :open="sectionOpen['core-knowledge']"
+      @update:open="sectionOpen['core-knowledge'] = $event"
+    >
       <article v-for="block in lesson.knowledgeBlocks" :key="block.title" class="knowledge-block">
         <h3>{{ block.title }}</h3>
         <p v-if="block.summary">{{ block.summary }}</p>
@@ -71,11 +104,11 @@ const lesson = computed(() => normalizeStudentLearning(props.learning))
       </article>
     </LearningSection>
 
-    <LearningSection v-if="lesson.mechanismChains.length" id="mechanisms" title="机制链">
+    <LearningSection v-if="lesson.mechanismChains.length" id="mechanisms" title="机制链" :open="sectionOpen.mechanisms" @update:open="sectionOpen.mechanisms = $event">
       <MechanismChain :chains="lesson.mechanismChains" />
     </LearningSection>
 
-    <LearningSection v-if="lesson.caseStudies.length" id="cases" title="典型案例">
+    <LearningSection v-if="lesson.caseStudies.length" id="cases" title="典型案例" :open="sectionOpen.cases" @update:open="sectionOpen.cases = $event">
       <article v-for="caseStudy in lesson.caseStudies" :key="caseStudy.title" class="detail-card">
         <h3>{{ caseStudy.title }}</h3>
         <p>情境：{{ caseStudy.context }}</p>
@@ -84,7 +117,7 @@ const lesson = computed(() => normalizeStudentLearning(props.learning))
       </article>
     </LearningSection>
 
-    <LearningSection v-if="lesson.misconceptions.length" id="misconceptions" title="易错辨析">
+    <LearningSection v-if="lesson.misconceptions.length" id="misconceptions" title="易错辨析" :open="sectionOpen.misconceptions" @update:open="sectionOpen.misconceptions = $event">
       <article v-for="item in lesson.misconceptions" :key="item.wrong" class="detail-card">
         <p>错误认识：{{ item.wrong }}</p>
         <p>为什么错：{{ item.reason }}</p>
@@ -92,21 +125,21 @@ const lesson = computed(() => normalizeStudentLearning(props.learning))
       </article>
     </LearningSection>
 
-    <LearningSection v-if="lesson.practice.length" id="practice" title="练习">
+    <LearningSection v-if="lesson.practice.length" id="practice" title="练习" :open="sectionOpen.practice" @update:open="sectionOpen.practice = $event">
       <PracticePanel :questions="lesson.practice" />
     </LearningSection>
 
-    <LearningSection v-if="lesson.memoryTips.length" id="memory" title="记忆要点">
+    <LearningSection v-if="lesson.memoryTips.length" id="memory" title="记忆要点" :open="sectionOpen.memory" @update:open="sectionOpen.memory = $event">
       <ul><li v-for="tip in lesson.memoryTips" :key="tip">{{ tip }}</li></ul>
     </LearningSection>
 
-    <LearningSection v-if="lesson.answerTemplates.length" id="answer-templates" title="答题模板">
+    <LearningSection v-if="lesson.answerTemplates.length" id="answer-templates" title="答题模板" :open="sectionOpen['answer-templates']" @update:open="sectionOpen['answer-templates'] = $event">
       <article v-for="template in lesson.answerTemplates" :key="template.title" class="detail-card">
         <h3>{{ template.title }}</h3>
         <p>{{ template.template }}</p>
       </article>
     </LearningSection>
-  </main>
+  </article>
 </template>
 
 <style scoped>
@@ -203,6 +236,29 @@ const lesson = computed(() => normalizeStudentLearning(props.learning))
 }
 
 .learning-tools button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.learning-section-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.learning-section-controls button {
+  min-height: 40px;
+  border: 1px solid var(--brown);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  color: var(--button-green-ink);
+  background: var(--card-bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.learning-section-controls button:focus-visible {
   outline: 2px solid var(--red);
   outline-offset: 2px;
 }

@@ -32,7 +32,7 @@
 
       <main class="content">
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
-        <p class="read-time">课堂速览：约 1 分钟讲完小结，3D 模型负责展开过程。</p>
+        <p v-if="!studentLearning" class="read-time">课堂速览：约 1 分钟讲完小结，3D 模型负责展开过程。</p>
 
         <StudentLearningView
           v-if="studentLearning"
@@ -120,28 +120,28 @@
     :sectionTitle="sectionData?.title || ''"
     :chapterTitle="chapterData?.title || ''"
     :gradeLevel="gradeLevel"
-    @close="showMindMap = false"
+    @close="closeTeachingTool"
   />
 
   <!-- 3D 沙盘视图 -->
-  <SandboxApp v-else-if="showSandbox" embedded :caseStudy="caseStudy" @close="showSandbox = false" />
+  <SandboxApp v-else-if="showSandbox" embedded :caseStudy="caseStudy" @close="closeTeachingTool" />
 
   <!-- 3D 地球视图 -->
-  <Earth3D v-else-if="showEarth3D" :mode="moduleMode" />
+  <Earth3D v-else-if="showEarth3D" :mode="moduleMode" @close="closeTeachingTool" />
 
   <!-- 3D 土壤剖面 -->
-  <SoilProfilePage v-else-if="showSoilProfile" :mode="moduleMode" />
+  <SoilProfilePage v-else-if="showSoilProfile" :mode="moduleMode" @close="closeTeachingTool" />
 
   <!-- 3D 大气模型视图 -->
-  <AtmosphereViewer v-else-if="showAtmo" :mode="moduleMode" />
+  <AtmosphereViewer v-else-if="showAtmo" :mode="moduleMode" @close="closeTeachingTool" />
 
   <!-- 3D 水循环视图 -->
-  <WaterCycleView v-else-if="showWater" @close="showWater = false" />
+  <WaterCycleView v-else-if="showWater" @close="closeTeachingTool" />
 
   <!-- 3D 灾害模拟 -->
-  <DisasterSandbox v-else-if="showDisaster" embedded @close="showDisaster = false" />
+  <DisasterSandbox v-else-if="showDisaster" embedded @close="closeTeachingTool" />
 
-  <DataVizViewer v-else-if="showDataViz && dataVizType" :type="dataVizType" :title="sectionData?.title || '数据可视化'" @close="showDataViz = false" />
+  <DataVizViewer v-else-if="showDataViz && dataVizType" :type="dataVizType" :title="sectionData?.title || '数据可视化'" @close="closeTeachingTool" />
 
   </div>
 
@@ -160,16 +160,39 @@ import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
 import StudentLearningView from './components/StudentLearningView.vue'
+import AsyncModuleError from './components/AsyncModuleError.vue'
 import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
 
-const SandboxApp = defineAsyncComponent(() => import('../sandbox/SandboxApp.vue'))
-const Earth3D = defineAsyncComponent(() => import('../sandbox/Earth3D.vue'))
-const SoilProfilePage = defineAsyncComponent(() => import('../soil-profile/SoilProfilePage.vue'))
-const AtmosphereViewer = defineAsyncComponent(() => import('./components/AtmosphereViewer.vue'))
-const MindMapViewer = defineAsyncComponent(() => import('./components/MindMapViewer.vue'))
-const DataVizViewer = defineAsyncComponent(() => import('./components/DataVizViewer.vue'))
-const WaterCycleView = defineAsyncComponent(() => import('../engine/WaterCycleView.vue'))
-const DisasterSandbox = defineAsyncComponent(() => import('../sandbox/DisasterSandbox.vue'))
+const defaultToolLoaders = {
+  sandbox: () => import('../sandbox/SandboxApp.vue'),
+  earth: () => import('../sandbox/Earth3D.vue'),
+  soil: () => import('../soil-profile/SoilProfilePage.vue'),
+  atmosphere: () => import('./components/AtmosphereViewer.vue'),
+  mindmap: () => import('./components/MindMapViewer.vue'),
+  dataViz: () => import('./components/DataVizViewer.vue'),
+  water: () => import('../engine/WaterCycleView.vue'),
+  disaster: () => import('../sandbox/DisasterSandbox.vue'),
+}
+
+const props = defineProps({
+  toolLoaders: { type: Object, default: () => ({}) },
+})
+
+const asyncTool = (id) => defineAsyncComponent({
+  loader: props.toolLoaders[id] || defaultToolLoaders[id],
+  errorComponent: AsyncModuleError,
+  delay: 0,
+  timeout: 10000,
+})
+
+const SandboxApp = asyncTool('sandbox')
+const Earth3D = asyncTool('earth')
+const SoilProfilePage = asyncTool('soil')
+const AtmosphereViewer = asyncTool('atmosphere')
+const MindMapViewer = asyncTool('mindmap')
+const DataVizViewer = asyncTool('dataViz')
+const WaterCycleView = asyncTool('water')
+const DisasterSandbox = asyncTool('disaster')
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
@@ -256,6 +279,18 @@ function openLearningTool(id) {
   if (id === 'data-viz') showDataViz.value = true
 }
 
+function closeTeachingTool() {
+  showSandbox.value = false
+  showEarth3D.value = false
+  showSoilProfile.value = false
+  showAtmo.value = false
+  showWater.value = false
+  showDisaster.value = false
+  showDataViz.value = false
+  showMindMap.value = false
+  caseStudy.value = ''
+}
+
 const chapterData = ref(null)
 const sectionData = ref(null)
 
@@ -332,27 +367,31 @@ const extraContent = computed(() => {
 })
 
 watch([gradeId, bookId, chapterId, sectionId], async () => {
-  showSandbox.value = false
-  showEarth3D.value = false
-  showSoilProfile.value = false
-  showAtmo.value = false
-  showWater.value = false
-  showDisaster.value = false
-  showDataViz.value = false
-  showMindMap.value = false
+  closeTeachingTool()
   loadedContent.value = null
   loading.value = true
 
-  const [chapter, section, content] = await Promise.all([
-    getChapter(gradeId.value, bookId.value, chapterId.value),
-    getSection(gradeId.value, bookId.value, chapterId.value, sectionId.value),
-    loadSectionContent(gradeId.value, bookId.value, chapterId.value, sectionId.value)
-  ])
+  try {
+    const [chapter, section] = await Promise.all([
+      getChapter(gradeId.value, bookId.value, chapterId.value),
+      getSection(gradeId.value, bookId.value, chapterId.value, sectionId.value),
+    ])
+    chapterData.value = chapter
+    sectionData.value = section
 
-  chapterData.value = chapter
-  sectionData.value = section
-  loadedContent.value = content
-  loading.value = false
+    try {
+      loadedContent.value = await loadSectionContent(
+        gradeId.value,
+        bookId.value,
+        chapterId.value,
+        sectionId.value,
+      )
+    } catch {
+      loadedContent.value = null
+    }
+  } finally {
+    loading.value = false
+  }
 }, { immediate: true })
 
 const prevSection = computed(() => {

@@ -102,6 +102,40 @@ describe('StudentLearningView', () => {
     })
   })
 
+  it('uses an article root and never creates a nested main landmark', () => {
+    const wrapper = mountView()
+
+    expect(wrapper.get('article.student-learning-view').exists()).toBe(true)
+    expect(wrapper.find('main').exists()).toBe(false)
+  })
+
+  it('expands and collapses every learning section with global controls', async () => {
+    const wrapper = mountView()
+    const expandedStates = () => wrapper.findAll('[data-learning-section]')
+      .map((section) => section.get('button').attributes('aria-expanded'))
+
+    expect(wrapper.get('[data-expand-all]').text()).toBe('全部展开')
+    expect(wrapper.get('[data-collapse-all]').text()).toBe('全部收起')
+    expect(expandedStates()).toEqual(['true', 'false', 'false', 'false', 'false', 'false', 'false'])
+
+    await wrapper.get('[data-expand-all]').trigger('click')
+    expect(expandedStates()).toEqual(Array(7).fill('true'))
+
+    await wrapper.get('[data-collapse-all]').trigger('click')
+    expect(expandedStates()).toEqual(Array(7).fill('false'))
+  })
+
+  it('omits global controls when only core knowledge is available', () => {
+    const wrapper = mountView({
+      ...completeLearning,
+      mechanismChains: [], caseStudies: [], misconceptions: [], practice: [],
+      memoryTips: [], answerTemplates: [],
+    }, [])
+
+    expect(wrapper.find('[data-expand-all]').exists()).toBe(false)
+    expect(wrapper.find('[data-collapse-all]').exists()).toBe(false)
+  })
+
   it('omits every empty header and detail module', () => {
     const wrapper = mountView({
       estimatedMinutes: 10,

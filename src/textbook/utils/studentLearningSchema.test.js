@@ -17,7 +17,7 @@ describe('normalizeStudentLearning', () => {
       mechanismChains: [{ title: '水循环', steps: ['蒸发', '输送', '降水', '径流'] }],
       caseStudies: [],
       misconceptions: [],
-      practice: [{ type: 'single-choice', question: '最重要的循环是？', options: ['A. 海陆间循环'], answer: 'A', explanation: '使陆地水更新。', knowledgePoint: '水循环类型' }],
+      practice: [{ type: 'single-choice', question: '最重要的循环是？', options: ['A. 海陆间循环', 'B. 海上内循环'], answer: 'A', explanation: '使陆地水更新。', knowledgePoint: '水循环类型' }],
       memoryTips: ['海陆最重要，海上量最大，陆地量最小。'],
       answerTemplates: [],
     })
@@ -27,10 +27,32 @@ describe('normalizeStudentLearning', () => {
     expect(result.practice[0].answer).toBe('A')
   })
 
-  it('drops invalid collection entries and supplies safe arrays', () => {
-    const result = normalizeStudentLearning({ overview: '有效摘要', objectives: '错误类型', practice: [null, { question: '' }] })
-    expect(result.objectives).toEqual([])
-    expect(result.practice).toEqual([])
-    expect(result.knowledgeBlocks).toEqual([])
+  it.each([
+    {},
+    [],
+    { objectives: ['   '], overview: '有效摘要', knowledgeBlocks: [{ title: '知识', items: [{ name: '概念', detail: '解释' }] }] },
+    { objectives: ['目标'], overview: '   ', knowledgeBlocks: [{ title: '知识', items: [{ name: '概念', detail: '解释' }] }] },
+    { objectives: ['目标'], overview: '有效摘要', knowledgeBlocks: [{ title: '知识', items: [null, {}, { name: '概念', detail: '   ' }] }] },
+  ])('rejects an overlay without the minimum usable contract: %j', (input) => {
+    expect(normalizeStudentLearning(input)).toBeNull()
+  })
+
+  it('cleans nested knowledge items before accepting a usable overlay', () => {
+    const result = normalizeStudentLearning({
+      objectives: [' 解释水循环 '],
+      overview: ' 水在圈层之间循环。 ',
+      knowledgeBlocks: [{
+        title: ' 循环环节 ',
+        items: [null, { name: ' 蒸发 ', detail: ' 水由液态变为气态。 ' }, { name: '', detail: '无效' }],
+      }],
+    })
+
+    expect(result.objectives).toEqual(['解释水循环'])
+    expect(result.overview).toBe('水在圈层之间循环。')
+    expect(result.knowledgeBlocks).toEqual([{
+      title: '循环环节',
+      summary: '',
+      items: [{ name: '蒸发', detail: '水由液态变为气态。' }],
+    }])
   })
 })

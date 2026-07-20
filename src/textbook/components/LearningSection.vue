@@ -1,28 +1,39 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   id: { type: String, required: true },
   title: { type: String, required: true },
   defaultOpen: { type: Boolean, default: false },
+  open: { type: Boolean, default: undefined },
 })
 
-const open = ref(props.defaultOpen)
+const emit = defineEmits(['update:open'])
+const internalOpen = ref(props.defaultOpen)
+const isOpen = computed({
+  get: () => props.open === undefined ? internalOpen.value : props.open,
+  set: (value) => {
+    if (props.open === undefined) internalOpen.value = value
+    else emit('update:open', value)
+  },
+})
 </script>
 
 <template>
   <section class="learning-section" :data-learning-section="id">
-    <button
-      class="learning-section__toggle"
-      type="button"
-      :aria-controls="`${id}-content`"
-      :aria-expanded="open"
-      @click="open = !open"
-    >
-      <span>{{ open ? `收起${title}` : `展开${title}` }}</span>
-      <span class="learning-section__indicator" aria-hidden="true">{{ open ? '−' : '+' }}</span>
-    </button>
-    <div v-show="open" :id="`${id}-content`" class="learning-section__content">
+    <h2 class="learning-section__heading">
+      <button
+        class="learning-section__toggle"
+        type="button"
+        :aria-controls="`${id}-content`"
+        :aria-expanded="isOpen"
+        @click="isOpen = !isOpen"
+      >
+        <span>{{ isOpen ? `收起${title}` : `展开${title}` }}</span>
+        <span class="learning-section__indicator" aria-hidden="true">{{ isOpen ? '−' : '+' }}</span>
+      </button>
+    </h2>
+    <div v-show="isOpen" :id="`${id}-content`" class="learning-section__content">
       <slot />
     </div>
   </section>
@@ -35,6 +46,11 @@ const open = ref(props.defaultOpen)
   border: 1px solid var(--brown-light);
   border-radius: var(--radius-box);
   background: var(--card-bg);
+}
+
+.learning-section__heading {
+  margin: 0;
+  font: inherit;
 }
 
 .learning-section__toggle {

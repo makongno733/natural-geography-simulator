@@ -23,6 +23,28 @@ describe('LearningSection', () => {
     expect(wrapper.get('#core-content').attributes('style')).not.toContain('display: none')
   })
 
+  it('places the toggle inside a navigable heading', () => {
+    const wrapper = mount(LearningSection, {
+      props: { id: 'core', title: '核心知识' },
+    })
+
+    expect(wrapper.get('h2').get('button').text()).toContain('展开核心知识')
+  })
+
+  it('supports a controlled open state without changing it internally', async () => {
+    const wrapper = mount(LearningSection, {
+      props: { id: 'core', title: '核心知识', open: false },
+      slots: { default: '知识正文' },
+    })
+
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.emitted('update:open')).toEqual([[true]])
+    expect(wrapper.get('button').attributes('aria-expanded')).toBe('false')
+
+    await wrapper.setProps({ open: true })
+    expect(wrapper.get('button').attributes('aria-expanded')).toBe('true')
+  })
+
   it('keeps the toggle large enough and gives keyboard focus a visible outline', () => {
     expect(componentSource).toMatch(/\.learning-section__toggle\s*\{[^}]*min-height:\s*40px/s)
     expect(componentSource).toMatch(/\.learning-section__toggle:focus-visible\s*\{[^}]*outline:\s*2px/s)

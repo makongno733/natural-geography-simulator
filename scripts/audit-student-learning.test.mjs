@@ -11,16 +11,22 @@ const auditCliPath = resolve(process.cwd(), 'scripts/audit-student-learning.mjs'
 
 function completeLesson() {
   return {
-    objectives: ['说出测试知识目标'],
-    overview: '这是一段完整的学习概览。',
+    estimatedMinutes: 18,
+    objectives: ['说出测试知识目标', '解释测试知识机制'],
+    overview: '本节通过完整而具体的地理情境建立知识框架，先辨认关键概念和空间位置，再沿着条件、过程与结果分析自然现象的形成机制，同时结合区域案例检验解释是否成立，最后用练习和答题模板完成迁移应用，帮助学习者形成可以复述、比较、推理并用于新情境的地理思维路径。',
     knowledgeBlocks: [
       {
         title: '测试知识块',
         summary: '用于验证最小完整节次。',
-        items: ['测试知识点'],
+        items: [{ name: '测试知识点', detail: '说明测试知识点的含义与应用。' }],
+      },
+      {
+        title: '测试机制块',
+        summary: '用于验证知识块数量。',
+        items: [{ name: '测试机制', detail: '说明条件、过程和结果之间的关系。' }],
       },
     ],
-    mechanismChains: [],
+    mechanismChains: [{ title: '测试机制链', steps: ['形成条件', '发生过程', '地理结果'] }],
     caseStudies: [],
     misconceptions: [
       {
@@ -31,7 +37,9 @@ function completeLesson() {
     ],
     practice: [
       {
+        type: 'single-choice',
         question: '测试问题是什么？',
+        options: ['A. 测试选项一', 'B. 测试选项二'],
         answer: '测试答案。',
         explanation: '测试解析。',
         knowledgePoint: '测试知识点',
@@ -130,6 +138,77 @@ describe('auditStudentLearning', () => {
         '第一章 第一节: 第 1 道练习缺少非空 knowledgePoint',
       ]),
     )
+  })
+
+  test.each([
+    ['objectives 中的空字符串', (lesson) => { lesson.objectives = ['有效目标', '   '] }, 'objectives'],
+    ['knowledgeBlocks 中的 null 项', (lesson) => { lesson.knowledgeBlocks[0].items = [null] }, 'knowledgeBlocks'],
+    ['畸形机制链', (lesson) => { lesson.mechanismChains = [{ title: '', steps: ['一步'] }] }, 'mechanismChains'],
+    ['畸形案例', (lesson) => { lesson.caseStudies = [{ title: '案例', context: '', question: '问题', conclusion: '结论' }] }, 'caseStudies'],
+    ['畸形易错项', (lesson) => { lesson.misconceptions = [{ wrong: '错误', reason: '', correct: '正确' }] }, 'misconceptions'],
+    ['畸形记忆要点', (lesson) => { lesson.memoryTips = ['   '] }, 'memoryTips'],
+    ['畸形答题模板', (lesson) => { lesson.answerTemplates = [{ title: '模板', template: '' }] }, 'answerTemplates'],
+    ['非正数学习时间', (lesson) => { lesson.estimatedMinutes = 0 }, 'estimatedMinutes'],
+  ])('rejects %s', (_name, mutate, expectedField) => {
+    const fixture = completeFixture()
+    mutate(fixture.第一章.第一节)
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.some((error) => error.includes(expectedField))).toBe(true)
+  })
+
+  test.each([
+    ['objectives 下限', (lesson) => { lesson.objectives = ['仅一个目标'] }, 'objectives'],
+    ['objectives 上限', (lesson) => { lesson.objectives = ['一', '二', '三', '四', '五'] }, 'objectives'],
+    ['knowledgeBlocks 下限', (lesson) => { lesson.knowledgeBlocks = [lesson.knowledgeBlocks[0]] }, 'knowledgeBlocks'],
+    ['knowledgeBlocks 上限', (lesson) => { lesson.knowledgeBlocks = Array(5).fill(lesson.knowledgeBlocks[0]) }, 'knowledgeBlocks'],
+    ['mechanismChains 上限', (lesson) => { lesson.mechanismChains = Array(4).fill({ title: '机制', steps: ['第一步', '第二步'] }) }, 'mechanismChains'],
+    ['caseStudies 上限', (lesson) => { lesson.caseStudies = Array(3).fill({ title: '案例', context: '情境', question: '问题', conclusion: '结论' }) }, 'caseStudies'],
+    ['misconceptions 上限', (lesson) => { lesson.misconceptions = Array(4).fill({ wrong: '错误', reason: '原因', correct: '正确' }) }, 'misconceptions'],
+    ['memoryTips 上限', (lesson) => { lesson.memoryTips = ['一', '二', '三', '四'] }, 'memoryTips'],
+  ])('enforces the %s quantity bound', (_name, mutate, expectedField) => {
+    const fixture = completeFixture()
+    mutate(fixture.第一章.第一节)
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.some((error) => error.includes(expectedField))).toBe(true)
+  })
+
+  test.each([
+    ['过短', '概览过短。'],
+    ['过长', '地'.repeat(181)],
+  ])('rejects an overview that is %s', (_name, overview) => {
+    const fixture = completeFixture()
+    fixture.第一章.第一节.overview = overview
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.some((error) => error.includes('overview'))).toBe(true)
+  })
+
+  test('rejects an unknown practice type', () => {
+    const fixture = completeFixture()
+    fixture.第一章.第一节.practice[0].type = 'matching'
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.some((error) => error.includes('type'))).toBe(true)
+  })
+
+  test('requires at least two non-empty options for a single-choice question', () => {
+    const fixture = completeFixture()
+    fixture.第一章.第一节.practice[0].options = ['A. 唯一选项', '   ']
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.some((error) => error.includes('options'))).toBe(true)
   })
 
   test('rejects a non-array practice without counting it as optional content', () => {

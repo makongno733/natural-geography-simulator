@@ -5,6 +5,7 @@ import componentSource from './SectionContent.vue?raw'
 
 const mocks = vi.hoisted(() => ({
   loadedContent: null,
+  loadSectionContent: vi.fn(),
   route: {
     params: {
       grade: '高中',
@@ -32,7 +33,7 @@ vi.mock('./data/catalogLoader.js', () => ({
 }))
 
 vi.mock('./data/contentLoader.js', () => ({
-  loadSectionContent: vi.fn(async () => mocks.loadedContent),
+  loadSectionContent: mocks.loadSectionContent,
 }))
 
 const StudentLearningViewStub = {
@@ -47,13 +48,23 @@ const Earth3DStub = {
   template: '<div data-earth-3d />',
 }
 
-async function mountSection() {
+const validStudentLearning = {
+  overview: '从地球所处的宇宙环境开始学习。',
+  objectives: ['说明地球的普通性和特殊性'],
+  knowledgeBlocks: [{
+    title: '地球的宇宙环境',
+    items: [{ name: '生命条件', detail: '适宜温度、液态水和适宜大气。' }],
+  }],
+}
+
+async function mountSection({ props = {}, stubEarth = true } = {}) {
   const wrapper = mount(SectionContent, {
+    props,
     global: {
       stubs: {
         RouterLink: { template: '<a><slot /></a>' },
         StudentLearningView: StudentLearningViewStub,
-        Earth3D: Earth3DStub,
+        ...(stubEarth ? { Earth3D: Earth3DStub } : {}),
       },
     },
   })
@@ -64,14 +75,12 @@ async function mountSection() {
 describe('SectionContent student learning integration', () => {
   beforeEach(() => {
     mocks.loadedContent = null
+    mocks.loadSectionContent.mockImplementation(async () => mocks.loadedContent)
   })
 
   it('replaces the legacy lesson brief and opens an existing tool branch', async () => {
     mocks.loadedContent = {
-      studentLearning: {
-        overview: '从地球所处的宇宙环境开始学习。',
-        objectives: ['说明地球的普通性和特殊性'],
-      },
+      studentLearning: validStudentLearning,
     }
 
     const wrapper = await mountSection()
@@ -79,6 +88,7 @@ describe('SectionContent student learning integration', () => {
 
     expect(learningView.exists()).toBe(true)
     expect(wrapper.find('.lesson-brief').exists()).toBe(false)
+    expect(wrapper.find('.read-time').exists()).toBe(false)
     expect(learningView.props('tools')).toContainEqual(expect.objectContaining({ id: 'earth' }))
 
     await learningView.vm.$emit('open-tool', 'earth')
@@ -92,6 +102,56 @@ describe('SectionContent student learning integration', () => {
 
     expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(false)
     expect(wrapper.find('.lesson-brief').exists()).toBe(true)
+    expect(wrapper.get('.read-time').text()).toContain('约 1 分钟')
+  })
+
+  it('uses the legacy lesson brief when the student learning overlay is invalid', async () => {
+    mocks.loadedContent = {
+      studentLearning: {
+        objectives: ['说明地球的普通性'],
+        overview: '缺少可用核心知识。',
+        knowledgeBlocks: [{ title: '无效知识块', items: [null] }],
+      },
+    }
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(false)
+    expect(wrapper.find('.lesson-brief').exists()).toBe(true)
+  })
+
+  it('clears loading and preserves base section content when optional content loading rejects', async () => {
+    mocks.loadSectionContent.mockRejectedValueOnce(new Error('optional overlay unavailable'))
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.text()).not.toContain('加载中...')
+    expect(wrapper.text()).toContain('第一节 地球的宇宙环境')
+    expect(wrapper.find('.lesson-brief').exists()).toBe(true)
+  })
+
+  it('shows async-module recovery and returns to the student text after close', async () => {
+    mocks.loadedContent = { studentLearning: validStudentLearning }
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const wrapper = await mountSection({
+      stubEarth: false,
+      props: {
+        toolLoaders: {
+          earth: async () => { throw new Error('earth module unavailable') },
+        },
+      },
+    })
+
+    await wrapper.getComponent({ name: 'StudentLearningView' }).vm.$emit('open-tool', 'earth')
+    await flushPromises()
+
+    expect(wrapper.get('[data-async-module-error]').text()).toContain('教学工具加载失败')
+    await wrapper.get('[data-async-module-error] button').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-async-module-error]').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(true)
+    consoleError.mockRestore()
   })
 
   it('keeps the student article within the reading measure and reduces narrow-screen padding', () => {

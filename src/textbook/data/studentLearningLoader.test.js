@@ -18,4 +18,14 @@ describe('student learning overlay', () => {
   it('returns null for books without an overlay', async () => {
     expect(await loadStudentLearning('高中', '必修第二册', '第一章', '第一节')).toBeNull()
   })
+
+  it('returns null when the optional overlay import fails', async () => {
+    const rejectedImporter = async () => {
+      throw new Error('overlay unavailable')
+    }
+
+    await expect(
+      loadStudentLearning('高中', '必修第一册', '第一章', '第一节', rejectedImporter),
+    ).resolves.toBeNull()
+  })
 })

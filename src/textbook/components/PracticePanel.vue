@@ -50,6 +50,10 @@ const answerStatus = (item, index) => {
         <textarea :id="`practice-${index}-response`" v-model="selected[index]" />
       </label>
 
+      <p v-if="item.type !== 'single-choice' && item.hint" class="practice-hint">
+        提示：{{ item.hint }}
+      </p>
+
       <button
         class="practice-answer-toggle"
         type="button"
@@ -58,7 +62,7 @@ const answerStatus = (item, index) => {
         :aria-expanded="Boolean(revealed[index])"
         @click="toggleAnswer(index)"
       >
-        {{ revealed[index] ? '隐藏答案' : '查看答案' }}
+        {{ revealed[index] ? '隐藏答案与解析' : '查看答案与解析' }}
       </button>
 
       <div
@@ -144,6 +148,11 @@ const answerStatus = (item, index) => {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.practice-hint {
+  margin: 0 0 12px;
+  color: var(--muted);
 }
 
 .practice-answer-toggle:hover {

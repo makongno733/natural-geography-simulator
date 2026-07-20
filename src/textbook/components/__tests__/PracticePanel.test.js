@@ -15,6 +15,7 @@ const questions = [
   {
     type: 'short-answer',
     question: '说明热力环流过程。',
+    hint: '可按“冷热—垂直运动—气压—水平运动”组织答案。',
     answer: '冷热不均导致大气垂直和水平运动。',
     explanation: '按四步因果链作答。',
     knowledgePoint: '热力环流',
@@ -70,10 +71,38 @@ describe('PracticePanel', () => {
   it('reveals a short-answer reference independently', async () => {
     const wrapper = mount(PracticePanel, { props: { questions } })
 
+    expect(wrapper.text()).toContain('可按“冷热—垂直运动—气压—水平运动”组织答案。')
+    expect(wrapper.findAll('[data-reveal-answer]')[1].text()).toBe('查看答案与解析')
+
     await wrapper.findAll('[data-reveal-answer]')[1].trigger('click')
 
-    expect(wrapper.get('#practice-answer-1').text()).toContain('冷热不均导致大气垂直和水平运动')
+    const answer = wrapper.get('#practice-answer-1')
+    expect(answer.classes()).toContain('is-reference')
+    expect(answer.text()).toContain('参考答案')
+    expect(answer.text()).toContain('冷热不均导致大气垂直和水平运动')
+    expect(wrapper.findAll('[data-reveal-answer]')[1].text()).toBe('隐藏答案与解析')
     expect(wrapper.get('#practice-answer-0').attributes('style')).toContain('display: none')
+  })
+
+  it('marks an incorrect choice and explains the error', async () => {
+    const wrapper = mount(PracticePanel, { props: { questions } })
+
+    await wrapper.get('input[value="B"]').setValue(true)
+    await wrapper.findAll('[data-reveal-answer]')[0].trigger('click')
+
+    const answer = wrapper.get('#practice-answer-0')
+    expect(answer.classes()).toContain('is-incorrect')
+    expect(answer.text()).toContain('回答有误')
+  })
+
+  it('marks an unreplied choice as unanswered', async () => {
+    const wrapper = mount(PracticePanel, { props: { questions } })
+
+    await wrapper.findAll('[data-reveal-answer]')[0].trigger('click')
+
+    const answer = wrapper.get('#practice-answer-0')
+    expect(answer.classes()).toContain('is-unanswered')
+    expect(answer.text()).toContain('尚未作答')
   })
 
   it('keeps answer controls touch-sized with a visible keyboard focus outline', () => {
