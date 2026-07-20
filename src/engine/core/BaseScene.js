@@ -3,6 +3,7 @@ import { RenderManager } from './RenderManager.js'
 import { CameraRig } from './CameraRig.js'
 import { LightRig } from './LightRig.js'
 import { LabelSystem } from './LabelSystem.js'
+import { modelManager } from '../optimization/modelManager.js'
 
 export class BaseScene {
   constructor(container, options = {}) {
@@ -13,6 +14,20 @@ export class BaseScene {
     this._moduleGroup = null
     this._moduleApi = null
     this._animFrameId = null
+    this.modelId = options.modelId || 'base-scene'
+    this.availableQualities = [...(options.availableQualities || ['low', 'medium', 'high'])]
+
+    const resolvedProfile = modelManager.resolveProfile({
+      modelId: this.modelId,
+      availableQualities: this.availableQualities,
+    })
+    const effectiveQuality = options.quality && this.availableQualities.includes(options.quality)
+      ? options.quality
+      : resolvedProfile.quality
+    this.modelProfile = {
+      ...resolvedProfile,
+      quality: effectiveQuality,
+    }
 
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(options.bg || 0x0a0e27)
@@ -20,7 +35,10 @@ export class BaseScene {
       this.scene.fog = options.fog
     }
 
-    this.renderManager = new RenderManager(container, options)
+    this.renderManager = new RenderManager(container, {
+      ...options,
+      quality: effectiveQuality,
+    })
     this.cameraRig = new CameraRig(container, this.renderManager.domElement, options)
     this.renderManager.initComposer(this.scene, this.cameraRig.camera)
 
@@ -52,6 +70,42 @@ export class BaseScene {
       clock: this.clock,
     })
 
+    this._attachModuleResult(result)
+  }
+
+  loadOptimizedModule(modelId, moduleFactory, params = {}) {
+    if (this._moduleGroup) {
+      this._disposeModule()
+    }
+
+    this.modelId = modelId || this.modelId
+    const mode = params.mode ?? this._mode
+    this._mode = mode
+    const effectiveQuality = this.modelProfile?.quality || this.renderManager?.quality || 'medium'
+    const result = modelManager.loadGeneratedModel({
+      modelId: this.modelId,
+      factory: moduleFactory,
+      scene: this.scene,
+      params: {
+        ...params,
+        mode,
+      },
+      availableQualities: [effectiveQuality],
+      context: {
+        labelSystem: this.labelSystem,
+        lightRig: this.lightRig,
+        cameraRig: this.cameraRig,
+        renderManager: this.renderManager,
+        clock: this.clock,
+      },
+    })
+
+    this.modelProfile = result.profile
+    this._params = { ...params, mode, quality: result.profile.quality, modelQuality: result.profile.quality }
+    this._attachModuleResult(result.model)
+  }
+
+  _attachModuleResult(result) {
     if (result instanceof THREE.Group) {
       this._moduleGroup = result
       this.scene.add(result)

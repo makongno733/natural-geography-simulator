@@ -9,6 +9,14 @@
       <span> &gt; </span>
       <strong>{{ exp?.name || '' }}</strong>
     </nav>
+    <router-link
+      v-if="textbookSourceRoute"
+      :to="textbookSourceRoute"
+      class="ev-return"
+      data-testid="return-to-textbook"
+    >
+      ← 返回教材
+    </router-link>
     <h2 class="ev-title">{{ exp?.name || '' }}</h2>
 
     <!-- 3D experiment: self-contained component -->
@@ -16,6 +24,8 @@
 
     <!-- Tutorial experiment: TutorialTemplate with steps -->
     <TutorialTemplate v-if="exp?.type === 'tutorial' && tutorialSteps.length" :steps="tutorialSteps" />
+
+    <ExperimentGuidePanel :key="exp?.id" :pedagogy="exp?.pedagogy" />
 
     <section class="ev-concepts" v-if="exp?.concepts?.length">
       <h4>涉及知识点</h4>
@@ -45,6 +55,8 @@
 import { computed, ref, watch, shallowRef, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import modules, { categoryLabels, getRelatedExperiments } from './modules/index.js'
+import { getExperimentsForSection } from './data/curriculumLinks.js'
+import ExperimentGuidePanel from './components/ExperimentGuidePanel.vue'
 import TutorialTemplate from './components/TutorialTemplate.vue'
 
 const route = useRoute()
@@ -52,6 +64,22 @@ const category = computed(() => route.params.category)
 const experimentId = computed(() => route.params.experiment)
 const exp = computed(() => modules.find(m => m.category === category.value && m.id === experimentId.value))
 const categoryLabel = computed(() => categoryLabels[category.value] || category.value)
+const textbookSourceRoute = computed(() => {
+  const { fromGrade, fromBook, fromChapter, fromSection } = route.query
+  if (!['初中', '高中'].includes(fromGrade)) return null
+  if (![fromBook, fromChapter, fromSection].every((value) => typeof value === 'string' && value.length)) return null
+  if (!getExperimentsForSection(fromGrade, fromBook, fromChapter, fromSection)
+    .some((experiment) => experiment.id === exp.value?.id)) return null
+  return {
+    name: 'section',
+    params: {
+      grade: fromGrade,
+      book: fromBook,
+      chapter: fromChapter,
+      section: fromSection,
+    },
+  }
+})
 
 const related = computed(() => {
   if (!exp.value) return []
@@ -60,15 +88,19 @@ const related = computed(() => {
 
 const expComponent = shallowRef(null)
 const tutorialSteps = ref([])
+let contentRequestSequence = 0
 
 async function loadContent() {
+  const requestSequence = ++contentRequestSequence
+  const requestedExperiment = exp.value
   expComponent.value = null
   tutorialSteps.value = []
-  if (!exp.value) return
+  if (!requestedExperiment) return
 
-  const mod = await exp.value.component()
+  const mod = await requestedExperiment.component()
+  if (requestSequence !== contentRequestSequence || exp.value?.id !== requestedExperiment.id) return
 
-  if (exp.value.type === '3d') {
+  if (requestedExperiment.type === '3d') {
     expComponent.value = defineAsyncComponent(() => Promise.resolve(mod.default || mod))
   } else {
     tutorialSteps.value = mod.default?.steps || mod.steps || []
@@ -83,6 +115,16 @@ watch(() => exp.value?.id, loadContent, { immediate: true })
 .ev-breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
 .ev-breadcrumb a { color: var(--muted); text-decoration: none; }
 .ev-breadcrumb a:hover { color: var(--red); }
+.ev-return {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  color: var(--red);
+  font-size: 13px;
+  text-decoration: none;
+}
+.ev-return:hover { text-decoration: underline; }
+.ev-return:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .ev-title { font-size: clamp(22px, 4.5vw, 30px); color: var(--ink); margin: 0 0 20px; }
 .ev-concepts { margin-top: 28px; }
 .ev-concepts h4 { font-size: 14px; color: var(--muted); margin: 0 0 8px; }

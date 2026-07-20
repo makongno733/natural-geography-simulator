@@ -2,16 +2,41 @@ import * as THREE from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 
+function renderSettingsForQuality(quality = 'medium') {
+  if (quality === 'low') {
+    return {
+      antialias: false,
+      pixelRatioCap: 1,
+      shadows: false,
+    }
+  }
+  if (quality === 'high') {
+    return {
+      antialias: true,
+      pixelRatioCap: 2,
+      shadows: true,
+    }
+  }
+  return {
+    antialias: true,
+    pixelRatioCap: 1.5,
+    shadows: true,
+  }
+}
+
 export class RenderManager {
   constructor(container, options = {}) {
     this.container = container
+    const qualitySettings = renderSettingsForQuality(options.quality)
+    this.quality = options.quality || 'medium'
+    this.pixelRatioCap = options.pixelRatioCap ?? qualitySettings.pixelRatioCap
     this.renderer = new THREE.WebGLRenderer({
-      antialias: options.antialias ?? true,
+      antialias: options.antialias ?? qualitySettings.antialias,
       alpha: options.alpha ?? true,
     })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.pixelRatioCap))
     this.renderer.setClearColor(options.bg || 0x0a0e27, 1)
-    this.renderer.shadowMap.enabled = options.shadows ?? true
+    this.renderer.shadowMap.enabled = options.shadows ?? qualitySettings.shadows
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.localClippingEnabled = true
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
