@@ -191,6 +191,25 @@ describe('auditStudentLearning', () => {
     expect(result.errors.some((error) => error.includes('overview'))).toBe(true)
   })
 
+  test('measures overview length after trimming surrounding whitespace', () => {
+    const fixture = completeFixture()
+    fixture.第一章.第一节.overview = `${'地'.repeat(99)} `
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.some((error) => error.includes('overview'))).toBe(true)
+  })
+
+  test.each([100, 180])('accepts an overview at the trimmed %i-character boundary', (length) => {
+    const fixture = completeFixture()
+    fixture.第一章.第一节.overview = `  ${'地'.repeat(length)}  `
+
+    const result = auditStudentLearning(fixture)
+
+    expect(result.errors.some((error) => error.includes('第一章 第一节: overview'))).toBe(false)
+  })
+
   test('rejects an unknown practice type', () => {
     const fixture = completeFixture()
     fixture.第一章.第一节.practice[0].type = 'matching'

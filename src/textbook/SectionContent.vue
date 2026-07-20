@@ -1,5 +1,5 @@
 <template>
-  <div class="page-shell" v-if="sectionData">
+  <div v-if="sectionData && !loading" class="page-shell">
     <div class="breadcrumb">
       <router-link to="/">首页</router-link>
       <span class="sep">></span>
@@ -145,7 +145,7 @@
 
   </div>
 
-  <div v-if="loading" class="page-shell not-found">
+  <div v-else-if="loading" class="page-shell not-found">
     <p>加载中...</p>
   </div>
   <div v-else-if="!sectionData" class="page-shell not-found">
@@ -366,31 +366,48 @@ const extraContent = computed(() => {
   return loadedContent.value
 })
 
+let loadGeneration = 0
+
 watch([gradeId, bookId, chapterId, sectionId], async () => {
+  const generation = ++loadGeneration
+  const ids = {
+    grade: gradeId.value,
+    book: bookId.value,
+    chapter: chapterId.value,
+    section: sectionId.value,
+  }
+
   closeTeachingTool()
+  chapterData.value = null
+  sectionData.value = null
   loadedContent.value = null
   loading.value = true
 
   try {
     const [chapter, section] = await Promise.all([
-      getChapter(gradeId.value, bookId.value, chapterId.value),
-      getSection(gradeId.value, bookId.value, chapterId.value, sectionId.value),
+      getChapter(ids.grade, ids.book, ids.chapter),
+      getSection(ids.grade, ids.book, ids.chapter, ids.section),
     ])
-    chapterData.value = chapter
-    sectionData.value = section
+    if (generation !== loadGeneration) return
 
+    let content = null
     try {
-      loadedContent.value = await loadSectionContent(
-        gradeId.value,
-        bookId.value,
-        chapterId.value,
-        sectionId.value,
+      content = await loadSectionContent(
+        ids.grade,
+        ids.book,
+        ids.chapter,
+        ids.section,
       )
     } catch {
-      loadedContent.value = null
+      content = null
     }
+
+    if (generation !== loadGeneration) return
+    chapterData.value = chapter
+    sectionData.value = section
+    loadedContent.value = content
   } finally {
-    loading.value = false
+    if (generation === loadGeneration) loading.value = false
   }
 }, { immediate: true })
 

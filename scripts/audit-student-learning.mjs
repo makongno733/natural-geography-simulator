@@ -68,9 +68,10 @@ export function auditStudentLearning(data) {
         errors.push(`${label}: objectives 必须包含 2–4 项`)
       }
 
-      if (!isNonEmptyString(lesson.overview)) {
+      const overview = typeof lesson.overview === 'string' ? lesson.overview.trim() : ''
+      if (!overview) {
         errors.push(`${label}: 缺少非空 overview`)
-      } else if (lesson.overview.length < 100 || lesson.overview.length > 180) {
+      } else if (overview.length < 100 || overview.length > 180) {
         errors.push(`${label}: overview 长度必须为 100–180 个字符`)
       }
 
