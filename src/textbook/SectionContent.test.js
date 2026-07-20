@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SectionContent from './SectionContent.vue'
+import componentSource from './SectionContent.vue?raw'
 
 const mocks = vi.hoisted(() => ({
   loadedContent: null,
@@ -91,5 +92,10 @@ describe('SectionContent student learning integration', () => {
 
     expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(false)
     expect(wrapper.find('.lesson-brief').exists()).toBe(true)
+  })
+
+  it('keeps the student article within the reading measure and reduces narrow-screen padding', () => {
+    expect(componentSource).toMatch(/\.content\s+:deep\(\[data-student-learning-view\]\)\s*\{[^}]*max-width:\s*860px/s)
+    expect(componentSource).toMatch(/@media\s*\(max-width:\s*720px\)[\s\S]*\.content\s*\{[^}]*padding:\s*16px\s+12px/s)
   })
 })

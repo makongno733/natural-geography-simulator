@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import PracticePanel from '../PracticePanel.vue'
+import componentSource from '../PracticePanel.vue?raw'
 
 const questions = [
   {
@@ -21,6 +22,16 @@ const questions = [
 ]
 
 describe('PracticePanel', () => {
+  it('associates every choice label with its radio input', () => {
+    const wrapper = mount(PracticePanel, { props: { questions } })
+    const inputs = wrapper.findAll('input[type="radio"]')
+    const labels = wrapper.findAll('fieldset label')
+
+    expect(inputs).toHaveLength(2)
+    expect(labels.map((label) => label.attributes('for'))).toEqual(inputs.map((input) => input.attributes('id')))
+    expect(inputs.every((input) => Boolean(input.attributes('id')))).toBe(true)
+  })
+
   it('connects each reveal button to its own answer region', async () => {
     const wrapper = mount(PracticePanel, { props: { questions } })
     const buttons = wrapper.findAll('[data-reveal-answer]')
@@ -47,8 +58,12 @@ describe('PracticePanel', () => {
     await wrapper.get('input[value="A"]').setValue(true)
     await wrapper.findAll('[data-reveal-answer]')[0].trigger('click')
 
-    expect(wrapper.get('#practice-answer-0').text()).toContain('正确答案：A')
-    expect(wrapper.get('#practice-answer-0').text()).toContain('地面长波辐射')
+    const answer = wrapper.get('#practice-answer-0')
+    expect(answer.classes()).toContain('answer-feedback')
+    expect(answer.classes()).toContain('is-correct')
+    expect(answer.text()).toContain('回答正确')
+    expect(answer.text()).toContain('正确答案：A')
+    expect(answer.text()).toContain('地面长波辐射')
     expect(wrapper.get('input[value="A"]').element.checked).toBe(true)
   })
 
@@ -59,5 +74,10 @@ describe('PracticePanel', () => {
 
     expect(wrapper.get('#practice-answer-1').text()).toContain('冷热不均导致大气垂直和水平运动')
     expect(wrapper.get('#practice-answer-0').attributes('style')).toContain('display: none')
+  })
+
+  it('keeps answer controls touch-sized with a visible keyboard focus outline', () => {
+    expect(componentSource).toMatch(/\.practice-answer-toggle\s*\{[^}]*min-height:\s*40px/s)
+    expect(componentSource).toMatch(/\.practice-answer-toggle:focus-visible\s*\{[^}]*outline:\s*2px/s)
   })
 })

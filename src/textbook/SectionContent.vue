@@ -435,11 +435,16 @@ const nextSection = computed(() => {
 }
 
 .content {
+  min-width: 0;
   border: 1px solid var(--brown);
   border-radius: var(--radius-box);
   background: rgba(255,255,255,0.97);
   padding: 24px;
   box-shadow: var(--shadow-sm);
+}
+.content :deep([data-student-learning-view]) {
+  max-width: 860px;
+  margin-inline: auto;
 }
 .section-title {
   margin: 0 0 16px;
@@ -495,6 +500,7 @@ const nextSection = computed(() => {
 }
 .primary-action,
 .ghost-action {
+  min-height: 40px;
   border: 1px solid rgba(100, 122, 63, 0.42);
   border-radius: 999px;
   padding: 7px 12px;
@@ -516,6 +522,11 @@ const nextSection = computed(() => {
   transform: translateY(-1px);
   border-color: rgba(100, 122, 63, 0.74);
   box-shadow: var(--shadow-hover);
+}
+.primary-action:focus-visible,
+.ghost-action:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
 }
 .section-nav {
   display: flex;
@@ -595,7 +606,10 @@ const nextSection = computed(() => {
   }
 }
 @media (max-width: 720px) {
+  .page-shell { padding: 14px 10px 32px; }
   .content-layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  .content { padding: 16px 12px; }
   .mindmap-branches {
     grid-template-columns: 1fr;
   }
