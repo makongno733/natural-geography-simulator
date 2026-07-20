@@ -58,7 +58,15 @@ export function auditStudentLearning(data) {
         }
       }
 
-      if (!['mechanismChains', 'caseStudies', 'misconceptions', 'practice'].some((field) => isNonEmpty(lesson[field]))) {
+      if (Object.hasOwn(lesson, 'practice') && !Array.isArray(lesson.practice)) {
+        errors.push(`${label}: practice 必须为数组`)
+      }
+
+      const hasOptionalContent = ['mechanismChains', 'caseStudies', 'misconceptions']
+        .some((field) => isNonEmpty(lesson[field]))
+        || (Array.isArray(lesson.practice) && lesson.practice.length > 0)
+
+      if (!hasOptionalContent) {
         errors.push(`${label}: mechanismChains、caseStudies、misconceptions、practice 至少一项必须非空`)
       }
 

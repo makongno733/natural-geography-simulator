@@ -78,3 +78,65 @@ pnpm qa:student-learning
 
 - `qa:student-learning` 当前必须保持失败，直到第四至第六章 8 节由后续任务补齐；届时成功文案应为 `Student learning audit passed: 17/17 sections`。
 - 构建成功，但 Vite 仍提示 `vendor-three` 压缩前体积超过 650 kB；该警告与本任务内容数据无关，未在本任务中扩大范围处理。
+
+## Important 审查修复（2026-07-21）
+
+### 根因
+
+原审计器使用通用 `isNonEmpty()` 判断四类可选模块。非空对象形式的 `practice` 因而被当作有效内容，但练习字段校验只在 `practice` 为数组时执行，形成了类型校验空档。
+
+### 扩充后的测试范围
+
+- 直接复用实现导出的 `requiredLessons`，删除测试中的重复目录常量。
+- 覆盖缺失必修节次、四类可选模块全空、`memoryTips` 与 `answerTemplates` 全空。
+- 覆盖单道练习缺少 `question`、`answer`、`explanation`、`knowledgePoint` 四个字段。
+- 分别覆盖 `学生回答`、`教师小结`、固定流程套话、固定提问套话、`。。` 和字面量反斜杠加 `n` 六种禁止模式。
+- 覆盖非数组 `practice` 必须失败，且不得满足可选模块规则。
+- 通过真实 Node 子进程覆盖 CLI 成功文案、失败错误输出和退出状态。
+
+### 修复 RED
+
+命令：
+
+```text
+pnpm test -- scripts/audit-student-learning.test.mjs
+```
+
+测试夹具路径问题修正后，功能性 RED 的退出码为 1，输出为：
+
+```text
+scripts/audit-student-learning.test.mjs (15 tests | 1 failed)
+× rejects a non-array practice without counting it as optional content
+AssertionError: expected true to be false
+Test Files  1 failed | 7 passed (8)
+Tests       1 failed | 28 passed (29)
+```
+
+该失败准确证明原实现接受了对象形式的 `practice`。
+
+### 修复 GREEN
+
+审计器现在对存在但非数组的 `practice` 报告 `practice 必须为数组`，并只允许非空练习数组满足可选内容规则。再次运行相关测试：
+
+```text
+Test Files  8 passed (8)
+Tests       29 passed (29)
+```
+
+随后运行全量测试：
+
+```text
+pnpm test
+Test Files  8 passed (8)
+Tests       29 passed (29)
+```
+
+### 内容修复
+
+- 1.3 保留原“地质时期特征题”，新增“重要成煤期成因题”：温暖湿润使植物繁盛，植物遗体堆积，地壳下沉与沉积物掩埋，经过长期地质作用形成煤。
+- 2.2 明确对比：高空摩擦力可忽略，水平气压梯度力与地转偏向力平衡，风向平行等压线；近地面受摩擦力影响，风向斜穿等压线。
+- 结构化内容断言通过：`Content review assertions passed: coal template and wind comparison`。
+
+### 修复后部分审计
+
+`pnpm qa:student-learning` 仍按任务阶段预期退出 1，只报告第四至第六章 8 个缺失节次；第一至第三章没有新增错误。
