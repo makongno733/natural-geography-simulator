@@ -34,6 +34,15 @@
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
         <p class="read-time">课堂速览：约 1 分钟讲完小结，3D 模型负责展开过程。</p>
 
+        <StudentLearningView
+          v-if="studentLearning"
+          :learning="studentLearning"
+          :section-title="sectionData.title"
+          :chapter-title="chapterData.title"
+          :tools="learningTools"
+          @open-tool="openLearningTool"
+        />
+        <template v-else>
         <section class="lesson-brief">
           <div class="brief-copy">
             <span class="brief-label">课后小结</span>
@@ -85,6 +94,7 @@
             <div class="concept-item-body">• {{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
           </div>
         </section>
+        </template>
 
         <div class="section-nav">
           <router-link
@@ -149,6 +159,8 @@ import { ref, computed, watch, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
+import StudentLearningView from './components/StudentLearningView.vue'
+import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
 
 const SandboxApp = defineAsyncComponent(() => import('../sandbox/SandboxApp.vue'))
 const Earth3D = defineAsyncComponent(() => import('../sandbox/Earth3D.vue'))
@@ -212,6 +224,38 @@ const isWaterChapter = computed(() =>
   )
 )
 
+const learningTools = computed(() => [
+  isGrouped.value && { id: 'mindmap', label: '打开思维导图', primary: true },
+  isEarthChapter.value && { id: 'earth', label: '打开地球模型', primary: true },
+  isAtmoChapter.value && { id: 'atmosphere', label: '打开大气模型', primary: true },
+  isWaterChapter.value && { id: 'water', label: '打开水循环模型', primary: true },
+  isLandformChapter.value && { id: 'landform', label: '打开地貌沙盘', primary: true },
+  isLandformChapter.value && { id: 'guilin', label: '桂林喀斯特' },
+  isLandformChapter.value && { id: 'yellowriver', label: '黄河三角洲' },
+  isLandformChapter.value && { id: 'taklamakan', label: '塔克拉玛干' },
+  isSoilChapter.value && { id: 'soil', label: '打开土壤剖面' },
+  isDisasterChapter.value && { id: 'disaster', label: '打开灾害模拟' },
+  dataVizType.value && { id: 'data-viz', label: '打开数据可视化' },
+].filter(Boolean))
+
+function openLearningTool(id) {
+  if (id === 'mindmap') showMindMap.value = true
+  if (id === 'earth') showEarth3D.value = true
+  if (id === 'atmosphere') showAtmo.value = true
+  if (id === 'water') showWater.value = true
+  if (id === 'landform') {
+    caseStudy.value = ''
+    showSandbox.value = true
+  }
+  if (['guilin', 'yellowriver', 'taklamakan'].includes(id)) {
+    caseStudy.value = id
+    showSandbox.value = true
+  }
+  if (id === 'soil') showSoilProfile.value = true
+  if (id === 'disaster') showDisaster.value = true
+  if (id === 'data-viz') showDataViz.value = true
+}
+
 const chapterData = ref(null)
 const sectionData = ref(null)
 
@@ -272,6 +316,10 @@ const conceptEntries = computed(() => {
 })
 
 const loadedContent = ref(null)
+
+const studentLearning = computed(() =>
+  normalizeStudentLearning(loadedContent.value?.studentLearning)
+)
 
 const extraContent = computed(() => {
   if (!loadedContent.value) return null
