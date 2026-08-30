@@ -32,4 +32,27 @@ describe('textbook experiment links', () => {
       grade: '高中', book: '必修第一册', chapter: '第三章', section: '第一节',
     }))
   })
+
+  it('reports duplicate raw configuration keys before building the registry', () => {
+    const key = '高中|必修第一册|第三章'
+    const audit = auditExperimentCoverage(grades, {
+      chapterDefaults: [
+        { key, primary: ['water-cycle-3d', 'water-cycle'] },
+        { key, primary: ['water-cycle-3d', 'water-movement'] },
+      ],
+      sectionOverrides: [],
+    })
+
+    expect(audit.duplicateKeys).toEqual([key])
+  })
+
+  it('reports orphan raw configuration keys before building the registry', () => {
+    const key = '高中|必修第一册|第三章|不存在的小节'
+    const audit = auditExperimentCoverage(grades, {
+      chapterDefaults: [],
+      sectionOverrides: [{ key, primary: ['water-cycle-3d', 'water-cycle'] }],
+    })
+
+    expect(audit.orphanKeys).toEqual([key])
+  })
 })

@@ -4,112 +4,79 @@ import { grades } from './index.js'
 const KEY_PARTS = ['grade', 'book', 'chapter', 'section']
 
 // These defaults deliberately use curriculum identifiers, never section-title matching.
-const CHAPTER_DEFAULTS = {
-  '初中|七年级上册|第一章': ['earth-system', 'globe-basics'],
-  '初中|七年级上册|第二章': ['map-projection', 'map-reading'],
-  '初中|七年级上册|第三章': ['earth-system', 'continents-oceans'],
-  '初中|七年级下册|第七章': ['earth-system', 'regional-environment'],
-  '初中|七年级下册|第八章': ['spatial-network', 'regional-connections'],
-  '初中|七年级下册|第九章': ['spatial-network', 'regional-connections'],
-  '初中|八年级上册|第一章': ['spatial-network', 'population-distribution'],
-  '初中|八年级上册|第二章': ['earth-system', 'china-natural-environment'],
-  '初中|八年级上册|第三章': ['human-environment', 'resource-system'],
-  '初中|八年级下册|第六章': ['map-projection', 'regional-division'],
-  '初中|八年级下册|第七章': ['spatial-network', 'regional-development'],
-  '高中|必修第一册|第一章': ['earth-system', 'cosmic-earth'],
-  '高中|必修第一册|第二章': ['atmosphere-system', 'atmosphere-process'],
-  '高中|必修第一册|第三章': ['water-cycle-3d', 'water-cycle'],
-  '高中|必修第一册|第四章': ['landform-sandbox', 'landform-process'],
-  '高中|必修第一册|第五章': ['soil-profile-3d', 'vegetation-soil'],
-  '高中|必修第一册|第六章': ['disaster-sandbox', 'natural-hazards'],
-  '高中|必修第二册|第一章': ['spatial-network', 'population-system'],
-  '高中|必修第二册|第二章': ['spatial-network', 'urban-system'],
-  '高中|必修第二册|第三章': ['spatial-network', 'industry-location'],
-  '高中|必修第二册|第四章': ['spatial-network', 'transport-network'],
-  '高中|必修第二册|第五章': ['human-environment', 'sustainable-development'],
-  '高中|选择性必修1|第一章': ['seasons', 'earth-motion'],
-  '高中|选择性必修1|第二章': ['fault-model', 'surface-process'],
-  '高中|选择性必修1|第三章': ['thermal-circulation', 'atmospheric-circulation'],
-  '高中|选择性必修1|第四章': ['water-cycle-3d', 'water-movement'],
-  '高中|选择性必修1|第五章': ['human-environment', 'natural-zonation'],
-  '高中|选择性必修2|第一章': ['spatial-network', 'regional-system'],
-  '高中|选择性必修2|第二章': ['human-environment', 'regional-resource'],
-  '高中|选择性必修2|第三章': ['spatial-network', 'city-industry-region'],
-  '高中|选择性必修2|第四章': ['spatial-network', 'regional-coordination'],
-  '高中|选择性必修3|第一章': ['human-environment', 'ecosystem-services'],
-  '高中|选择性必修3|第二章': ['human-environment', 'resource-security'],
-  '高中|选择性必修3|第三章': ['human-environment', 'environmental-security'],
-  '高中|选择性必修3|第四章': ['human-environment', 'environmental-governance'],
-}
+const chapterDefault = (key, primary) => Object.freeze({ key, primary: Object.freeze(primary) })
+const sectionOverride = (key, primary, related = []) => Object.freeze({
+  key, primary: Object.freeze(primary), related: Object.freeze(related.map(reference => Object.freeze(reference))),
+})
 
-const SECTION_OVERRIDES = {
-  '初中|七年级上册|第一章|第三节': {
-    primary: ['seasons', 'earth-motion'], related: [['solar-motion', 'default']],
-  },
-  '初中|七年级上册|第三章|第二节': {
-    primary: ['landform-sandbox', 'landform-process'], related: [['stream-table', 'default']],
-  },
-  '初中|八年级上册|第二章|第一节': {
-    primary: ['landform-sandbox', 'landform-process'], related: [['stream-table', 'default']],
-  },
-  '初中|八年级上册|第二章|第二节': {
-    primary: ['atmosphere-system', 'atmosphere-process'], related: [['thermal-circulation', 'atmospheric-circulation']],
-  },
-  '初中|八年级上册|第二章|第三节': {
-    primary: ['stream-table', 'default'], related: [['water-cycle-3d', 'water-cycle']],
-  },
-  '高中|必修第一册|第一章|第三节': {
-    primary: ['geologic-time', 'default'], related: [['stratigraphy', 'default']],
-  },
-  '高中|必修第一册|第二章|第二节': {
-    primary: ['thermal-circulation', 'atmospheric-circulation'], related: [['coriolis', 'default']],
-  },
-  '高中|必修第一册|第三章|第一节': {
-    primary: ['water-cycle-3d', 'water-cycle'], related: [['water-cycle', 'default']],
-  },
-  '高中|必修第一册|第三章|第三节': {
-    primary: ['water-cycle-3d', 'water-movement'], related: [['water-cycle', 'default']],
-  },
-  '高中|必修第一册|第四章|第一节': {
-    primary: ['landform-sandbox', 'landform-process'], related: [['stream-table', 'default']],
-  },
-  '高中|必修第一册|第四章|第二节': {
-    primary: ['landform-sandbox', 'landform-process'], related: [['stream-table', 'default']],
-  },
-  '高中|必修第一册|第六章|第一节': {
-    primary: ['disaster-sandbox', 'natural-hazards'], related: [['thermal-circulation', 'atmospheric-circulation']],
-  },
-  '高中|必修第一册|第六章|第二节': {
-    primary: ['disaster-sandbox', 'natural-hazards'], related: [['fault-model', 'default']],
-  },
-  '高中|选择性必修1|第一章|第一节': {
-    primary: ['seasons', 'earth-motion'], related: [['solar-motion', 'default']],
-  },
-  '高中|选择性必修1|第一章|第二节': {
-    primary: ['solar-motion', 'default'], related: [['seasons', 'earth-motion']],
-  },
-  '高中|选择性必修1|第二章|第二节': {
-    primary: ['fault-model', 'default'], related: [['stratigraphy', 'default']],
-  },
-  '高中|选择性必修1|第二章|第三节': {
-    primary: ['stream-table', 'default'], related: [['sediment-transport', 'default']],
-  },
-  '高中|选择性必修1|第二章|问题研究': {
-    primary: ['stream-table', 'default'], related: [['sediment-transport', 'default']],
-  },
-  '高中|选择性必修1|第三章|第一节': {
-    primary: ['thermal-circulation', 'atmospheric-circulation'], related: [['coriolis', 'default']],
-  },
-  '高中|选择性必修1|第三章|第二节': {
-    primary: ['thermal-circulation', 'atmospheric-circulation'], related: [['coriolis', 'default']],
-  },
-  '高中|选择性必修1|第四章|第一节': {
-    primary: ['groundwater', 'default'], related: [['water-cycle-3d', 'water-cycle']],
-  },
-  '高中|选择性必修1|第四章|第二节': {
-    primary: ['water-cycle-3d', 'water-movement'], related: [['water-cycle', 'default']],
-  },
-}
+// Arrays preserve the raw keys so audits can find duplicate configuration entries.
+const CHAPTER_DEFAULTS = Object.freeze([
+  chapterDefault('初中|七年级上册|第一章', ['earth-system', 'globe-basics']),
+  chapterDefault('初中|七年级上册|第二章', ['map-projection', 'map-reading']),
+  chapterDefault('初中|七年级上册|第三章', ['earth-system', 'continents-oceans']),
+  chapterDefault('初中|七年级下册|第七章', ['earth-system', 'regional-environment']),
+  chapterDefault('初中|七年级下册|第八章', ['spatial-network', 'regional-connections']),
+  chapterDefault('初中|七年级下册|第九章', ['spatial-network', 'regional-connections']),
+  chapterDefault('初中|八年级上册|第一章', ['spatial-network', 'population-distribution']),
+  chapterDefault('初中|八年级上册|第二章', ['earth-system', 'china-natural-environment']),
+  chapterDefault('初中|八年级上册|第三章', ['human-environment', 'resource-system']),
+  chapterDefault('初中|八年级下册|第六章', ['map-projection', 'regional-division']),
+  chapterDefault('初中|八年级下册|第七章', ['spatial-network', 'regional-development']),
+  chapterDefault('高中|必修第一册|第一章', ['earth-system', 'cosmic-earth']),
+  chapterDefault('高中|必修第一册|第二章', ['atmosphere-system', 'atmosphere-process']),
+  chapterDefault('高中|必修第一册|第三章', ['water-cycle-3d', 'water-cycle']),
+  chapterDefault('高中|必修第一册|第四章', ['landform-sandbox', 'landform-process']),
+  chapterDefault('高中|必修第一册|第五章', ['soil-profile-3d', 'vegetation-soil']),
+  chapterDefault('高中|必修第一册|第六章', ['disaster-sandbox', 'natural-hazards']),
+  chapterDefault('高中|必修第二册|第一章', ['spatial-network', 'population-system']),
+  chapterDefault('高中|必修第二册|第二章', ['spatial-network', 'urban-system']),
+  chapterDefault('高中|必修第二册|第三章', ['spatial-network', 'industry-location']),
+  chapterDefault('高中|必修第二册|第四章', ['spatial-network', 'transport-network']),
+  chapterDefault('高中|必修第二册|第五章', ['human-environment', 'sustainable-development']),
+  chapterDefault('高中|选择性必修1|第一章', ['seasons', 'earth-motion']),
+  chapterDefault('高中|选择性必修1|第二章', ['fault-model', 'surface-process']),
+  chapterDefault('高中|选择性必修1|第三章', ['thermal-circulation', 'atmospheric-circulation']),
+  chapterDefault('高中|选择性必修1|第四章', ['water-cycle-3d', 'water-movement']),
+  chapterDefault('高中|选择性必修1|第五章', ['human-environment', 'natural-zonation']),
+  chapterDefault('高中|选择性必修2|第一章', ['spatial-network', 'regional-system']),
+  chapterDefault('高中|选择性必修2|第二章', ['human-environment', 'regional-resource']),
+  chapterDefault('高中|选择性必修2|第三章', ['spatial-network', 'city-industry-region']),
+  chapterDefault('高中|选择性必修2|第四章', ['spatial-network', 'regional-coordination']),
+  chapterDefault('高中|选择性必修3|第一章', ['human-environment', 'ecosystem-services']),
+  chapterDefault('高中|选择性必修3|第二章', ['human-environment', 'resource-security']),
+  chapterDefault('高中|选择性必修3|第三章', ['human-environment', 'environmental-security']),
+  chapterDefault('高中|选择性必修3|第四章', ['human-environment', 'environmental-governance']),
+])
+
+const SECTION_OVERRIDES = Object.freeze([
+  sectionOverride('初中|七年级上册|第一章|第三节', ['seasons', 'earth-motion'], [['solar-motion', 'default']]),
+  sectionOverride('初中|七年级上册|第三章|第二节', ['landform-sandbox', 'landform-process'], [['stream-table', 'default']]),
+  sectionOverride('初中|八年级上册|第二章|第一节', ['landform-sandbox', 'landform-process'], [['stream-table', 'default']]),
+  sectionOverride('初中|八年级上册|第二章|第二节', ['atmosphere-system', 'atmosphere-process'], [['thermal-circulation', 'atmospheric-circulation']]),
+  sectionOverride('初中|八年级上册|第二章|第三节', ['stream-table', 'default'], [['water-cycle-3d', 'water-cycle']]),
+  sectionOverride('高中|必修第一册|第一章|第三节', ['geologic-time', 'default'], [['stratigraphy', 'default']]),
+  sectionOverride('高中|必修第一册|第二章|第二节', ['thermal-circulation', 'atmospheric-circulation'], [['coriolis', 'default']]),
+  sectionOverride('高中|必修第一册|第三章|第一节', ['water-cycle-3d', 'water-cycle'], [['water-cycle', 'default']]),
+  sectionOverride('高中|必修第一册|第三章|第三节', ['water-cycle-3d', 'water-movement'], [['water-cycle', 'default']]),
+  sectionOverride('高中|必修第一册|第四章|第一节', ['landform-sandbox', 'landform-process'], [['stream-table', 'default']]),
+  sectionOverride('高中|必修第一册|第四章|第二节', ['landform-sandbox', 'landform-process'], [['stream-table', 'default']]),
+  sectionOverride('高中|必修第一册|第六章|第一节', ['disaster-sandbox', 'natural-hazards'], [['thermal-circulation', 'atmospheric-circulation']]),
+  sectionOverride('高中|必修第一册|第六章|第二节', ['disaster-sandbox', 'natural-hazards'], [['fault-model', 'default']]),
+  sectionOverride('高中|选择性必修1|第一章|第一节', ['seasons', 'earth-motion'], [['solar-motion', 'default']]),
+  sectionOverride('高中|选择性必修1|第一章|第二节', ['solar-motion', 'default'], [['seasons', 'earth-motion']]),
+  sectionOverride('高中|选择性必修1|第二章|第二节', ['fault-model', 'default'], [['stratigraphy', 'default']]),
+  sectionOverride('高中|选择性必修1|第二章|第三节', ['stream-table', 'default'], [['sediment-transport', 'default']]),
+  sectionOverride('高中|选择性必修1|第二章|问题研究', ['stream-table', 'default'], [['sediment-transport', 'default']]),
+  sectionOverride('高中|选择性必修1|第三章|第一节', ['thermal-circulation', 'atmospheric-circulation'], [['coriolis', 'default']]),
+  sectionOverride('高中|选择性必修1|第三章|第二节', ['thermal-circulation', 'atmospheric-circulation'], [['coriolis', 'default']]),
+  sectionOverride('高中|选择性必修1|第四章|第一节', ['groundwater', 'default'], [['water-cycle-3d', 'water-cycle']]),
+  sectionOverride('高中|选择性必修1|第四章|第二节', ['water-cycle-3d', 'water-movement'], [['water-cycle', 'default']]),
+])
+
+export const experimentLinkConfiguration = Object.freeze({
+  chapterDefaults: CHAPTER_DEFAULTS,
+  sectionOverrides: SECTION_OVERRIDES,
+})
 
 export function textbookKey(context) {
   if (!context || KEY_PARTS.some(part => !context[part])) return null
@@ -156,14 +123,28 @@ function sectionsFor(grades) {
     })))))
 }
 
-function buildRegistry(grades) {
+function configurationEntries(configuration) {
+  return [
+    ...(configuration?.chapterDefaults || []).map(entry => Object.freeze({ ...entry, kind: 'chapter-default' })),
+    ...(configuration?.sectionOverrides || []).map(entry => Object.freeze({ ...entry, kind: 'section-override' })),
+  ]
+}
+
+function latestConfigByKey(entries) {
+  return new Map(entries.map(entry => [entry.key, entry]))
+}
+
+function buildRegistry(grades, configuration = experimentLinkConfiguration) {
   const entries = []
+  const configurationByKind = configurationEntries(configuration)
+  const chapterDefaultsByKey = latestConfigByKey(configurationByKind.filter(entry => entry.kind === 'chapter-default'))
+  const sectionOverridesByKey = latestConfigByKey(configurationByKind.filter(entry => entry.kind === 'section-override'))
 
   for (const context of sectionsFor(grades)) {
     const key = textbookKey(context)
-    const override = SECTION_OVERRIDES[key]
-    const chapterDefault = CHAPTER_DEFAULTS[chapterKey(context)]
-    const config = override || (chapterDefault ? { primary: chapterDefault } : null)
+    const override = sectionOverridesByKey.get(key)
+    const chapterDefault = chapterDefaultsByKey.get(chapterKey(context))
+    const config = override || chapterDefault
     if (!config) continue
 
     entries.push(Object.freeze({ key, context, link: createLink(config.primary, config.related) }))
@@ -182,12 +163,12 @@ function validateReferences(entries) {
   const invalidExperiments = []
   const invalidPresets = []
 
-  for (const { key, link } of entries) {
-    for (const reference of [link.primary, ...link.related]) {
-      if (!getExperiment(reference.experimentId)) {
-        invalidExperiments.push({ key, experimentId: reference.experimentId })
-      } else if (!getExperimentPreset(reference.experimentId, reference.presetId)) {
-        invalidPresets.push({ key, experimentId: reference.experimentId, presetId: reference.presetId })
+  for (const { key, primary, related = [] } of entries) {
+    for (const [experimentId, presetId] of [primary, ...related]) {
+      if (!getExperiment(experimentId)) {
+        invalidExperiments.push({ key, experimentId })
+      } else if (!getExperimentPreset(experimentId, presetId)) {
+        invalidPresets.push({ key, experimentId, presetId })
       }
     }
   }
@@ -206,19 +187,23 @@ export function getTextbooksForExperiment(id) {
     .map(({ context }) => context)
 }
 
-export function auditExperimentCoverage(grades) {
+export function auditExperimentCoverage(grades, configuration = experimentLinkConfiguration) {
   const curriculumSections = sectionsFor(grades)
   const curriculumKeys = new Set(curriculumSections.map(textbookKey))
-  const entries = buildRegistry(grades)
+  const curriculumChapterKeys = new Set(curriculumSections.map(chapterKey))
+  const rawConfigurationEntries = configurationEntries(configuration)
+  const entries = buildRegistry(grades, configuration)
   const linksByKey = new Map(entries.map(({ key, link }) => [key, link]))
-  const { invalidExperiments, invalidPresets } = validateReferences(entries)
+  const { invalidExperiments, invalidPresets } = validateReferences(rawConfigurationEntries)
   const uncovered = curriculumSections
     .filter(context => !linksByKey.has(textbookKey(context)))
     .map(textbookKey)
     .sort()
-  const orphanKeys = entries
+  const orphanKeys = rawConfigurationEntries
+    .filter(entry => entry.kind === 'chapter-default'
+      ? !curriculumChapterKeys.has(entry.key)
+      : !curriculumKeys.has(entry.key))
     .map(({ key }) => key)
-    .filter(key => !curriculumKeys.has(key))
     .sort()
   const curated = curriculumSections.filter(context => linksByKey.get(textbookKey(context))?.confidence === 'curated').length
 
@@ -229,7 +214,7 @@ export function auditExperimentCoverage(grades) {
     uncovered,
     invalidExperiments,
     invalidPresets,
-    duplicateKeys: countDuplicates(entries),
+    duplicateKeys: countDuplicates(rawConfigurationEntries),
     orphanKeys,
   })
 }
