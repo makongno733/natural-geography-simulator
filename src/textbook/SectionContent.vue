@@ -80,21 +80,49 @@
 
         <section v-if="isGrouped" class="concept-defs">
           <div v-for="(concepts, groupName) in conceptDefinitions" :key="groupName" class="concept-group">
-            <h3 class="concept-group-title">{{ groupName }}</h3>
-            <div v-for="(defs, conceptName) in concepts" :key="conceptName" class="concept-item">
-              <div class="concept-item-name">• {{ conceptName }}</div>
-              <div class="concept-item-body">• {{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
+            <button
+              type="button"
+              class="concept-group-title"
+              :aria-expanded="!collapsedGroups[groupName]"
+              @click="toggleGroup(groupName)"
+            >
+              <span class="group-dot" :style="{ background: groupAccent(groupName) }"></span>
+              <span class="group-name">{{ groupName }}</span>
+              <span class="group-count">{{ conceptCount(concepts) }}</span>
+              <span class="group-arrow" aria-hidden="true">{{ collapsedGroups[groupName] ? '▸' : '▾' }}</span>
+            </button>
+            <div v-show="!collapsedGroups[groupName]" class="concept-items">
+              <div v-for="(defs, conceptName) in concepts" :key="conceptName" class="concept-item">
+                <div class="concept-item-name">{{ conceptName }}</div>
+                <div class="concept-item-body">{{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
+              </div>
             </div>
           </div>
         </section>
         <section v-else-if="conceptEntries.length" class="concept-defs">
           <h3 class="concept-group-title">核心概念</h3>
           <div v-for="[name, defs] in conceptEntries" :key="name" class="concept-item">
-            <div class="concept-item-name">• {{ name }}</div>
-            <div class="concept-item-body">• {{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
+            <div class="concept-item-name">{{ name }}</div>
+            <div class="concept-item-body">{{ defs[gradeLevel] || defs['高中'] || defs['初中'] }}</div>
           </div>
         </section>
         </template>
+
+        <section v-if="figures.length" class="section-figures" aria-label="关键图表">
+          <h3 class="figures-title">关键图表</h3>
+          <figure v-for="fig in figures" :key="fig.id" class="figure-card">
+            <div class="figure-images" :class="'figure-count-' + fig.images.length">
+              <img
+                v-for="key in fig.images"
+                :key="key"
+                :src="resolveFigure(key)"
+                :alt="fig.caption"
+                loading="lazy"
+              />
+            </div>
+            <figcaption class="figure-caption">{{ fig.caption }}</figcaption>
+          </figure>
+        </section>
 
         <div class="section-nav">
           <router-link
@@ -155,13 +183,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineAsyncComponent } from 'vue'
+import { ref, reactive, computed, watch, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
 import StudentLearningView from './components/StudentLearningView.vue'
 import AsyncModuleError from './components/AsyncModuleError.vue'
 import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
+import { figureAssets } from './data/figureAssets.js'
 
 const defaultToolLoaders = {
   sandbox: () => import('../sandbox/SandboxApp.vue'),
@@ -300,6 +329,8 @@ const teachingKeyPoints = computed(() =>
   []
 )
 const classroomSummary = computed(() => {
+  const overview = studentLearning.value?.overview
+  if (overview) return overview
   const chapterTitle = chapterData.value?.title || '本章'
   const sectionTitle = sectionData.value?.title || '本节'
   const conceptNames = conceptEntries.value.slice(0, 3).map(([n]) => n).join('、') || '核心概念、过程机制、区域应用'
@@ -350,7 +381,36 @@ const conceptEntries = computed(() => {
   return Object.entries(defs)
 })
 
+const figures = computed(() => {
+  const list = loadedContent.value?.figures
+  return Array.isArray(list) ? list : []
+})
+const resolveFigure = (key) => figureAssets[key] || ''
+
+const GROUP_ACCENTS = {
+  核心概念: '#b01217',
+  过程机制: '#2f6fb2',
+  空间规律: '#4a7c4a',
+  典型案例: '#c8822a',
+  易错辨析: '#7b4fa0',
+}
+const groupAccent = (name) => GROUP_ACCENTS[name] || '#8a6a52'
+const conceptCount = (concepts) => Object.keys(concepts || {}).length
+
+const collapsedGroups = reactive({})
+function toggleGroup(name) {
+  collapsedGroups[name] = !collapsedGroups[name]
+}
+
 const loadedContent = ref(null)
+
+watch(conceptDefinitions, (defs) => {
+  Object.keys(collapsedGroups).forEach((k) => delete collapsedGroups[k])
+  const names = defs ? Object.keys(defs) : []
+  names.forEach((name) => {
+    collapsedGroups[name] = name !== '核心概念'
+  })
+}, { immediate: true })
 
 const studentLearning = computed(() =>
   normalizeStudentLearning(loadedContent.value?.studentLearning)
@@ -617,29 +677,108 @@ const nextSection = computed(() => {
 }
 .concept-group {
   margin-bottom: 18px;
+  border: 1px solid rgba(138, 106, 82, 0.18);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 252, 247, 0.5);
 }
 .concept-group-title {
-  margin: 0 0 8px;
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 4px 2px 8px;
+  border: none;
+  border-bottom: 1px solid rgba(138, 106, 82, 0.14);
+  background: transparent;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--red);
+  color: #5a352c;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.concept-group-title:hover .group-name { color: var(--red); }
+.group-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+.group-name { flex: 1; }
+.group-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a6a52;
+  background: rgba(138, 106, 82, 0.1);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.group-arrow {
+  color: #8a6a52;
+  font-size: 13px;
+  width: 12px;
+  text-align: center;
+}
+.concept-items {
+  padding-top: 8px;
 }
 .concept-item {
-  margin-bottom: 8px;
+  margin-bottom: 11px;
 }
 .concept-item-name {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--button-green-ink);
   padding-left: 4px;
+  margin-bottom: 2px;
 }
 .concept-item-body {
   padding-left: 20px;
-  font-size: 13.5px;
-  line-height: 1.88;
+  font-size: 14px;
+  line-height: 1.92;
   color: #3d231b;
   text-align: justify;
   white-space: pre-line;
+}
+
+.section-figures {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--brown-light);
+}
+.figures-title {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--red);
+}
+.figure-card {
+  margin: 0 0 18px;
+  padding: 12px;
+  border: 1px solid rgba(138, 106, 82, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 252, 247, 0.6);
+}
+.figure-images {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.figure-images img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+}
+.figure-count-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.figure-count-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.figure-caption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b4a3d;
+  text-align: center;
 }
 
 @media (max-width: 960px) {
