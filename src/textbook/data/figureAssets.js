@@ -47,6 +47,18 @@ import slope from '../../assets/textbook/必修第一册/4.2/slope.png'
 import forestLayers from '../../assets/textbook/必修第一册/5.1/forest-layers.jpg'
 import vegetationTypes from '../../assets/textbook/必修第一册/5.1/vegetation-types.png'
 
+import soilProfile from '../../assets/textbook/必修第一册/5.2/soil-profile.jpg'
+import soilFactors from '../../assets/textbook/必修第一册/5.2/soil-factors.png'
+import soilComposition from '../../assets/textbook/必修第一册/5.2/soil-composition.png'
+import typhoonStructure from '../../assets/textbook/必修第一册/6.1/typhoon-structure.jpg'
+import typhoonPath from '../../assets/textbook/必修第一册/6.1/typhoon-path.jpg'
+import earthquake from '../../assets/textbook/必修第一册/6.2/earthquake.png'
+import landslide from '../../assets/textbook/必修第一册/6.2/landslide.png'
+import disasterMonitoring from '../../assets/textbook/必修第一册/6.3/disaster-monitoring.jpg'
+import remoteSensing from '../../assets/textbook/必修第一册/6.4/remote-sensing.jpg'
+import gnss from '../../assets/textbook/必修第一册/6.4/gnss.jpg'
+import gis from '../../assets/textbook/必修第一册/6.4/gis.jpg'
+
 export const figureAssets = {
   nebula,
   star,
@@ -94,4 +106,16 @@ export const figureAssets = {
   slope,
   'forest-layers': forestLayers,
   'vegetation-types': vegetationTypes,
+
+  'soil-profile': soilProfile,
+  'soil-factors': soilFactors,
+  'soil-composition': soilComposition,
+  'typhoon-structure': typhoonStructure,
+  'typhoon-path': typhoonPath,
+  earthquake,
+  landslide,
+  'disaster-monitoring': disasterMonitoring,
+  'remote-sensing': remoteSensing,
+  gnss,
+  gis,
 }
