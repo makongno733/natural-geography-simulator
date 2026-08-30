@@ -1,0 +1,292 @@
+{
+  "第四章": {
+    "第一节": {
+      "figures": [
+        {
+          "id": "huanghe-basin-overview",
+          "caption": "图4.4 黄河流域概况",
+          "images": [
+            {
+              "src": "image36.jpeg",
+              "key": "ch4-huanghe-basin-provinces"
+            },
+            {
+              "src": "image38.png",
+              "key": "ch4-huanghe-basin-map"
+            }
+          ]
+        },
+        {
+          "id": "huanghe-suspended-river",
+          "caption": "图4.5 黄河下游的“地上河”示意",
+          "images": [
+            {
+              "src": "image40.jpeg",
+              "key": "ch4-suspended-river-diagram"
+            },
+            {
+              "src": "image41.jpeg",
+              "key": "ch4-suspended-river"
+            }
+          ]
+        },
+        {
+          "id": "loess-soil-conservation",
+          "caption": "图4.6 黄土高原实施水土保持工程措施的模式",
+          "images": [
+            {
+              "src": "image47.png",
+              "key": "ch4-soil-conservation-bio-1"
+            },
+            {
+              "src": "image48.png",
+              "key": "ch4-soil-conservation-bio-2"
+            },
+            {
+              "src": "image49.png",
+              "key": "ch4-soil-conservation-tillage-1"
+            },
+            {
+              "src": "image50.png",
+              "key": "ch4-soil-conservation-tillage-2"
+            },
+            {
+              "src": "image51.jpeg",
+              "key": "ch4-soil-conservation-engineering"
+            }
+          ]
+        },
+        {
+          "id": "huanghe-sediment-discharge",
+          "caption": "图4.7 黄河干流主要水文站不同阶段实测年均输沙量比较",
+          "images": [
+            {
+              "src": "image53.jpeg",
+              "key": "ch4-huanghe-sediment-discharge"
+            }
+          ]
+        },
+        {
+          "id": "nanxiaohegou-watershed",
+          "caption": "图4.8 南小河沟小流域综合治理措施示意",
+          "images": [
+            {
+              "src": "image54.jpeg",
+              "key": "ch4-nanxiaohegou-treatment"
+            },
+            {
+              "src": "image55.png",
+              "key": "ch4-nanxiaohegou-measures"
+            }
+          ]
+        },
+        {
+          "id": "xiaolangdi-flushing",
+          "caption": "图4.9 黄河小浪底水库放水调沙",
+          "images": [
+            {
+              "src": "image46.jpeg",
+              "key": "ch4-xiaolangdi-flushing"
+            }
+          ]
+        }
+      ]
+    },
+    "第二节": {
+      "figures": [
+        {
+          "id": "west-east-gas-pipeline",
+          "caption": "图4.16 西气东输工程线路示意",
+          "images": [
+            {
+              "src": "image42.png",
+              "key": "ch4-gas-pipeline-map"
+            },
+            {
+              "src": "image45.png",
+              "key": "ch4-gas-pipeline-route"
+            }
+          ]
+        },
+        {
+          "id": "energy-production-consumption-ratio",
+          "caption": "图4.17 我国东部、中部和西部能源生产、消费占全国的比例（2019年）",
+          "images": [
+            {
+              "src": "image49.jpeg",
+              "key": "ch4-energy-prod-consumption"
+            }
+          ]
+        },
+        {
+          "id": "energy-consumption-structure",
+          "caption": "图4.18 1980—2020年我国能源消费结构",
+          "images": [
+            {
+              "src": "image50.png",
+              "key": "ch4-energy-structure-1"
+            },
+            {
+              "src": "image51.png",
+              "key": "ch4-energy-structure-2"
+            },
+            {
+              "src": "image52.png",
+              "key": "ch4-energy-structure-3"
+            }
+          ]
+        },
+        {
+          "id": "gas-pipeline-regional-impact",
+          "caption": "图4.20 西气东输对资源调出区和调入区的影响",
+          "images": [
+            {
+              "src": "image62.jpeg",
+              "key": "ch4-gas-pipeline-impact"
+            }
+          ]
+        },
+        {
+          "id": "snowy-mountains-water-transfer",
+          "caption": "图4.22 澳大利亚雪山调水工程示意",
+          "images": [
+            {
+              "src": "image66.jpeg",
+              "key": "ch4-snowy-mtns-water-transfer"
+            }
+          ]
+        }
+      ]
+    },
+    "第三节": {
+      "figures": [
+        {
+          "id": "shoe-production-share",
+          "caption": "图4.23 2015年某品牌鞋生产份额",
+          "images": [
+            {
+              "src": "image19.png",
+              "key": "ch4-shoe-production-share"
+            },
+            {
+              "src": "image20.jpeg",
+              "key": "ch4-shoe-vietnam"
+            }
+          ]
+        },
+        {
+          "id": "ethiopia-location",
+          "caption": "图4.27 埃塞俄比亚位置示意",
+          "images": [
+            {
+              "src": "image38.png",
+              "key": "ch4-ethiopia-location"
+            }
+          ]
+        },
+        {
+          "id": "east-asia-industrial-transfer",
+          "caption": "图4.29 东亚、东南亚产业转移目的地的变化",
+          "images": [
+            {
+              "src": "image44.jpeg",
+              "key": "ch4-east-asia-transfer"
+            }
+          ]
+        },
+        {
+          "id": "japan-industrial-restructure",
+          "caption": "图4.30 日本通过产业废旧建新实现产业结构调整",
+          "images": [
+            {
+              "src": "image47.png",
+              "key": "ch4-japan-restructure"
+            }
+          ]
+        },
+        {
+          "id": "value-chain",
+          "caption": "图4.31 产品生产环节的价值链",
+          "images": [
+            {
+              "src": "image53.jpeg",
+              "key": "ch4-value-chain"
+            }
+          ]
+        },
+        {
+          "id": "japan-unemployment",
+          "caption": "图4.32 20世纪90年代以来日本失业率的升高",
+          "images": [
+            {
+              "src": "image54.jpeg",
+              "key": "ch4-japan-unemployment"
+            }
+          ]
+        }
+      ]
+    },
+    "第四节": {
+      "figures": [
+        {
+          "id": "japan-earthquake-tsunami",
+          "caption": "图4.33 东日本大地震引发的海啸",
+          "images": [
+            {
+              "src": "image16.png",
+              "key": "ch4-japan-tsunami"
+            }
+          ]
+        },
+        {
+          "id": "world-economy-dual-triple",
+          "caption": "图4.34 世界经济的“二元结构”和“三元结构”示意",
+          "images": [
+            {
+              "src": "image33.png",
+              "key": "ch4-economy-dual-triple"
+            }
+          ]
+        },
+        {
+          "id": "belt-road-forum",
+          "caption": "图4.36 2019年第二届“一带一路”国际合作高峰论坛",
+          "images": [
+            {
+              "src": "image48.jpeg",
+              "key": "ch4-belt-road-forum"
+            }
+          ]
+        },
+        {
+          "id": "yuxinou-railway",
+          "caption": "图4.39 “渝新欧”班列运行线路",
+          "images": [
+            {
+              "src": "image56.jpeg",
+              "key": "ch4-yuxinou-route"
+            },
+            {
+              "src": "image57.png",
+              "key": "ch4-yuxinou-map"
+            }
+          ]
+        }
+      ]
+    },
+    "问题研究": {
+      "figures": [
+        {
+          "id": "tibet-xinjiang-water-transfer",
+          "caption": "图4.40 藏水入疆引水路线构想示意",
+          "images": [
+            {
+              "src": "image18.png",
+              "key": "ch4-tibet-xinjiang-water-route"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

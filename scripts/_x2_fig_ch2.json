@@ -1,0 +1,268 @@
+{
+  "第二章": {
+    "第一节": {
+      "figures": [
+        {
+          "id": "australia-iron-ore-port",
+          "caption": "图2.1 澳大利亚运输铁矿石的港口",
+          "images": [
+            {
+              "src": "image13.png",
+              "key": "ch2-australia-iron-ore-port"
+            }
+          ]
+        },
+        {
+          "id": "dujiangyan-project",
+          "caption": "图2.2 都江堰水利工程",
+          "images": [
+            {
+              "src": "image28.png",
+              "key": "ch2-dujiangyan-project"
+            },
+            {
+              "src": "image29.jpeg",
+              "key": "ch2-dujiangyan-project-view"
+            }
+          ]
+        },
+        {
+          "id": "us-black-storm",
+          "caption": "图2.3 美国“黑风暴”",
+          "images": [
+            {
+              "src": "image33.png",
+              "key": "ch2-us-black-storm"
+            }
+          ]
+        },
+        {
+          "id": "dujiangyan-schematic",
+          "caption": "图2.4 都江堰水利工程示意",
+          "images": [
+            {
+              "src": "image30.gif",
+              "key": "ch2-dujiangyan-schematic"
+            }
+          ]
+        },
+        {
+          "id": "swiss-watch",
+          "caption": "图2.6 瑞士制造的手表内盘",
+          "images": [
+            {
+              "src": "image59.png",
+              "key": "ch2-swiss-watch"
+            },
+            {
+              "src": "image60.jpeg",
+              "key": "ch2-swiss-watch-dial"
+            }
+          ]
+        },
+        {
+          "id": "shanxi-coal-distribution",
+          "caption": "图2.7 山西省煤炭资源的分布",
+          "images": [
+            {
+              "src": "image61.jpeg",
+              "key": "ch2-shanxi-coal-distribution"
+            }
+          ]
+        }
+      ]
+    },
+    "第二节": {
+      "figures": [
+        {
+          "id": "hunshandake-grassland",
+          "caption": "图2.8 浑善达克沙地东部夏季草场（克什克腾旗）",
+          "images": [
+            {
+              "src": "image14.png",
+              "key": "ch2-hunshandake-grassland"
+            },
+            {
+              "src": "image15.png",
+              "key": "ch2-hunshandake-summer-grassland"
+            }
+          ]
+        },
+        {
+          "id": "guizhou-rocky-desertification",
+          "caption": "图2.9 贵州喀斯特山区石漠化景观",
+          "images": [
+            {
+              "src": "image30.jpeg",
+              "key": "ch2-guizhou-rocky-desertification"
+            }
+          ]
+        },
+        {
+          "id": "agro-pastoral-zone",
+          "caption": "图2.11 我国北方农牧交错带分布范围示意",
+          "images": [
+            {
+              "src": "image38.png",
+              "key": "ch2-agro-pastoral-zone-map"
+            },
+            {
+              "src": "image41.png",
+              "key": "ch2-agro-pastoral-zone-range"
+            }
+          ]
+        },
+        {
+          "id": "ordos-precipitation",
+          "caption": "图2.12 鄂尔多斯市降水量的变化",
+          "images": [
+            {
+              "src": "image42.jpeg",
+              "key": "ch2-ordos-precipitation-monthly"
+            },
+            {
+              "src": "image43.jpeg",
+              "key": "ch2-ordos-precipitation-annual"
+            }
+          ]
+        },
+        {
+          "id": "livestock-grassland-impact",
+          "caption": "图2.13 牲畜数量增加对草场的影响",
+          "images": [
+            {
+              "src": "image53.png",
+              "key": "ch2-livestock-grassland-impact"
+            }
+          ]
+        },
+        {
+          "id": "sahel-region",
+          "caption": "图2.14 萨赫勒地区示意",
+          "images": [
+            {
+              "src": "image58.png",
+              "key": "ch2-sahel-region"
+            }
+          ]
+        }
+      ]
+    },
+    "第三节": {
+      "figures": [
+        {
+          "id": "rmb-5-yuan",
+          "caption": "图2.23 我国第三套人民币的5元券",
+          "images": [
+            {
+              "src": "image17.png",
+              "key": "ch2-rmb-5-yuan"
+            }
+          ]
+        },
+        {
+          "id": "daqing-petrochemical",
+          "caption": "图2.25 大庆石化公司厂景",
+          "images": [
+            {
+              "src": "image32.png",
+              "key": "ch2-daqing-petrochemical"
+            }
+          ]
+        },
+        {
+          "id": "jiaozuo-location",
+          "caption": "图2.27 焦作市位置示意",
+          "images": [
+            {
+              "src": "image35.jpeg",
+              "key": "ch2-jiaozuo-location"
+            }
+          ]
+        },
+        {
+          "id": "jiaozuo-env-problems",
+          "caption": "图2.28 焦作市煤炭开采遗留的主要环境问题",
+          "images": [
+            {
+              "src": "image39.png",
+              "key": "ch2-jiaozuo-env-subsidence"
+            },
+            {
+              "src": "image40.png",
+              "key": "ch2-jiaozuo-env-coal-gangue"
+            },
+            {
+              "src": "image41.png",
+              "key": "ch2-jiaozuo-env-abandoned-mine"
+            },
+            {
+              "src": "image42.png",
+              "key": "ch2-jiaozuo-env-wastewater"
+            }
+          ]
+        },
+        {
+          "id": "yuntai-mountain",
+          "caption": "图2.29 焦作市云台山景观",
+          "images": [
+            {
+              "src": "image48.png",
+              "key": "ch2-yuntai-mountain-1"
+            },
+            {
+              "src": "image49.jpeg",
+              "key": "ch2-yuntai-mountain-2"
+            },
+            {
+              "src": "image50.png",
+              "key": "ch2-yuntai-mountain-3"
+            }
+          ]
+        },
+        {
+          "id": "jiaozuo-gdp",
+          "caption": "图2.31 1999—2019年焦作市地区生产总值",
+          "images": [
+            {
+              "src": "image55.jpeg",
+              "key": "ch2-jiaozuo-gdp"
+            },
+            {
+              "src": "image56.png",
+              "key": "ch2-jiaozuo-gdp-chart"
+            }
+          ]
+        }
+      ]
+    },
+    "问题研究": {
+      "figures": [
+        {
+          "id": "jingdezhen-location",
+          "caption": "图2.33 景德镇位置示意",
+          "images": [
+            {
+              "src": "image27.jpeg",
+              "key": "ch2-jingdezhen-location"
+            },
+            {
+              "src": "image28.png",
+              "key": "ch2-jingdezhen-location-map"
+            }
+          ]
+        },
+        {
+          "id": "jingdezhen-porcelain",
+          "caption": "图2.34 景德镇生产的瓷器",
+          "images": [
+            {
+              "src": "image23.jpeg",
+              "key": "ch2-jingdezhen-porcelain"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

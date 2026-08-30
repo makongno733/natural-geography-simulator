@@ -1,0 +1,151 @@
+{
+  "第三章": {
+    "第一节": {
+      "figures": [
+        {
+          "id": "zhengzhou-zhengdong-new-area",
+          "caption": "图3.1 郑州市郑东新区景观",
+          "images": [
+            {
+              "src": "image15.png",
+              "key": "ch3-zhengzhou-zhengdong-new-area"
+            }
+          ]
+        },
+        {
+          "id": "new-york-port-history",
+          "caption": "图3.5 历史时期的纽约港",
+          "images": [
+            {
+              "src": "image62.png",
+              "key": "ch3-new-york-port-history"
+            }
+          ]
+        },
+        {
+          "id": "erie-canal",
+          "caption": "图3.6 伊利运河示意",
+          "images": [
+            {
+              "src": "image63.jpeg",
+              "key": "ch3-erie-canal"
+            }
+          ]
+        },
+        {
+          "id": "boswash-population-scale",
+          "caption": "图3.8 美国“波士华城市带”各城市人口等级规模",
+          "images": [
+            {
+              "src": "image65.jpeg",
+              "key": "ch3-boswash-population-scale"
+            }
+          ]
+        },
+        {
+          "id": "new-york-multiple-functions",
+          "caption": "图3.11 纽约发挥着政治、经济、文化职能",
+          "images": [
+            {
+              "src": "image70.jpeg",
+              "key": "ch3-ny-un-headquarters"
+            },
+            {
+              "src": "image71.jpeg",
+              "key": "ch3-ny-wall-street"
+            },
+            {
+              "src": "image72.jpeg",
+              "key": "ch3-ny-met-museum"
+            },
+            {
+              "src": "image73.jpeg",
+              "key": "ch3-ny-met-opera"
+            }
+          ]
+        },
+        {
+          "id": "wuhan-city-circle",
+          "caption": "图3.12 武汉城市圈",
+          "images": [
+            {
+              "src": "image74.jpeg",
+              "key": "ch3-wuhan-city-circle"
+            }
+          ]
+        }
+      ]
+    },
+    "第二节": {
+      "figures": [
+        {
+          "id": "shenzhen-changes",
+          "caption": "图3.14 改革开放以来深圳的变化",
+          "images": [
+            {
+              "src": "image17.png",
+              "key": "ch3-shenzhen-before"
+            },
+            {
+              "src": "image18.png",
+              "key": "ch3-shenzhen-after"
+            }
+          ]
+        },
+        {
+          "id": "china-four-regions",
+          "caption": "图3.15 中国四大地区示意",
+          "images": [
+            {
+              "src": "image27.jpeg",
+              "key": "ch3-china-four-regions"
+            }
+          ]
+        },
+        {
+          "id": "prd-leading-industry-change",
+          "caption": "图3.16 20世纪90年代珠江三角洲地区主导产业的变化",
+          "images": [
+            {
+              "src": "image47.jpeg",
+              "key": "ch3-prd-leading-industry-change"
+            }
+          ]
+        },
+        {
+          "id": "shanghai-location",
+          "caption": "图3.17 上海市位置示意",
+          "images": [
+            {
+              "src": "image52.jpeg",
+              "key": "ch3-shanghai-location"
+            }
+          ]
+        },
+        {
+          "id": "shanghai-three-industries-proportion",
+          "caption": "图3.18 上海市三次产业产值所占比例变化",
+          "images": [
+            {
+              "src": "image53.jpeg",
+              "key": "ch3-shanghai-three-industries-proportion"
+            }
+          ]
+        },
+        {
+          "id": "yangshan-port",
+          "caption": "图3.24 洋山港全自动集装箱码头",
+          "images": [
+            {
+              "src": "image59.png",
+              "key": "ch3-yangshan-port"
+            }
+          ]
+        }
+      ]
+    },
+    "问题研究": {
+      "figures": []
+    }
+  }
+}

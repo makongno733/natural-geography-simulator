@@ -1,0 +1,222 @@
+{
+  "第一章": {
+    "第一节": {
+      "figures": [
+        {
+          "id": "pingsha-island-agriculture",
+          "caption": "图1.1 广东省平沙岛的农业景观",
+          "images": [
+            {
+              "src": "image9.jpeg",
+              "key": "ch1-pingsha-island-agriculture"
+            }
+          ]
+        },
+        {
+          "id": "dongxiang-wild-rice",
+          "caption": "图1.2 江西省抚州市东乡区的野生稻",
+          "images": [
+            {
+              "src": "image53.jpeg",
+              "key": "ch1-dongxiang-wild-rice"
+            }
+          ]
+        },
+        {
+          "id": "chinese-dialect-regions",
+          "caption": "图1.3 中国汉语方言区分布示意",
+          "images": [
+            {
+              "src": "image28.jpeg",
+              "key": "ch1-chinese-dialect-regions"
+            }
+          ]
+        },
+        {
+          "id": "northeast-plain",
+          "caption": "图1.4 东北平原示意",
+          "images": [
+            {
+              "src": "image61.jpeg",
+              "key": "ch1-northeast-plain"
+            }
+          ]
+        },
+        {
+          "id": "yugong-jiuzhou-map",
+          "caption": "图1.5 南宋刻本《禹贡九州山川之图》",
+          "images": [
+            {
+              "src": "image76.jpeg",
+              "key": "ch1-yugong-jiuzhou-map"
+            }
+          ]
+        },
+        {
+          "id": "qinling-landscape",
+          "caption": "图1.6 秦岭景观",
+          "images": [
+            {
+              "src": "image78.jpeg",
+              "key": "ch1-qinling-landscape"
+            },
+            {
+              "src": "image80.jpeg",
+              "key": "ch1-qinling-mountain"
+            }
+          ]
+        }
+      ]
+    },
+    "第二节": {
+      "figures": [
+        {
+          "id": "qingtian-rice-fish",
+          "caption": "图1.7 浙江省青田县的稻田养鱼景观",
+          "images": [
+            {
+              "src": "image13.jpeg",
+              "key": "ch1-qingtian-rice-fish"
+            },
+            {
+              "src": "image11.png",
+              "key": "ch1-qingtian-rice-fish-panorama"
+            }
+          ]
+        },
+        {
+          "id": "peitian-village",
+          "caption": "图1.8 福建培田村",
+          "images": [
+            {
+              "src": "image27.png",
+              "key": "ch1-peitian-village-panorama"
+            },
+            {
+              "src": "image28.png",
+              "key": "ch1-peitian-village-local"
+            }
+          ]
+        },
+        {
+          "id": "oman-location",
+          "caption": "图1.9 阿曼位置示意",
+          "images": [
+            {
+              "src": "image37.jpeg",
+              "key": "ch1-oman-location"
+            }
+          ]
+        },
+        {
+          "id": "falaj-landscape",
+          "caption": "图1.10 法拉吉景观",
+          "images": [
+            {
+              "src": "image38.jpeg",
+              "key": "ch1-falaj-landscape"
+            },
+            {
+              "src": "image39.jpeg",
+              "key": "ch1-falaj-landscape-2"
+            }
+          ]
+        },
+        {
+          "id": "jingjinji-association",
+          "caption": "图1.11 京津冀区域关联示意",
+          "images": [
+            {
+              "src": "image59.png",
+              "key": "ch1-jingjinji-association"
+            }
+          ]
+        },
+        {
+          "id": "yangtze-delta-conditions",
+          "caption": "图1.12 长江三角洲的地理条件",
+          "images": [
+            {
+              "src": "image61.png",
+              "key": "ch1-yangtze-delta-conditions"
+            }
+          ]
+        },
+        {
+          "id": "songnen-plain-conditions",
+          "caption": "图1.13 松嫩平原的地理条件",
+          "images": [
+            {
+              "src": "image62.png",
+              "key": "ch1-songnen-plain-conditions"
+            }
+          ]
+        },
+        {
+          "id": "yangtze-rice-field",
+          "caption": "图1.14 长江三角洲的水稻田",
+          "images": [
+            {
+              "src": "image63.png",
+              "key": "ch1-yangtze-rice-field"
+            }
+          ]
+        },
+        {
+          "id": "songnen-corn",
+          "caption": "图1.15 松嫩平原的玉米",
+          "images": [
+            {
+              "src": "image64.png",
+              "key": "ch1-songnen-corn"
+            }
+          ]
+        },
+        {
+          "id": "pingyao-ancient-city",
+          "caption": "图1.16 我国北方传统民居——山西省平遥古城",
+          "images": [
+            {
+              "src": "image75.jpeg",
+              "key": "ch1-pingyao-ancient-city"
+            }
+          ]
+        },
+        {
+          "id": "shaoxing-ancient-town",
+          "caption": "图1.17 我国南方传统民居——浙江省绍兴古镇",
+          "images": [
+            {
+              "src": "image76.jpeg",
+              "key": "ch1-shaoxing-ancient-town"
+            }
+          ]
+        }
+      ]
+    },
+    "问题研究": {
+      "figures": [
+        {
+          "id": "mauritius-location",
+          "caption": "图1.18 毛里求斯地理位置示意",
+          "images": [
+            {
+              "src": "image24.jpeg",
+              "key": "ch1-mauritius-location"
+            }
+          ]
+        },
+        {
+          "id": "mauritius-sugarcane",
+          "caption": "图1.19 毛里求斯种植的甘蔗",
+          "images": [
+            {
+              "src": "image27.jpeg",
+              "key": "ch1-mauritius-sugarcane"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
