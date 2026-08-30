@@ -9,6 +9,12 @@ describe('student learning overlay', () => {
     expect(learning.practice.length).toBeGreaterThan(0)
   })
 
+  it('loads the compulsory-two overlay by chapter and section', async () => {
+    const learning = await loadStudentLearning('高中', '必修第二册', '第一章', '第一节')
+    expect(learning.overview).toBeTruthy()
+    expect(learning.practice.length).toBeGreaterThan(0)
+  })
+
   it('merges learning data without removing existing concepts', async () => {
     const section = await loadSectionContent('高中', '必修第一册', '第一章', '第一节')
     expect(section.studentLearning.overview).toContain('地球')
@@ -16,7 +22,7 @@ describe('student learning overlay', () => {
   })
 
   it('returns null for books without an overlay', async () => {
-    expect(await loadStudentLearning('高中', '必修第二册', '第一章', '第一节')).toBeNull()
+    expect(await loadStudentLearning('高中', '选择性必修1', '第一章', '第一节')).toBeNull()
   })
 
   it('returns null when the optional overlay import fails', async () => {
