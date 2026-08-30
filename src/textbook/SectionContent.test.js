@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   loadSectionContent: vi.fn(),
   getChapter: vi.fn(),
   getSection: vi.fn(),
+  getSectionExperimentLink: vi.fn(),
   routeProxy: null,
   route: {
     params: {
@@ -35,17 +36,33 @@ vi.mock('./data/contentLoader.js', () => ({
   loadSectionContent: mocks.loadSectionContent,
 }))
 
+vi.mock('./data/experimentLinks.js', () => ({
+  getSectionExperimentLink: mocks.getSectionExperimentLink,
+}))
+
 const StudentLearningViewStub = {
   name: 'StudentLearningView',
-  props: ['learning', 'sectionTitle', 'chapterTitle', 'tools'],
+  props: ['learning', 'sectionTitle', 'chapterTitle', 'localTools'],
   emits: ['open-tool'],
   template: '<div data-student-learning-view />',
 }
 
-const Earth3DStub = {
-  name: 'Earth3D',
-  template: '<div data-earth-3d />',
+const TextbookExperimentCardStub = {
+  name: 'TextbookExperimentCard',
+  props: ['link', 'textbook'],
+  template: '<div data-textbook-experiment-card>{{ link.primary.title }}</div>',
 }
+
+const earthLink = Object.freeze({
+  confidence: 'curated',
+  primary: Object.freeze({
+    experimentId: 'earth-system',
+    presetId: 'cosmic-earth',
+    title: '宇宙中的地球',
+    purpose: '从宇宙环境理解地球。',
+  }),
+  related: Object.freeze([]),
+})
 
 const validStudentLearning = {
   overview: '从地球所处的宇宙环境开始学习。',
@@ -62,14 +79,13 @@ const deferred = () => {
   return { promise, resolve }
 }
 
-async function mountSection({ props = {}, stubEarth = true } = {}) {
+async function mountSection() {
   const wrapper = mount(SectionContent, {
-    props,
     global: {
       stubs: {
         RouterLink: { template: '<a><slot /></a>' },
         StudentLearningView: StudentLearningViewStub,
-        ...(stubEarth ? { Earth3D: Earth3DStub } : {}),
+        TextbookExperimentCard: TextbookExperimentCardStub,
       },
     },
   })
@@ -87,6 +103,12 @@ describe('SectionContent student learning integration', () => {
     })
     mocks.loadedContent = null
     mocks.loadSectionContent.mockImplementation(async () => mocks.loadedContent)
+    mocks.getSectionExperimentLink.mockImplementation(({ section }) => (
+      section === '第一节' ? earthLink : Object.freeze({
+        ...earthLink,
+        primary: Object.freeze({ ...earthLink.primary, title: 'B 节新实验' }),
+      })
+    ))
     mocks.getChapter.mockImplementation(async (_grade, _book, chapter) => ({
       id: chapter,
       title: '宇宙中的地球',
@@ -101,7 +123,7 @@ describe('SectionContent student learning integration', () => {
     }))
   })
 
-  it('replaces the legacy lesson brief and opens an existing tool branch', async () => {
+  it('replaces the legacy lesson brief and moves the 3D tool into the curated route card', async () => {
     mocks.loadedContent = {
       studentLearning: validStudentLearning,
     }
@@ -112,12 +134,9 @@ describe('SectionContent student learning integration', () => {
     expect(learningView.exists()).toBe(true)
     expect(wrapper.find('.lesson-brief').exists()).toBe(false)
     expect(wrapper.find('.read-time').exists()).toBe(false)
-    expect(learningView.props('tools')).toContainEqual(expect.objectContaining({ id: 'earth' }))
-
-    await learningView.vm.$emit('open-tool', 'earth')
-    await flushPromises()
-
-    expect(wrapper.findComponent({ name: 'Earth3D' }).exists()).toBe(true)
+    expect(learningView.props('localTools')).toEqual([])
+    expect(wrapper.get('[data-textbook-experiment-card]').text()).toBe('宇宙中的地球')
+    expect(wrapper.text()).not.toContain('打开地球模型')
   })
 
   it('falls back to the legacy lesson brief without a student learning overlay', async () => {
@@ -125,6 +144,7 @@ describe('SectionContent student learning integration', () => {
 
     expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(false)
     expect(wrapper.find('.lesson-brief').exists()).toBe(true)
+    expect(wrapper.find('.brief-actions').exists()).toBe(false)
     expect(wrapper.get('.read-time').text()).toContain('约 1 分钟')
   })
 
@@ -165,7 +185,7 @@ describe('SectionContent student learning integration', () => {
         stubs: {
           RouterLink: { template: '<a><slot /></a>' },
           StudentLearningView: StudentLearningViewStub,
-          Earth3D: Earth3DStub,
+          TextbookExperimentCard: TextbookExperimentCardStub,
         },
       },
     })
@@ -196,30 +216,35 @@ describe('SectionContent student learning integration', () => {
     expect(wrapper.get('.section-title').text()).toBe('第二节 B 节新正文')
     expect(wrapper.text()).toContain('B新概念')
     expect(wrapper.text()).not.toContain('A旧概念')
+    expect(wrapper.get('[data-textbook-experiment-card]').text()).toBe('B 节新实验')
   })
 
-  it('shows async-module recovery and returns to the student text after close', async () => {
-    mocks.loadedContent = { studentLearning: validStudentLearning }
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const wrapper = await mountSection({
-      stubEarth: false,
-      props: {
-        toolLoaders: {
-          earth: async () => { throw new Error('earth module unavailable') },
-        },
-      },
-    })
+  it('does not render an experiment card when the current section has no curated link', async () => {
+    mocks.getSectionExperimentLink.mockReturnValue(null)
 
-    await wrapper.getComponent({ name: 'StudentLearningView' }).vm.$emit('open-tool', 'earth')
+    const wrapper = await mountSection()
+
+    expect(wrapper.find('[data-textbook-experiment-card]').exists()).toBe(false)
+  })
+
+  it('removes the old experiment card immediately during a rapid section switch', async () => {
+    const requestB = deferred()
+    mocks.loadSectionContent.mockImplementation((_grade, _book, _chapter, section) => (
+      section === '第一节' ? Promise.resolve(null) : requestB.promise
+    ))
+    const wrapper = await mountSection()
+
+    expect(wrapper.get('[data-textbook-experiment-card]').text()).toBe('宇宙中的地球')
+
+    mocks.routeProxy.params.section = '第二节'
+    await nextTick()
+
+    expect(wrapper.find('[data-textbook-experiment-card]').exists()).toBe(false)
+
+    requestB.resolve(null)
     await flushPromises()
 
-    expect(wrapper.get('[data-async-module-error]').text()).toContain('教学工具加载失败')
-    await wrapper.get('[data-async-module-error] button').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.find('[data-async-module-error]').exists()).toBe(false)
-    expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(true)
-    consoleError.mockRestore()
+    expect(wrapper.get('[data-textbook-experiment-card]').text()).toBe('B 节新实验')
   })
 
   it('keeps the student article within the reading measure and reduces narrow-screen padding', () => {

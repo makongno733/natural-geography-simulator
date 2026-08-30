@@ -9,7 +9,7 @@ const props = defineProps({
   learning: { type: Object, default: null },
   sectionTitle: { type: String, default: '' },
   chapterTitle: { type: String, default: '' },
-  tools: { type: Array, default: () => [] },
+  localTools: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['open-tool'])
@@ -67,9 +67,9 @@ const setAllSections = (open) => {
       <p>{{ lesson.overview }}</p>
     </section>
 
-    <nav v-if="tools.length" class="learning-tools" aria-label="学习工具">
+    <nav v-if="localTools.length" class="learning-tools" aria-label="本地学习工具">
       <button
-        v-for="tool in tools"
+        v-for="tool in localTools"
         :key="tool.id"
         type="button"
         :data-tool="tool.id"

@@ -42,7 +42,7 @@ const mountView = (learning = completeLearning, tools = [{ id: 'water', label: '
     sectionTitle: '水循环',
     chapterTitle: '地球上的水',
     learning,
-    tools,
+    localTools: tools,
   },
 })
 
@@ -77,6 +77,7 @@ describe('StudentLearningView', () => {
     expect(wrapper.text()).toContain('按“环节—影响—意义”作答')
 
     const tool = wrapper.get('[data-tool="water"]')
+    expect(wrapper.get('.learning-tools').attributes('aria-label')).toBe('本地学习工具')
     expect(tool.text()).toBe('打开水循环模型')
     await tool.trigger('click')
     expect(wrapper.emitted('open-tool')).toEqual([['water']])

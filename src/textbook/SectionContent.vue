@@ -14,7 +14,7 @@
       <span>{{ sectionId }}</span>
     </div>
 
-    <template v-if="!showMindMap && !showSandbox && !showEarth3D && !showSoilProfile && !showAtmo && !showWater && !showDisaster && !showDataViz">
+    <template v-if="!showMindMap && !showDataViz">
     <div class="content-layout">
       <aside class="sidebar">
         <h3 class="sidebar-title">{{ chapterId }} {{ chapterData.title }}</h3>
@@ -32,6 +32,11 @@
 
       <main class="content">
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
+        <TextbookExperimentCard
+          v-if="experimentLink"
+          :link="experimentLink"
+          :textbook="textbookContext"
+        />
         <p v-if="!studentLearning" class="read-time">课堂速览：约 1 分钟讲完小结，3D 模型负责展开过程。</p>
 
         <StudentLearningView
@@ -39,7 +44,7 @@
           :learning="studentLearning"
           :section-title="sectionData.title"
           :chapter-title="chapterData.title"
-          :tools="learningTools"
+          :local-tools="learningTools"
           @open-tool="openLearningTool"
         />
         <template v-else>
@@ -48,17 +53,8 @@
             <span class="brief-label">课后小结</span>
             <p>{{ classroomSummary }}</p>
           </div>
-          <div class="brief-actions">
+          <div v-if="learningTools.length" class="brief-actions">
             <button v-if="isGrouped" class="primary-action" @click="showMindMap = true">打开思维导图</button>
-            <button v-if="isEarthChapter" class="ghost-action" @click="showEarth3D = true">专项地球模型</button>
-            <button v-if="isAtmoChapter" class="ghost-action" @click="showAtmo = true">专项大气模型</button>
-            <button v-if="isWaterChapter" class="ghost-action" @click="showWater = true">专项水循环</button>
-            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy=''">专项地貌沙盘</button>
-            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy='guilin'">📌 桂林喀斯特</button>
-            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy='yellowriver'">📌 黄河三角洲</button>
-            <button v-if="isLandformChapter" class="ghost-action" @click="showSandbox = true; caseStudy='taklamakan'">📌 塔克拉玛干</button>
-            <button v-if="isSoilChapter" class="ghost-action" @click="showSoilProfile = true">专项土壤剖面</button>
-            <button v-if="isDisasterChapter" class="ghost-action" @click="showDisaster = true">专项灾害模拟</button>
             <button v-if="dataVizType" class="ghost-action" @click="showDataViz = true">数据可视化</button>
           </div>
         </section>
@@ -151,24 +147,6 @@
     @close="closeTeachingTool"
   />
 
-  <!-- 3D 沙盘视图 -->
-  <SandboxApp v-else-if="showSandbox" embedded :caseStudy="caseStudy" @close="closeTeachingTool" />
-
-  <!-- 3D 地球视图 -->
-  <Earth3D v-else-if="showEarth3D" :mode="moduleMode" @close="closeTeachingTool" />
-
-  <!-- 3D 土壤剖面 -->
-  <SoilProfilePage v-else-if="showSoilProfile" :mode="moduleMode" @close="closeTeachingTool" />
-
-  <!-- 3D 大气模型视图 -->
-  <AtmosphereViewer v-else-if="showAtmo" :mode="moduleMode" @close="closeTeachingTool" />
-
-  <!-- 3D 水循环视图 -->
-  <WaterCycleView v-else-if="showWater" @close="closeTeachingTool" />
-
-  <!-- 3D 灾害模拟 -->
-  <DisasterSandbox v-else-if="showDisaster" embedded @close="closeTeachingTool" />
-
   <DataVizViewer v-else-if="showDataViz && dataVizType" :type="dataVizType" :title="sectionData?.title || '数据可视化'" @close="closeTeachingTool" />
 
   </div>
@@ -188,136 +166,57 @@ import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
 import StudentLearningView from './components/StudentLearningView.vue'
+import TextbookExperimentCard from './components/TextbookExperimentCard.vue'
 import AsyncModuleError from './components/AsyncModuleError.vue'
 import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
 import { figureAssets } from './data/figureAssets.js'
+import { getSectionExperimentLink } from './data/experimentLinks.js'
 
-const defaultToolLoaders = {
-  sandbox: () => import('../sandbox/SandboxApp.vue'),
-  earth: () => import('../sandbox/Earth3D.vue'),
-  soil: () => import('../soil-profile/SoilProfilePage.vue'),
-  atmosphere: () => import('./components/AtmosphereViewer.vue'),
-  mindmap: () => import('./components/MindMapViewer.vue'),
-  dataViz: () => import('./components/DataVizViewer.vue'),
-  water: () => import('../engine/WaterCycleView.vue'),
-  disaster: () => import('../sandbox/DisasterSandbox.vue'),
-}
-
-const props = defineProps({
-  toolLoaders: { type: Object, default: () => ({}) },
-})
-
-const asyncTool = (id) => defineAsyncComponent({
-  loader: props.toolLoaders[id] || defaultToolLoaders[id],
+const asyncTool = (loader) => defineAsyncComponent({
+  loader,
   errorComponent: AsyncModuleError,
   delay: 0,
   timeout: 10000,
 })
 
-const SandboxApp = asyncTool('sandbox')
-const Earth3D = asyncTool('earth')
-const SoilProfilePage = asyncTool('soil')
-const AtmosphereViewer = asyncTool('atmosphere')
-const MindMapViewer = asyncTool('mindmap')
-const DataVizViewer = asyncTool('dataViz')
-const WaterCycleView = asyncTool('water')
-const DisasterSandbox = asyncTool('disaster')
+const MindMapViewer = asyncTool(() => import('./components/MindMapViewer.vue'))
+const DataVizViewer = asyncTool(() => import('./components/DataVizViewer.vue'))
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
 const bookId = computed(() => route.params.book)
 const chapterId = computed(() => route.params.chapter)
 const sectionId = computed(() => route.params.section)
+const textbookContext = computed(() => ({
+  grade: gradeId.value,
+  book: bookId.value,
+  chapter: chapterId.value,
+  section: sectionId.value,
+}))
+const experimentLink = computed(() => getSectionExperimentLink(textbookContext.value))
 
 const loading = ref(true)
-const showSandbox = ref(false)
-const showEarth3D = ref(false)
-const showSoilProfile = ref(false)
-const showAtmo = ref(false)
-const showWater = ref(false)
-const showDisaster = ref(false)
 const showDataViz = ref(false)
-const caseStudy = ref('')
 const showMindMap = ref(false)
-const isLandformChapter = computed(() =>
-  gradeId.value === '高中' && (
-    (bookId.value === '必修第一册' && chapterId.value === '第四章') ||
-    (bookId.value === '选择性必修1' && chapterId.value === '第二章')
-  )
-)
-const isDisasterChapter = computed(() =>
-  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第六章'
-)
 // 必修二 data visualization chapters
 const dataVizType = computed(() => {
   if (gradeId.value !== '高中' || bookId.value !== '必修第二册') return null
   const map = { '第一章':'pyramid', '第二章':'urban', '第三章':'triangle', '第四章':'transport', '第五章':'sustain' }
   return map[chapterId.value] || null
 })
-const isEarthChapter = computed(() =>
-  gradeId.value === '高中' && (
-    (bookId.value === '必修第一册' && chapterId.value === '第一章') ||
-    (bookId.value === '选择性必修1' && chapterId.value === '第一章')
-  )
-)
-const isAtmoChapter = computed(() =>
-  gradeId.value === '高中' && (
-    (bookId.value === '必修第一册' && chapterId.value === '第二章') ||
-    (bookId.value === '选择性必修1' && chapterId.value === '第三章')
-  )
-)
-const isSoilChapter = computed(() =>
-  gradeId.value === '高中' && bookId.value === '必修第一册' && chapterId.value === '第五章'
-)
-const isWaterChapter = computed(() =>
-  gradeId.value === '高中' && (
-    (bookId.value === '必修第一册' && chapterId.value === '第三章') ||
-    (bookId.value === '选择性必修1' && chapterId.value === '第四章')
-  )
-)
-
 const learningTools = computed(() => [
   isGrouped.value && { id: 'mindmap', label: '打开思维导图', primary: true },
-  isEarthChapter.value && { id: 'earth', label: '打开地球模型', primary: true },
-  isAtmoChapter.value && { id: 'atmosphere', label: '打开大气模型', primary: true },
-  isWaterChapter.value && { id: 'water', label: '打开水循环模型', primary: true },
-  isLandformChapter.value && { id: 'landform', label: '打开地貌沙盘', primary: true },
-  isLandformChapter.value && { id: 'guilin', label: '桂林喀斯特' },
-  isLandformChapter.value && { id: 'yellowriver', label: '黄河三角洲' },
-  isLandformChapter.value && { id: 'taklamakan', label: '塔克拉玛干' },
-  isSoilChapter.value && { id: 'soil', label: '打开土壤剖面' },
-  isDisasterChapter.value && { id: 'disaster', label: '打开灾害模拟' },
   dataVizType.value && { id: 'data-viz', label: '打开数据可视化' },
 ].filter(Boolean))
 
 function openLearningTool(id) {
   if (id === 'mindmap') showMindMap.value = true
-  if (id === 'earth') showEarth3D.value = true
-  if (id === 'atmosphere') showAtmo.value = true
-  if (id === 'water') showWater.value = true
-  if (id === 'landform') {
-    caseStudy.value = ''
-    showSandbox.value = true
-  }
-  if (['guilin', 'yellowriver', 'taklamakan'].includes(id)) {
-    caseStudy.value = id
-    showSandbox.value = true
-  }
-  if (id === 'soil') showSoilProfile.value = true
-  if (id === 'disaster') showDisaster.value = true
   if (id === 'data-viz') showDataViz.value = true
 }
 
 function closeTeachingTool() {
-  showSandbox.value = false
-  showEarth3D.value = false
-  showSoilProfile.value = false
-  showAtmo.value = false
-  showWater.value = false
-  showDisaster.value = false
   showDataViz.value = false
   showMindMap.value = false
-  caseStudy.value = ''
 }
 
 const chapterData = ref(null)
@@ -355,11 +254,6 @@ const mindMapBranches = computed(() => {
 const gradeLevel = computed(() => {
   if (gradeId.value === '初中') return '初中'
   return '高中'
-})
-
-const moduleMode = computed(() => {
-  if (gradeLevel.value === '初中') return 'junior'
-  return 'simple'
 })
 
 const isGrouped = computed(() => {
