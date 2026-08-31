@@ -19,9 +19,15 @@ function defaultPreset(title, purpose) {
   return preset('default', title, purpose)
 }
 
-const systemPreset = (id, title, purpose, params) => preset(id, title, purpose, {
+const spatialNetworkPreset = (id, title, purpose, params) => preset(id, title, purpose, {
   terrain: 'network',
-  theme: 'system',
+  theme: 'network',
+  ...params,
+})
+
+const humanEnvironmentPreset = (id, title, purpose, params) => preset(id, title, purpose, {
+  terrain: 'system',
+  theme: 'environment',
   ...params,
 })
 
@@ -85,26 +91,26 @@ export const experimentPresets = Object.freeze({
   ]),
   'geologic-time': Object.freeze([defaultPreset('地质年代', '沿时间轴认识地球演化和生命变迁。')]),
   'spatial-network': Object.freeze([
-    systemPreset('regional-connections', '区域联系', '观察区域间的人流、物流和信息流。', { nodes: ['区域节点', '交通枢纽', '产业基地', '市场'], flows: ['人流', '物流', '信息流'], layers: ['节点', '通道', '网络'], metrics: ['可达性', '联系强度'] }),
-    systemPreset('population-distribution', '人口分布', '解释人口分布的自然与社会经济差异。', { nodes: ['平原沿海', '城市集聚', '资源环境', '经济机会'], flows: ['人口集聚', '空间差异'], layers: ['自然条件', '经济机会'], metrics: ['密度', '分布'] }),
-    systemPreset('regional-development', '区域发展', '理解区域差异、联系与协同发展。', { nodes: ['核心区', '外围区', '资源', '产业'], flows: ['要素流动', '辐射带动'], layers: ['基础', '过程', '效应'], metrics: ['发展水平', '差异'] }),
-    systemPreset('population-system', '人口系统', '梳理人口规模、结构与迁移的联系。', { nodes: ['人口规模', '年龄结构', '迁移', '容量'], flows: ['出生死亡', '迁入迁出'], layers: ['数量', '结构', '空间'], metrics: ['增长率', '密度'] }),
-    systemPreset('urban-system', '城镇系统', '观察城镇层级、功能区和通勤联系。', { nodes: ['中心城区', '居住区', '工业区', '郊区'], flows: ['通勤', '服务流'], layers: ['核心', '过渡', '外围'], metrics: ['城镇化率', '地租'] }),
-    systemPreset('industry-location', '产业区位', '比较市场、交通、劳动力与政策对产业布局的影响。', { nodes: ['原料', '市场', '劳动力', '交通'], flows: ['投入', '产出'], layers: ['自然', '经济', '技术'], metrics: ['成本', '收益'] }),
-    systemPreset('transport-network', '交通网络', '分析交通节点、通道与区域可达性。', { nodes: ['港口', '铁路', '机场', '城市'], flows: ['客流', '货流'], layers: ['节点', '通道', '网络'], metrics: ['运量', '时效'] }),
-    systemPreset('regional-system', '区域系统', '识别区域整体性和开放性。', { nodes: ['自然环境', '人口', '产业', '制度'], flows: ['要素交换', '反馈'], layers: ['基础', '结构', '功能'], metrics: ['规模', '联系'] }),
-    systemPreset('city-industry-region', '城市产业区域', '理解城市、产业和腹地之间的互动。', { nodes: ['中心城市', '产业园区', '腹地', '创新节点'], flows: ['产业链', '技术流'], layers: ['城市', '产业', '区域'], metrics: ['辐射强度', '产业层级'] }),
-    systemPreset('regional-coordination', '区域协调', '比较区域分工、补偿与协同机制。', { nodes: ['上游', '下游', '调出区', '调入区'], flows: ['资源调配', '利益协调'], layers: ['流域', '通道', '区域'], metrics: ['公平', '效率'] }),
+    spatialNetworkPreset('regional-connections', '区域联系', '观察区域间的人流、物流和信息流。', { nodes: ['区域节点', '交通枢纽', '产业基地', '市场'], flows: ['人流', '物流', '信息流'], layers: ['节点', '通道', '网络'], metrics: ['可达性', '联系强度'] }),
+    spatialNetworkPreset('population-distribution', '人口分布', '解释人口分布的自然与社会经济差异。', { nodes: ['平原沿海', '城市集聚', '资源环境', '经济机会'], flows: ['人口集聚', '空间差异'], layers: ['自然条件', '经济机会'], metrics: ['密度', '分布'] }),
+    spatialNetworkPreset('regional-development', '区域发展', '理解区域差异、联系与协同发展。', { nodes: ['核心区', '外围区', '资源', '产业'], flows: ['要素流动', '辐射带动'], layers: ['基础', '过程', '效应'], metrics: ['发展水平', '差异'] }),
+    spatialNetworkPreset('population-system', '人口系统', '梳理人口规模、结构与迁移的联系。', { nodes: ['人口规模', '年龄结构', '迁移', '容量'], flows: ['出生死亡', '迁入迁出'], layers: ['数量', '结构', '空间'], metrics: ['增长率', '密度'] }),
+    spatialNetworkPreset('urban-system', '城镇系统', '观察城镇层级、功能区和通勤联系。', { nodes: ['中心城区', '居住区', '工业区', '郊区'], flows: ['通勤', '服务流'], layers: ['核心', '过渡', '外围'], metrics: ['城镇化率', '地租'] }),
+    spatialNetworkPreset('industry-location', '产业区位', '比较市场、交通、劳动力与政策对产业布局的影响。', { nodes: ['原料', '市场', '劳动力', '交通'], flows: ['投入', '产出'], layers: ['自然', '经济', '技术'], metrics: ['成本', '收益'] }),
+    spatialNetworkPreset('transport-network', '交通网络', '分析交通节点、通道与区域可达性。', { nodes: ['港口', '铁路', '机场', '城市'], flows: ['客流', '货流'], layers: ['节点', '通道', '网络'], metrics: ['运量', '时效'] }),
+    spatialNetworkPreset('regional-system', '区域系统', '识别区域整体性和开放性。', { nodes: ['自然环境', '人口', '产业', '制度'], flows: ['要素交换', '反馈'], layers: ['基础', '结构', '功能'], metrics: ['规模', '联系'] }),
+    spatialNetworkPreset('city-industry-region', '城市产业区域', '理解城市、产业和腹地之间的互动。', { nodes: ['中心城市', '产业园区', '腹地', '创新节点'], flows: ['产业链', '技术流'], layers: ['城市', '产业', '区域'], metrics: ['辐射强度', '产业层级'] }),
+    spatialNetworkPreset('regional-coordination', '区域协调', '比较区域分工、补偿与协同机制。', { nodes: ['上游', '下游', '调出区', '调入区'], flows: ['资源调配', '利益协调'], layers: ['流域', '通道', '区域'], metrics: ['公平', '效率'] }),
   ]),
   'human-environment': Object.freeze([
-    systemPreset('resource-system', '资源系统', '理解资源供给、消费与环境反馈。', { nodes: ['资源禀赋', '开发利用', '消费需求', '环境压力'], flows: ['资源投入', '废弃物输出'], layers: ['自然', '社会', '经济'], metrics: ['消耗', '承载力'] }),
-    systemPreset('sustainable-development', '可持续发展', '协调经济增长、社会公平与生态保护。', { nodes: ['经济', '社会', '生态', '政策'], flows: ['绿色转型', '治理反馈'], layers: ['目标', '路径', '行动'], metrics: ['碳排', '公平'] }),
-    systemPreset('natural-zonation', '自然地带性', '解释水热条件与自然景观的空间分异。', { nodes: ['热量', '水分', '土壤', '植被'], flows: ['纬度变化', '海拔变化'], layers: ['气候', '地貌', '生态'], metrics: ['温度', '降水'] }),
-    systemPreset('regional-resource', '区域资源', '比较区域资源基础与开发路径。', { nodes: ['资源', '生态脆弱性', '产业', '治理'], flows: ['开发', '修复'], layers: ['基础', '压力', '转型'], metrics: ['资源量', '恢复力'] }),
-    systemPreset('ecosystem-services', '生态系统服务', '识别生态系统对人类的多种服务。', { nodes: ['供给服务', '调节服务', '文化服务', '支撑服务'], flows: ['生态服务', '人类需求'], layers: ['生态', '社会', '经济'], metrics: ['服务价值', '生态足迹'] }),
-    systemPreset('resource-security', '资源安全', '理解战略资源、储备与供应链风险。', { nodes: ['能源', '耕地', '储备', '供应链'], flows: ['开采', '调配'], layers: ['基础', '储备', '防控'], metrics: ['自给率', '储备量'] }),
-    systemPreset('environmental-security', '环境安全', '识别污染、生态保护与气候风险的传导。', { nodes: ['污染源', '生态红线', '气候变化', '安全'], flows: ['风险传导', '生态修复'], layers: ['局地', '区域', '全球'], metrics: ['浓度', '韧性'] }),
-    systemPreset('environmental-governance', '环境治理', '建立政策、监督和公众参与的治理闭环。', { nodes: ['政策工具', '企业', '公众', '生态系统'], flows: ['规划', '监督', '反馈'], layers: ['制度', '行动', '评估'], metrics: ['执行力', '协同度'] }),
+    humanEnvironmentPreset('resource-system', '资源系统', '理解资源供给、消费与环境反馈。', { nodes: ['资源禀赋', '开发利用', '消费需求', '环境压力'], flows: ['资源投入', '废弃物输出'], layers: ['自然', '社会', '经济'], metrics: ['消耗', '承载力'] }),
+    humanEnvironmentPreset('sustainable-development', '可持续发展', '协调经济增长、社会公平与生态保护。', { nodes: ['经济', '社会', '生态', '政策'], flows: ['绿色转型', '治理反馈'], layers: ['目标', '路径', '行动'], metrics: ['碳排', '公平'] }),
+    humanEnvironmentPreset('natural-zonation', '自然地带性', '解释水热条件与自然景观的空间分异。', { nodes: ['热量', '水分', '土壤', '植被'], flows: ['纬度变化', '海拔变化'], layers: ['气候', '地貌', '生态'], metrics: ['温度', '降水'] }),
+    humanEnvironmentPreset('regional-resource', '区域资源', '比较区域资源基础与开发路径。', { nodes: ['资源', '生态脆弱性', '产业', '治理'], flows: ['开发', '修复'], layers: ['基础', '压力', '转型'], metrics: ['资源量', '恢复力'] }),
+    humanEnvironmentPreset('ecosystem-services', '生态系统服务', '识别生态系统对人类的多种服务。', { nodes: ['供给服务', '调节服务', '文化服务', '支撑服务'], flows: ['生态服务', '人类需求'], layers: ['生态', '社会', '经济'], metrics: ['服务价值', '生态足迹'] }),
+    humanEnvironmentPreset('resource-security', '资源安全', '理解战略资源、储备与供应链风险。', { nodes: ['能源', '耕地', '储备', '供应链'], flows: ['开采', '调配'], layers: ['基础', '储备', '防控'], metrics: ['自给率', '储备量'] }),
+    humanEnvironmentPreset('environmental-security', '环境安全', '识别污染、生态保护与气候风险的传导。', { nodes: ['污染源', '生态红线', '气候变化', '安全'], flows: ['风险传导', '生态修复'], layers: ['局地', '区域', '全球'], metrics: ['浓度', '韧性'] }),
+    humanEnvironmentPreset('environmental-governance', '环境治理', '建立政策、监督和公众参与的治理闭环。', { nodes: ['政策工具', '企业', '公众', '生态系统'], flows: ['规划', '监督', '反馈'], layers: ['制度', '行动', '评估'], metrics: ['执行力', '协同度'] }),
   ]),
 })
 

@@ -33,8 +33,8 @@ const experiments = Object.freeze([
   item('disaster-sandbox', '自然灾害沙盘', 'systems', '3d', '认识典型自然灾害及防灾减灾。', ['自然灾害', '风险', '防灾减灾'], () => import('../sandbox/DisasterSandbox.vue'), ['natural-hazards']),
   item('map-projection', '地图投影', 'systems', '3d', '比较地图投影方式及其空间表达。', ['地图投影', '地图阅读', '区域'], () => import('../sandbox/MapProjectionView.vue'), ['map-reading', 'regional-division']),
   item('geologic-time', '地质年代表', 'systems', '3d', '沿时间轴理解地球演化。', ['地质年代', '地球演化', '生命演化'], () => import('../sandbox/GeologicTimeView.vue')),
-  item('spatial-network', '空间网络系统', 'systems', '3d', '通过概念网络探索人口、城镇、产业和区域联系。', ['人口', '城镇', '产业', '区域联系'], () => import('./modules/systems/ConceptSystemAdapter.vue'), ['regional-connections', 'population-distribution', 'regional-development', 'population-system', 'urban-system', 'industry-location', 'transport-network', 'regional-system', 'city-industry-region', 'regional-coordination']),
-  item('human-environment', '人地关系系统', 'systems', '3d', '通过概念网络探索资源、环境与可持续发展。', ['资源', '环境', '可持续发展', '国家安全'], () => import('./modules/systems/ConceptSystemAdapter.vue'), ['resource-system', 'sustainable-development', 'natural-zonation', 'regional-resource', 'ecosystem-services', 'resource-security', 'environmental-security', 'environmental-governance']),
+  item('spatial-network', '空间网络系统', 'systems', '3d', '通过概念网络探索人口、城镇、产业和区域联系。', ['人口', '城镇', '产业', '区域联系'], () => import('./modules/systems/SpatialNetwork.vue'), ['regional-connections', 'population-distribution', 'regional-development', 'population-system', 'urban-system', 'industry-location', 'transport-network', 'regional-system', 'city-industry-region', 'regional-coordination']),
+  item('human-environment', '人地关系系统', 'systems', '3d', '通过概念网络探索资源、环境与可持续发展。', ['资源', '环境', '可持续发展', '国家安全'], () => import('./modules/systems/HumanEnvironment.vue'), ['resource-system', 'sustainable-development', 'natural-zonation', 'regional-resource', 'ecosystem-services', 'resource-security', 'environmental-security', 'environmental-governance']),
 ])
 
 export function listExperiments() {
