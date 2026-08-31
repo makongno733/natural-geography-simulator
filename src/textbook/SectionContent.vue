@@ -106,14 +106,16 @@
 
         <section v-if="figures.length" class="section-figures" aria-label="关键图表">
           <h3 class="figures-title">关键图表</h3>
-          <figure v-for="fig in figures" :key="fig.id" class="figure-card">
+          <figure v-for="(fig, figIndex) in figures" :key="fig.id" class="figure-card">
             <div class="figure-images" :class="'figure-count-' + fig.images.length">
               <img
-                v-for="key in fig.images"
+                v-for="(key, imageIndex) in fig.images"
                 :key="key"
                 :src="resolveFigure(key)"
                 :alt="fig.caption"
-                loading="lazy"
+                decoding="async"
+                :loading="isFirstFigure(figIndex, imageIndex) ? 'eager' : 'lazy'"
+                :fetchpriority="isFirstFigure(figIndex, imageIndex) ? 'high' : undefined"
               />
             </div>
             <figcaption class="figure-caption">{{ fig.caption }}</figcaption>
@@ -169,7 +171,7 @@ import StudentLearningView from './components/StudentLearningView.vue'
 import TextbookExperimentCard from './components/TextbookExperimentCard.vue'
 import AsyncModuleError from './components/AsyncModuleError.vue'
 import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
-import { figureAssets } from './data/figureAssets.js'
+import { loadFigureAssets } from './data/figureAssets/loader.js'
 import { getSectionExperimentLink } from './data/experimentLinks.js'
 
 const asyncTool = (loader) => defineAsyncComponent({
@@ -279,7 +281,9 @@ const figures = computed(() => {
   const list = loadedContent.value?.figures
   return Array.isArray(list) ? list : []
 })
-const resolveFigure = (key) => figureAssets[key] || ''
+const figureAssets = ref({})
+const resolveFigure = (key) => figureAssets.value[key] || ''
+const isFirstFigure = (figIndex, imageIndex) => figIndex === 0 && imageIndex === 0
 
 const GROUP_ACCENTS = {
   核心概念: '#b01217',
@@ -335,6 +339,7 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   chapterData.value = null
   sectionData.value = null
   loadedContent.value = null
+  figureAssets.value = {}
   loading.value = true
 
   try {
@@ -344,22 +349,16 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
     ])
     if (generation !== loadGeneration) return
 
-    let content = null
-    try {
-      content = await loadSectionContent(
-        ids.grade,
-        ids.book,
-        ids.chapter,
-        ids.section,
-      )
-    } catch {
-      content = null
-    }
+    const [content, assets] = await Promise.all([
+      loadSectionContent(ids.grade, ids.book, ids.chapter, ids.section).catch(() => null),
+      loadFigureAssets(ids.grade, ids.book).catch(() => ({})),
+    ])
 
     if (generation !== loadGeneration) return
     chapterData.value = chapter
     sectionData.value = section
     loadedContent.value = content
+    figureAssets.value = assets
   } finally {
     if (generation === loadGeneration) loading.value = false
   }

@@ -40,6 +40,10 @@ vi.mock('./data/experimentLinks.js', () => ({
   getSectionExperimentLink: mocks.getSectionExperimentLink,
 }))
 
+vi.mock('./data/figureAssets/loader.js', () => ({
+  loadFigureAssets: vi.fn(async () => ({})),
+}))
+
 const StudentLearningViewStub = {
   name: 'StudentLearningView',
   props: ['learning', 'sectionTitle', 'chapterTitle', 'localTools'],
