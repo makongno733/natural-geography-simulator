@@ -77,11 +77,11 @@ function warmPrimary() {
   align-items: center;
   margin: 0 0 18px;
   padding: 18px;
-  border: 1px solid rgba(100, 122, 63, 0.34);
+  border: 1px solid var(--border);
   border-radius: 16px;
   background:
-    linear-gradient(135deg, rgba(250, 253, 235, 0.98), rgba(226, 237, 195, 0.9)),
-    radial-gradient(circle at 0 0, rgba(183, 55, 44, 0.08), transparent 38%);
+    linear-gradient(135deg, #f6f9ff, #eef4ff),
+    radial-gradient(circle at 0 0, rgba(31, 111, 235, 0.08), transparent 38%);
   box-shadow: var(--shadow-sm);
 }
 .experiment-copy { min-width: 0; }
@@ -90,17 +90,17 @@ function warmPrimary() {
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--red);
+  color: var(--accent);
 }
 .experiment-copy h3 {
   margin: 0;
   font-size: 19px;
-  color: #3f502a;
+  color: var(--text);
 }
 .experiment-purpose {
   margin: 8px 0 0;
   line-height: 1.7;
-  color: #4f4438;
+  color: var(--text-muted);
 }
 .experiment-actions {
   display: grid;
@@ -111,7 +111,7 @@ function warmPrimary() {
   border-radius: 999px;
   padding: 11px 16px;
   color: #fff;
-  background: linear-gradient(135deg, #7f9850, #536936);
+  background: linear-gradient(135deg, #2f80ed, #1856c4);
   font-size: 14px;
   font-weight: 800;
   text-align: center;
@@ -135,7 +135,7 @@ function warmPrimary() {
   gap: 5px 9px;
   font-size: 12px;
 }
-.related-experiments span { color: #746756; }
+.related-experiments span { color: var(--text-muted); }
 .related-experiments a {
   color: var(--button-green-ink);
   font-weight: 700;

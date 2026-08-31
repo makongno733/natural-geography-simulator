@@ -75,17 +75,17 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
   padding: 2px 8px;
   border-radius: 4px;
 }
-.badge-3d { background: #dce8b8; color: #43552d; }
-.badge-tutorial { background: #e8e0d0; color: #6d5d40; }
+.badge-3d { background: var(--accent-soft); color: var(--accent); }
+.badge-tutorial { background: #eef2f7; color: var(--text-muted); }
 .exp-item-name { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px; padding-right: 80px; }
-.exp-item-desc { font-size: 13px; color: #777; margin-bottom: 8px; line-height: 1.5; }
+.exp-item-desc { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
 .exp-item-concepts { display: flex; flex-wrap: wrap; gap: 6px; }
 .concept-tag {
   font-size: 11px;
   padding: 1px 7px;
   border-radius: 3px;
-  background: rgba(158, 36, 38, 0.07);
-  color: var(--red);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 @media (max-width: 720px) {

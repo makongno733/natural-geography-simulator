@@ -48,17 +48,17 @@ watch(
 }
 .breadcrumb {
   font-size: 13px;
-  color: var(--button-green-deep);
+  color: var(--text-muted);
   margin-bottom: 20px;
   padding: 7px 12px;
-  background: rgba(247, 250, 229, 0.84);
+  background: var(--surface-soft);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--brown-light);
+  border: 1px solid var(--border);
   display: inline-block;
 }
-.breadcrumb a { color: var(--button-green-ink); text-decoration: none; }
+.breadcrumb a { color: var(--accent); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
-.sep { margin: 0 8px; color: var(--brown-dark); }
+.sep { margin: 0 8px; color: var(--text-faint); }
 .card-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -67,25 +67,25 @@ watch(
 .card {
   display: block;
   text-decoration: none;
-  border: 1px solid rgba(100, 122, 63, 0.36);
-  border-left: 4px solid var(--button-green-deep);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
   border-radius: var(--radius-card);
   padding: 16px;
-  background: linear-gradient(90deg, rgba(198, 216, 150, 0.36), rgba(253, 254, 243, 0.96) 20%);
+  background: var(--surface);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
   transform: translateY(-2px);
-  border-color: rgba(100, 122, 63, 0.7);
+  border-color: var(--accent);
   box-shadow: var(--shadow-hover);
 }
 .card-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--button-green-ink);
+  color: var(--text);
   margin-bottom: 4px;
 }
-.card-desc { font-size: 12px; color: var(--button-green-deep); line-height: 1.6; }
+.card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 </style>

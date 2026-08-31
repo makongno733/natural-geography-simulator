@@ -1,13 +1,22 @@
 <template>
-  <div :class="['app-root', { 'home-mode': isHome }]">
+  <div class="app-root">
     <header class="app-header">
-      <router-link to="/" class="app-title">中学地理教学系统</router-link>
-      <p class="app-subtitle">人教版 · 初中 / 高中</p>
-      <nav class="app-nav">
-        <router-link to="/experiments" class="nav-link">地学实验</router-link>
-      </nav>
+      <div class="header-inner">
+        <router-link to="/" class="brand" aria-label="返回首页">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <span class="brand-name">中学地理教学系统</span>
+        </router-link>
+        <nav class="app-nav" aria-label="主导航">
+          <router-link to="/" class="nav-link" :class="{ active: isHome }">首页</router-link>
+          <router-link to="/初中" class="nav-link" :class="{ active: grade === '初中' }">初中</router-link>
+          <router-link to="/高中" class="nav-link" :class="{ active: grade === '高中' }">高中</router-link>
+          <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">地理实验室</router-link>
+        </nav>
+      </div>
     </header>
-    <router-view />
+    <main class="app-main">
+      <router-view />
+    </main>
   </div>
 </template>
 
@@ -17,102 +26,116 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const isHome = computed(() => route.path === '/')
+const isExperiments = computed(() => route.path.startsWith('/experiments'))
+const grade = computed(() => route.params.grade || '')
 </script>
 
 <style scoped>
 .app-root {
   min-height: 100vh;
-  background:
-    linear-gradient(90deg, var(--grid-green) 1px, transparent 1px),
-    linear-gradient(0deg, var(--grid-green) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-gold) 1px, transparent 1px),
-    linear-gradient(0deg, var(--grid-gold) 1px, transparent 1px),
-    radial-gradient(circle at 50% 4%, rgba(236, 228, 169, 0.44), transparent 36%),
-    linear-gradient(180deg, #fffff7 0%, var(--paper) 100%);
-  background-size: 36px 36px, 36px 36px, 18px 18px, 18px 18px, auto, auto;
-  background-color: var(--cream);
-  overflow-x: hidden;
-}
-.app-root.home-mode {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: 100vh;
-  padding-bottom: 8vh;
 }
+
 .app-header {
-  text-align: center;
-  padding: 28px 20px 14px;
-  border-bottom: 1px solid rgba(126, 157, 105, 0.16);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: var(--text);
   min-width: 0;
 }
-.home-mode .app-header {
-  padding: 0 20px 8px;
-  border-bottom: 0;
+
+.brand-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--accent), #4d9bff);
+  flex: none;
 }
-.app-title {
-  font-family: "Ma Shan Zheng", "STXingkai", "Kaiti SC", serif;
-  font-size: clamp(38px, 8vw, 92px);
-  color: var(--red);
-  text-shadow: 0 6px 18px rgba(137, 96, 45, 0.14);
-  line-height: 1;
-  letter-spacing: 0;
-  text-decoration: none;
-  display: inline-block;
-  width: min(100%, 1180px);
-  margin: 0 auto;
-  padding: 0 12px;
-  word-break: keep-all;
-  overflow-wrap: normal;
-  text-wrap: balance;
-}
-.home-mode .app-title {
-  font-size: clamp(54px, 12vw, 136px);
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
-.app-subtitle {
-  margin: 4px 0 0;
-  color: #8f7652;
-  font-size: 14px;
-  font-family: "Noto Serif SC", "Songti SC", serif;
+
+.app-nav {
+  display: flex;
+  gap: 4px;
 }
-.app-nav { margin-top: 2px; display: flex; gap: 16px; justify-content: center; }
+
 .nav-link {
-  font-size: 14px;
-  color: #8f7652;
   text-decoration: none;
-  padding: 2px 10px;
-  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: 8px;
   transition: color var(--transition), background var(--transition);
+  white-space: nowrap;
 }
-.nav-link:hover { color: var(--red); background: rgba(158, 36, 38, 0.06); }
-.nav-link.router-link-exact-active { color: var(--red); font-weight: 600; }
-@media (max-width: 1120px) {
-  .home-mode .app-title {
-    font-size: clamp(48px, 10.5vw, 112px);
-  }
+
+.nav-link:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 720px) {
-  .app-header {
-    padding: 22px 14px 12px;
+  .header-inner {
+    height: auto;
+    padding: 8px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
-  .app-title {
-    font-size: clamp(30px, 10vw, 52px);
-    line-height: 1.04;
+
+  .brand-name { font-size: 15px; }
+
+  .app-nav {
     width: 100%;
-    overflow-wrap: anywhere;
+    justify-content: space-between;
+    gap: 2px;
   }
-  .home-mode .app-title {
-    font-size: clamp(38px, 13vw, 64px);
-    white-space: normal;
+
+  .nav-link {
+    font-size: 13px;
+    padding: 6px 8px;
+    flex: 1;
+    text-align: center;
   }
-  .app-root.home-mode {
-    justify-content: flex-start;
-    padding-top: 22vh;
-    padding-bottom: 28px;
-  }
-  .app-nav { gap: 8px; }
-  .nav-link { font-size: 12px; padding: 2px 6px; }
 }
 </style>

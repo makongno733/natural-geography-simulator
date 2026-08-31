@@ -519,7 +519,7 @@ onUnmounted(() => {
 .mindmap-search-input:focus {
   outline: none;
   border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(158,36,38,0.1);
+  box-shadow: 0 0 0 3px rgba(31,111,235,0.1);
   width: 200px;
 }
 
@@ -588,7 +588,7 @@ onUnmounted(() => {
 
 /* === Nodes (base) === */
 .mindmap-node { cursor: pointer; outline: none; }
-.mindmap-node:focus-visible { filter: drop-shadow(0 0 0 3px rgba(158,36,38,0.35)); }
+.mindmap-node:focus-visible { filter: drop-shadow(0 0 0 3px rgba(31,111,235,0.35)); }
 
 .mindmap-node-bg {
   transition: fill 0.2s, filter 0.2s, stroke 0.2s;
@@ -596,12 +596,12 @@ onUnmounted(() => {
 
 /* === Root node === */
 .mindmap-node-root .mindmap-node-bg {
-  fill: #9e2426;
-  filter: drop-shadow(0 2px 8px rgba(158,36,38,0.25));
+  fill: #1f6feb;
+  filter: drop-shadow(0 2px 8px rgba(31,111,235,0.25));
 }
 .mindmap-node-root:hover .mindmap-node-bg {
   fill: #b12a2c;
-  filter: drop-shadow(0 4px 12px rgba(158,36,38,0.35));
+  filter: drop-shadow(0 4px 12px rgba(31,111,235,0.35));
 }
 .mindmap-node-text-root {
   fill: #fff;
@@ -614,17 +614,17 @@ onUnmounted(() => {
 /* === Group nodes === */
 .mindmap-node-group .mindmap-node-bg {
   fill: #fdf7f0;
-  stroke: #9e2426;
+  stroke: #1f6feb;
   stroke-width: 1.6;
-  filter: drop-shadow(0 1px 4px rgba(158,36,38,0.08));
+  filter: drop-shadow(0 1px 4px rgba(31,111,235,0.08));
 }
 .mindmap-node-group:hover .mindmap-node-bg {
   fill: #fef3e8;
   stroke-width: 2;
-  filter: drop-shadow(0 2px 8px rgba(158,36,38,0.15));
+  filter: drop-shadow(0 2px 8px rgba(31,111,235,0.15));
 }
 .mindmap-node-text-group {
-  fill: #9e2426;
+  fill: #1f6feb;
   font-family: "Noto Serif SC", "Songti SC", serif;
   font-size: 13px;
   font-weight: 700;
@@ -646,13 +646,13 @@ onUnmounted(() => {
   fill: rgba(255,255,255,0.92);
   stroke: #c44d42;
   stroke-width: 0.9;
-  filter: drop-shadow(0 1px 3px rgba(158,36,38,0.05));
+  filter: drop-shadow(0 1px 3px rgba(31,111,235,0.05));
 }
 .mindmap-node-concept:hover .mindmap-node-bg {
   fill: #fff5f2;
-  stroke: #9e2426;
+  stroke: #1f6feb;
   stroke-width: 1.3;
-  filter: drop-shadow(0 2px 6px rgba(158,36,38,0.12));
+  filter: drop-shadow(0 2px 6px rgba(31,111,235,0.12));
 }
 .mindmap-node-text-concept {
   fill: #5a2816;
@@ -742,8 +742,8 @@ onUnmounted(() => {
   border-radius: 3px;
   flex-shrink: 0;
 }
-.mindmap-legend-root { background: #9e2426; }
-.mindmap-legend-group { background: var(--brown-light); border: 1px solid #9e2426; }
+.mindmap-legend-root { background: #1f6feb; }
+.mindmap-legend-group { background: var(--brown-light); border: 1px solid #1f6feb; }
 .mindmap-legend-concept { background: rgba(255,255,255,0.92); border: 1px solid #c44d42; }
 
 /* === Responsive === */

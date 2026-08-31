@@ -74,8 +74,8 @@ const errorMessage = computed(() => {
 
 .async-module-error .retry-btn {
   color: #fdfef6;
-  border-color: rgba(84, 104, 51, 0.62);
-  background: linear-gradient(135deg, #7f9850, #536936);
+  border-color: rgba(24, 86, 196, 0.62);
+  background: linear-gradient(135deg, #2f80ed, #1856c4);
 }
 
 .async-module-error button:focus-visible {

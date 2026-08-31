@@ -1,22 +1,39 @@
 <template>
   <div class="home-shell">
-    <div class="hero-grid">
-      <router-link to="/初中" class="hero-card card-junior">
-        <div class="card-kicker">课程入口</div>
-        <div class="card-title">初中课程</div>
-        <div class="card-desc">七年级 · 八年级</div>
+    <section class="hero">
+      <h1 class="hero-title">中学地理教学系统</h1>
+      <p class="hero-subtitle">人教版 · 初中 / 高中 · 配套 3D 地理实验室</p>
+    </section>
+
+    <div class="entry-grid">
+      <router-link to="/初中" class="entry-card">
+        <span class="entry-icon" aria-hidden="true">🌏</span>
+        <span class="entry-text">
+          <strong class="entry-title">初中课程</strong>
+          <em class="entry-desc">七年级 · 八年级</em>
+        </span>
+        <span class="entry-arrow" aria-hidden="true">→</span>
       </router-link>
-      <router-link to="/高中" class="hero-card card-senior">
-        <div class="card-kicker">课程入口</div>
-        <div class="card-title">高中课程</div>
-        <div class="card-desc">必修 · 选择性必修</div>
+
+      <router-link to="/高中" class="entry-card">
+        <span class="entry-icon" aria-hidden="true">🗺️</span>
+        <span class="entry-text">
+          <strong class="entry-title">高中课程</strong>
+          <em class="entry-desc">必修 · 选择性必修</em>
+        </span>
+        <span class="entry-arrow" aria-hidden="true">→</span>
       </router-link>
-      <router-link to="/experiments" class="hero-card card-experiments">
-        <div class="card-kicker">互动入口</div>
-        <div class="card-title">地理实验室</div>
-        <div class="card-desc">气象 · 水文 · 地质 · 天文</div>
+
+      <router-link to="/experiments" class="entry-card">
+        <span class="entry-icon" aria-hidden="true">🔬</span>
+        <span class="entry-text">
+          <strong class="entry-title">地理实验室</strong>
+          <em class="entry-desc">气象 · 水文 · 地质 · 天文</em>
+        </span>
+        <span class="entry-arrow" aria-hidden="true">→</span>
       </router-link>
     </div>
+
     <div class="sub-tools">
       <router-link to="/map" class="tool-pill">地图系统</router-link>
       <router-link to="/geo" class="tool-pill">地质年代</router-link>
@@ -29,113 +46,134 @@
 
 <style scoped>
 .home-shell {
-  padding: 30px 20px 30px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 56px 20px 48px;
 }
 
-.hero-grid {
+.hero {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.hero-subtitle {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.entry-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  max-width: 920px;
-  margin: 0 auto;
 }
 
-.hero-card {
-  display: block;
+.entry-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 20px;
   text-decoration: none;
-  border-radius: 12px;
-  padding: 16px 16px 14px;
-  text-align: left;
-  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-box);
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
-  border: 1px solid rgba(80, 100, 52, 0.26);
 }
-.hero-card:hover {
-  transform: translateY(-2px);
+
+.entry-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
   box-shadow: var(--shadow-hover);
 }
 
-.card-junior {
-  background: linear-gradient(180deg, rgba(232, 245, 233, 0.96), rgba(200, 230, 201, 0.9));
+.entry-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  font-size: 22px;
+  border-radius: 12px;
+  background: var(--accent-soft);
 }
 
-.card-senior {
-  background: linear-gradient(180deg, rgba(227, 242, 253, 0.96), rgba(187, 222, 251, 0.9));
+.entry-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.card-experiments {
-  background: linear-gradient(180deg, rgba(252, 228, 236, 0.96), rgba(248, 187, 208, 0.9));
-}
-
-.card-kicker {
-  font-size: 11px;
-  color: rgba(45, 32, 26, 0.62);
-  letter-spacing: 0.08em;
-}
-
-.card-title {
-  margin-top: 4px;
-  font-size: 24px;
+.entry-title {
+  font-size: 18px;
   font-weight: 700;
-  line-height: 1.15;
+  color: var(--text);
 }
 
-.card-desc {
-  margin-top: 6px;
-  font-size: 12px;
-  color: rgba(45, 32, 26, 0.78);
+.entry-desc {
+  font-size: 13px;
+  font-style: normal;
+  color: var(--text-muted);
 }
 
-.card-junior .card-title { color: #2f6c37; }
-.card-senior .card-title { color: #1f5586; }
-.card-experiments .card-title { color: #8c2d3b; }
+.entry-arrow {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 18px;
+  transition: transform var(--transition), color var(--transition);
+}
+
+.entry-card:hover .entry-arrow {
+  color: var(--accent);
+  transform: translateX(3px);
+}
 
 .sub-tools {
-  margin: 14px auto 0;
-  max-width: 920px;
+  margin: 20px auto 0;
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .tool-pill {
   text-decoration: none;
-  color: var(--button-green-ink);
-  font-size: 12px;
-  border: 1px solid rgba(100, 122, 63, 0.32);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgba(239, 247, 214, 0.9);
-  padding: 6px 12px;
+  background: var(--surface);
+  padding: 7px 16px;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .tool-pill:hover {
   color: #fff;
-  border-color: var(--button-green-deep);
-  background: var(--button-green-deep);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 @media (max-width: 720px) {
   .home-shell {
-    padding: 14px 10px 20px;
+    padding: 32px 14px 32px;
   }
 
-  .hero-grid {
+  .entry-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 10px;
   }
 
-  .hero-card {
-    padding: 12px;
-  }
-
-  .card-title {
-    font-size: 19px;
-  }
-
-  .card-desc {
-    font-size: 11px;
+  .entry-card {
+    padding: 16px;
   }
 }
 </style>

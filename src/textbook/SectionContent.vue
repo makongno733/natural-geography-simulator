@@ -292,7 +292,7 @@ const GROUP_ACCENTS = {
   典型案例: '#c8822a',
   易错辨析: '#7b4fa0',
 }
-const groupAccent = (name) => GROUP_ACCENTS[name] || '#8a6a52'
+const groupAccent = (name) => GROUP_ACCENTS[name] || '#5c6b7a'
 const conceptCount = (concepts) => Object.keys(concepts || {}).length
 
 const collapsedGroups = reactive({})
@@ -407,7 +407,7 @@ const nextSection = computed(() => {
 .sidebar {
   border: 1px solid var(--brown);
   border-radius: var(--radius-box);
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,248,238,0.95));
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98));
   padding: 14px;
   position: sticky;
   top: 20px;
@@ -431,7 +431,7 @@ const nextSection = computed(() => {
   display: block;
   padding: 7px 10px;
   text-decoration: none;
-  color: #6b3b32;
+  color: var(--text);
   font-size: 13px;
   border-radius: 6px;
   transition: background var(--transition);
@@ -465,7 +465,7 @@ const nextSection = computed(() => {
 .read-time {
   margin: -8px 0 14px;
   font-size: 12px;
-  color: #7a6051;
+  color: var(--text-muted);
 }
 .lesson-brief {
   display: grid;
@@ -474,11 +474,11 @@ const nextSection = computed(() => {
   align-items: stretch;
   margin-bottom: 16px;
   padding: 16px;
-  border: 1px solid rgba(183, 55, 44, 0.22);
+  border: 1px solid rgba(31, 111, 235, 0.22);
   border-radius: 16px;
   background:
-    linear-gradient(135deg, rgba(255, 252, 245, 0.98), rgba(255, 241, 224, 0.92)),
-    radial-gradient(circle at 0 0, rgba(183, 55, 44, 0.08), transparent 36%);
+    linear-gradient(135deg, rgba(250, 252, 255, 0.98), rgba(238, 244, 254, 0.95)),
+    radial-gradient(circle at 0 0, rgba(31, 111, 235, 0.08), transparent 36%);
 }
 .brief-copy {
   min-width: 0;
@@ -486,7 +486,7 @@ const nextSection = computed(() => {
 .brief-label {
   display: inline-flex;
   margin-bottom: 8px;
-  border: 1px solid rgba(183, 55, 44, 0.24);
+  border: 1px solid rgba(31, 111, 235, 0.24);
   border-radius: 999px;
   padding: 3px 9px;
   font-size: 12px;
@@ -496,7 +496,7 @@ const nextSection = computed(() => {
 }
 .brief-copy p {
   margin: 0;
-  color: #32211b;
+  color: var(--text);
   font-size: 16px;
   line-height: 1.88;
   text-align: justify;
@@ -510,26 +510,26 @@ const nextSection = computed(() => {
 .primary-action,
 .ghost-action {
   min-height: 40px;
-  border: 1px solid rgba(100, 122, 63, 0.42);
+  border: 1px solid rgba(31, 111, 235, 0.3);
   border-radius: 999px;
   padding: 7px 12px;
   font-size: 12px;
   font-weight: 700;
   color: var(--button-green-ink);
-  background: linear-gradient(180deg, rgba(246, 250, 228, 0.98), rgba(220, 232, 184, 0.94));
+  background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(219, 231, 255, 0.94));
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .primary-action {
   color: #fdfef6;
-  border-color: rgba(84, 104, 51, 0.62);
-  background: linear-gradient(135deg, #7f9850, #536936);
+  border-color: rgba(24, 86, 196, 0.62);
+  background: linear-gradient(135deg, #2f80ed, #1856c4);
 }
 .primary-action:hover,
 .ghost-action:hover {
   transform: translateY(-1px);
-  border-color: rgba(100, 122, 63, 0.74);
+  border-color: rgba(31, 111, 235, 0.5);
   box-shadow: var(--shadow-hover);
 }
 .primary-action:focus-visible,
@@ -550,18 +550,18 @@ const nextSection = computed(() => {
   font-size: 14px;
   font-weight: 600;
   padding: 8px 16px;
-  border: 1px solid rgba(100, 122, 63, 0.38);
+  border: 1px solid rgba(31, 111, 235, 0.28);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(250, 253, 235, 0.98), rgba(223, 234, 190, 0.9));
+  background: linear-gradient(180deg, rgba(244, 248, 255, 0.98), rgba(219, 231, 255, 0.92));
   transition: background var(--transition), border-color var(--transition);
 }
 .nav-link:hover {
   background: var(--button-green);
-  border-color: rgba(100, 122, 63, 0.72);
+  border-color: rgba(31, 111, 235, 0.5);
   text-decoration: none;
 }
 .not-found { text-align: center; padding: 60px 20px; }
-.not-found a { color: #b01217; }
+.not-found a { color: var(--accent); }
 
 .concept-defs {
   margin-top: 20px;
@@ -570,10 +570,10 @@ const nextSection = computed(() => {
 }
 .concept-group {
   margin-bottom: 18px;
-  border: 1px solid rgba(138, 106, 82, 0.18);
+  border: 1px solid rgba(31, 111, 235, 0.14);
   border-radius: 10px;
   padding: 8px 12px;
-  background: rgba(255, 252, 247, 0.5);
+  background: rgba(248, 251, 255, 0.55);
 }
 .concept-group-title {
   display: flex;
@@ -583,11 +583,11 @@ const nextSection = computed(() => {
   margin: 0;
   padding: 4px 2px 8px;
   border: none;
-  border-bottom: 1px solid rgba(138, 106, 82, 0.14);
+  border-bottom: 1px solid rgba(31, 111, 235, 0.12);
   background: transparent;
   font-size: 16px;
   font-weight: 700;
-  color: #5a352c;
+  color: var(--text);
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -603,13 +603,13 @@ const nextSection = computed(() => {
 .group-count {
   font-size: 12px;
   font-weight: 600;
-  color: #8a6a52;
-  background: rgba(138, 106, 82, 0.1);
+  color: #5c6b7a;
+  background: rgba(31, 111, 235, 0.08);
   border-radius: 999px;
   padding: 1px 8px;
 }
 .group-arrow {
-  color: #8a6a52;
+  color: #5c6b7a;
   font-size: 13px;
   width: 12px;
   text-align: center;
@@ -631,7 +631,7 @@ const nextSection = computed(() => {
   padding-left: 20px;
   font-size: 14px;
   line-height: 1.92;
-  color: #3d231b;
+  color: var(--text);
   text-align: justify;
   white-space: pre-line;
 }
@@ -650,9 +650,9 @@ const nextSection = computed(() => {
 .figure-card {
   margin: 0 0 18px;
   padding: 12px;
-  border: 1px solid rgba(138, 106, 82, 0.2);
+  border: 1px solid rgba(31, 111, 235, 0.16);
   border-radius: 10px;
-  background: rgba(255, 252, 247, 0.6);
+  background: rgba(248, 251, 255, 0.6);
 }
 .figure-images {
   display: grid;
@@ -670,7 +670,7 @@ const nextSection = computed(() => {
 .figure-caption {
   margin-top: 8px;
   font-size: 13px;
-  color: #6b4a3d;
+  color: var(--text-muted);
   text-align: center;
 }
 
