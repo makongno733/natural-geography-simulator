@@ -121,13 +121,13 @@ onBeforeUnmount(() => {
   background: transparent;
   padding: 5px 14px;
   font-size: 13px;
-  color: #6b3b32;
+  color: var(--text);
   cursor: pointer;
   border-radius: 6px;
   font-family: inherit;
   transition: background 0.15s, color 0.15s;
 }
-.atmo-tab:hover { background: #f5ede8; }
+.atmo-tab:hover { background: var(--accent-softer); }
 .atmo-tab.active {
   background: #b01217;
   color: #fff;
@@ -148,7 +148,7 @@ onBeforeUnmount(() => {
   background: #fff;
   padding: 3px 10px;
   font-size: 11px;
-  color: #6b3b32;
+  color: var(--text);
   cursor: pointer;
   border-radius: 4px;
   font-family: inherit;

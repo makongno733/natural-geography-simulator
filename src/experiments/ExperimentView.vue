@@ -173,15 +173,15 @@ watch(() => route.fullPath, loadExperiment, { immediate: true })
 .ev-breadcrumb a { color: var(--muted); text-decoration: none; }
 .ev-breadcrumb a:hover { color: var(--red); }
 .ev-title { font-size: clamp(22px, 4.5vw, 30px); color: var(--ink); margin: 0 0 20px; }
-.ev-source { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 0 0 18px; padding: 10px 12px; background: rgba(31, 111, 235, 0.08); border-radius: 4px; font-size: 13px; color: var(--ink); }
+.ev-source { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 0 0 18px; padding: 10px 12px; background: rgba(255, 255, 255, 0.55); border-radius: 12px; font-size: 13px; color: var(--ink); }
 .ev-source a { color: var(--red); font-weight: 600; }
 .ev-concepts, .ev-related, .ev-textbook-links { margin-top: 28px; }
 .ev-concepts h4, .ev-related h4, .ev-textbook-links h4 { font-size: 14px; color: var(--muted); margin: 0 0 8px; }
 .concept-list, .textbook-link-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .textbook-link-list a { font-size: 12px; color: var(--red); }
-.concept-tag { font-size: 12px; padding: 2px 8px; border-radius: 3px; background: rgba(31, 111, 235, 0.08); color: var(--red); }
+.concept-tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(31, 111, 235, 0.08); color: var(--red); }
 .related-grid { display: flex; gap: 12px; flex-wrap: wrap; }
-.related-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--radius-card); background: var(--card-bg); border: 1px solid var(--brown-light); text-decoration: none; transition: box-shadow var(--transition); min-width: 180px; flex: 1; }
+.related-card { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--radius-card); background: var(--card-bg); border: 1px solid var(--brown-light); text-decoration: none; transition: box-shadow var(--transition); min-width: 180px; flex: 1; }
 .related-card:hover { box-shadow: var(--shadow-hover); }
 .related-name { font-size: 14px; font-weight: 600; color: var(--ink); }
 .related-shared { font-size: 11px; color: var(--muted); }

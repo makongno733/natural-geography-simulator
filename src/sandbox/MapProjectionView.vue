@@ -115,7 +115,7 @@ onBeforeUnmount(() => {
 .map-canvas { flex: 1; position: relative; overflow: hidden; min-width: 0; background: #f5f0e8; }
 .map-controls {
   width: 300px; overflow-y: auto; padding: 12px;
-  background: #fff; border-left: 1px solid #e8ddd0;
+  background: #fff; border-left: 1px solid var(--border);
 }
 .reset-btn {
   display: block; width: 100%; padding: 10px; border: 2px solid #8b4513; border-radius: 8px;

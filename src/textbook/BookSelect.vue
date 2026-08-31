@@ -62,6 +62,8 @@ watch(
   gap: 14px;
 }
 .card {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   display: block;
   text-decoration: none;
   border: 1px solid var(--border);
@@ -74,9 +76,8 @@ watch(
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
-  transform: translateY(-3px);
+  background: var(--accent-softer);
   border-color: var(--accent);
-  box-shadow: var(--shadow-hover);
 }
 .card-title {
   font-size: 17px;

@@ -405,9 +405,11 @@ const nextSection = computed(() => {
 }
 
 .sidebar {
-  border: 1px solid var(--brown);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-box);
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98));
+  background: var(--surface);
   padding: 14px;
   position: sticky;
   top: 20px;
@@ -433,7 +435,7 @@ const nextSection = computed(() => {
   text-decoration: none;
   color: var(--text);
   font-size: 13px;
-  border-radius: 6px;
+  border-radius: 999px;
   transition: background var(--transition);
 }
 .section-list a:hover { background: var(--brown-light); }
@@ -444,10 +446,12 @@ const nextSection = computed(() => {
 }
 
 .content {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   min-width: 0;
-  border: 1px solid var(--brown);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-box);
-  background: rgba(255,255,255,0.97);
+  background: rgba(255, 255, 255, 0.88);
   padding: 24px;
   box-shadow: var(--shadow-sm);
 }
@@ -468,6 +472,8 @@ const nextSection = computed(() => {
   color: var(--text-muted);
 }
 .lesson-brief {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
@@ -475,7 +481,7 @@ const nextSection = computed(() => {
   margin-bottom: 16px;
   padding: 16px;
   border: 1px solid rgba(31, 111, 235, 0.22);
-  border-radius: 16px;
+  border-radius: 18px;
   background:
     linear-gradient(135deg, rgba(250, 252, 255, 0.98), rgba(238, 244, 254, 0.95)),
     radial-gradient(circle at 0 0, rgba(31, 111, 235, 0.08), transparent 36%);
@@ -510,27 +516,48 @@ const nextSection = computed(() => {
 .primary-action,
 .ghost-action {
   min-height: 40px;
-  border: 1px solid rgba(31, 111, 235, 0.3);
+  border: 1px solid var(--accent);
   border-radius: 999px;
-  padding: 7px 12px;
+  padding: 7px 14px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--button-green-ink);
-  background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(219, 231, 255, 0.94));
+  color: var(--accent);
+  background: var(--surface);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  box-shadow: none;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 .primary-action {
-  color: #fdfef6;
-  border-color: rgba(24, 86, 196, 0.62);
-  background: linear-gradient(135deg, #2f80ed, #1856c4);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border-color: var(--accent-strong);
+  background: var(--gem-flecks), var(--gem);
+  box-shadow: var(--gem-glow), var(--gem-inner);
 }
-.primary-action:hover,
+.primary-action::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background-image: var(--rainbow-sweep);
+  transform: translateX(-140%) skewX(-14deg);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+}
+.primary-action:hover {
+  background: var(--gem-flecks), var(--gem-deep);
+  border-color: #154aa8;
+  box-shadow: 0 6px 20px rgba(31, 111, 235, 0.42), var(--gem-inner);
+}
+.primary-action:hover::after {
+  transform: translateX(340%) skewX(-14deg);
+}
 .ghost-action:hover {
-  transform: translateY(-1px);
-  border-color: rgba(31, 111, 235, 0.5);
-  box-shadow: var(--shadow-hover);
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 .primary-action:focus-visible,
 .ghost-action:focus-visible {
@@ -546,18 +573,18 @@ const nextSection = computed(() => {
 }
 .nav-link {
   text-decoration: none;
-  color: var(--button-green-ink);
+  color: var(--accent);
   font-size: 14px;
   font-weight: 600;
   padding: 8px 16px;
-  border: 1px solid rgba(31, 111, 235, 0.28);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(244, 248, 255, 0.98), rgba(219, 231, 255, 0.92));
+  background: var(--surface);
   transition: background var(--transition), border-color var(--transition);
 }
 .nav-link:hover {
-  background: var(--button-green);
-  border-color: rgba(31, 111, 235, 0.5);
+  background: var(--accent-soft);
+  border-color: var(--accent);
   text-decoration: none;
 }
 .not-found { text-align: center; padding: 60px 20px; }
@@ -571,7 +598,7 @@ const nextSection = computed(() => {
 .concept-group {
   margin-bottom: 18px;
   border: 1px solid rgba(31, 111, 235, 0.14);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 8px 12px;
   background: rgba(248, 251, 255, 0.55);
 }
@@ -651,7 +678,7 @@ const nextSection = computed(() => {
   margin: 0 0 18px;
   padding: 12px;
   border: 1px solid rgba(31, 111, 235, 0.16);
-  border-radius: 10px;
+  border-radius: 14px;
   background: rgba(248, 251, 255, 0.6);
 }
 .figure-images {
@@ -662,7 +689,7 @@ const nextSection = computed(() => {
 .figure-images img {
   max-width: 100%;
   height: auto;
-  border-radius: 6px;
+  border-radius: 10px;
   display: block;
 }
 .figure-count-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }

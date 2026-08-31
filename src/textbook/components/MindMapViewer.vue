@@ -509,7 +509,7 @@ onUnmounted(() => {
   width: 160px;
   padding: 6px 10px 6px 32px;
   border: 1px solid var(--brown);
-  border-radius: 8px;
+  border-radius: 2px;
   font-size: 13px;
   font-family: "Noto Serif SC", "Songti SC", serif;
   background: rgba(255,255,255,0.8);
@@ -526,7 +526,7 @@ onUnmounted(() => {
 /* Buttons */
 .mindmap-btn {
   border: 1px solid var(--brown);
-  border-radius: 6px;
+  border-radius: 2px;
   padding: 5px 10px;
   font-size: 13px;
   font-family: inherit;
@@ -561,7 +561,7 @@ onUnmounted(() => {
   overflow: hidden;
   position: relative;
   border: 1px solid var(--brown);
-  border-radius: 10px;
+  border-radius: 2px;
   background:
     repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(150,180,205,0.015) 2px, rgba(150,180,205,0.015) 4px),
     repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(140,170,195,0.012) 3px, rgba(140,170,195,0.012) 6px),
@@ -680,7 +680,7 @@ onUnmounted(() => {
   max-width: 320px;
   background: rgba(255,255,255,0.97);
   border: 1px solid var(--brown);
-  border-radius: 10px;
+  border-radius: 2px;
   padding: 14px 16px;
   box-shadow: 0 8px 32px rgba(88,73,39,0.14);
   z-index: 10;

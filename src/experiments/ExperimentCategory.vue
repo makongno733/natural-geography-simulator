@@ -55,17 +55,19 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
 .cat-title { font-size: clamp(24px, 5vw, 34px); color: var(--ink); margin: 0 0 24px; }
 .cat-grid { display: flex; flex-direction: column; gap: 14px; }
 .exp-item {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   display: block;
   text-decoration: none;
   border-radius: var(--radius-card);
   padding: 18px 22px;
   background: var(--card-bg);
-  border: 1px solid var(--brown-light);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition);
   position: relative;
 }
-.exp-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.exp-item:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
 .exp-badge {
   position: absolute;
   top: 14px;
@@ -73,7 +75,7 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 .badge-3d { background: var(--accent-soft); color: var(--accent); }
 .badge-tutorial { background: #eef2f7; color: var(--text-muted); }
@@ -83,7 +85,7 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
 .concept-tag {
   font-size: 11px;
   padding: 1px 7px;
-  border-radius: 3px;
+  border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
 }
