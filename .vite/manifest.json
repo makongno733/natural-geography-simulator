@@ -1,0 +1,2657 @@
+{
+  "_BaseScene-q8cXd3sG.js": {
+    "file": "assets/BaseScene-q8cXd3sG.js",
+    "name": "BaseScene",
+    "imports": [
+      "index.html",
+      "_vendor-three-xLFykhM-.js"
+    ],
+    "dynamicImports": [
+      "_vendor-three-xLFykhM-.js"
+    ]
+  },
+  "_ExperimentEngine-BL80gyEi.js": {
+    "file": "assets/ExperimentEngine-BL80gyEi.js",
+    "name": "ExperimentEngine",
+    "imports": [
+      "_vendor-three-xLFykhM-.js"
+    ]
+  },
+  "_GeometryFactory-C8XdQFUI.js": {
+    "file": "assets/GeometryFactory-C8XdQFUI.js",
+    "name": "GeometryFactory",
+    "imports": [
+      "_vendor-three-xLFykhM-.js"
+    ]
+  },
+  "_GlossaryText-DZM65H0S.css": {
+    "file": "assets/GlossaryText-DZM65H0S.css",
+    "src": "_GlossaryText-DZM65H0S.css"
+  },
+  "_GlossaryText-Du4fapju.js": {
+    "file": "assets/GlossaryText-Du4fapju.js",
+    "name": "GlossaryText",
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "index.html"
+    ],
+    "css": [
+      "assets/GlossaryText-DZM65H0S.css"
+    ]
+  },
+  "_MaterialLibrary-C-i923x5.js": {
+    "file": "assets/MaterialLibrary-C-i923x5.js",
+    "name": "MaterialLibrary",
+    "imports": [
+      "_vendor-three-xLFykhM-.js"
+    ]
+  },
+  "_catalog-BGjws9hf.js": {
+    "file": "assets/catalog-BGjws9hf.js",
+    "name": "catalog",
+    "imports": [
+      "index.html"
+    ],
+    "dynamicImports": [
+      "src/experiments/modules/meteorology/ThermalCirculation.vue",
+      "src/experiments/modules/meteorology/Coriolis.vue",
+      "src/experiments/modules/meteorology/CloudBottle.js",
+      "src/experiments/modules/meteorology/WeatherInstruments.js",
+      "src/experiments/modules/hydrology/StreamTable.vue",
+      "src/experiments/modules/hydrology/Groundwater.vue",
+      "src/experiments/modules/hydrology/Infiltration.js",
+      "src/experiments/modules/hydrology/WaterCycle.js",
+      "src/experiments/modules/hydrology/SedimentTransport.vue",
+      "src/experiments/modules/geology/FaultModel.vue",
+      "src/experiments/modules/geology/Stratigraphy.vue",
+      "src/experiments/modules/geology/MineralID.js",
+      "src/experiments/modules/geology/PotatoCore.js",
+      "src/experiments/modules/geology/SoilErosion.vue",
+      "src/experiments/modules/astronomy/MoonPhases.vue",
+      "src/experiments/modules/astronomy/Seasons.vue",
+      "src/experiments/modules/astronomy/KeplerLaws.vue",
+      "src/experiments/modules/astronomy/SolarMotion.vue",
+      "src/experiments/modules/astronomy/Eclipse.vue",
+      "src/sandbox/Earth3D.vue",
+      "src/textbook/components/AtmosphereViewer.vue",
+      "src/engine/WaterCycleView.vue",
+      "src/sandbox/SandboxApp.vue",
+      "src/soil-profile/SoilProfilePage.vue",
+      "src/sandbox/DisasterSandbox.vue",
+      "src/sandbox/MapProjectionView.vue",
+      "src/sandbox/GeologicTimeView.vue",
+      "src/experiments/modules/systems/SpatialNetwork.vue",
+      "src/experiments/modules/systems/HumanEnvironment.vue"
+    ]
+  },
+  "_experimentLinks-Cm0uyo8z.js": {
+    "file": "assets/experimentLinks-Cm0uyo8z.js",
+    "name": "experimentLinks",
+    "imports": [
+      "_catalog-BGjws9hf.js",
+      "src/textbook/data/index.js"
+    ]
+  },
+  "_sceneConfigs-BuVg1_-5.js": {
+    "file": "assets/sceneConfigs-BuVg1_-5.js",
+    "name": "sceneConfigs"
+  },
+  "_vendor-core-DhG9R98V.js": {
+    "file": "assets/vendor-core-DhG9R98V.js",
+    "name": "vendor-core"
+  },
+  "_vendor-three-xLFykhM-.js": {
+    "file": "assets/vendor-three-xLFykhM-.js",
+    "name": "vendor-three",
+    "isDynamicEntry": true
+  },
+  "_vendor-vue-CVST4TYr.js": {
+    "file": "assets/vendor-vue-CVST4TYr.js",
+    "name": "vendor-vue",
+    "imports": [
+      "_vendor-core-DhG9R98V.js"
+    ]
+  },
+  "index.html": {
+    "file": "assets/index-Dy926a3c.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "dynamicImports": [
+      "src/textbook/data/index.js",
+      "src/textbook/TextbookHome.vue",
+      "src/textbook/BookSelect.vue",
+      "src/textbook/ChapterList.vue",
+      "src/textbook/SectionContent.vue",
+      "src/experiments/ExperimentsHome.vue",
+      "src/experiments/ExperimentCategory.vue",
+      "src/experiments/ExperimentView.vue"
+    ],
+    "css": [
+      "assets/index-CTFza1RL.css"
+    ]
+  },
+  "src/assets/textbook/必修第一册/1.1/celestial-system.png": {
+    "file": "assets/celestial-system-Bl8RCfBz.png",
+    "src": "src/assets/textbook/必修第一册/1.1/celestial-system.png"
+  },
+  "src/assets/textbook/必修第一册/1.1/nebula.jpg": {
+    "file": "assets/nebula-wmYvwDa1.jpg",
+    "src": "src/assets/textbook/必修第一册/1.1/nebula.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.1/orbit-features.png": {
+    "file": "assets/orbit-features-dKPiChF-.png",
+    "src": "src/assets/textbook/必修第一册/1.1/orbit-features.png"
+  },
+  "src/assets/textbook/必修第一册/1.1/planet-data-table.png": {
+    "file": "assets/planet-data-table-CB6Hue9q.png",
+    "src": "src/assets/textbook/必修第一册/1.1/planet-data-table.png"
+  },
+  "src/assets/textbook/必修第一册/1.1/planet.jpg": {
+    "file": "assets/planet-CqakEEVK.jpg",
+    "src": "src/assets/textbook/必修第一册/1.1/planet.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.1/satellite.jpg": {
+    "file": "assets/satellite-D4j3KwJP.jpg",
+    "src": "src/assets/textbook/必修第一册/1.1/satellite.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.1/solar-system.jpg": {
+    "file": "assets/solar-system-CWoT6u1l.jpg",
+    "src": "src/assets/textbook/必修第一册/1.1/solar-system.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.1/star.jpg": {
+    "file": "assets/star-CZNdbB89.jpg",
+    "src": "src/assets/textbook/必修第一册/1.1/star.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.2/solar-activities.jpg": {
+    "file": "assets/solar-activities-BJ0na-Nh.jpg",
+    "src": "src/assets/textbook/必修第一册/1.2/solar-activities.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.2/solar-atmosphere.png": {
+    "file": "assets/solar-atmosphere-D1jiLA37.png",
+    "src": "src/assets/textbook/必修第一册/1.2/solar-atmosphere.png"
+  },
+  "src/assets/textbook/必修第一册/1.2/solar-impact.png": {
+    "file": "assets/solar-impact-BeQjcAxF.png",
+    "src": "src/assets/textbook/必修第一册/1.2/solar-impact.png"
+  },
+  "src/assets/textbook/必修第一册/1.2/solar-spectrum.png": {
+    "file": "assets/solar-spectrum-CvFA_CcF.png",
+    "src": "src/assets/textbook/必修第一册/1.2/solar-spectrum.png"
+  },
+  "src/assets/textbook/必修第一册/1.3/evolution.png": {
+    "file": "assets/evolution-BnZOHP6l.png",
+    "src": "src/assets/textbook/必修第一册/1.3/evolution.png"
+  },
+  "src/assets/textbook/必修第一册/1.3/fossil.jpg": {
+    "file": "assets/fossil-1yh6ycan.jpg",
+    "src": "src/assets/textbook/必修第一册/1.3/fossil.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.3/geologic-time.png": {
+    "file": "assets/geologic-time-BkWPUCPc.png",
+    "src": "src/assets/textbook/必修第一册/1.3/geologic-time.png"
+  },
+  "src/assets/textbook/必修第一册/1.3/strata.jpg": {
+    "file": "assets/strata-BuuLYZh8.jpg",
+    "src": "src/assets/textbook/必修第一册/1.3/strata.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.4/external-spheres.jpg": {
+    "file": "assets/external-spheres-DLR9JKuM.jpg",
+    "src": "src/assets/textbook/必修第一册/1.4/external-spheres.jpg"
+  },
+  "src/assets/textbook/必修第一册/1.4/internal-structure.png": {
+    "file": "assets/internal-structure-BYesNGLw.png",
+    "src": "src/assets/textbook/必修第一册/1.4/internal-structure.png"
+  },
+  "src/assets/textbook/必修第一册/1.4/seismic-waves.png": {
+    "file": "assets/seismic-waves-C1CHpVqv.png",
+    "src": "src/assets/textbook/必修第一册/1.4/seismic-waves.png"
+  },
+  "src/assets/textbook/必修第一册/1.4/velocity-structure.png": {
+    "file": "assets/velocity-structure-CSyJW9JH.png",
+    "src": "src/assets/textbook/必修第一册/1.4/velocity-structure.png"
+  },
+  "src/assets/textbook/必修第一册/2.1/air-composition.png": {
+    "file": "assets/air-composition-Crsn0XtX.png",
+    "src": "src/assets/textbook/必修第一册/2.1/air-composition.png"
+  },
+  "src/assets/textbook/必修第一册/2.1/atmosphere-layers.png": {
+    "file": "assets/atmosphere-layers-wfGcklUC.png",
+    "src": "src/assets/textbook/必修第一册/2.1/atmosphere-layers.png"
+  },
+  "src/assets/textbook/必修第一册/2.2/earth-moon-temp.png": {
+    "file": "assets/earth-moon-temp-c3TEj3yt.png",
+    "src": "src/assets/textbook/必修第一册/2.2/earth-moon-temp.png"
+  },
+  "src/assets/textbook/必修第一册/2.2/pressure-surface.png": {
+    "file": "assets/pressure-surface-C0uJH1XG.png",
+    "src": "src/assets/textbook/必修第一册/2.2/pressure-surface.png"
+  },
+  "src/assets/textbook/必修第一册/2.2/thermal-circulation.png": {
+    "file": "assets/thermal-circulation-s1rC6P2_.png",
+    "src": "src/assets/textbook/必修第一册/2.2/thermal-circulation.png"
+  },
+  "src/assets/textbook/必修第一册/3.1/water-cycle.jpg": {
+    "file": "assets/water-cycle-B71oGWce.jpg",
+    "src": "src/assets/textbook/必修第一册/3.1/water-cycle.jpg"
+  },
+  "src/assets/textbook/必修第一册/3.2/salinity-dist.png": {
+    "file": "assets/salinity-dist-CZEb5A8n.png",
+    "src": "src/assets/textbook/必修第一册/3.2/salinity-dist.png"
+  },
+  "src/assets/textbook/必修第一册/3.2/tds-latitude.png": {
+    "file": "assets/tds-latitude-Dxivyw8n.png",
+    "src": "src/assets/textbook/必修第一册/3.2/tds-latitude.png"
+  },
+  "src/assets/textbook/必修第一册/3.2/temp-vertical.png": {
+    "file": "assets/temp-vertical-BtjBEufM.png",
+    "src": "src/assets/textbook/必修第一册/3.2/temp-vertical.png"
+  },
+  "src/assets/textbook/必修第一册/3.3/ocean-current.png": {
+    "file": "assets/ocean-current-Cz6iVLZZ.png",
+    "src": "src/assets/textbook/必修第一册/3.3/ocean-current.png"
+  },
+  "src/assets/textbook/必修第一册/3.3/tide.png": {
+    "file": "assets/tide-AgG8cpRp.png",
+    "src": "src/assets/textbook/必修第一册/3.3/tide.png"
+  },
+  "src/assets/textbook/必修第一册/3.3/wave-elements.png": {
+    "file": "assets/wave-elements-CHMVRrvV.png",
+    "src": "src/assets/textbook/必修第一册/3.3/wave-elements.png"
+  },
+  "src/assets/textbook/必修第一册/4.1/coast.jpg": {
+    "file": "assets/coast-CJySmQXz.jpg",
+    "src": "src/assets/textbook/必修第一册/4.1/coast.jpg"
+  },
+  "src/assets/textbook/必修第一册/4.1/dune.jpg": {
+    "file": "assets/dune-yIN5xKGf.jpg",
+    "src": "src/assets/textbook/必修第一册/4.1/dune.jpg"
+  },
+  "src/assets/textbook/必修第一册/4.1/fluvial.png": {
+    "file": "assets/fluvial-C_8-pCMo.png",
+    "src": "src/assets/textbook/必修第一册/4.1/fluvial.png"
+  },
+  "src/assets/textbook/必修第一册/4.1/karst.jpg": {
+    "file": "assets/karst-hRzBWVTw.jpg",
+    "src": "src/assets/textbook/必修第一册/4.1/karst.jpg"
+  },
+  "src/assets/textbook/必修第一册/4.2/contour.png": {
+    "file": "assets/contour-CEB69Usk.png",
+    "src": "src/assets/textbook/必修第一册/4.2/contour.png"
+  },
+  "src/assets/textbook/必修第一册/4.2/slope.png": {
+    "file": "assets/slope-Ciz85VYW.png",
+    "src": "src/assets/textbook/必修第一册/4.2/slope.png"
+  },
+  "src/assets/textbook/必修第一册/5.1/forest-layers.jpg": {
+    "file": "assets/forest-layers-cCIMHyu1.jpg",
+    "src": "src/assets/textbook/必修第一册/5.1/forest-layers.jpg"
+  },
+  "src/assets/textbook/必修第一册/5.1/vegetation-types.png": {
+    "file": "assets/vegetation-types-BvhzMfCC.png",
+    "src": "src/assets/textbook/必修第一册/5.1/vegetation-types.png"
+  },
+  "src/assets/textbook/必修第一册/5.2/soil-composition.png": {
+    "file": "assets/soil-composition-Dg15I582.png",
+    "src": "src/assets/textbook/必修第一册/5.2/soil-composition.png"
+  },
+  "src/assets/textbook/必修第一册/5.2/soil-factors.png": {
+    "file": "assets/soil-factors-B76yZAfd.png",
+    "src": "src/assets/textbook/必修第一册/5.2/soil-factors.png"
+  },
+  "src/assets/textbook/必修第一册/5.2/soil-profile.jpg": {
+    "file": "assets/soil-profile-DbNJWJ6P.jpg",
+    "src": "src/assets/textbook/必修第一册/5.2/soil-profile.jpg"
+  },
+  "src/assets/textbook/必修第一册/6.1/typhoon-path.jpg": {
+    "file": "assets/typhoon-path-COdQwve7.jpg",
+    "src": "src/assets/textbook/必修第一册/6.1/typhoon-path.jpg"
+  },
+  "src/assets/textbook/必修第一册/6.1/typhoon-structure.jpg": {
+    "file": "assets/typhoon-structure-DwkULpQQ.jpg",
+    "src": "src/assets/textbook/必修第一册/6.1/typhoon-structure.jpg"
+  },
+  "src/assets/textbook/必修第一册/6.2/earthquake.png": {
+    "file": "assets/earthquake-CtyK4xo0.png",
+    "src": "src/assets/textbook/必修第一册/6.2/earthquake.png"
+  },
+  "src/assets/textbook/必修第一册/6.2/landslide.png": {
+    "file": "assets/landslide-CEAnFfv8.png",
+    "src": "src/assets/textbook/必修第一册/6.2/landslide.png"
+  },
+  "src/assets/textbook/必修第一册/6.3/disaster-monitoring.jpg": {
+    "file": "assets/disaster-monitoring-CbIC99mV.jpg",
+    "src": "src/assets/textbook/必修第一册/6.3/disaster-monitoring.jpg"
+  },
+  "src/assets/textbook/必修第一册/6.4/gis.jpg": {
+    "file": "assets/gis-DXJoGYf1.jpg",
+    "src": "src/assets/textbook/必修第一册/6.4/gis.jpg"
+  },
+  "src/assets/textbook/必修第一册/6.4/gnss.jpg": {
+    "file": "assets/gnss-BOgcLngC.jpg",
+    "src": "src/assets/textbook/必修第一册/6.4/gnss.jpg"
+  },
+  "src/assets/textbook/必修第一册/6.4/remote-sensing.jpg": {
+    "file": "assets/remote-sensing-9g9oXAho.jpg",
+    "src": "src/assets/textbook/必修第一册/6.4/remote-sensing.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.1/finland-population.jpg": {
+    "file": "assets/finland-population-RMOcqep-.jpg",
+    "src": "src/assets/textbook/必修第二册/1.1/finland-population.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.1/hu-huangyong-line.jpg": {
+    "file": "assets/hu-huangyong-line-DSmPXVLg.jpg",
+    "src": "src/assets/textbook/必修第二册/1.1/hu-huangyong-line.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.1/world-pop-density.jpg": {
+    "file": "assets/world-pop-density-OGMeGhvL.jpg",
+    "src": "src/assets/textbook/必修第二册/1.1/world-pop-density.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.1/world-topography.png": {
+    "file": "assets/world-topography-BfLrLwH4.png",
+    "src": "src/assets/textbook/必修第二册/1.1/world-topography.png"
+  },
+  "src/assets/textbook/必修第二册/1.2/domestic-migration-prc.jpg": {
+    "file": "assets/domestic-migration-prc-lPCrxd7O.jpg",
+    "src": "src/assets/textbook/必修第二册/1.2/domestic-migration-prc.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.2/intl-migration-postww2.jpg": {
+    "file": "assets/intl-migration-postww2-sSos5mVG.jpg",
+    "src": "src/assets/textbook/必修第二册/1.2/intl-migration-postww2.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.2/intl-migration-pre19th.jpg": {
+    "file": "assets/intl-migration-pre19th-BzOy4xAn.jpg",
+    "src": "src/assets/textbook/必修第二册/1.2/intl-migration-pre19th.jpg"
+  },
+  "src/assets/textbook/必修第二册/1.2/push-pull-theory.png": {
+    "file": "assets/push-pull-theory-BmeczROo.png",
+    "src": "src/assets/textbook/必修第二册/1.2/push-pull-theory.png"
+  },
+  "src/assets/textbook/必修第二册/1.3/global-population-growth.png": {
+    "file": "assets/global-population-growth-DFzW8xBd.png",
+    "src": "src/assets/textbook/必修第二册/1.3/global-population-growth.png"
+  },
+  "src/assets/textbook/必修第二册/1.3/population-pressure-index-map.png": {
+    "file": "assets/population-pressure-index-map-mBhqXCnH.png",
+    "src": "src/assets/textbook/必修第二册/1.3/population-pressure-index-map.png"
+  },
+  "src/assets/textbook/必修第二册/1.3/resource-population-carrying-capacity.png": {
+    "file": "assets/resource-population-carrying-capacity-Z6RnkUM-.png",
+    "src": "src/assets/textbook/必修第二册/1.3/resource-population-carrying-capacity.png"
+  },
+  "src/assets/textbook/必修第二册/1.3/short-board-effect.jpg": {
+    "file": "assets/short-board-effect-CgYKDGa4.jpg",
+    "src": "src/assets/textbook/必修第二册/1.3/short-board-effect.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.1/city-functional-zones-plan.png": {
+    "file": "assets/city-functional-zones-plan-CqtWFGV5.png",
+    "src": "src/assets/textbook/必修第二册/2.1/city-functional-zones-plan.png"
+  },
+  "src/assets/textbook/必修第二册/2.1/land-rent-distance-curve.jpg": {
+    "file": "assets/land-rent-distance-curve-COi2q3XU.jpg",
+    "src": "src/assets/textbook/必修第二册/2.1/land-rent-distance-curve.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.1/rural-village-land-use-plan.jpg": {
+    "file": "assets/rural-village-land-use-plan-Dw2fSrb8.jpg",
+    "src": "src/assets/textbook/必修第二册/2.1/rural-village-land-use-plan.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.1/urban-structure-concentric-model.jpg": {
+    "file": "assets/urban-structure-concentric-model-aSVhVrBK.jpg",
+    "src": "src/assets/textbook/必修第二册/2.1/urban-structure-concentric-model.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.2/shenzhen-urbanization-rate.png": {
+    "file": "assets/shenzhen-urbanization-rate-CL0_jWgv.png",
+    "src": "src/assets/textbook/必修第二册/2.2/shenzhen-urbanization-rate.png"
+  },
+  "src/assets/textbook/必修第二册/2.2/urbanization-economic-development.jpg": {
+    "file": "assets/urbanization-economic-development-BWlCpu8v.jpg",
+    "src": "src/assets/textbook/必修第二册/2.2/urbanization-economic-development.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.2/world-urbanization-distribution.jpg": {
+    "file": "assets/world-urbanization-distribution-F20UCt-n.jpg",
+    "src": "src/assets/textbook/必修第二册/2.2/world-urbanization-distribution.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.2/world-urbanization-process.png": {
+    "file": "assets/world-urbanization-process-DR_il1pU.png",
+    "src": "src/assets/textbook/必修第二册/2.2/world-urbanization-process.png"
+  },
+  "src/assets/textbook/必修第二册/2.3/ancient-chinese-capital-layout.png": {
+    "file": "assets/ancient-chinese-capital-layout-bbKpj0aP.png",
+    "src": "src/assets/textbook/必修第二册/2.3/ancient-chinese-capital-layout.png"
+  },
+  "src/assets/textbook/必修第二册/2.3/fujian-yongding-tulou.jpg": {
+    "file": "assets/fujian-yongding-tulou-CaNMg-wc.jpg",
+    "src": "src/assets/textbook/必修第二册/2.3/fujian-yongding-tulou.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.3/honghe-hani-terraces.jpg": {
+    "file": "assets/honghe-hani-terraces-cIBmi5Ul.jpg",
+    "src": "src/assets/textbook/必修第二册/2.3/honghe-hani-terraces.jpg"
+  },
+  "src/assets/textbook/必修第二册/2.3/suzhou-classical-garden.jpg": {
+    "file": "assets/suzhou-classical-garden-BllOUZwu.jpg",
+    "src": "src/assets/textbook/必修第二册/2.3/suzhou-classical-garden.jpg"
+  },
+  "src/assets/textbook/必修第二册/3.1/farming-system-distribution.jpg": {
+    "file": "assets/farming-system-distribution-BSoPF3P4.jpg",
+    "src": "src/assets/textbook/必修第二册/3.1/farming-system-distribution.jpg"
+  },
+  "src/assets/textbook/必修第二册/3.1/northwest-irrigation-agriculture.png": {
+    "file": "assets/northwest-irrigation-agriculture-DChVKI-m.png",
+    "src": "src/assets/textbook/必修第二册/3.1/northwest-irrigation-agriculture.png"
+  },
+  "src/assets/textbook/必修第二册/3.1/qianyanzhou-stereo-agriculture.jpg": {
+    "file": "assets/qianyanzhou-stereo-agriculture-Bygr7eeS.jpg",
+    "src": "src/assets/textbook/必修第二册/3.1/qianyanzhou-stereo-agriculture.jpg"
+  },
+  "src/assets/textbook/必修第二册/3.1/tea-planting-distribution.png": {
+    "file": "assets/tea-planting-distribution-BP0DG5a9.png",
+    "src": "src/assets/textbook/必修第二册/3.1/tea-planting-distribution.png"
+  },
+  "src/assets/textbook/必修第二册/3.2/air-pollution-downwind-layout.png": {
+    "file": "assets/air-pollution-downwind-layout-DDxtw3jk.png",
+    "src": "src/assets/textbook/必修第二册/3.2/air-pollution-downwind-layout.png"
+  },
+  "src/assets/textbook/必修第二册/3.2/industrial-location-factors.jpg": {
+    "file": "assets/industrial-location-factors-CW0Uyq47.jpg",
+    "src": "src/assets/textbook/必修第二册/3.2/industrial-location-factors.jpg"
+  },
+  "src/assets/textbook/必修第二册/3.2/shougang-relocation.png": {
+    "file": "assets/shougang-relocation-LbJf3KTM.png",
+    "src": "src/assets/textbook/必修第二册/3.2/shougang-relocation.png"
+  },
+  "src/assets/textbook/必修第二册/3.2/steel-industry-location-change.png": {
+    "file": "assets/steel-industry-location-change-BfG6AQCa.png",
+    "src": "src/assets/textbook/必修第二册/3.2/steel-industry-location-change.png"
+  },
+  "src/assets/textbook/必修第二册/3.3/city-catering-distribution.jpg": {
+    "file": "assets/city-catering-distribution-C7pSl2UY.jpg",
+    "src": "src/assets/textbook/必修第二册/3.3/city-catering-distribution.jpg"
+  },
+  "src/assets/textbook/必修第二册/3.3/huaqiangbei-agglomeration.png": {
+    "file": "assets/huaqiangbei-agglomeration-DEoy2q9z.png",
+    "src": "src/assets/textbook/必修第二册/3.3/huaqiangbei-agglomeration.png"
+  },
+  "src/assets/textbook/必修第二册/3.3/live-stream-ecommerce.jpg": {
+    "file": "assets/live-stream-ecommerce-CJooZkdt.jpg",
+    "src": "src/assets/textbook/必修第二册/3.3/live-stream-ecommerce.jpg"
+  },
+  "src/assets/textbook/必修第二册/3.3/sorting-robot.jpg": {
+    "file": "assets/sorting-robot-DWl1lI4x.jpg",
+    "src": "src/assets/textbook/必修第二册/3.3/sorting-robot.jpg"
+  },
+  "src/assets/textbook/必修第二册/4.1/africa-railway-layout.jpg": {
+    "file": "assets/africa-railway-layout-HdrTDCy1.jpg",
+    "src": "src/assets/textbook/必修第二册/4.1/africa-railway-layout.jpg"
+  },
+  "src/assets/textbook/必修第二册/4.1/beijing-shanghai-hsr-route.jpg": {
+    "file": "assets/beijing-shanghai-hsr-route-CEp9TPG2.jpg",
+    "src": "src/assets/textbook/必修第二册/4.1/beijing-shanghai-hsr-route.jpg"
+  },
+  "src/assets/textbook/必修第二册/4.1/qinghai-tibet-railway-heat-rod.jpg": {
+    "file": "assets/qinghai-tibet-railway-heat-rod-CbWYtxD-.jpg",
+    "src": "src/assets/textbook/必修第二册/4.1/qinghai-tibet-railway-heat-rod.jpg"
+  },
+  "src/assets/textbook/必修第二册/4.1/tianmenshan-pan-mountain-road.jpg": {
+    "file": "assets/tianmenshan-pan-mountain-road-BAmdf_np.jpg",
+    "src": "src/assets/textbook/必修第二册/4.1/tianmenshan-pan-mountain-road.jpg"
+  },
+  "src/assets/textbook/必修第二册/4.2/eight-vertical-eight-horizontal-hsr.png": {
+    "file": "assets/eight-vertical-eight-horizontal-hsr-BJBmZVv1.png",
+    "src": "src/assets/textbook/必修第二册/4.2/eight-vertical-eight-horizontal-hsr.png"
+  },
+  "src/assets/textbook/必修第二册/4.2/railway-speed-up-lines.png": {
+    "file": "assets/railway-speed-up-lines-B3naUClc.png",
+    "src": "src/assets/textbook/必修第二册/4.2/railway-speed-up-lines.png"
+  },
+  "src/assets/textbook/必修第二册/4.2/west-east-gas-pipeline.jpg": {
+    "file": "assets/west-east-gas-pipeline-CnBiaMBw.jpg",
+    "src": "src/assets/textbook/必修第二册/4.2/west-east-gas-pipeline.jpg"
+  },
+  "src/assets/textbook/必修第二册/4.2/zhengzhou-rail-hub.png": {
+    "file": "assets/zhengzhou-rail-hub-DswaB6U3.png",
+    "src": "src/assets/textbook/必修第二册/4.2/zhengzhou-rail-hub.png"
+  },
+  "src/assets/textbook/必修第二册/5.1/acid-rain-impact.jpg": {
+    "file": "assets/acid-rain-impact-YgXtaPvn.jpg",
+    "src": "src/assets/textbook/必修第二册/5.1/acid-rain-impact.jpg"
+  },
+  "src/assets/textbook/必修第二册/5.1/env-issue-mechanism.jpg": {
+    "file": "assets/env-issue-mechanism-CcRzh1GI.jpg",
+    "src": "src/assets/textbook/必修第二册/5.1/env-issue-mechanism.jpg"
+  },
+  "src/assets/textbook/必修第二册/5.1/global-env-issues.jpg": {
+    "file": "assets/global-env-issues-kBd2s7RM.jpg",
+    "src": "src/assets/textbook/必修第二册/5.1/global-env-issues.jpg"
+  },
+  "src/assets/textbook/必修第二册/5.1/over-cultivation-impact.jpg": {
+    "file": "assets/over-cultivation-impact-Bxj3B94F.jpg",
+    "src": "src/assets/textbook/必修第二册/5.1/over-cultivation-impact.jpg"
+  },
+  "src/assets/textbook/必修第二册/5.2/2030-sdg-goals.jpg": {
+    "file": "assets/2030-sdg-goals-DCRCjR-h.jpg",
+    "src": "src/assets/textbook/必修第二册/5.2/2030-sdg-goals.jpg"
+  },
+  "src/assets/textbook/必修第二册/5.2/human-earth-relationship-evolution.png": {
+    "file": "assets/human-earth-relationship-evolution-D9rZ-W5U.png",
+    "src": "src/assets/textbook/必修第二册/5.2/human-earth-relationship-evolution.png"
+  },
+  "src/assets/textbook/必修第二册/5.2/sustainable-development-connotation.jpg": {
+    "file": "assets/sustainable-development-connotation-BgUgPP7k.jpg",
+    "src": "src/assets/textbook/必修第二册/5.2/sustainable-development-connotation.jpg"
+  },
+  "src/assets/textbook/必修第二册/5.2/sustainable-development-system.png": {
+    "file": "assets/sustainable-development-system-CdBUYEsl.png",
+    "src": "src/assets/textbook/必修第二册/5.2/sustainable-development-system.png"
+  },
+  "src/assets/textbook/必修第二册/wr1/migrant-worker-net-increase-stat.png": {
+    "file": "assets/migrant-worker-net-increase-stat-BWcqClCA.png",
+    "src": "src/assets/textbook/必修第二册/wr1/migrant-worker-net-increase-stat.png"
+  },
+  "src/assets/textbook/必修第二册/wr1/rural-population-change-1978-2017.png": {
+    "file": "assets/rural-population-change-1978-2017-BWJZ6c_p.png",
+    "src": "src/assets/textbook/必修第二册/wr1/rural-population-change-1978-2017.png"
+  },
+  "src/assets/textbook/必修第二册/wr1/shidu-township-location-map.png": {
+    "file": "assets/shidu-township-location-map-BophGzFV.png",
+    "src": "src/assets/textbook/必修第二册/wr1/shidu-township-location-map.png"
+  },
+  "src/assets/textbook/必修第二册/wr2/city-spatial-structure.png": {
+    "file": "assets/city-spatial-structure-BoN1um82.png",
+    "src": "src/assets/textbook/必修第二册/wr2/city-spatial-structure.png"
+  },
+  "src/assets/textbook/必修第二册/wr2/jobs-housing-ratio.png": {
+    "file": "assets/jobs-housing-ratio-ChDVnOMz.png",
+    "src": "src/assets/textbook/必修第二册/wr2/jobs-housing-ratio.png"
+  },
+  "src/assets/textbook/必修第二册/wr2/rail-transit-walking-radius.png": {
+    "file": "assets/rail-transit-walking-radius-COsOgZet.png",
+    "src": "src/assets/textbook/必修第二册/wr2/rail-transit-walking-radius.png"
+  },
+  "src/assets/textbook/必修第二册/wr3/online-shopping-diagram.png": {
+    "file": "assets/online-shopping-diagram-B5Z6iP-U.png",
+    "src": "src/assets/textbook/必修第二册/wr3/online-shopping-diagram.png"
+  },
+  "src/assets/textbook/必修第二册/wr3/tea-production-ecommerce.png": {
+    "file": "assets/tea-production-ecommerce-BmwHzuMJ.png",
+    "src": "src/assets/textbook/必修第二册/wr3/tea-production-ecommerce.png"
+  },
+  "src/assets/textbook/必修第二册/wr3/zhongguancun-electronics-city.jpg": {
+    "file": "assets/zhongguancun-electronics-city-C3J7pNlq.jpg",
+    "src": "src/assets/textbook/必修第二册/wr3/zhongguancun-electronics-city.jpg"
+  },
+  "src/assets/textbook/必修第二册/wr4/bike-highway-distribution.png": {
+    "file": "assets/bike-highway-distribution-eXajOlQD.png",
+    "src": "src/assets/textbook/必修第二册/wr4/bike-highway-distribution.png"
+  },
+  "src/assets/textbook/必修第二册/wr4/shared-mobility-chain.png": {
+    "file": "assets/shared-mobility-chain-CYwhnv8B.png",
+    "src": "src/assets/textbook/必修第二册/wr4/shared-mobility-chain.png"
+  },
+  "src/assets/textbook/必修第二册/wr4/tide-lane-traffic-flow.png": {
+    "file": "assets/tide-lane-traffic-flow-DTh-OeXt.png",
+    "src": "src/assets/textbook/必修第二册/wr4/tide-lane-traffic-flow.png"
+  },
+  "src/assets/textbook/必修第二册/wr5/low-carbon-food-lifecycle.png": {
+    "file": "assets/low-carbon-food-lifecycle-DNw0tT05.png",
+    "src": "src/assets/textbook/必修第二册/wr5/low-carbon-food-lifecycle.png"
+  },
+  "src/assets/textbook/必修第二册/wr5/low-carbon-food-summary.png": {
+    "file": "assets/low-carbon-food-summary-CIIkcGJS.png",
+    "src": "src/assets/textbook/必修第二册/wr5/low-carbon-food-summary.png"
+  },
+  "src/assets/textbook/必修第二册/wr5/per-capita-carbon-emission-chart.png": {
+    "file": "assets/per-capita-carbon-emission-chart-BKBJ8bQ1.png",
+    "src": "src/assets/textbook/必修第二册/wr5/per-capita-carbon-emission-chart.png"
+  },
+  "src/assets/textbook/选择性必修1/1.1/direct-ray-movement.png": {
+    "file": "assets/direct-ray-movement-DOKjPbjV.png",
+    "src": "src/assets/textbook/选择性必修1/1.1/direct-ray-movement.png"
+  },
+  "src/assets/textbook/选择性必修1/1.1/huangchi-angle.png": {
+    "file": "assets/huangchi-angle-DWbaTFPJ.png",
+    "src": "src/assets/textbook/选择性必修1/1.1/huangchi-angle.png"
+  },
+  "src/assets/textbook/选择性必修1/1.1/self-rotation.jpg": {
+    "file": "assets/self-rotation-C6ANC2EC.jpg",
+    "src": "src/assets/textbook/选择性必修1/1.1/self-rotation.jpg"
+  },
+  "src/assets/textbook/选择性必修1/1.2/day-length.jpg": {
+    "file": "assets/day-length-L5Eqg4r_.jpg",
+    "src": "src/assets/textbook/选择性必修1/1.2/day-length.jpg"
+  },
+  "src/assets/textbook/选择性必修1/1.2/day-night.png": {
+    "file": "assets/day-night-b5akC7ys.png",
+    "src": "src/assets/textbook/选择性必修1/1.2/day-night.png"
+  },
+  "src/assets/textbook/选择性必修1/1.2/five-zones.jpeg": {
+    "file": "assets/five-zones-g59M9cHY.jpeg",
+    "src": "src/assets/textbook/选择性必修1/1.2/five-zones.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/2.1/internal-force.png": {
+    "file": "assets/internal-force-qFz3Tx08.png",
+    "src": "src/assets/textbook/选择性必修1/2.1/internal-force.png"
+  },
+  "src/assets/textbook/选择性必修1/2.1/rock-cycle.jpeg": {
+    "file": "assets/rock-cycle-Ddto5dhs.jpeg",
+    "src": "src/assets/textbook/选择性必修1/2.1/rock-cycle.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/2.1/weathering.jpg": {
+    "file": "assets/weathering-B9yo9xSF.jpg",
+    "src": "src/assets/textbook/选择性必修1/2.1/weathering.jpg"
+  },
+  "src/assets/textbook/选择性必修1/2.2/fault.png": {
+    "file": "assets/fault-D5cpgXNh.png",
+    "src": "src/assets/textbook/选择性必修1/2.2/fault.png"
+  },
+  "src/assets/textbook/选择性必修1/2.2/fold.jpg": {
+    "file": "assets/fold-D3XjdOoc.jpg",
+    "src": "src/assets/textbook/选择性必修1/2.2/fold.jpg"
+  },
+  "src/assets/textbook/选择性必修1/2.2/plates.jpeg": {
+    "file": "assets/plates-Bw23v49S.jpeg",
+    "src": "src/assets/textbook/选择性必修1/2.2/plates.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/2.3/alluvial-fan.jpg": {
+    "file": "assets/alluvial-fan-BFK6h4V3.jpg",
+    "src": "src/assets/textbook/选择性必修1/2.3/alluvial-fan.jpg"
+  },
+  "src/assets/textbook/选择性必修1/2.3/meander.jpeg": {
+    "file": "assets/meander-Cw44vtRO.jpeg",
+    "src": "src/assets/textbook/选择性必修1/2.3/meander.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/2.3/valley-evolution.jpg": {
+    "file": "assets/valley-evolution-De4jEzaa.jpg",
+    "src": "src/assets/textbook/选择性必修1/2.3/valley-evolution.jpg"
+  },
+  "src/assets/textbook/选择性必修1/3.1/cyclone.png": {
+    "file": "assets/cyclone-GlMvHswV.png",
+    "src": "src/assets/textbook/选择性必修1/3.1/cyclone.png"
+  },
+  "src/assets/textbook/选择性必修1/3.1/front.png": {
+    "file": "assets/front-DgbB5ICP.png",
+    "src": "src/assets/textbook/选择性必修1/3.1/front.png"
+  },
+  "src/assets/textbook/选择性必修1/3.2/pressure-belts.jpeg": {
+    "file": "assets/pressure-belts-DHiFd6DE.jpeg",
+    "src": "src/assets/textbook/选择性必修1/3.2/pressure-belts.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/3.2/seasonal-movement.png": {
+    "file": "assets/seasonal-movement-DpkTnEKq.png",
+    "src": "src/assets/textbook/选择性必修1/3.2/seasonal-movement.png"
+  },
+  "src/assets/textbook/选择性必修1/3.2/tri-circulation.jpeg": {
+    "file": "assets/tri-circulation-BStjpHcU.jpeg",
+    "src": "src/assets/textbook/选择性必修1/3.2/tri-circulation.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/3.3/climate-distribution.jpeg": {
+    "file": "assets/climate-distribution-CG1q9UEj.jpeg",
+    "src": "src/assets/textbook/选择性必修1/3.3/climate-distribution.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/4.1/glacier.png": {
+    "file": "assets/glacier-BWLl471J.png",
+    "src": "src/assets/textbook/选择性必修1/4.1/glacier.png"
+  },
+  "src/assets/textbook/选择性必修1/4.1/lake-river.png": {
+    "file": "assets/lake-river-CqIvKHIn.png",
+    "src": "src/assets/textbook/选择性必修1/4.1/lake-river.png"
+  },
+  "src/assets/textbook/选择性必修1/4.2/current-pattern.jpg": {
+    "file": "assets/current-pattern-D0V_OnY-.jpg",
+    "src": "src/assets/textbook/选择性必修1/4.2/current-pattern.jpg"
+  },
+  "src/assets/textbook/选择性必修1/4.2/ocean-currents.jpeg": {
+    "file": "assets/ocean-currents-j5mEm7iT.jpeg",
+    "src": "src/assets/textbook/选择性必修1/4.2/ocean-currents.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/4.3/air-sea-exchange.png": {
+    "file": "assets/air-sea-exchange-BZkyzkBh.png",
+    "src": "src/assets/textbook/选择性必修1/4.3/air-sea-exchange.png"
+  },
+  "src/assets/textbook/选择性必修1/4.3/el-nino.png": {
+    "file": "assets/el-nino-DGZosuIL.png",
+    "src": "src/assets/textbook/选择性必修1/4.3/el-nino.png"
+  },
+  "src/assets/textbook/选择性必修1/4.3/la-nina.png": {
+    "file": "assets/la-nina-efAVBnaS.png",
+    "src": "src/assets/textbook/选择性必修1/4.3/la-nina.png"
+  },
+  "src/assets/textbook/选择性必修1/4.3/walker.png": {
+    "file": "assets/walker-B3XUbRv_.png",
+    "src": "src/assets/textbook/选择性必修1/4.3/walker.png"
+  },
+  "src/assets/textbook/选择性必修1/5.1/elements-exchange.png": {
+    "file": "assets/elements-exchange-D5PO0U4y.png",
+    "src": "src/assets/textbook/选择性必修1/5.1/elements-exchange.png"
+  },
+  "src/assets/textbook/选择性必修1/5.1/huangshan.jpeg": {
+    "file": "assets/huangshan-CgHKYBRY.jpeg",
+    "src": "src/assets/textbook/选择性必修1/5.1/huangshan.jpeg"
+  },
+  "src/assets/textbook/选择性必修1/5.2/latitude-zonation.jpg": {
+    "file": "assets/latitude-zonation-CrNqDGJd.jpg",
+    "src": "src/assets/textbook/选择性必修1/5.2/latitude-zonation.jpg"
+  },
+  "src/assets/textbook/选择性必修1/5.2/natural-zones.png": {
+    "file": "assets/natural-zones-9gtYRElV.png",
+    "src": "src/assets/textbook/选择性必修1/5.2/natural-zones.png"
+  },
+  "src/assets/textbook/选择性必修1/5.2/vertical-zonation.png": {
+    "file": "assets/vertical-zonation-BUGsqvCi.png",
+    "src": "src/assets/textbook/选择性必修1/5.2/vertical-zonation.png"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-chinese-dialect-regions.jpg": {
+    "file": "assets/x2ch1-chinese-dialect-regions-CIGaiLAp.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-chinese-dialect-regions.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-dongxiang-wild-rice.jpg": {
+    "file": "assets/x2ch1-dongxiang-wild-rice-BSvGbsJu.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-dongxiang-wild-rice.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-northeast-plain.jpg": {
+    "file": "assets/x2ch1-northeast-plain-Cp4dTSFX.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-northeast-plain.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-pingsha-island-agriculture.jpg": {
+    "file": "assets/x2ch1-pingsha-island-agriculture-BuOn0Tkb.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-pingsha-island-agriculture.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-qinling-landscape.jpg": {
+    "file": "assets/x2ch1-qinling-landscape-Cco4JCyn.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-qinling-landscape.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-qinling-mountain.jpg": {
+    "file": "assets/x2ch1-qinling-mountain-B_ERgtv9.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-qinling-mountain.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.1/x2ch1-yugong-jiuzhou-map.jpg": {
+    "file": "assets/x2ch1-yugong-jiuzhou-map-By2yvEgt.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.1/x2ch1-yugong-jiuzhou-map.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-falaj-landscape-2.jpg": {
+    "file": "assets/x2ch1-falaj-landscape-2-C-ghv5HT.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-falaj-landscape-2.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-falaj-landscape.jpg": {
+    "file": "assets/x2ch1-falaj-landscape-CTh7FzJJ.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-falaj-landscape.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-jingjinji-association.png": {
+    "file": "assets/x2ch1-jingjinji-association-Cp7j669w.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-jingjinji-association.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-oman-location.jpg": {
+    "file": "assets/x2ch1-oman-location-bPhisH0b.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-oman-location.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-peitian-village-local.png": {
+    "file": "assets/x2ch1-peitian-village-local-Dr3IAXcM.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-peitian-village-local.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-peitian-village-panorama.png": {
+    "file": "assets/x2ch1-peitian-village-panorama-CdZrUlTH.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-peitian-village-panorama.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-pingyao-ancient-city.jpg": {
+    "file": "assets/x2ch1-pingyao-ancient-city-CSuE4UtN.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-pingyao-ancient-city.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-qingtian-rice-fish-panorama.png": {
+    "file": "assets/x2ch1-qingtian-rice-fish-panorama-y-IiaBzx.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-qingtian-rice-fish-panorama.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-qingtian-rice-fish.jpg": {
+    "file": "assets/x2ch1-qingtian-rice-fish-FiOx-ZjJ.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-qingtian-rice-fish.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-shaoxing-ancient-town.jpg": {
+    "file": "assets/x2ch1-shaoxing-ancient-town-C1NxL-De.jpg",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-shaoxing-ancient-town.jpg"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-songnen-corn.png": {
+    "file": "assets/x2ch1-songnen-corn-xmVCq_9L.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-songnen-corn.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-songnen-plain-conditions.png": {
+    "file": "assets/x2ch1-songnen-plain-conditions-DK31xFhk.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-songnen-plain-conditions.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-yangtze-delta-conditions.png": {
+    "file": "assets/x2ch1-yangtze-delta-conditions-YZvppILv.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-yangtze-delta-conditions.png"
+  },
+  "src/assets/textbook/选择性必修2/1.2/x2ch1-yangtze-rice-field.png": {
+    "file": "assets/x2ch1-yangtze-rice-field-BnhP6v_-.png",
+    "src": "src/assets/textbook/选择性必修2/1.2/x2ch1-yangtze-rice-field.png"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-australia-iron-ore-port.png": {
+    "file": "assets/x2ch2-australia-iron-ore-port-fIr62WfQ.png",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-australia-iron-ore-port.png"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-dujiangyan-project-view.jpg": {
+    "file": "assets/x2ch2-dujiangyan-project-view-Dpi94lNY.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-dujiangyan-project-view.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-dujiangyan-project.png": {
+    "file": "assets/x2ch2-dujiangyan-project-hOIf0AT-.png",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-dujiangyan-project.png"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-dujiangyan-schematic.png": {
+    "file": "assets/x2ch2-dujiangyan-schematic-CkHw1Hwx.png",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-dujiangyan-schematic.png"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-shanxi-coal-distribution.jpg": {
+    "file": "assets/x2ch2-shanxi-coal-distribution-ziq3c2UK.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-shanxi-coal-distribution.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-swiss-watch-dial.jpg": {
+    "file": "assets/x2ch2-swiss-watch-dial-CzEm-sVV.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-swiss-watch-dial.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-swiss-watch.png": {
+    "file": "assets/x2ch2-swiss-watch-DMRK1G5G.png",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-swiss-watch.png"
+  },
+  "src/assets/textbook/选择性必修2/2.1/x2ch2-us-black-storm.png": {
+    "file": "assets/x2ch2-us-black-storm-C1BH7xbe.png",
+    "src": "src/assets/textbook/选择性必修2/2.1/x2ch2-us-black-storm.png"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-agro-pastoral-zone-map.png": {
+    "file": "assets/x2ch2-agro-pastoral-zone-map-DfJKP_lR.png",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-agro-pastoral-zone-map.png"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-agro-pastoral-zone-range.png": {
+    "file": "assets/x2ch2-agro-pastoral-zone-range-BLH2geeE.png",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-agro-pastoral-zone-range.png"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-guizhou-rocky-desertification.jpg": {
+    "file": "assets/x2ch2-guizhou-rocky-desertification-B-YbO3KE.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-guizhou-rocky-desertification.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-hunshandake-grassland.png": {
+    "file": "assets/x2ch2-hunshandake-grassland-WX0iCQ9B.png",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-hunshandake-grassland.png"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-hunshandake-summer-grassland.png": {
+    "file": "assets/x2ch2-hunshandake-summer-grassland-scXLHymH.png",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-hunshandake-summer-grassland.png"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-livestock-grassland-impact.png": {
+    "file": "assets/x2ch2-livestock-grassland-impact-UmfBr4m4.png",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-livestock-grassland-impact.png"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-ordos-precipitation-annual.jpg": {
+    "file": "assets/x2ch2-ordos-precipitation-annual-CLA9P46L.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-ordos-precipitation-annual.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-ordos-precipitation-monthly.jpg": {
+    "file": "assets/x2ch2-ordos-precipitation-monthly-BH8RI0sB.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-ordos-precipitation-monthly.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.2/x2ch2-sahel-region.png": {
+    "file": "assets/x2ch2-sahel-region-BzvNM3j1.png",
+    "src": "src/assets/textbook/选择性必修2/2.2/x2ch2-sahel-region.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-daqing-petrochemical.png": {
+    "file": "assets/x2ch2-daqing-petrochemical-DxsnyF5i.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-daqing-petrochemical.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-abandoned-mine.png": {
+    "file": "assets/x2ch2-jiaozuo-env-abandoned-mine-2mJwsAb-.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-abandoned-mine.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-coal-gangue.png": {
+    "file": "assets/x2ch2-jiaozuo-env-coal-gangue-DCWZvQ6o.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-coal-gangue.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-subsidence.png": {
+    "file": "assets/x2ch2-jiaozuo-env-subsidence-BWSgL-4C.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-subsidence.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-wastewater.png": {
+    "file": "assets/x2ch2-jiaozuo-env-wastewater-MaYvWfuA.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-env-wastewater.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-gdp-chart.png": {
+    "file": "assets/x2ch2-jiaozuo-gdp-chart-DEEYGtNA.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-gdp-chart.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-gdp.jpg": {
+    "file": "assets/x2ch2-jiaozuo-gdp-bMfYVuNd.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-gdp.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-location.jpg": {
+    "file": "assets/x2ch2-jiaozuo-location-DuBFchLo.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-jiaozuo-location.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-rmb-5-yuan.png": {
+    "file": "assets/x2ch2-rmb-5-yuan-DK726xGy.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-rmb-5-yuan.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-yuntai-mountain-1.png": {
+    "file": "assets/x2ch2-yuntai-mountain-1-YmEn7cAZ.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-yuntai-mountain-1.png"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-yuntai-mountain-2.jpg": {
+    "file": "assets/x2ch2-yuntai-mountain-2-D-pwuCe1.jpg",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-yuntai-mountain-2.jpg"
+  },
+  "src/assets/textbook/选择性必修2/2.3/x2ch2-yuntai-mountain-3.png": {
+    "file": "assets/x2ch2-yuntai-mountain-3-nmuqbzAq.png",
+    "src": "src/assets/textbook/选择性必修2/2.3/x2ch2-yuntai-mountain-3.png"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-boswash-population-scale.jpg": {
+    "file": "assets/x2ch3-boswash-population-scale-CnRpFhDK.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-boswash-population-scale.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-erie-canal.jpg": {
+    "file": "assets/x2ch3-erie-canal-BZ3cPY9H.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-erie-canal.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-new-york-port-history.png": {
+    "file": "assets/x2ch3-new-york-port-history-DhR8ZZDA.png",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-new-york-port-history.png"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-met-museum.jpg": {
+    "file": "assets/x2ch3-ny-met-museum-KRiACgRV.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-met-museum.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-met-opera.jpg": {
+    "file": "assets/x2ch3-ny-met-opera-DJz8zthu.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-met-opera.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-un-headquarters.jpg": {
+    "file": "assets/x2ch3-ny-un-headquarters-BBfja_FU.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-un-headquarters.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-wall-street.jpg": {
+    "file": "assets/x2ch3-ny-wall-street-vSsxrx_a.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-ny-wall-street.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-wuhan-city-circle.jpg": {
+    "file": "assets/x2ch3-wuhan-city-circle-BdK03gIR.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-wuhan-city-circle.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.1/x2ch3-zhengzhou-zhengdong-new-area.png": {
+    "file": "assets/x2ch3-zhengzhou-zhengdong-new-area-Cgh720CA.png",
+    "src": "src/assets/textbook/选择性必修2/3.1/x2ch3-zhengzhou-zhengdong-new-area.png"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-china-four-regions.jpg": {
+    "file": "assets/x2ch3-china-four-regions-B4wRMeD_.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-china-four-regions.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-prd-leading-industry-change.jpg": {
+    "file": "assets/x2ch3-prd-leading-industry-change-BySgAGO2.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-prd-leading-industry-change.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-shanghai-location.jpg": {
+    "file": "assets/x2ch3-shanghai-location-BbNEGnw-.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-shanghai-location.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-shanghai-three-industries-proportion.jpg": {
+    "file": "assets/x2ch3-shanghai-three-industries-proportion-CWb5JQg6.jpg",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-shanghai-three-industries-proportion.jpg"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-shenzhen-after.png": {
+    "file": "assets/x2ch3-shenzhen-after-CPUmVKAT.png",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-shenzhen-after.png"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-shenzhen-before.png": {
+    "file": "assets/x2ch3-shenzhen-before-Dd_MYDeR.png",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-shenzhen-before.png"
+  },
+  "src/assets/textbook/选择性必修2/3.2/x2ch3-yangshan-port.png": {
+    "file": "assets/x2ch3-yangshan-port-COZGs5vT.png",
+    "src": "src/assets/textbook/选择性必修2/3.2/x2ch3-yangshan-port.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-huanghe-basin-map.png": {
+    "file": "assets/x2ch4-huanghe-basin-map-DF1Kr2UK.png",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-huanghe-basin-map.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-huanghe-basin-provinces.jpg": {
+    "file": "assets/x2ch4-huanghe-basin-provinces-D9hiISrk.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-huanghe-basin-provinces.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-huanghe-sediment-discharge.jpg": {
+    "file": "assets/x2ch4-huanghe-sediment-discharge-CRp6AnqN.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-huanghe-sediment-discharge.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-nanxiaohegou-measures.png": {
+    "file": "assets/x2ch4-nanxiaohegou-measures-BCQCSw9f.png",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-nanxiaohegou-measures.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-nanxiaohegou-treatment.jpg": {
+    "file": "assets/x2ch4-nanxiaohegou-treatment-zuIIakJ1.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-nanxiaohegou-treatment.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-bio-1.png": {
+    "file": "assets/x2ch4-soil-conservation-bio-1-Bswj9W_J.png",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-bio-1.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-bio-2.png": {
+    "file": "assets/x2ch4-soil-conservation-bio-2-VXWApHA9.png",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-bio-2.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-engineering.jpg": {
+    "file": "assets/x2ch4-soil-conservation-engineering-WGuX4e0R.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-engineering.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-tillage-1.png": {
+    "file": "assets/x2ch4-soil-conservation-tillage-1-BCFytoli.png",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-tillage-1.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-tillage-2.png": {
+    "file": "assets/x2ch4-soil-conservation-tillage-2-D-waGNn1.png",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-soil-conservation-tillage-2.png"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-suspended-river-diagram.jpg": {
+    "file": "assets/x2ch4-suspended-river-diagram-DtVyVHZV.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-suspended-river-diagram.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-suspended-river.jpg": {
+    "file": "assets/x2ch4-suspended-river-hlfZ8S4K.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-suspended-river.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.1/x2ch4-xiaolangdi-flushing.jpg": {
+    "file": "assets/x2ch4-xiaolangdi-flushing-BckRFO8V.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.1/x2ch4-xiaolangdi-flushing.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-prod-consumption.jpg": {
+    "file": "assets/x2ch4-energy-prod-consumption-DUGy6PWO.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-prod-consumption.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-structure-1.png": {
+    "file": "assets/x2ch4-energy-structure-1-D7yXpw0g.png",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-structure-1.png"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-structure-2.png": {
+    "file": "assets/x2ch4-energy-structure-2-CiXme6m8.png",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-structure-2.png"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-structure-3.png": {
+    "file": "assets/x2ch4-energy-structure-3-DjYZ-Asl.png",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-energy-structure-3.png"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-gas-pipeline-impact.jpg": {
+    "file": "assets/x2ch4-gas-pipeline-impact-B2SqHxkB.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-gas-pipeline-impact.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-gas-pipeline-map.png": {
+    "file": "assets/x2ch4-gas-pipeline-map-CbUgOmZl.png",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-gas-pipeline-map.png"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-gas-pipeline-route.png": {
+    "file": "assets/x2ch4-gas-pipeline-route-Dfw74F7N.png",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-gas-pipeline-route.png"
+  },
+  "src/assets/textbook/选择性必修2/4.2/x2ch4-snowy-mtns-water-transfer.jpg": {
+    "file": "assets/x2ch4-snowy-mtns-water-transfer-B-9G9Zqo.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.2/x2ch4-snowy-mtns-water-transfer.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-east-asia-transfer.jpg": {
+    "file": "assets/x2ch4-east-asia-transfer-q_EeWwvn.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-east-asia-transfer.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-ethiopia-location.png": {
+    "file": "assets/x2ch4-ethiopia-location-DlYfLTiI.png",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-ethiopia-location.png"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-japan-restructure.png": {
+    "file": "assets/x2ch4-japan-restructure-2Ky92ndq.png",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-japan-restructure.png"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-japan-unemployment.jpg": {
+    "file": "assets/x2ch4-japan-unemployment-AKF5Strj.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-japan-unemployment.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-shoe-production-share.png": {
+    "file": "assets/x2ch4-shoe-production-share-FM9UW9FH.png",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-shoe-production-share.png"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-shoe-vietnam.jpg": {
+    "file": "assets/x2ch4-shoe-vietnam-Ckoy0n0X.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-shoe-vietnam.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.3/x2ch4-value-chain.jpg": {
+    "file": "assets/x2ch4-value-chain-BntkF4SS.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.3/x2ch4-value-chain.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.4/x2ch4-belt-road-forum.jpg": {
+    "file": "assets/x2ch4-belt-road-forum-CibzSWqG.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.4/x2ch4-belt-road-forum.jpg"
+  },
+  "src/assets/textbook/选择性必修2/4.4/x2ch4-economy-dual-triple.png": {
+    "file": "assets/x2ch4-economy-dual-triple-3FRT1RIa.png",
+    "src": "src/assets/textbook/选择性必修2/4.4/x2ch4-economy-dual-triple.png"
+  },
+  "src/assets/textbook/选择性必修2/4.4/x2ch4-japan-tsunami.png": {
+    "file": "assets/x2ch4-japan-tsunami-mP7B0vdp.png",
+    "src": "src/assets/textbook/选择性必修2/4.4/x2ch4-japan-tsunami.png"
+  },
+  "src/assets/textbook/选择性必修2/4.4/x2ch4-yuxinou-map.png": {
+    "file": "assets/x2ch4-yuxinou-map-BbuBnld6.png",
+    "src": "src/assets/textbook/选择性必修2/4.4/x2ch4-yuxinou-map.png"
+  },
+  "src/assets/textbook/选择性必修2/4.4/x2ch4-yuxinou-route.jpg": {
+    "file": "assets/x2ch4-yuxinou-route-B3t-I4AP.jpg",
+    "src": "src/assets/textbook/选择性必修2/4.4/x2ch4-yuxinou-route.jpg"
+  },
+  "src/assets/textbook/选择性必修2/q1/x2ch1-mauritius-location.jpg": {
+    "file": "assets/x2ch1-mauritius-location-B43TPxa_.jpg",
+    "src": "src/assets/textbook/选择性必修2/q1/x2ch1-mauritius-location.jpg"
+  },
+  "src/assets/textbook/选择性必修2/q1/x2ch1-mauritius-sugarcane.jpg": {
+    "file": "assets/x2ch1-mauritius-sugarcane-CbEGtYc0.jpg",
+    "src": "src/assets/textbook/选择性必修2/q1/x2ch1-mauritius-sugarcane.jpg"
+  },
+  "src/assets/textbook/选择性必修2/q2/x2ch2-jingdezhen-location-map.png": {
+    "file": "assets/x2ch2-jingdezhen-location-map-ByNZmAw-.png",
+    "src": "src/assets/textbook/选择性必修2/q2/x2ch2-jingdezhen-location-map.png"
+  },
+  "src/assets/textbook/选择性必修2/q2/x2ch2-jingdezhen-location.jpg": {
+    "file": "assets/x2ch2-jingdezhen-location-Dr9ed_Wi.jpg",
+    "src": "src/assets/textbook/选择性必修2/q2/x2ch2-jingdezhen-location.jpg"
+  },
+  "src/assets/textbook/选择性必修2/q2/x2ch2-jingdezhen-porcelain.jpg": {
+    "file": "assets/x2ch2-jingdezhen-porcelain-CyR2Jxex.jpg",
+    "src": "src/assets/textbook/选择性必修2/q2/x2ch2-jingdezhen-porcelain.jpg"
+  },
+  "src/assets/textbook/选择性必修2/q4/x2ch4-tibet-xinjiang-water-route.png": {
+    "file": "assets/x2ch4-tibet-xinjiang-water-route-DpJYrZKn.png",
+    "src": "src/assets/textbook/选择性必修2/q4/x2ch4-tibet-xinjiang-water-route.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-dam-impact.png": {
+    "file": "assets/ch1-dam-impact-CQ-45pkK.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-dam-impact.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-forest-multi-value.png": {
+    "file": "assets/ch1-forest-multi-value-DNz-xkRu.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-forest-multi-value.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-forest-services-choice.png": {
+    "file": "assets/ch1-forest-services-choice-iBeqRqQw.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-forest-services-choice.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-service-cultural.jpg": {
+    "file": "assets/ch1-service-cultural-ExVyd-PC.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-cultural.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-service-regulating.png": {
+    "file": "assets/ch1-service-regulating-DA53i67a.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-regulating.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-service-supply.jpg": {
+    "file": "assets/ch1-service-supply-B6r2F2Et.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supply.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png": {
+    "file": "assets/ch3-temp-co2-change-Cjxe3nth.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-tree-value-data.png": {
+    "file": "assets/ch1-tree-value-data-Bo6sM52d.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-tree-value-data.png"
+  },
+  "src/assets/textbook/选择性必修3/1.1/ch1-tree-value-diagram.png": {
+    "file": "assets/ch1-tree-value-diagram-Cpej5Va5.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-tree-value-diagram.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-coal-anthracite.png": {
+    "file": "assets/ch1-coal-anthracite-C8LWZnNa.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-coal-anthracite.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-coal-bituminous.png": {
+    "file": "assets/ch1-coal-bituminous-Bi-2mqTD.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-coal-bituminous.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-coal-lignite.png": {
+    "file": "assets/ch1-coal-lignite-CwsP2HUj.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-coal-lignite.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-forest-renewal.jpg": {
+    "file": "assets/ch1-forest-renewal-D-1cXrTz.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-forest-renewal.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-milk-farm.png": {
+    "file": "assets/ch1-milk-farm-D8LM0GI8.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-milk-farm.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-milk-feed.png": {
+    "file": "assets/ch1-milk-feed-D2iorkAF.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-milk-feed.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-milk-package.png": {
+    "file": "assets/ch1-milk-package-DBb8nEMb.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-milk-package.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-milk-process.jpg": {
+    "file": "assets/ch1-milk-process-CpiTqc3A.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-milk-process.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-water-column.png": {
+    "file": "assets/ch1-water-column-Cjx8WA9z.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-water-column.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-water-pie.png": {
+    "file": "assets/ch1-water-pie-BNrfhGBt.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-water-pie.png"
+  },
+  "src/assets/textbook/选择性必修3/1.2/ch1-water-table.png": {
+    "file": "assets/ch1-water-table-5Lw6HH6E.png",
+    "src": "src/assets/textbook/选择性必修3/1.2/ch1-water-table.png"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-ddt-biomagnify.jpg": {
+    "file": "assets/ch1-ddt-biomagnify-BqHm6sOj.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-ddt-biomagnify.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-ddt-chain.png": {
+    "file": "assets/ch1-ddt-chain-Yl7Qp_Kg.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-ddt-chain.png"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-ekc-curve.jpg": {
+    "file": "assets/ch1-ekc-curve-BRaFxfoq.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-ekc-curve.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-env-factors-diagram.jpg": {
+    "file": "assets/ch1-env-factors-diagram-BINu1EOY.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-env-factors-diagram.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-factor-population.png": {
+    "file": "assets/ch1-factor-population-DIyQpUi3.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-factor-population.png"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-factor-tech.png": {
+    "file": "assets/ch1-factor-tech-DQD-en2t.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-factor-tech.png"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-flow-arrows.jpg": {
+    "file": "assets/ch1-flow-arrows-DCsBXycT.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-flow-arrows.jpg"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-flow-natural-human.png": {
+    "file": "assets/ch1-flow-natural-human-CXKfOqPg.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-flow-natural-human.png"
+  },
+  "src/assets/textbook/选择性必修3/1.3/ch1-flow-relation.jpg": {
+    "file": "assets/ch1-flow-relation-C1LvFf8s.jpg",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-flow-relation.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-nauru-degraded-surface-1.png": {
+    "file": "assets/ch2-nauru-degraded-surface-1-DQEjeI34.png",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-nauru-degraded-surface-1.png"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-nauru-degraded-surface-2.jpg": {
+    "file": "assets/ch2-nauru-degraded-surface-2-BDecSXCo.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-nauru-degraded-surface-2.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-nauru-location.jpg": {
+    "file": "assets/ch2-nauru-location-DV8BqMNT.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-nauru-location.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-population-water-1949.jpg": {
+    "file": "assets/ch2-population-water-1949-DIFyvKTy.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-population-water-1949.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-resource-security-pathway-1.jpg": {
+    "file": "assets/ch2-resource-security-pathway-1-DTAuVQcn.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-resource-security-pathway-1.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-resource-security-pathway-2.jpg": {
+    "file": "assets/ch2-resource-security-pathway-2-6E70Woec.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-resource-security-pathway-2.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-resource-security-pathway-3.jpg": {
+    "file": "assets/ch2-resource-security-pathway-3-O6e7G33o.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-resource-security-pathway-3.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-supply-demand-balance.png": {
+    "file": "assets/ch3-temp-co2-change-Cjxe3nth.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-supply-demand-demand-growth.jpg": {
+    "file": "assets/ch2-supply-demand-demand-growth-BGXBQeic.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-supply-demand-demand-growth.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.1/ch2-supply-demand-supply-decline.jpg": {
+    "file": "assets/ch2-supply-demand-supply-decline-_J5yyd4O.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.1/ch2-supply-demand-supply-decline.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.2/ch2-coal-oil-spatial-supply-demand.png": {
+    "file": "assets/ch2-coal-oil-spatial-supply-demand-CDGRY6gU.png",
+    "src": "src/assets/textbook/选择性必修3/2.2/ch2-coal-oil-spatial-supply-demand.png"
+  },
+  "src/assets/textbook/选择性必修3/2.2/ch2-coal-oil-transport-pattern.png": {
+    "file": "assets/ch2-coal-oil-transport-pattern-DSXLYkLJ.png",
+    "src": "src/assets/textbook/选择性必修3/2.2/ch2-coal-oil-transport-pattern.png"
+  },
+  "src/assets/textbook/选择性必修3/2.2/ch2-energy-production-consumption.jpg": {
+    "file": "assets/ch2-energy-production-consumption-BYLJn9MG.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.2/ch2-energy-production-consumption.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.2/ch2-energy-structure-comparison.jpg": {
+    "file": "assets/ch2-energy-structure-comparison-CgtkRJB0.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.2/ch2-energy-structure-comparison.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.2/ch2-oil-gas-dependence-1.png": {
+    "file": "assets/ch2-oil-gas-dependence-1-DliZKNz-.png",
+    "src": "src/assets/textbook/选择性必修3/2.2/ch2-oil-gas-dependence-1.png"
+  },
+  "src/assets/textbook/选择性必修3/2.3/ch2-central-grain-reserve.jpg": {
+    "file": "assets/ch2-central-grain-reserve-DLMyXQ81.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.3/ch2-central-grain-reserve.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.3/ch2-cropland-quality-share-2015.png": {
+    "file": "assets/ch2-cropland-quality-share-2015-DZR7DfpV.png",
+    "src": "src/assets/textbook/选择性必修3/2.3/ch2-cropland-quality-share-2015.png"
+  },
+  "src/assets/textbook/选择性必修3/2.3/ch2-grain-area-yield-output.jpg": {
+    "file": "assets/ch2-grain-area-yield-output-Byole6xW.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.3/ch2-grain-area-yield-output.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.3/ch2-provincial-cropland-quality.jpg": {
+    "file": "assets/ch2-provincial-cropland-quality-CrV8dlG-.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.3/ch2-provincial-cropland-quality.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-hk-airport.jpg": {
+    "file": "assets/ch2-land-expansion-hk-airport-Dij3Uxyh.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-hk-airport.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-hkzm-bridge.jpg": {
+    "file": "assets/ch2-land-expansion-hkzm-bridge-CrOcJ3FX.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-hkzm-bridge.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-holland.png": {
+    "file": "assets/ch2-land-expansion-holland-Bmf5SAAv.png",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-holland.png"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-palm-island.png": {
+    "file": "assets/ch2-land-expansion-palm-island-Cfygte-H.png",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-land-expansion-palm-island.png"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-marine-space-classification.jpg": {
+    "file": "assets/ch2-marine-space-classification-CDTbW3IV.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-marine-space-classification.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-marine-space-reality-vision.jpg": {
+    "file": "assets/ch2-marine-space-reality-vision-Bd8QCH-Y.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-marine-space-reality-vision.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-marine-space-schematic.jpg": {
+    "file": "assets/ch2-marine-space-schematic-DofKGIsY.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-marine-space-schematic.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-sansha-map.jpg": {
+    "file": "assets/ch2-sansha-map-CDdDX6EB.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-sansha-map.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-tidal-flat-aquaculture.png": {
+    "file": "assets/ch2-tidal-flat-aquaculture-D9rHgPwQ.png",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-tidal-flat-aquaculture.png"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-tidal-flat-farming.png": {
+    "file": "assets/ch2-tidal-flat-farming-cXw6u9Ee.png",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-tidal-flat-farming.png"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-tidal-flat-salt-field.jpg": {
+    "file": "assets/ch2-tidal-flat-salt-field-AEY7loM7.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-tidal-flat-salt-field.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-yongxing-reclamation.jpg": {
+    "file": "assets/ch2-yongxing-reclamation-DH0bFldm.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-yongxing-reclamation.jpg"
+  },
+  "src/assets/textbook/选择性必修3/2.4/ch2-yongxing-remote-sensing.jpg": {
+    "file": "assets/ch2-yongxing-remote-sensing-CS5OfSlG.jpg",
+    "src": "src/assets/textbook/选择性必修3/2.4/ch2-yongxing-remote-sensing.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.1/ch3-env-issue-evolution.jpg": {
+    "file": "assets/ch3-env-issue-evolution-KXlLZGx9.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.1/ch3-env-issue-evolution.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.1/ch3-env-threshold.jpg": {
+    "file": "assets/ch3-env-threshold-CWtAr58C.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.1/ch3-env-threshold.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.1/ch3-reduce-risk-path.png": {
+    "file": "assets/ch3-temp-co2-change-Cjxe3nth.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png"
+  },
+  "src/assets/textbook/选择性必修3/3.1/ch3-surface-water-quality.png": {
+    "file": "assets/ch3-surface-water-quality-D_8yk8Rv.png",
+    "src": "src/assets/textbook/选择性必修3/3.1/ch3-surface-water-quality.png"
+  },
+  "src/assets/textbook/选择性必修3/3.2/ch3-london-death-pollution.png": {
+    "file": "assets/ch3-london-death-pollution-CrOebRnk.png",
+    "src": "src/assets/textbook/选择性必修3/3.2/ch3-london-death-pollution.png"
+  },
+  "src/assets/textbook/选择性必修3/3.2/ch3-pollutant-transfer.png": {
+    "file": "assets/ch3-pollutant-transfer-ChLRkLdt.png",
+    "src": "src/assets/textbook/选择性必修3/3.2/ch3-pollutant-transfer.png"
+  },
+  "src/assets/textbook/选择性必修3/3.2/ch3-rhine-pollution.jpg": {
+    "file": "assets/ch3-rhine-pollution-egcUUPHh.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.2/ch3-rhine-pollution.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.2/ch3-songhua-pollution.png": {
+    "file": "assets/ch3-songhua-pollution-9LfRmd-A.png",
+    "src": "src/assets/textbook/选择性必修3/3.2/ch3-songhua-pollution.png"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-desertification.jpg": {
+    "file": "assets/ch3-eco-deg-desertification-DvXi2ugx.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-desertification.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-erosion.jpg": {
+    "file": "assets/ch3-eco-deg-erosion-jZE7iEnq.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-erosion.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-extinction.jpg": {
+    "file": "assets/ch3-eco-deg-extinction-CCBztPAQ.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-extinction.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-forest.png": {
+    "file": "assets/ch3-eco-deg-forest-Dw8vV2u6.png",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-eco-deg-forest.png"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-natural-forest-protection.jpg": {
+    "file": "assets/ch3-natural-forest-protection-BqRhmG-f.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-natural-forest-protection.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-nature-reserve.png": {
+    "file": "assets/ch3-nature-reserve-C5O6GPk3.png",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-nature-reserve.png"
+  },
+  "src/assets/textbook/选择性必修3/3.3/ch3-soil-erosion.jpg": {
+    "file": "assets/ch3-soil-erosion-CetyNzsz.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.3/ch3-soil-erosion.jpg"
+  },
+  "src/assets/textbook/选择性必修3/3.4/ch3-carbon-cycle.png": {
+    "file": "assets/ch3-carbon-cycle-BQrA-yIK.png",
+    "src": "src/assets/textbook/选择性必修3/3.4/ch3-carbon-cycle.png"
+  },
+  "src/assets/textbook/选择性必修3/3.4/ch3-co2-concentration-change.png": {
+    "file": "assets/ch3-co2-concentration-change-29t5Ocfh.png",
+    "src": "src/assets/textbook/选择性必修3/3.4/ch3-co2-concentration-change.png"
+  },
+  "src/assets/textbook/选择性必修3/3.4/ch3-maldives-cabinet-2.png": {
+    "file": "assets/ch3-maldives-cabinet-2-C6bnBgLP.png",
+    "src": "src/assets/textbook/选择性必修3/3.4/ch3-maldives-cabinet-2.png"
+  },
+  "src/assets/textbook/选择性必修3/3.4/ch3-maldives-cabinet.png": {
+    "file": "assets/ch1-ddt-chain-Yl7Qp_Kg.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-ddt-chain.png"
+  },
+  "src/assets/textbook/选择性必修3/3.4/ch3-temp-co2-change.png": {
+    "file": "assets/ch3-temp-co2-change-Cjxe3nth.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png"
+  },
+  "src/assets/textbook/选择性必修3/3.4/ch3-tuvalu-location.jpg": {
+    "file": "assets/ch3-tuvalu-location-CXDkxpP1.jpg",
+    "src": "src/assets/textbook/选择性必修3/3.4/ch3-tuvalu-location.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-anji-mine-before.png": {
+    "file": "assets/ch1-ddt-chain-Yl7Qp_Kg.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-ddt-chain.png"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-anji-yucun-park.png": {
+    "file": "assets/ch4-anji-yucun-park-CPCo9s8K.png",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-anji-yucun-park.png"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-green-production-example-1.png": {
+    "file": "assets/ch4-green-production-example-1-CccarisB.png",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-green-production-example-1.png"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-green-production-example-2.png": {
+    "file": "assets/ch3-temp-co2-change-Cjxe3nth.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-green-production.jpg": {
+    "file": "assets/ch4-green-production-C9eUYfff.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-green-production.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-passive-active-heating.jpg": {
+    "file": "assets/ch4-passive-active-heating-lYx07hwm.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-passive-active-heating.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-passive-house-compare.jpg": {
+    "file": "assets/ch4-passive-house-compare-DuVlkRRj.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-passive-house-compare.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-passive-house.jpg": {
+    "file": "assets/ch4-passive-house-BBNRAdKk.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-passive-house.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.1/ch4-society-development-history.png": {
+    "file": "assets/ch4-society-development-history-BXoC7q-k.png",
+    "src": "src/assets/textbook/选择性必修3/4.1/ch4-society-development-history.png"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-ecological-red-line-region.jpg": {
+    "file": "assets/ch4-ecological-red-line-region-D_EeeJft.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.2/ch4-ecological-red-line-region.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-ecological-red-line-types.png": {
+    "file": "assets/ch3-temp-co2-change-Cjxe3nth.png",
+    "src": "src/assets/textbook/选择性必修3/1.1/ch1-service-supporting.png"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-emergency-disposal-flow.jpg": {
+    "file": "assets/ch4-emergency-disposal-flow-CcDWAl4J.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.2/ch4-emergency-disposal-flow.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-oil-reserve-distribution.jpg": {
+    "file": "assets/ch4-oil-reserve-distribution-C7B2YHIx.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.2/ch4-oil-reserve-distribution.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-strategic-resource-reserve.jpg": {
+    "file": "assets/ch4-strategic-resource-reserve-Di6s76aU.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.2/ch4-strategic-resource-reserve.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-tragedy-commons-illustration.png": {
+    "file": "assets/ch1-ddt-chain-Yl7Qp_Kg.png",
+    "src": "src/assets/textbook/选择性必修3/1.3/ch1-ddt-chain.png"
+  },
+  "src/assets/textbook/选择性必修3/4.2/ch4-tragedy-commons-pasture.jpg": {
+    "file": "assets/ch4-tragedy-commons-pasture-BTQHrLjO.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.2/ch4-tragedy-commons-pasture.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-climate-negotiation-positions.jpg": {
+    "file": "assets/ch4-climate-negotiation-positions-DroQlwXK.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-climate-negotiation-positions.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-climate-negotiation-roles.jpg": {
+    "file": "assets/ch4-climate-negotiation-roles-Ccl9yhU9.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-climate-negotiation-roles.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-cooperation-necessity.png": {
+    "file": "assets/ch4-cooperation-necessity-BYAFCcfu.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-cooperation-necessity.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-cooperation-ways.jpg": {
+    "file": "assets/ch4-cooperation-ways-B6Nmkt0z.jpg",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-cooperation-ways.jpg"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-1.png": {
+    "file": "assets/ch4-global-env-challenge-1-DxbZnzvV.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-1.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-2.png": {
+    "file": "assets/ch4-global-env-challenge-2-BQEBgBl0.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-2.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-3.png": {
+    "file": "assets/ch4-global-env-challenge-3-BgcKaksT.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-3.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-4.png": {
+    "file": "assets/ch4-global-env-challenge-4-iOuQvSg2.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-global-env-challenge-4.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-jinghong-dam.png": {
+    "file": "assets/ch4-jinghong-dam-ClADbABf.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-jinghong-dam.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-jinghong-reservoir.png": {
+    "file": "assets/ch4-jinghong-reservoir-CP4Enjj1.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-jinghong-reservoir.png"
+  },
+  "src/assets/textbook/选择性必修3/4.3/ch4-lancang-mekong-river.png": {
+    "file": "assets/ch4-lancang-mekong-river-DeJMV32m.png",
+    "src": "src/assets/textbook/选择性必修3/4.3/ch4-lancang-mekong-river.png"
+  },
+  "src/engine/WaterCycleView.vue": {
+    "file": "assets/WaterCycleView-tfcAD8dd.js",
+    "name": "WaterCycleView",
+    "src": "src/engine/WaterCycleView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_BaseScene-q8cXd3sG.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_vendor-three-xLFykhM-.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/WaterCycleView-Ti_mTPHS.css"
+    ]
+  },
+  "src/experiments/ExperimentCategory.vue": {
+    "file": "assets/ExperimentCategory-BDp-Qm5j.js",
+    "name": "ExperimentCategory",
+    "src": "src/experiments/ExperimentCategory.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-vue-CVST4TYr.js",
+      "_catalog-BGjws9hf.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js"
+    ],
+    "css": [
+      "assets/ExperimentCategory-Bu1JMwgZ.css"
+    ]
+  },
+  "src/experiments/ExperimentView.vue": {
+    "file": "assets/ExperimentView-Ci-f8Sgw.js",
+    "name": "ExperimentView",
+    "src": "src/experiments/ExperimentView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-vue-CVST4TYr.js",
+      "_catalog-BGjws9hf.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_experimentLinks-Cm0uyo8z.js",
+      "src/textbook/data/index.js"
+    ],
+    "css": [
+      "assets/ExperimentView-AfuVKp6s.css"
+    ]
+  },
+  "src/experiments/ExperimentsHome.vue": {
+    "file": "assets/ExperimentsHome-Bz8U28N1.js",
+    "name": "ExperimentsHome",
+    "src": "src/experiments/ExperimentsHome.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_catalog-BGjws9hf.js",
+      "_experimentLinks-Cm0uyo8z.js",
+      "src/textbook/data/index.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/ExperimentsHome-BvEJekAK.css"
+    ]
+  },
+  "src/experiments/modules/astronomy/Eclipse.vue": {
+    "file": "assets/Eclipse-DjS6pd7N.js",
+    "name": "Eclipse",
+    "src": "src/experiments/modules/astronomy/Eclipse.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/Eclipse-C2WTj8XR.css"
+    ]
+  },
+  "src/experiments/modules/astronomy/KeplerLaws.vue": {
+    "file": "assets/KeplerLaws-gfO3vd1O.js",
+    "name": "KeplerLaws",
+    "src": "src/experiments/modules/astronomy/KeplerLaws.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/KeplerLaws-DURncqxp.css"
+    ]
+  },
+  "src/experiments/modules/astronomy/MoonPhases.vue": {
+    "file": "assets/MoonPhases-B3FyMe7y.js",
+    "name": "MoonPhases",
+    "src": "src/experiments/modules/astronomy/MoonPhases.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/MoonPhases-ggRnVX2u.css"
+    ]
+  },
+  "src/experiments/modules/astronomy/Seasons.vue": {
+    "file": "assets/Seasons-BNmtwbN2.js",
+    "name": "Seasons",
+    "src": "src/experiments/modules/astronomy/Seasons.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/Seasons-DhaxGfTl.css"
+    ]
+  },
+  "src/experiments/modules/astronomy/SolarMotion.vue": {
+    "file": "assets/SolarMotion-BshDNee2.js",
+    "name": "SolarMotion",
+    "src": "src/experiments/modules/astronomy/SolarMotion.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/SolarMotion-CrwlmwSy.css"
+    ]
+  },
+  "src/experiments/modules/geology/FaultModel.vue": {
+    "file": "assets/FaultModel-CEIRIj35.js",
+    "name": "FaultModel",
+    "src": "src/experiments/modules/geology/FaultModel.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/FaultModel-Bw9HoQlU.css"
+    ]
+  },
+  "src/experiments/modules/geology/MineralID.js": {
+    "file": "assets/MineralID-Bf8amNyW.js",
+    "name": "MineralID",
+    "src": "src/experiments/modules/geology/MineralID.js",
+    "isDynamicEntry": true
+  },
+  "src/experiments/modules/geology/PotatoCore.js": {
+    "file": "assets/PotatoCore-DChiXTiy.js",
+    "name": "PotatoCore",
+    "src": "src/experiments/modules/geology/PotatoCore.js",
+    "isDynamicEntry": true
+  },
+  "src/experiments/modules/geology/SoilErosion.vue": {
+    "file": "assets/SoilErosion-0TyIB6oB.js",
+    "name": "SoilErosion",
+    "src": "src/experiments/modules/geology/SoilErosion.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/SoilErosion-BGkiuWES.css"
+    ]
+  },
+  "src/experiments/modules/geology/Stratigraphy.vue": {
+    "file": "assets/Stratigraphy-ubRqMMRe.js",
+    "name": "Stratigraphy",
+    "src": "src/experiments/modules/geology/Stratigraphy.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/Stratigraphy-B3W_RSkC.css"
+    ]
+  },
+  "src/experiments/modules/hydrology/Groundwater.vue": {
+    "file": "assets/Groundwater-C9Hdl5mb.js",
+    "name": "Groundwater",
+    "src": "src/experiments/modules/hydrology/Groundwater.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/Groundwater-NpHz1E14.css"
+    ]
+  },
+  "src/experiments/modules/hydrology/Infiltration.js": {
+    "file": "assets/Infiltration-DeTfCRK5.js",
+    "name": "Infiltration",
+    "src": "src/experiments/modules/hydrology/Infiltration.js",
+    "isDynamicEntry": true
+  },
+  "src/experiments/modules/hydrology/SedimentTransport.vue": {
+    "file": "assets/SedimentTransport-D72K0Xvu.js",
+    "name": "SedimentTransport",
+    "src": "src/experiments/modules/hydrology/SedimentTransport.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/SedimentTransport-qN1_R_hO.css"
+    ]
+  },
+  "src/experiments/modules/hydrology/StreamTable.vue": {
+    "file": "assets/StreamTable-MdPECvwL.js",
+    "name": "StreamTable",
+    "src": "src/experiments/modules/hydrology/StreamTable.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/StreamTable-C42g0sJk.css"
+    ]
+  },
+  "src/experiments/modules/hydrology/WaterCycle.js": {
+    "file": "assets/WaterCycle-BlxtUNJ7.js",
+    "name": "WaterCycle",
+    "src": "src/experiments/modules/hydrology/WaterCycle.js",
+    "isDynamicEntry": true
+  },
+  "src/experiments/modules/meteorology/CloudBottle.js": {
+    "file": "assets/CloudBottle-BAeXSeWJ.js",
+    "name": "CloudBottle",
+    "src": "src/experiments/modules/meteorology/CloudBottle.js",
+    "isDynamicEntry": true
+  },
+  "src/experiments/modules/meteorology/Coriolis.vue": {
+    "file": "assets/Coriolis-BCcUUeYV.js",
+    "name": "Coriolis",
+    "src": "src/experiments/modules/meteorology/Coriolis.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/Coriolis-hEKxqGsm.css"
+    ]
+  },
+  "src/experiments/modules/meteorology/ThermalCirculation.vue": {
+    "file": "assets/ThermalCirculation-BZAvJpFq.js",
+    "name": "ThermalCirculation",
+    "src": "src/experiments/modules/meteorology/ThermalCirculation.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ExperimentEngine-BL80gyEi.js",
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/ThermalCirculation-CoximfJf.css"
+    ]
+  },
+  "src/experiments/modules/meteorology/WeatherInstruments.js": {
+    "file": "assets/WeatherInstruments-lRylH54w.js",
+    "name": "WeatherInstruments",
+    "src": "src/experiments/modules/meteorology/WeatherInstruments.js",
+    "isDynamicEntry": true
+  },
+  "src/experiments/modules/systems/HumanEnvironment.vue": {
+    "file": "assets/HumanEnvironment-CvSKy9Dv.js",
+    "name": "HumanEnvironment",
+    "src": "src/experiments/modules/systems/HumanEnvironment.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_BaseScene-q8cXd3sG.js",
+      "_vendor-three-xLFykhM-.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_sceneConfigs-BuVg1_-5.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/HumanEnvironment-CWaOxWsc.css"
+    ]
+  },
+  "src/experiments/modules/systems/SpatialNetwork.vue": {
+    "file": "assets/SpatialNetwork-CyvItDEo.js",
+    "name": "SpatialNetwork",
+    "src": "src/experiments/modules/systems/SpatialNetwork.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_BaseScene-q8cXd3sG.js",
+      "_vendor-three-xLFykhM-.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_sceneConfigs-BuVg1_-5.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/SpatialNetwork-DXbRhS-t.css"
+    ]
+  },
+  "src/sandbox/DisasterSandbox.vue": {
+    "file": "assets/DisasterSandbox-DYk5AAwP.js",
+    "name": "DisasterSandbox",
+    "src": "src/sandbox/DisasterSandbox.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_BaseScene-q8cXd3sG.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_MaterialLibrary-C-i923x5.js",
+      "_vendor-three-xLFykhM-.js",
+      "_GlossaryText-Du4fapju.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/DisasterSandbox-vpK_H2zO.css"
+    ]
+  },
+  "src/sandbox/Earth3D.vue": {
+    "file": "assets/Earth3D-B3m6F_wS.js",
+    "name": "Earth3D",
+    "src": "src/sandbox/Earth3D.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_BaseScene-q8cXd3sG.js",
+      "_MaterialLibrary-C-i923x5.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_vendor-three-xLFykhM-.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/Earth3D-B-QEwoq1.css"
+    ]
+  },
+  "src/sandbox/GeologicTimeView.vue": {
+    "file": "assets/GeologicTimeView-2e-5Bf1Q.js",
+    "name": "GeologicTimeView",
+    "src": "src/sandbox/GeologicTimeView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_BaseScene-q8cXd3sG.js",
+      "_vendor-three-xLFykhM-.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/GeologicTimeView-JEeLC2R5.css"
+    ]
+  },
+  "src/sandbox/MapProjectionView.vue": {
+    "file": "assets/MapProjectionView-D0MvT2UF.js",
+    "name": "MapProjectionView",
+    "src": "src/sandbox/MapProjectionView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_BaseScene-q8cXd3sG.js",
+      "_vendor-three-xLFykhM-.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/MapProjectionView-BmoyY-M-.css"
+    ]
+  },
+  "src/sandbox/SandboxApp.vue": {
+    "file": "assets/SandboxApp-C_ROEqCv.js",
+    "name": "SandboxApp",
+    "src": "src/sandbox/SandboxApp.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_BaseScene-q8cXd3sG.js",
+      "_vendor-three-xLFykhM-.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_GlossaryText-Du4fapju.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/SandboxApp-CPF7QbDM.css"
+    ]
+  },
+  "src/soil-profile/SoilProfilePage.vue": {
+    "file": "assets/SoilProfilePage-BvaShaM5.js",
+    "name": "SoilProfilePage",
+    "src": "src/soil-profile/SoilProfilePage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "_BaseScene-q8cXd3sG.js",
+      "_MaterialLibrary-C-i923x5.js",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_vendor-three-xLFykhM-.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/SoilProfilePage-DwVLjHwe.css"
+    ]
+  },
+  "src/textbook/BookSelect.vue": {
+    "file": "assets/BookSelect-BYmXGeUo.js",
+    "name": "BookSelect",
+    "src": "src/textbook/BookSelect.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-vue-CVST4TYr.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js"
+    ],
+    "css": [
+      "assets/BookSelect-BmJSO7Cn.css"
+    ]
+  },
+  "src/textbook/ChapterList.vue": {
+    "file": "assets/ChapterList-BxTcIO9D.js",
+    "name": "ChapterList",
+    "src": "src/textbook/ChapterList.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-vue-CVST4TYr.js",
+      "index.html",
+      "_vendor-core-DhG9R98V.js"
+    ],
+    "css": [
+      "assets/ChapterList-BeJpZNfD.css"
+    ]
+  },
+  "src/textbook/SectionContent.vue": {
+    "file": "assets/SectionContent-B9ZarBTY.js",
+    "name": "SectionContent",
+    "src": "src/textbook/SectionContent.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js",
+      "_catalog-BGjws9hf.js",
+      "_experimentLinks-Cm0uyo8z.js",
+      "src/textbook/data/index.js"
+    ],
+    "dynamicImports": [
+      "src/textbook/data/高中/必修第一册/student-learning.json",
+      "src/textbook/data/高中/必修第二册/student-learning.json",
+      "src/textbook/data/大学/自然地理学/index.json",
+      "src/textbook/data/初中/七年级上册/content.json",
+      "src/textbook/data/初中/七年级下册/content.json",
+      "src/textbook/data/初中/八年级上册/content.json",
+      "src/textbook/data/初中/八年级下册/content.json",
+      "src/textbook/data/高中/必修第一册/content.json",
+      "src/textbook/data/高中/必修第二册/content.json",
+      "src/textbook/data/高中/选择性必修1/content.json",
+      "src/textbook/data/高中/选择性必修2/content.json",
+      "src/textbook/data/高中/选择性必修3/content.json",
+      "src/textbook/data/figureAssets/必修第一册.js",
+      "src/textbook/data/figureAssets/必修第二册.js",
+      "src/textbook/data/figureAssets/选择性必修1.js",
+      "src/textbook/data/figureAssets/选择性必修2.js",
+      "src/textbook/data/figureAssets/选择性必修3.js",
+      "src/textbook/components/MindMapViewer.vue",
+      "src/textbook/components/DataVizViewer.vue"
+    ],
+    "css": [
+      "assets/SectionContent-CtTt5QVD.css"
+    ]
+  },
+  "src/textbook/TextbookHome.vue": {
+    "file": "assets/TextbookHome-Ci9fLgYa.js",
+    "name": "TextbookHome",
+    "src": "src/textbook/TextbookHome.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/TextbookHome-hwbRFinZ.css"
+    ]
+  },
+  "src/textbook/components/AtmosphereViewer.vue": {
+    "file": "assets/AtmosphereViewer-DKZDRgL1.js",
+    "name": "AtmosphereViewer",
+    "src": "src/textbook/components/AtmosphereViewer.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_BaseScene-q8cXd3sG.js",
+      "index.html",
+      "_GeometryFactory-C8XdQFUI.js",
+      "_vendor-three-xLFykhM-.js",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "dynamicImports": [
+      "_vendor-three-xLFykhM-.js"
+    ],
+    "css": [
+      "assets/AtmosphereViewer-BB7I1psK.css"
+    ]
+  },
+  "src/textbook/components/DataVizViewer.vue": {
+    "file": "assets/DataVizViewer-CCBa7qt4.js",
+    "name": "DataVizViewer",
+    "src": "src/textbook/components/DataVizViewer.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_vendor-core-DhG9R98V.js",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/DataVizViewer-Cfbvj2Np.css"
+    ]
+  },
+  "src/textbook/components/MindMapViewer.vue": {
+    "file": "assets/MindMapViewer-BYQj13vW.js",
+    "name": "MindMapViewer",
+    "src": "src/textbook/components/MindMapViewer.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-core-DhG9R98V.js",
+      "index.html",
+      "_vendor-vue-CVST4TYr.js"
+    ],
+    "css": [
+      "assets/MindMapViewer-CPrdCVfP.css"
+    ]
+  },
+  "src/textbook/data/figureAssets/必修第一册.js": {
+    "file": "assets/必修第一册-BHrSwHn_.js",
+    "name": "必修第一册",
+    "src": "src/textbook/data/figureAssets/必修第一册.js",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/nebula-wmYvwDa1.jpg",
+      "assets/star-CZNdbB89.jpg",
+      "assets/planet-CqakEEVK.jpg",
+      "assets/satellite-D4j3KwJP.jpg",
+      "assets/celestial-system-Bl8RCfBz.png",
+      "assets/solar-system-CWoT6u1l.jpg",
+      "assets/planet-data-table-CB6Hue9q.png",
+      "assets/orbit-features-dKPiChF-.png",
+      "assets/solar-spectrum-CvFA_CcF.png",
+      "assets/solar-atmosphere-D1jiLA37.png",
+      "assets/solar-activities-BJ0na-Nh.jpg",
+      "assets/solar-impact-BeQjcAxF.png",
+      "assets/strata-BuuLYZh8.jpg",
+      "assets/fossil-1yh6ycan.jpg",
+      "assets/geologic-time-BkWPUCPc.png",
+      "assets/evolution-BnZOHP6l.png",
+      "assets/seismic-waves-C1CHpVqv.png",
+      "assets/internal-structure-BYesNGLw.png",
+      "assets/velocity-structure-CSyJW9JH.png",
+      "assets/external-spheres-DLR9JKuM.jpg",
+      "assets/air-composition-Crsn0XtX.png",
+      "assets/atmosphere-layers-wfGcklUC.png",
+      "assets/earth-moon-temp-c3TEj3yt.png",
+      "assets/thermal-circulation-s1rC6P2_.png",
+      "assets/pressure-surface-C0uJH1XG.png",
+      "assets/water-cycle-B71oGWce.jpg",
+      "assets/temp-vertical-BtjBEufM.png",
+      "assets/salinity-dist-CZEb5A8n.png",
+      "assets/tds-latitude-Dxivyw8n.png",
+      "assets/wave-elements-CHMVRrvV.png",
+      "assets/tide-AgG8cpRp.png",
+      "assets/ocean-current-Cz6iVLZZ.png",
+      "assets/karst-hRzBWVTw.jpg",
+      "assets/fluvial-C_8-pCMo.png",
+      "assets/dune-yIN5xKGf.jpg",
+      "assets/coast-CJySmQXz.jpg",
+      "assets/contour-CEB69Usk.png",
+      "assets/slope-Ciz85VYW.png",
+      "assets/forest-layers-cCIMHyu1.jpg",
+      "assets/vegetation-types-BvhzMfCC.png",
+      "assets/soil-profile-DbNJWJ6P.jpg",
+      "assets/soil-factors-B76yZAfd.png",
+      "assets/soil-composition-Dg15I582.png",
+      "assets/typhoon-structure-DwkULpQQ.jpg",
+      "assets/typhoon-path-COdQwve7.jpg",
+      "assets/earthquake-CtyK4xo0.png",
+      "assets/landslide-CEAnFfv8.png",
+      "assets/disaster-monitoring-CbIC99mV.jpg",
+      "assets/remote-sensing-9g9oXAho.jpg",
+      "assets/gnss-BOgcLngC.jpg",
+      "assets/gis-DXJoGYf1.jpg"
+    ]
+  },
+  "src/textbook/data/figureAssets/必修第二册.js": {
+    "file": "assets/必修第二册-IFZNJuHR.js",
+    "name": "必修第二册",
+    "src": "src/textbook/data/figureAssets/必修第二册.js",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/world-pop-density-OGMeGhvL.jpg",
+      "assets/world-topography-BfLrLwH4.png",
+      "assets/finland-population-RMOcqep-.jpg",
+      "assets/hu-huangyong-line-DSmPXVLg.jpg",
+      "assets/push-pull-theory-BmeczROo.png",
+      "assets/intl-migration-pre19th-BzOy4xAn.jpg",
+      "assets/intl-migration-postww2-sSos5mVG.jpg",
+      "assets/domestic-migration-prc-lPCrxd7O.jpg",
+      "assets/short-board-effect-CgYKDGa4.jpg",
+      "assets/global-population-growth-DFzW8xBd.png",
+      "assets/resource-population-carrying-capacity-Z6RnkUM-.png",
+      "assets/population-pressure-index-map-mBhqXCnH.png",
+      "assets/rural-village-land-use-plan-Dw2fSrb8.jpg",
+      "assets/city-functional-zones-plan-CqtWFGV5.png",
+      "assets/land-rent-distance-curve-COi2q3XU.jpg",
+      "assets/urban-structure-concentric-model-aSVhVrBK.jpg",
+      "assets/world-urbanization-process-DR_il1pU.png",
+      "assets/world-urbanization-distribution-F20UCt-n.jpg",
+      "assets/shenzhen-urbanization-rate-CL0_jWgv.png",
+      "assets/urbanization-economic-development-BWlCpu8v.jpg",
+      "assets/honghe-hani-terraces-cIBmi5Ul.jpg",
+      "assets/fujian-yongding-tulou-CaNMg-wc.jpg",
+      "assets/ancient-chinese-capital-layout-bbKpj0aP.png",
+      "assets/suzhou-classical-garden-BllOUZwu.jpg",
+      "assets/farming-system-distribution-BSoPF3P4.jpg",
+      "assets/northwest-irrigation-agriculture-DChVKI-m.png",
+      "assets/tea-planting-distribution-BP0DG5a9.png",
+      "assets/qianyanzhou-stereo-agriculture-Bygr7eeS.jpg",
+      "assets/industrial-location-factors-CW0Uyq47.jpg",
+      "assets/air-pollution-downwind-layout-DDxtw3jk.png",
+      "assets/steel-industry-location-change-BfG6AQCa.png",
+      "assets/shougang-relocation-LbJf3KTM.png",
+      "assets/city-catering-distribution-C7pSl2UY.jpg",
+      "assets/huaqiangbei-agglomeration-DEoy2q9z.png",
+      "assets/live-stream-ecommerce-CJooZkdt.jpg",
+      "assets/sorting-robot-DWl1lI4x.jpg",
+      "assets/tianmenshan-pan-mountain-road-BAmdf_np.jpg",
+      "assets/qinghai-tibet-railway-heat-rod-CbWYtxD-.jpg",
+      "assets/beijing-shanghai-hsr-route-CEp9TPG2.jpg",
+      "assets/africa-railway-layout-HdrTDCy1.jpg",
+      "assets/west-east-gas-pipeline-CnBiaMBw.jpg",
+      "assets/eight-vertical-eight-horizontal-hsr-BJBmZVv1.png",
+      "assets/railway-speed-up-lines-B3naUClc.png",
+      "assets/zhengzhou-rail-hub-DswaB6U3.png",
+      "assets/env-issue-mechanism-CcRzh1GI.jpg",
+      "assets/over-cultivation-impact-Bxj3B94F.jpg",
+      "assets/acid-rain-impact-YgXtaPvn.jpg",
+      "assets/global-env-issues-kBd2s7RM.jpg",
+      "assets/sustainable-development-connotation-BgUgPP7k.jpg",
+      "assets/2030-sdg-goals-DCRCjR-h.jpg",
+      "assets/human-earth-relationship-evolution-D9rZ-W5U.png",
+      "assets/sustainable-development-system-CdBUYEsl.png",
+      "assets/migrant-worker-net-increase-stat-BWcqClCA.png",
+      "assets/shidu-township-location-map-BophGzFV.png",
+      "assets/rural-population-change-1978-2017-BWJZ6c_p.png",
+      "assets/city-spatial-structure-BoN1um82.png",
+      "assets/jobs-housing-ratio-ChDVnOMz.png",
+      "assets/rail-transit-walking-radius-COsOgZet.png",
+      "assets/zhongguancun-electronics-city-C3J7pNlq.jpg",
+      "assets/online-shopping-diagram-B5Z6iP-U.png",
+      "assets/tea-production-ecommerce-BmwHzuMJ.png",
+      "assets/tide-lane-traffic-flow-DTh-OeXt.png",
+      "assets/shared-mobility-chain-CYwhnv8B.png",
+      "assets/bike-highway-distribution-eXajOlQD.png",
+      "assets/low-carbon-food-lifecycle-DNw0tT05.png",
+      "assets/low-carbon-food-summary-CIIkcGJS.png",
+      "assets/per-capita-carbon-emission-chart-BKBJ8bQ1.png"
+    ]
+  },
+  "src/textbook/data/figureAssets/选择性必修1.js": {
+    "file": "assets/选择性必修1-8UvdQD1S.js",
+    "name": "选择性必修1",
+    "src": "src/textbook/data/figureAssets/选择性必修1.js",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/self-rotation-C6ANC2EC.jpg",
+      "assets/huangchi-angle-DWbaTFPJ.png",
+      "assets/direct-ray-movement-DOKjPbjV.png",
+      "assets/day-night-b5akC7ys.png",
+      "assets/day-length-L5Eqg4r_.jpg",
+      "assets/five-zones-g59M9cHY.jpeg",
+      "assets/rock-cycle-Ddto5dhs.jpeg",
+      "assets/internal-force-qFz3Tx08.png",
+      "assets/weathering-B9yo9xSF.jpg",
+      "assets/fold-D3XjdOoc.jpg",
+      "assets/fault-D5cpgXNh.png",
+      "assets/plates-Bw23v49S.jpeg",
+      "assets/valley-evolution-De4jEzaa.jpg",
+      "assets/meander-Cw44vtRO.jpeg",
+      "assets/alluvial-fan-BFK6h4V3.jpg",
+      "assets/front-DgbB5ICP.png",
+      "assets/cyclone-GlMvHswV.png",
+      "assets/tri-circulation-BStjpHcU.jpeg",
+      "assets/pressure-belts-DHiFd6DE.jpeg",
+      "assets/seasonal-movement-DpkTnEKq.png",
+      "assets/climate-distribution-CG1q9UEj.jpeg",
+      "assets/lake-river-CqIvKHIn.png",
+      "assets/glacier-BWLl471J.png",
+      "assets/ocean-currents-j5mEm7iT.jpeg",
+      "assets/current-pattern-D0V_OnY-.jpg",
+      "assets/air-sea-exchange-BZkyzkBh.png",
+      "assets/walker-B3XUbRv_.png",
+      "assets/el-nino-DGZosuIL.png",
+      "assets/la-nina-efAVBnaS.png",
+      "assets/elements-exchange-D5PO0U4y.png",
+      "assets/huangshan-CgHKYBRY.jpeg",
+      "assets/natural-zones-9gtYRElV.png",
+      "assets/vertical-zonation-BUGsqvCi.png",
+      "assets/latitude-zonation-CrNqDGJd.jpg"
+    ]
+  },
+  "src/textbook/data/figureAssets/选择性必修2.js": {
+    "file": "assets/选择性必修2-kv_kRrQz.js",
+    "name": "选择性必修2",
+    "src": "src/textbook/data/figureAssets/选择性必修2.js",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/x2ch1-chinese-dialect-regions-CIGaiLAp.jpg",
+      "assets/x2ch1-dongxiang-wild-rice-BSvGbsJu.jpg",
+      "assets/x2ch1-falaj-landscape-CTh7FzJJ.jpg",
+      "assets/x2ch1-falaj-landscape-2-C-ghv5HT.jpg",
+      "assets/x2ch1-jingjinji-association-Cp7j669w.png",
+      "assets/x2ch1-mauritius-location-B43TPxa_.jpg",
+      "assets/x2ch1-mauritius-sugarcane-CbEGtYc0.jpg",
+      "assets/x2ch1-northeast-plain-Cp4dTSFX.jpg",
+      "assets/x2ch1-oman-location-bPhisH0b.jpg",
+      "assets/x2ch1-peitian-village-local-Dr3IAXcM.png",
+      "assets/x2ch1-peitian-village-panorama-CdZrUlTH.png",
+      "assets/x2ch1-pingsha-island-agriculture-BuOn0Tkb.jpg",
+      "assets/x2ch1-pingyao-ancient-city-CSuE4UtN.jpg",
+      "assets/x2ch1-qingtian-rice-fish-FiOx-ZjJ.jpg",
+      "assets/x2ch1-qingtian-rice-fish-panorama-y-IiaBzx.png",
+      "assets/x2ch1-qinling-landscape-Cco4JCyn.jpg",
+      "assets/x2ch1-qinling-mountain-B_ERgtv9.jpg",
+      "assets/x2ch1-shaoxing-ancient-town-C1NxL-De.jpg",
+      "assets/x2ch1-songnen-corn-xmVCq_9L.png",
+      "assets/x2ch1-songnen-plain-conditions-DK31xFhk.png",
+      "assets/x2ch1-yangtze-delta-conditions-YZvppILv.png",
+      "assets/x2ch1-yangtze-rice-field-BnhP6v_-.png",
+      "assets/x2ch1-yugong-jiuzhou-map-By2yvEgt.jpg",
+      "assets/x2ch2-agro-pastoral-zone-map-DfJKP_lR.png",
+      "assets/x2ch2-agro-pastoral-zone-range-BLH2geeE.png",
+      "assets/x2ch2-australia-iron-ore-port-fIr62WfQ.png",
+      "assets/x2ch2-daqing-petrochemical-DxsnyF5i.png",
+      "assets/x2ch2-dujiangyan-project-hOIf0AT-.png",
+      "assets/x2ch2-dujiangyan-project-view-Dpi94lNY.jpg",
+      "assets/x2ch2-dujiangyan-schematic-CkHw1Hwx.png",
+      "assets/x2ch2-guizhou-rocky-desertification-B-YbO3KE.jpg",
+      "assets/x2ch2-hunshandake-grassland-WX0iCQ9B.png",
+      "assets/x2ch2-hunshandake-summer-grassland-scXLHymH.png",
+      "assets/x2ch2-jiaozuo-env-abandoned-mine-2mJwsAb-.png",
+      "assets/x2ch2-jiaozuo-env-coal-gangue-DCWZvQ6o.png",
+      "assets/x2ch2-jiaozuo-env-subsidence-BWSgL-4C.png",
+      "assets/x2ch2-jiaozuo-env-wastewater-MaYvWfuA.png",
+      "assets/x2ch2-jiaozuo-gdp-bMfYVuNd.jpg",
+      "assets/x2ch2-jiaozuo-gdp-chart-DEEYGtNA.png",
+      "assets/x2ch2-jiaozuo-location-DuBFchLo.jpg",
+      "assets/x2ch2-jingdezhen-location-Dr9ed_Wi.jpg",
+      "assets/x2ch2-jingdezhen-location-map-ByNZmAw-.png",
+      "assets/x2ch2-jingdezhen-porcelain-CyR2Jxex.jpg",
+      "assets/x2ch2-livestock-grassland-impact-UmfBr4m4.png",
+      "assets/x2ch2-ordos-precipitation-annual-CLA9P46L.jpg",
+      "assets/x2ch2-ordos-precipitation-monthly-BH8RI0sB.jpg",
+      "assets/x2ch2-rmb-5-yuan-DK726xGy.png",
+      "assets/x2ch2-sahel-region-BzvNM3j1.png",
+      "assets/x2ch2-shanxi-coal-distribution-ziq3c2UK.jpg",
+      "assets/x2ch2-swiss-watch-DMRK1G5G.png",
+      "assets/x2ch2-swiss-watch-dial-CzEm-sVV.jpg",
+      "assets/x2ch2-us-black-storm-C1BH7xbe.png",
+      "assets/x2ch2-yuntai-mountain-1-YmEn7cAZ.png",
+      "assets/x2ch2-yuntai-mountain-2-D-pwuCe1.jpg",
+      "assets/x2ch2-yuntai-mountain-3-nmuqbzAq.png",
+      "assets/x2ch3-boswash-population-scale-CnRpFhDK.jpg",
+      "assets/x2ch3-china-four-regions-B4wRMeD_.jpg",
+      "assets/x2ch3-erie-canal-BZ3cPY9H.jpg",
+      "assets/x2ch3-new-york-port-history-DhR8ZZDA.png",
+      "assets/x2ch3-ny-met-museum-KRiACgRV.jpg",
+      "assets/x2ch3-ny-met-opera-DJz8zthu.jpg",
+      "assets/x2ch3-ny-un-headquarters-BBfja_FU.jpg",
+      "assets/x2ch3-ny-wall-street-vSsxrx_a.jpg",
+      "assets/x2ch3-prd-leading-industry-change-BySgAGO2.jpg",
+      "assets/x2ch3-shanghai-location-BbNEGnw-.jpg",
+      "assets/x2ch3-shanghai-three-industries-proportion-CWb5JQg6.jpg",
+      "assets/x2ch3-shenzhen-after-CPUmVKAT.png",
+      "assets/x2ch3-shenzhen-before-Dd_MYDeR.png",
+      "assets/x2ch3-wuhan-city-circle-BdK03gIR.jpg",
+      "assets/x2ch3-yangshan-port-COZGs5vT.png",
+      "assets/x2ch3-zhengzhou-zhengdong-new-area-Cgh720CA.png",
+      "assets/x2ch4-belt-road-forum-CibzSWqG.jpg",
+      "assets/x2ch4-east-asia-transfer-q_EeWwvn.jpg",
+      "assets/x2ch4-economy-dual-triple-3FRT1RIa.png",
+      "assets/x2ch4-energy-prod-consumption-DUGy6PWO.jpg",
+      "assets/x2ch4-energy-structure-1-D7yXpw0g.png",
+      "assets/x2ch4-energy-structure-2-CiXme6m8.png",
+      "assets/x2ch4-energy-structure-3-DjYZ-Asl.png",
+      "assets/x2ch4-ethiopia-location-DlYfLTiI.png",
+      "assets/x2ch4-gas-pipeline-impact-B2SqHxkB.jpg",
+      "assets/x2ch4-gas-pipeline-map-CbUgOmZl.png",
+      "assets/x2ch4-gas-pipeline-route-Dfw74F7N.png",
+      "assets/x2ch4-huanghe-basin-map-DF1Kr2UK.png",
+      "assets/x2ch4-huanghe-basin-provinces-D9hiISrk.jpg",
+      "assets/x2ch4-huanghe-sediment-discharge-CRp6AnqN.jpg",
+      "assets/x2ch4-japan-restructure-2Ky92ndq.png",
+      "assets/x2ch4-japan-tsunami-mP7B0vdp.png",
+      "assets/x2ch4-japan-unemployment-AKF5Strj.jpg",
+      "assets/x2ch4-nanxiaohegou-measures-BCQCSw9f.png",
+      "assets/x2ch4-nanxiaohegou-treatment-zuIIakJ1.jpg",
+      "assets/x2ch4-shoe-production-share-FM9UW9FH.png",
+      "assets/x2ch4-shoe-vietnam-Ckoy0n0X.jpg",
+      "assets/x2ch4-snowy-mtns-water-transfer-B-9G9Zqo.jpg",
+      "assets/x2ch4-soil-conservation-bio-1-Bswj9W_J.png",
+      "assets/x2ch4-soil-conservation-bio-2-VXWApHA9.png",
+      "assets/x2ch4-soil-conservation-engineering-WGuX4e0R.jpg",
+      "assets/x2ch4-soil-conservation-tillage-1-BCFytoli.png",
+      "assets/x2ch4-soil-conservation-tillage-2-D-waGNn1.png",
+      "assets/x2ch4-suspended-river-hlfZ8S4K.jpg",
+      "assets/x2ch4-suspended-river-diagram-DtVyVHZV.jpg",
+      "assets/x2ch4-tibet-xinjiang-water-route-DpJYrZKn.png",
+      "assets/x2ch4-value-chain-BntkF4SS.jpg",
+      "assets/x2ch4-xiaolangdi-flushing-BckRFO8V.jpg",
+      "assets/x2ch4-yuxinou-map-BbuBnld6.png",
+      "assets/x2ch4-yuxinou-route-B3t-I4AP.jpg"
+    ]
+  },
+  "src/textbook/data/figureAssets/选择性必修3.js": {
+    "file": "assets/选择性必修3-CsD3Rgmc.js",
+    "name": "选择性必修3",
+    "src": "src/textbook/data/figureAssets/选择性必修3.js",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/ch1-coal-anthracite-C8LWZnNa.png",
+      "assets/ch1-coal-bituminous-Bi-2mqTD.png",
+      "assets/ch1-coal-lignite-CwsP2HUj.png",
+      "assets/ch1-dam-impact-CQ-45pkK.png",
+      "assets/ch1-ddt-biomagnify-BqHm6sOj.jpg",
+      "assets/ch1-ddt-chain-Yl7Qp_Kg.png",
+      "assets/ch1-ekc-curve-BRaFxfoq.jpg",
+      "assets/ch1-env-factors-diagram-BINu1EOY.jpg",
+      "assets/ch1-factor-population-DIyQpUi3.png",
+      "assets/ch1-factor-tech-DQD-en2t.png",
+      "assets/ch1-flow-arrows-DCsBXycT.jpg",
+      "assets/ch1-flow-natural-human-CXKfOqPg.png",
+      "assets/ch1-flow-relation-C1LvFf8s.jpg",
+      "assets/ch1-forest-multi-value-DNz-xkRu.png",
+      "assets/ch1-forest-renewal-D-1cXrTz.jpg",
+      "assets/ch1-forest-services-choice-iBeqRqQw.png",
+      "assets/ch1-milk-farm-D8LM0GI8.png",
+      "assets/ch1-milk-feed-D2iorkAF.png",
+      "assets/ch1-milk-package-DBb8nEMb.png",
+      "assets/ch1-milk-process-CpiTqc3A.jpg",
+      "assets/ch1-service-cultural-ExVyd-PC.jpg",
+      "assets/ch1-service-regulating-DA53i67a.png",
+      "assets/ch1-service-supply-B6r2F2Et.jpg",
+      "assets/ch3-temp-co2-change-Cjxe3nth.png",
+      "assets/ch1-tree-value-data-Bo6sM52d.png",
+      "assets/ch1-tree-value-diagram-Cpej5Va5.png",
+      "assets/ch1-water-column-Cjx8WA9z.png",
+      "assets/ch1-water-pie-BNrfhGBt.png",
+      "assets/ch1-water-table-5Lw6HH6E.png",
+      "assets/ch2-central-grain-reserve-DLMyXQ81.jpg",
+      "assets/ch2-coal-oil-spatial-supply-demand-CDGRY6gU.png",
+      "assets/ch2-coal-oil-transport-pattern-DSXLYkLJ.png",
+      "assets/ch2-cropland-quality-share-2015-DZR7DfpV.png",
+      "assets/ch2-energy-production-consumption-BYLJn9MG.jpg",
+      "assets/ch2-energy-structure-comparison-CgtkRJB0.jpg",
+      "assets/ch2-grain-area-yield-output-Byole6xW.jpg",
+      "assets/ch2-land-expansion-hk-airport-Dij3Uxyh.jpg",
+      "assets/ch2-land-expansion-hkzm-bridge-CrOcJ3FX.jpg",
+      "assets/ch2-land-expansion-holland-Bmf5SAAv.png",
+      "assets/ch2-land-expansion-palm-island-Cfygte-H.png",
+      "assets/ch2-marine-space-classification-CDTbW3IV.jpg",
+      "assets/ch2-marine-space-reality-vision-Bd8QCH-Y.jpg",
+      "assets/ch2-marine-space-schematic-DofKGIsY.jpg",
+      "assets/ch2-nauru-degraded-surface-1-DQEjeI34.png",
+      "assets/ch2-nauru-degraded-surface-2-BDecSXCo.jpg",
+      "assets/ch2-nauru-location-DV8BqMNT.jpg",
+      "assets/ch2-oil-gas-dependence-1-DliZKNz-.png",
+      "assets/ch2-population-water-1949-DIFyvKTy.jpg",
+      "assets/ch2-provincial-cropland-quality-CrV8dlG-.jpg",
+      "assets/ch2-resource-security-pathway-1-DTAuVQcn.jpg",
+      "assets/ch2-resource-security-pathway-2-6E70Woec.jpg",
+      "assets/ch2-resource-security-pathway-3-O6e7G33o.jpg",
+      "assets/ch2-sansha-map-CDdDX6EB.jpg",
+      "assets/ch2-supply-demand-demand-growth-BGXBQeic.jpg",
+      "assets/ch2-supply-demand-supply-decline-_J5yyd4O.jpg",
+      "assets/ch2-tidal-flat-aquaculture-D9rHgPwQ.png",
+      "assets/ch2-tidal-flat-farming-cXw6u9Ee.png",
+      "assets/ch2-tidal-flat-salt-field-AEY7loM7.jpg",
+      "assets/ch2-yongxing-reclamation-DH0bFldm.jpg",
+      "assets/ch2-yongxing-remote-sensing-CS5OfSlG.jpg",
+      "assets/ch3-carbon-cycle-BQrA-yIK.png",
+      "assets/ch3-co2-concentration-change-29t5Ocfh.png",
+      "assets/ch3-eco-deg-desertification-DvXi2ugx.jpg",
+      "assets/ch3-eco-deg-erosion-jZE7iEnq.jpg",
+      "assets/ch3-eco-deg-extinction-CCBztPAQ.jpg",
+      "assets/ch3-eco-deg-forest-Dw8vV2u6.png",
+      "assets/ch3-env-issue-evolution-KXlLZGx9.jpg",
+      "assets/ch3-env-threshold-CWtAr58C.jpg",
+      "assets/ch3-london-death-pollution-CrOebRnk.png",
+      "assets/ch3-maldives-cabinet-2-C6bnBgLP.png",
+      "assets/ch3-natural-forest-protection-BqRhmG-f.jpg",
+      "assets/ch3-nature-reserve-C5O6GPk3.png",
+      "assets/ch3-pollutant-transfer-ChLRkLdt.png",
+      "assets/ch3-rhine-pollution-egcUUPHh.jpg",
+      "assets/ch3-soil-erosion-CetyNzsz.jpg",
+      "assets/ch3-songhua-pollution-9LfRmd-A.png",
+      "assets/ch3-surface-water-quality-D_8yk8Rv.png",
+      "assets/ch3-tuvalu-location-CXDkxpP1.jpg",
+      "assets/ch4-anji-yucun-park-CPCo9s8K.png",
+      "assets/ch4-climate-negotiation-positions-DroQlwXK.jpg",
+      "assets/ch4-climate-negotiation-roles-Ccl9yhU9.jpg",
+      "assets/ch4-cooperation-necessity-BYAFCcfu.png",
+      "assets/ch4-cooperation-ways-B6Nmkt0z.jpg",
+      "assets/ch4-ecological-red-line-region-D_EeeJft.jpg",
+      "assets/ch4-emergency-disposal-flow-CcDWAl4J.jpg",
+      "assets/ch4-global-env-challenge-1-DxbZnzvV.png",
+      "assets/ch4-global-env-challenge-2-BQEBgBl0.png",
+      "assets/ch4-global-env-challenge-3-BgcKaksT.png",
+      "assets/ch4-global-env-challenge-4-iOuQvSg2.png",
+      "assets/ch4-green-production-C9eUYfff.jpg",
+      "assets/ch4-green-production-example-1-CccarisB.png",
+      "assets/ch4-jinghong-dam-ClADbABf.png",
+      "assets/ch4-jinghong-reservoir-CP4Enjj1.png",
+      "assets/ch4-lancang-mekong-river-DeJMV32m.png",
+      "assets/ch4-oil-reserve-distribution-C7B2YHIx.jpg",
+      "assets/ch4-passive-active-heating-lYx07hwm.jpg",
+      "assets/ch4-passive-house-BBNRAdKk.jpg",
+      "assets/ch4-passive-house-compare-DuVlkRRj.jpg",
+      "assets/ch4-society-development-history-BXoC7q-k.png",
+      "assets/ch4-strategic-resource-reserve-Di6s76aU.jpg",
+      "assets/ch4-tragedy-commons-pasture-BTQHrLjO.jpg"
+    ]
+  },
+  "src/textbook/data/index.js": {
+    "file": "assets/catalog-data-CX0_QfEM.js",
+    "name": "catalog-data",
+    "src": "src/textbook/data/index.js",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/初中/七年级上册/content.json": {
+    "file": "assets/content-D7g0Ptoo.js",
+    "name": "content",
+    "src": "src/textbook/data/初中/七年级上册/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/初中/七年级下册/content.json": {
+    "file": "assets/content-DzH2b5xn.js",
+    "name": "content",
+    "src": "src/textbook/data/初中/七年级下册/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/初中/八年级上册/content.json": {
+    "file": "assets/content-B9TaJtDC.js",
+    "name": "content",
+    "src": "src/textbook/data/初中/八年级上册/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/初中/八年级下册/content.json": {
+    "file": "assets/content-cI1PfM6w.js",
+    "name": "content",
+    "src": "src/textbook/data/初中/八年级下册/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/大学/自然地理学/index.json": {
+    "file": "assets/index-BxK7rOH5.js",
+    "name": "index",
+    "src": "src/textbook/data/大学/自然地理学/index.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/必修第一册/content.json": {
+    "file": "assets/content-Ciu_4fZc.js",
+    "name": "content",
+    "src": "src/textbook/data/高中/必修第一册/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/必修第一册/student-learning.json": {
+    "file": "assets/student-learning-6qkPPeBS.js",
+    "name": "student-learning",
+    "src": "src/textbook/data/高中/必修第一册/student-learning.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/必修第二册/content.json": {
+    "file": "assets/content-CIjZBcK5.js",
+    "name": "content",
+    "src": "src/textbook/data/高中/必修第二册/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/必修第二册/student-learning.json": {
+    "file": "assets/student-learning-DpEkf_LW.js",
+    "name": "student-learning",
+    "src": "src/textbook/data/高中/必修第二册/student-learning.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/选择性必修1/content.json": {
+    "file": "assets/content-7E6BY6Kt.js",
+    "name": "content",
+    "src": "src/textbook/data/高中/选择性必修1/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/选择性必修2/content.json": {
+    "file": "assets/content-BNGDSRIG.js",
+    "name": "content",
+    "src": "src/textbook/data/高中/选择性必修2/content.json",
+    "isDynamicEntry": true
+  },
+  "src/textbook/data/高中/选择性必修3/content.json": {
+    "file": "assets/content-DqyIS4Gz.js",
+    "name": "content",
+    "src": "src/textbook/data/高中/选择性必修3/content.json",
+    "isDynamicEntry": true
+  }
+}
