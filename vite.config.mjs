@@ -21,6 +21,7 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
+    manifest: true,
     cssMinify: 'lightningcss',
     modulePreload: {
       polyfill: false

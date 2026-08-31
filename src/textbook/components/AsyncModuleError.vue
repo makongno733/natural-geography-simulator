@@ -1,12 +1,33 @@
 <script setup>
-defineEmits(['close'])
+import { computed } from 'vue'
+
+const props = defineProps({
+  error: { type: [Object, Error, String], default: null },
+  retry: { type: Function, default: null },
+  attempts: { type: Number, default: 0 },
+  moduleName: { type: String, default: '' },
+})
+const emit = defineEmits(['close'])
+
+const displayName = computed(() => props.moduleName || '教学互动工具')
+const errorMessage = computed(() => {
+  const error = props.error
+  if (!error) return ''
+  if (typeof error === 'string') return error
+  if (typeof error === 'object' && error.message) return error.message
+  return ''
+})
 </script>
 
 <template>
   <section class="async-module-error" data-async-module-error role="alert">
-    <h2>教学工具加载失败</h2>
-    <p>暂时无法打开该互动工具，请返回课文继续学习。</p>
-    <button type="button" @click="$emit('close')">返回课文</button>
+    <h2>{{ displayName }}加载失败</h2>
+    <p v-if="errorMessage" class="async-module-error-detail">{{ errorMessage }}</p>
+    <p>暂时无法打开该互动工具，可以重试，或返回课文继续学习。</p>
+    <div class="async-module-error-actions">
+      <button v-if="retry" type="button" class="retry-btn" @click="retry">重试</button>
+      <button type="button" @click="emit('close')">返回课文</button>
+    </div>
   </section>
 </template>
 
@@ -26,6 +47,19 @@ defineEmits(['close'])
   color: var(--red);
 }
 
+.async-module-error-detail {
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.async-module-error-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
 .async-module-error button {
   min-height: 40px;
   border: 1px solid var(--button-green-deep);
@@ -36,6 +70,12 @@ defineEmits(['close'])
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.async-module-error .retry-btn {
+  color: #fdfef6;
+  border-color: rgba(84, 104, 51, 0.62);
+  background: linear-gradient(135deg, #7f9850, #536936);
 }
 
 .async-module-error button:focus-visible {

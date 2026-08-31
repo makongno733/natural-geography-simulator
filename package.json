@@ -22,6 +22,7 @@
     "qa:textbook": "node scripts/audit-textbook-quality.mjs",
     "qa:student-learning": "node scripts/audit-student-learning.mjs",
     "qa:experiment-links": "node scripts/audit-experiment-coverage.mjs",
+    "qa:bundle": "pnpm run build && node scripts/check-bundle-budget.mjs dist",
     "fix:textbook:pass1": "node scripts/fix-textbook-quality-pass1.mjs",
     "test": "vitest run",
     "test:watch": "vitest"

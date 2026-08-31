@@ -163,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, defineAsyncComponent } from 'vue'
+import { ref, reactive, computed, watch, defineAsyncComponent, h } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
@@ -174,15 +174,15 @@ import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
 import { loadFigureAssets } from './data/figureAssets/loader.js'
 import { getSectionExperimentLink } from './data/experimentLinks.js'
 
-const asyncTool = (loader) => defineAsyncComponent({
+const asyncTool = (loader, moduleName = '教学互动工具') => defineAsyncComponent({
   loader,
-  errorComponent: AsyncModuleError,
+  errorComponent: (props) => h(AsyncModuleError, { ...props, moduleName }),
   delay: 0,
   timeout: 10000,
 })
 
-const MindMapViewer = asyncTool(() => import('./components/MindMapViewer.vue'))
-const DataVizViewer = asyncTool(() => import('./components/DataVizViewer.vue'))
+const MindMapViewer = asyncTool(() => import('./components/MindMapViewer.vue'), '思维导图')
+const DataVizViewer = asyncTool(() => import('./components/DataVizViewer.vue'), '数据可视化')
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)
