@@ -8,10 +8,6 @@ const TextbookHome = () => import('./textbook/TextbookHome.vue')
 const BookSelect = () => import('./textbook/BookSelect.vue')
 const ChapterList = () => import('./textbook/ChapterList.vue')
 const SectionContent = () => import('./textbook/SectionContent.vue')
-const Earth3D = () => import('./sandbox/Earth3D.vue')
-const DisasterSandbox = () => import('./sandbox/DisasterSandbox.vue')
-const MapProjectionView = () => import('./sandbox/MapProjectionView.vue')
-const GeologicTimeView = () => import('./sandbox/GeologicTimeView.vue')
 const ExperimentsHome = () => import('./experiments/ExperimentsHome.vue')
 const ExperimentCategory = () => import('./experiments/ExperimentCategory.vue')
 const ExperimentView = () => import('./experiments/ExperimentView.vue')
@@ -44,10 +40,10 @@ const ChapterRedirect = {
 
 const routes = [
   { path: '/', name: 'home', component: TextbookHome },
-  { path: '/earth3d', name: 'earth3d', component: Earth3D },
-  { path: '/disasters', name: 'disasters', component: DisasterSandbox },
-  { path: '/map', name: 'map', component: MapProjectionView },
-  { path: '/geo', name: 'geo', component: GeologicTimeView },
+  { path: '/earth3d', name: 'earth3d', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'earth-system' } } },
+  { path: '/disasters', name: 'disasters', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'disaster-sandbox' } } },
+  { path: '/map', name: 'map', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'map-projection' } } },
+  { path: '/geo', name: 'geo', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'geologic-time' } } },
   { path: '/textbook', redirect: '/' },
   { path: '/experiments', name: 'experiments', component: ExperimentsHome },
   { path: '/experiments/:category', name: 'experiment-category', component: ExperimentCategory },

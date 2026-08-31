@@ -15,8 +15,8 @@
         :to="`/experiments/${exp.category}/${exp.id}`"
         class="exp-item"
       >
-        <span :class="['exp-badge', exp.type === '3d' ? 'badge-3d' : 'badge-tutorial']">
-          {{ exp.type === '3d' ? '3D 交互' : '图文教程' }}
+        <span :class="['exp-badge', exp.kind === '3d' ? 'badge-3d' : 'badge-tutorial']">
+          {{ exp.kind === '3d' ? '3D 交互' : '图文教程' }}
         </span>
         <div class="exp-item-name">{{ exp.name }}</div>
         <div class="exp-item-desc">{{ exp.description }}</div>
@@ -31,12 +31,20 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import modules, { categoryLabels } from './modules/index.js'
+import { listExperiments } from './catalog.js'
+
+const categoryLabels = Object.freeze({
+  meteorology: '气象学实验',
+  hydrology: '水文学实验',
+  geology: '地质实验',
+  astronomy: '天文学实验',
+  systems: '地理系统实验',
+})
 
 const route = useRoute()
 const category = computed(() => route.params.category)
 const label = computed(() => categoryLabels[category.value] || category.value)
-const experiments = computed(() => modules.filter(m => m.category === category.value))
+const experiments = computed(() => listExperiments().filter(experiment => experiment.category === category.value))
 </script>
 
 <style scoped>
