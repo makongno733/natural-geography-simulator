@@ -248,7 +248,7 @@ function onResize() {
   padding: 5px 14px;
   font-size: 13px;
   background: #fff;
-  color: #6b3b32;
+  color: var(--text);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -337,7 +337,7 @@ function onResize() {
 }
 .tool-label {
   font-size: 12px;
-  color: #6b3b32;
+  color: var(--text);
   min-width: 2em;
 }
 .timeline-slider, .climate-slider {
@@ -350,7 +350,7 @@ function onResize() {
   background: #fff;
   padding: 4px 10px;
   font-size: 12px;
-  color: #6b3b32;
+  color: var(--text);
   cursor: pointer;
 }
 .tool-btn:hover { background: rgba(183,55,44,0.06); }
@@ -412,7 +412,7 @@ function onResize() {
   padding: 2px 0;
   border-bottom: 1px solid var(--brown-light);
 }
-.param-label { color: #6b3b32; }
+.param-label { color: var(--text); }
 .param-val { color: var(--red); font-weight: 600; }
 
 @media (max-width: 860px) {

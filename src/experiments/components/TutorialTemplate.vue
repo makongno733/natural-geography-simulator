@@ -99,7 +99,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .illustration-svg :deep(svg) { display: block; max-width: 100%; height: auto; min-height: 100px; }
 .tutorial-content { font-size: 15px; line-height: 1.8; color: var(--ink); margin-bottom: 14px; }
 .tutorial-highlight {
-  background: linear-gradient(90deg, rgba(158, 36, 38, 0.08), transparent);
+  background: linear-gradient(90deg, rgba(31, 111, 235, 0.08), transparent);
   border-left: 3px solid var(--red);
   padding: 10px 14px;
   font-size: 13px;

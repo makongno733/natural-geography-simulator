@@ -33,6 +33,8 @@ const errorMessage = computed(() => {
 
 <style scoped>
 .async-module-error {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   max-width: 640px;
   margin: 32px auto;
   border: 1px solid var(--brown);
@@ -62,10 +64,10 @@ const errorMessage = computed(() => {
 
 .async-module-error button {
   min-height: 40px;
-  border: 1px solid var(--button-green-deep);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
   padding: 8px 16px;
-  color: var(--button-green-ink);
+  color: var(--accent);
   background: var(--button-green);
   font: inherit;
   font-weight: 700;
@@ -73,9 +75,33 @@ const errorMessage = computed(() => {
 }
 
 .async-module-error .retry-btn {
-  color: #fdfef6;
-  border-color: rgba(84, 104, 51, 0.62);
-  background: linear-gradient(135deg, #7f9850, #536936);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border-color: var(--accent-strong);
+  background: var(--gem-flecks), var(--gem);
+  box-shadow: var(--gem-glow), var(--gem-inner);
+}
+
+.async-module-error .retry-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background-image: var(--rainbow-sweep);
+  transform: translateX(-140%) skewX(-14deg);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+}
+
+.async-module-error .retry-btn:hover {
+  background: var(--gem-flecks), var(--gem-deep);
+}
+
+.async-module-error .retry-btn:hover::after {
+  transform: translateX(340%) skewX(-14deg);
 }
 
 .async-module-error button:focus-visible {

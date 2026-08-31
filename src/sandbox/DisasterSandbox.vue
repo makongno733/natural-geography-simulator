@@ -187,7 +187,7 @@ function onResize() { if (engine) engine.resize() }
 .mode-tabs { display: flex; gap: 4px; margin: 0 auto; }
 .mode-btn {
   border: 1px solid var(--brown); border-radius: 6px; padding: 5px 14px;
-  font-size: 13px; background: #fff; color: #6b3b32; cursor: pointer;
+  font-size: 13px; background: #fff; color: var(--text); cursor: pointer;
 }
 .mode-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 .chapter-ref { font-size: 12px; color: var(--muted); }
@@ -213,7 +213,7 @@ function onResize() { if (engine) engine.resize() }
 .viewport-loading, .viewport-error {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  font-size: 15px; color: #6b3b32; background: #f5efe8;
+  font-size: 15px; color: var(--text); background: var(--surface-soft);
 }
 .viewport-error p { margin: 4px 0; }
 .error-hint { font-size: 12px; color: #99897a; }
@@ -224,11 +224,11 @@ function onResize() { if (engine) engine.resize() }
   border: 1px solid var(--brown-light); border-radius: 8px; padding: 8px 12px;
 }
 .tool-item { display: flex; align-items: center; gap: 6px; }
-.tool-label { font-size: 12px; color: #6b3b32; min-width: 2em; }
+.tool-label { font-size: 12px; color: var(--text); min-width: 2em; }
 .timeline-slider { width: 100px; accent-color: var(--red); }
 .tool-btn {
   border: 1px solid var(--brown); border-radius: 6px; background: #fff;
-  padding: 4px 10px; font-size: 12px; color: #6b3b32; cursor: pointer;
+  padding: 4px 10px; font-size: 12px; color: var(--text); cursor: pointer;
 }
 .tool-btn:hover { background: rgba(183,55,44,0.06); }
 .viewport-hint { position: absolute; top: 10px; right: 14px; font-size: 11px; color: #99897a; z-index: 10; }
@@ -250,6 +250,6 @@ function onResize() { if (engine) engine.resize() }
 .ref-item { font-size: 11px; color: #7a6051; line-height: 1.5; margin: 4px 0; }
 .param-section { margin-top: 10px; }
 .param-row { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; border-bottom: 1px solid var(--brown-light); }
-.param-label { color: #6b3b32; }
+.param-label { color: var(--text); }
 .param-val { color: var(--red); font-weight: 600; }
 </style>

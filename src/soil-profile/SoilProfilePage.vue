@@ -122,7 +122,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 80px);
-  background: #f0ebe4;
+  background: var(--surface-soft);
   color: #333;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
 }
@@ -174,7 +174,7 @@ onUnmounted(() => {
 #canvas-container {
   flex: 1;
   position: relative;
-  background: linear-gradient(180deg, #e8e2d8 0%, #d6cec2 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.68) 0%, rgba(238,243,251,0.68) 100%);
 }
 .controls-hint {
   position: absolute;
@@ -228,7 +228,7 @@ onUnmounted(() => {
   padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
-  border-bottom: 1px solid #f0ebe4;
+  border-bottom: 1px solid var(--surface-soft);
   font-size: 0.8rem;
 }
 .layer-item:hover {

@@ -71,57 +71,91 @@ function warmPrimary() {
 
 <style scoped>
 .experiment-card {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(210px, auto);
   gap: 18px;
   align-items: center;
   margin: 0 0 18px;
-  padding: 18px;
-  border: 1px solid rgba(100, 122, 63, 0.34);
-  border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(250, 253, 235, 0.98), rgba(226, 237, 195, 0.9)),
-    radial-gradient(circle at 0 0, rgba(183, 55, 44, 0.08), transparent 38%);
+  padding: 16px 18px 16px 20px;
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+/* 左侧流动彩虹条（Gemini 动态彩虹） */
+.experiment-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 999px 0 0 999px;
+  background-image: var(--rainbow-fade-v);
+  background-size: 300% 300%;
+  animation: rainbow-slide 4s ease-in-out infinite;
 }
 .experiment-copy { min-width: 0; }
 .experiment-eyebrow {
   margin: 0 0 6px;
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--red);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
 }
 .experiment-copy h3 {
   margin: 0;
   font-size: 19px;
-  color: #3f502a;
+  color: var(--text);
 }
 .experiment-purpose {
   margin: 8px 0 0;
   line-height: 1.7;
-  color: #4f4438;
+  color: var(--text-muted);
 }
 .experiment-actions {
   display: grid;
   gap: 10px;
 }
 .primary-experiment {
+  position: relative;
+  overflow: hidden;
   display: block;
+  border: 1px solid var(--accent-strong);
   border-radius: 999px;
-  padding: 11px 16px;
+  padding: 10px 16px;
   color: #fff;
-  background: linear-gradient(135deg, #7f9850, #536936);
+  background: var(--gem-flecks), var(--gem);
+  box-shadow: var(--gem-glow), var(--gem-inner);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
   text-decoration: none;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+.primary-experiment::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background-image: var(--rainbow-sweep);
+  transform: translateX(-140%) skewX(-14deg);
+  transition: transform 0.55s ease;
+  pointer-events: none;
 }
 .primary-experiment:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
+  background: var(--gem-flecks), var(--gem-deep);
+  border-color: #154aa8;
+  box-shadow: 0 6px 20px rgba(31, 111, 235, 0.42), var(--gem-inner);
+}
+.primary-experiment:hover::after {
+  transform: translateX(340%) skewX(-14deg);
 }
 .primary-experiment:focus-visible,
 .related-experiments a:focus-visible {
@@ -135,7 +169,7 @@ function warmPrimary() {
   gap: 5px 9px;
   font-size: 12px;
 }
-.related-experiments span { color: #746756; }
+.related-experiments span { color: var(--text-muted); }
 .related-experiments a {
   color: var(--button-green-ink);
   font-weight: 700;

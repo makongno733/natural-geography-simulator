@@ -427,7 +427,7 @@ class CoriolisEngine extends ExperimentEngine {
 .guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
 .guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
 .guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.cor-canvas-wrap { flex: 1; min-height: 460px; background: #e8f5e9; position: relative; }
+.cor-canvas-wrap { flex: 1; min-height: 460px; background: #eaf1fb; position: relative; }
 .cor-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
 .lock-btn {
   position: absolute; top: 12px; right: 12px; z-index: 10;

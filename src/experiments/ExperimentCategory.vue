@@ -55,17 +55,19 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
 .cat-title { font-size: clamp(24px, 5vw, 34px); color: var(--ink); margin: 0 0 24px; }
 .cat-grid { display: flex; flex-direction: column; gap: 14px; }
 .exp-item {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   display: block;
   text-decoration: none;
   border-radius: var(--radius-card);
   padding: 18px 22px;
   background: var(--card-bg);
-  border: 1px solid var(--brown-light);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition);
   position: relative;
 }
-.exp-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.exp-item:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
 .exp-badge {
   position: absolute;
   top: 14px;
@@ -73,19 +75,19 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
-.badge-3d { background: #dce8b8; color: #43552d; }
-.badge-tutorial { background: #e8e0d0; color: #6d5d40; }
+.badge-3d { background: var(--accent-soft); color: var(--accent); }
+.badge-tutorial { background: #eef2f7; color: var(--text-muted); }
 .exp-item-name { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px; padding-right: 80px; }
-.exp-item-desc { font-size: 13px; color: #777; margin-bottom: 8px; line-height: 1.5; }
+.exp-item-desc { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
 .exp-item-concepts { display: flex; flex-wrap: wrap; gap: 6px; }
 .concept-tag {
   font-size: 11px;
   padding: 1px 7px;
-  border-radius: 3px;
-  background: rgba(158, 36, 38, 0.07);
-  color: var(--red);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 @media (max-width: 720px) {

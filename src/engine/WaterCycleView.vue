@@ -80,7 +80,7 @@ onBeforeUnmount(() => engine?.dispose())
   padding: 5px 14px;
   font-size: 13px;
   background: #fff;
-  color: #6b3b32;
+  color: var(--text);
   cursor: pointer;
 }
 .mode-btn.active {

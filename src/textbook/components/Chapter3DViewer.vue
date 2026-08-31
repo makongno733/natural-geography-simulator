@@ -138,9 +138,9 @@ onBeforeUnmount(() => {
 }
 
 .mode-btn.active {
-  color: #7a241b;
-  border-color: #ffdfb6;
-  background: #fff3dc;
+  color: var(--accent-strong);
+  border-color: var(--accent-soft);
+  background: var(--accent-soft);
   font-weight: 700;
 }
 

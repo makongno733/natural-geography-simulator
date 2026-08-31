@@ -87,14 +87,30 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 <style scoped>
 .exp-home { padding: 40px 20px 34px; }
-.exp-heading { text-align: center; font-size: clamp(28px, 6vw, 44px); color: var(--red); margin: 0 0 8px; font-family: "Ma Shan Zheng", "STXingkai", "Kaiti SC", serif; }
+.exp-heading { text-align: center; font-size: clamp(28px, 6vw, 44px); color: var(--text); margin: 0 0 8px; font-weight: 800; }
 .exp-lead { text-align: center; color: var(--muted); font-size: 15px; margin: 0 0 32px; }
 .exp-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; max-width: 780px; margin: 0 auto; }
-.exp-card { display: flex; flex-direction: column; align-items: center; width: 180px; text-decoration: none; border-radius: 16px; padding: 28px 20px 22px; text-align: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
-.exp-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
-.exp-card-meteorology { background: linear-gradient(180deg, #e3f2fd, #bbdefb); border: 1px solid #90caf9; }.exp-card-hydrology { background: linear-gradient(180deg, #e0f2f1, #b2dfdb); border: 1px solid #80cbc4; }.exp-card-geology { background: linear-gradient(180deg, #efebe9, #d7ccc8); border: 1px solid #bcaaa4; }.exp-card-astronomy { background: linear-gradient(180deg, #ede7f6, #d1c4e9); border: 1px solid #b39ddb; }
-.exp-card-icon { font-size: 40px; margin-bottom: 10px; }.exp-card-title { font-size: 20px; font-weight: 700; color: #333; margin-bottom: 4px; }.exp-card-desc { font-size: 11px; color: #777; line-height: 1.5; }
-.exp-card-meteorology .exp-card-title { color: #1565c0; }.exp-card-hydrology .exp-card-title { color: #00695c; }.exp-card-geology .exp-card-title { color: #4e342e; }.exp-card-astronomy .exp-card-title { color: #4527a0; }
-.exp-filter { max-width: 900px; margin: 42px auto 0; padding: 20px; border: 1px solid var(--brown-light); border-radius: var(--radius-card); background: var(--card-bg); }.exp-filter h2 { margin: 0 0 16px; font-size: 20px; color: var(--ink); }.filter-controls { display: flex; flex-wrap: wrap; gap: 12px; }.filter-controls label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }.filter-controls select { min-width: 150px; padding: 6px 8px; }.experiment-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 18px; }.experiment-result { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--brown-light); border-radius: 6px; color: var(--ink); text-decoration: none; }.experiment-result:hover { box-shadow: var(--shadow-hover); }.experiment-result small { color: var(--muted); line-height: 1.4; }
+.exp-card { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); display: flex; flex-direction: column; align-items: center; width: 180px; text-decoration: none; border-radius: 22px; padding: 28px 20px 22px; text-align: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition), transform var(--transition); }
+.exp-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.exp-card-meteorology { background: linear-gradient(180deg, #e3f2fd, #d6e9ff); border: 1px solid #90caf9; }
+.exp-card-hydrology { background: linear-gradient(180deg, #e0f2f1, #cdeae8); border: 1px solid #80cbc4; }
+.exp-card-geology { background: linear-gradient(180deg, #e8edf3, #d3dce6); border: 1px solid #aebfce; }
+.exp-card-astronomy { background: linear-gradient(180deg, #ede7f6, #dcd1ef); border: 1px solid #b39ddb; }
+.exp-card-icon { font-size: 40px; margin-bottom: 10px; }
+.exp-card-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.exp-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.exp-card-meteorology .exp-card-title { color: #1565c0; }
+.exp-card-hydrology .exp-card-title { color: #00695c; }
+.exp-card-geology .exp-card-title { color: #3d5a6e; }
+.exp-card-astronomy .exp-card-title { color: #4527a0; }
+.exp-filter { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); max-width: 900px; margin: 42px auto 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card-bg); }
+.exp-filter h2 { margin: 0 0 16px; font-size: 20px; color: var(--text); }
+.filter-controls { display: flex; flex-wrap: wrap; gap: 12px; }
+.filter-controls label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.filter-controls select { min-width: 150px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text); }
+.experiment-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 18px; }
+.experiment-result { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); display: grid; gap: 4px; padding: 12px; border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); text-decoration: none; background: var(--surface); }
+.experiment-result:hover { box-shadow: var(--shadow-hover); border-color: var(--accent); }
+.experiment-result small { color: var(--muted); line-height: 1.4; }
 @media (max-width: 720px) { .exp-home { padding: 16px 10px 24px; }.exp-heading { font-size: 24px; }.exp-lead { font-size: 13px; margin-bottom: 20px; }.exp-grid { gap: 10px; }.exp-card { width: 140px; padding: 16px 10px 14px; }.exp-card-icon { font-size: 28px; }.exp-card-title { font-size: 16px; }.exp-card-desc { font-size: 10px; } }
 </style>
