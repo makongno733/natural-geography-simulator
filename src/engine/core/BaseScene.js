@@ -3,6 +3,7 @@ import { RenderManager } from './RenderManager.js'
 import { CameraRig } from './CameraRig.js'
 import { LightRig } from './LightRig.js'
 import { LabelSystem } from './LabelSystem.js'
+import { SceneActivity } from './SceneActivity.js'
 
 export class BaseScene {
   constructor(container, options = {}) {
@@ -10,9 +11,11 @@ export class BaseScene {
     this._mode = options.mode || 'simple'
     this._params = options.params || {}
     this._running = false
+    this._disposed = false
     this._moduleGroup = null
     this._moduleApi = null
     this._animFrameId = null
+    this._sceneActivity = null
 
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(options.bg || 0x0a0e27)
@@ -35,6 +38,14 @@ export class BaseScene {
     this.clock = new THREE.Clock()
 
     this._animate()
+
+    this._sceneActivity = new SceneActivity({
+      element: container,
+      onActiveChange: (active) => {
+        if (active) this.resume()
+        else this.pause()
+      },
+    })
   }
 
   loadModule(moduleFactory, params = {}) {
@@ -118,6 +129,7 @@ export class BaseScene {
   }
 
   _animate() {
+    if (this._running || this._disposed) return
     this._running = true
     const loop = () => {
       if (!this._running) return
@@ -138,10 +150,35 @@ export class BaseScene {
     loop()
   }
 
-  dispose() {
+  pause() {
     this._running = false
     if (this._animFrameId) {
       cancelAnimationFrame(this._animFrameId)
+      this._animFrameId = null
+    }
+  }
+
+  resume() {
+    if (this._disposed || this._running) return
+    this.clock.getDelta() // discard accumulated time so the first resumed frame doesn't jump
+    this._animate()
+  }
+
+  get isRunning() {
+    return this._running
+  }
+
+  dispose() {
+    if (this._disposed) return
+    this._disposed = true
+    this._running = false
+    if (this._animFrameId) {
+      cancelAnimationFrame(this._animFrameId)
+      this._animFrameId = null
+    }
+    if (this._sceneActivity) {
+      this._sceneActivity.dispose()
+      this._sceneActivity = null
     }
     this._disposeModule()
 

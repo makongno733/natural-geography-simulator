@@ -54,6 +54,21 @@ export class AssetLoader {
   get(key) {
     return this.cache.get(key) || null
   }
+
+  dispose(key) {
+    const texture = this.cache.get(key)
+    if (texture) {
+      texture.dispose()
+      this.cache.delete(key)
+    }
+  }
+
+  disposeAll() {
+    for (const texture of this.cache.values()) {
+      texture.dispose()
+    }
+    this.cache.clear()
+  }
 }
 
 export const assetLoader = new AssetLoader()

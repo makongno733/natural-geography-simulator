@@ -16,6 +16,7 @@ export class ExperimentEngine {
     this._guideIndex = 0
     this._guideTimer = 0
     this._onGuideChange = null
+    this._disposed = false
   }
 
   init(canvas) {
@@ -110,6 +111,8 @@ export class ExperimentEngine {
   }
 
   dispose() {
+    if (this._disposed) return
+    this._disposed = true
     cancelAnimationFrame(this.animationId)
     if (this.controls) this.controls.dispose()
     if (this.renderer) this.renderer.dispose()

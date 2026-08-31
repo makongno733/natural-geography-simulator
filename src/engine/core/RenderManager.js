@@ -5,6 +5,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 export class RenderManager {
   constructor(container, options = {}) {
     this.container = container
+    this._disposed = false
     this.renderer = new THREE.WebGLRenderer({
       antialias: options.antialias ?? true,
       alpha: options.alpha ?? true,
@@ -74,6 +75,8 @@ export class RenderManager {
   }
 
   dispose() {
+    if (this._disposed) return
+    this._disposed = true
     this._passes.forEach(p => {
       if (p.dispose) p.dispose()
     })
