@@ -146,10 +146,11 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.42);
   -webkit-backdrop-filter: var(--blur);
   backdrop-filter: var(--blur);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(190, 210, 235, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 10px 32px rgba(24, 70, 150, 0.05);
 }
 
 .header-inner {
@@ -215,9 +216,9 @@ onBeforeUnmount(() => {
 }
 
 .brand-name {
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
   white-space: nowrap;
 }
 
@@ -233,7 +234,7 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
-  padding: 6px 1px;
+  padding: 6px 2px 8px;
   transition: color var(--transition);
   white-space: nowrap;
 }
@@ -253,17 +254,18 @@ onBeforeUnmount(() => {
   transition: transform var(--transition);
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link.active {
   color: var(--accent);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  transform: scaleX(1);
 }
 
 .nav-link.active {
-  color: var(--accent);
   font-weight: 600;
-}
-
-.nav-link.active::after {
-  transform: scaleX(1);
 }
 
 .app-main {

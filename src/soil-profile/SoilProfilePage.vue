@@ -123,22 +123,24 @@ onUnmounted(() => {
   flex-direction: column;
   height: calc(100vh - 80px);
   background: var(--surface-soft);
-  color: #333;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+  color: var(--text);
 }
 .topbar {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 10px 18px;
-  border-bottom: 1px solid #d6ccc0;
-  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--surface);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   flex-shrink: 0;
 }
 .back-link {
-  color: #b01217;
+  color: var(--accent);
   text-decoration: none;
   font-size: 13px;
+  font-weight: 600;
 }
 .back-link:hover {
   text-decoration: underline;
@@ -150,21 +152,21 @@ onUnmounted(() => {
 }
 .mode-btn {
   padding: 6px 14px;
-  border: 1px solid #d6ccc0;
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: #6b5a4e;
+  color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
 }
 .mode-btn.active {
-  background: #b01217;
-  color: #fff;
-  border-color: #b01217;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
 }
 .chapter-ref {
   font-size: 12px;
-  color: #8a7a6e;
+  color: var(--text-muted);
 }
 #main {
   display: flex;
@@ -192,26 +194,28 @@ onUnmounted(() => {
   width: 340px;
   padding: 16px;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.97);
-  border-left: 1px solid #d6ccc0;
+  background: var(--surface);
+  border-left: 1px solid var(--glass-border);
   font-size: 0.85rem;
   line-height: 1.7;
-  color: #444;
+  color: var(--text);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
 }
 #info-panel h2 {
   font-size: 1rem;
   margin-bottom: 4px;
-  color: #b01217;
+  color: var(--accent);
 }
 #info-panel .subtitle {
   font-size: 0.8rem;
-  color: #8a7a6e;
+  color: var(--text-muted);
   margin-bottom: 12px;
 }
 #info-panel h3 {
   font-size: 0.9rem;
   margin: 12px 0 6px;
-  color: #b01217;
+  color: var(--accent);
 }
 #info-panel p {
   margin-bottom: 10px;
@@ -232,7 +236,7 @@ onUnmounted(() => {
   font-size: 0.8rem;
 }
 .layer-item:hover {
-  background: rgba(183, 55, 44, 0.06);
+  background: var(--accent-softer);
 }
 .layer-dot {
   width: 12px;
@@ -244,35 +248,35 @@ onUnmounted(() => {
 .layer-en {
   flex: 1;
   font-size: 0.7rem;
-  color: #8a7a6e;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .info-badge {
   font-size: 14px;
-  color: #b01217;
+  color: var(--accent);
   cursor: pointer;
   flex-shrink: 0;
 }
 .info-badge:hover {
-  color: #d4322a;
+  color: var(--accent-strong);
 }
 .sources {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #e0d6cc;
+  border-top: 1px solid var(--border);
 }
 .sources h4 {
   font-size: 0.8rem;
-  color: #8a7a6e;
+  color: var(--text-muted);
   margin: 0 0 6px;
 }
 .sources ul {
   margin: 0;
   padding-left: 16px;
   font-size: 0.7rem;
-  color: #8a7a6e;
+  color: var(--text-muted);
 }
 .sources li {
   margin-bottom: 2px;
@@ -285,7 +289,7 @@ onUnmounted(() => {
     width: 100%;
     height: 35vh;
     border-left: none;
-    border-top: 1px solid #d6ccc0;
+    border-top: 1px solid var(--border);
   }
 }
 </style>

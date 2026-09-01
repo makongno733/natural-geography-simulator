@@ -87,11 +87,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.map-page { min-height: 100vh; background: #f5f0e8; font-family: 'Noto Serif SC', -apple-system, sans-serif; }
+.map-page { min-height: 100vh; background: var(--bg-soft); }
 .map-top { text-align: center; padding: 20px 16px 8px; }
-.map-back { color: #8b4513; text-decoration: none; font-size: 13px; }
-.map-title { margin: 8px 0 4px; font-size: 22px; color: #333; font-weight: 700; }
-.map-sub { margin: 0; font-size: 13px; color: #999; }
+.map-back { color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600; }
+.map-title { margin: 8px 0 4px; font-size: 22px; color: var(--text); font-weight: 700; }
+.map-sub { margin: 0; font-size: 13px; color: var(--text-muted); }
 .map-quick-controls {
   margin-top: 8px;
   display: inline-flex;
@@ -99,42 +99,44 @@ onBeforeUnmount(() => {
   gap: 6px;
 }
 .quick-btn {
-  border: 1px solid rgba(91, 66, 44, 0.28);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #533721;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
   padding: 4px 10px;
   font-size: 11px;
   cursor: pointer;
 }
 .quick-btn:hover {
-  border-color: #8e3a2d;
-  color: #8e3a2d;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-softer);
 }
 .map-body { display: flex; height: calc(100vh - 120px); }
-.map-canvas { flex: 1; position: relative; overflow: hidden; min-width: 0; background: #f5f0e8; }
+.map-canvas { flex: 1; position: relative; overflow: hidden; min-width: 0; background: var(--bg-soft); }
 .map-controls {
   width: 300px; overflow-y: auto; padding: 12px;
-  background: #fff; border-left: 1px solid var(--border);
+  background: var(--surface); border-left: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
 }
 .reset-btn {
-  display: block; width: 100%; padding: 10px; border: 2px solid #8b4513; border-radius: 8px;
-  background: #fff; color: #8b4513; font-size: 14px; font-weight: 700;
-  cursor: pointer; margin-bottom: 14px; transition: all 0.15s;
+  display: block; width: 100%; padding: 10px; border: 2px solid var(--accent); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--accent); font-size: 14px; font-weight: 700;
+  cursor: pointer; margin-bottom: 14px; transition: background var(--transition), color var(--transition);
 }
-.reset-btn:hover, .reset-btn.active { background: #8b4513; color: #fff; }
+.reset-btn:hover, .reset-btn.active { background: var(--accent); color: var(--accent-ink); }
 .cat-group { margin-bottom: 14px; }
-.cat-title { margin: 0 0 6px; font-size: 11px; color: #bbb; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+.cat-title { margin: 0 0 6px; font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
 .btn-grid { display: flex; flex-wrap: wrap; gap: 3px; }
 .proj-btn {
-  padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px;
-  background: #fafafa; color: #666; font-size: 11px; cursor: pointer;
-  display: flex; align-items: center; gap: 3px; transition: all 0.15s;
+  padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface-soft); color: var(--text-muted); font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; gap: 3px; transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
-.proj-btn:hover { border-color: #8b4513; color: #333; background: #fdf5ee; }
-.proj-btn.active { background: #8b4513; color: #fff; border-color: #8b4513; }
-.tag { font-size: 9px; padding: 1px 4px; border-radius: 2px; background: rgba(0,0,0,0.05); color: #aaa; }
-.proj-btn.active .tag { background: rgba(255,255,255,0.2); color: #fdd; }
+.proj-btn:hover { border-color: var(--accent); color: var(--text); background: var(--accent-softer); }
+.proj-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tag { font-size: 9px; padding: 1px 4px; border-radius: 2px; background: var(--accent-soft); color: var(--text-faint); }
+.proj-btn.active .tag { background: rgba(255,255,255,0.2); color: var(--accent-ink); }
 @media (max-width: 720px) {
   .map-body { flex-direction: column; }
   .map-canvas { height: 50vh; }

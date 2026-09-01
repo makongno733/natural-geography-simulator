@@ -13,7 +13,7 @@
         v-for="exp in experiments"
         :key="exp.id"
         :to="`/experiments/${exp.category}/${exp.id}`"
-        class="exp-item"
+        class="exp-item sheen-card"
       >
         <span :class="['exp-badge', exp.kind === '3d' ? 'badge-3d' : 'badge-tutorial']">
           {{ exp.kind === '3d' ? '3D 交互' : '图文教程' }}
@@ -51,7 +51,7 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
 .cat-page { padding: 24px 20px 40px; max-width: 900px; margin: 0 auto; }
 .cat-breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 .cat-breadcrumb a { color: var(--muted); text-decoration: none; }
-.cat-breadcrumb a:hover { color: var(--red); }
+.cat-breadcrumb a:hover { color: var(--accent); }
 .cat-title { font-size: clamp(24px, 5vw, 34px); color: var(--ink); margin: 0 0 24px; }
 .cat-grid { display: flex; flex-direction: column; gap: 14px; }
 .exp-item {
@@ -78,7 +78,7 @@ const experiments = computed(() => listExperiments().filter(experiment => experi
   border-radius: 8px;
 }
 .badge-3d { background: var(--accent-soft); color: var(--accent); }
-.badge-tutorial { background: #eef2f7; color: var(--text-muted); }
+.badge-tutorial { background: var(--accent-softer); color: var(--text-muted); }
 .exp-item-name { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px; padding-right: 80px; }
 .exp-item-desc { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
 .exp-item-concepts { display: flex; flex-wrap: wrap; gap: 6px; }

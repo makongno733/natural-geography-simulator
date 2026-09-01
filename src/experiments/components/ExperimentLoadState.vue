@@ -34,20 +34,27 @@ defineEmits(['retry'])
 <style scoped>
 .experiment-load-state {
   padding: 18px;
-  border: 1px solid var(--brown-light);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
-  background: var(--card-bg);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--text);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow-sm);
 }
 .experiment-load-state p { margin: 0; }
 .experiment-load-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; align-items: center; }
-.experiment-load-actions a { color: var(--red); }
+.experiment-load-actions a { color: var(--accent); font-weight: 600; }
 .experiment-load-actions button {
-  border: 0;
-  border-radius: 4px;
-  padding: 7px 12px;
-  color: white;
-  background: var(--red);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--accent-strong);
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  color: var(--accent-ink);
+  background: var(--gem-flecks), var(--gem);
+  box-shadow: var(--gem-glow), var(--gem-inner);
+  font-weight: 700;
   cursor: pointer;
 }
 </style>

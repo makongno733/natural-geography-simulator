@@ -41,20 +41,23 @@ const infoText = computed(() => {
   justify-content: center;
 }
 .info-card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-box);
   padding: 24px;
   max-width: 420px;
   width: 90vw;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-hover);
   position: relative;
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
 }
 .info-close {
   position: absolute;
   top: 10px;
   right: 10px;
   border: none;
-  background: #f0f0f0;
+  background: var(--accent-soft);
   border-radius: 50%;
   width: 28px;
   height: 28px;
@@ -63,25 +66,26 @@ const infoText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555;
+  color: var(--text-muted);
 }
 .info-close:hover {
-  background: #e0e0e0;
+  background: var(--accent-softer);
+  color: var(--accent);
 }
 .info-title {
   margin: 0 0 4px;
   font-size: 16px;
-  color: #333;
+  color: var(--text);
 }
 .info-en {
   font-size: 12px;
-  color: #888;
+  color: var(--text-faint);
   margin: 0 0 12px;
 }
 .info-body {
   font-size: 14px;
   line-height: 1.7;
-  color: #555;
+  color: var(--text-muted);
   margin: 0;
 }
 </style>

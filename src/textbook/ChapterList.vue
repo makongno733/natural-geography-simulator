@@ -12,7 +12,7 @@
         v-for="ch in currentBook.chapters"
         :key="ch.id"
         :to="{ name: 'chapter', params: { grade: gradeId, book: bookId, chapter: ch.id } }"
-        class="card"
+        class="card sheen-card"
       >
         <div class="card-title">{{ ch.id }} {{ ch.title }}</div>
         <div class="card-desc">{{ ch.sections.length }} 节 · {{ ch.sections.map(s => s.title).join('、') }}</div>
@@ -50,10 +50,13 @@ watch(
   font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 20px;
-  padding: 7px 12px;
-  background: var(--surface-soft);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  padding: 7px 14px;
+  background: var(--surface);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
   display: inline-block;
 }
 .breadcrumb a { color: var(--accent); text-decoration: none; }
@@ -69,18 +72,18 @@ watch(
   backdrop-filter: var(--blur);
   display: block;
   text-decoration: none;
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
-  padding: 16px;
+  padding: 16px 16px 16px 18px;
   background: var(--surface);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--accent);
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 .card:hover {
   background: var(--accent-softer);
   border-color: var(--accent);
+  box-shadow: var(--shadow-hover), inset 3px 0 0 var(--accent);
 }
 .card-title {
   font-size: 15px;
