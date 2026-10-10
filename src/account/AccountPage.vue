@@ -49,9 +49,9 @@
         <p v-if="!config.email && !config.google && !config.github" class="notice">登录服务正在配置中，请稍后再试。</p>
       </template>
       <p class="account-legal-links">
-        <a :href="`${siteOrigin}/privacy.html`">隐私政策</a>
+        <a :href="`${siteOrigin}/privacy`">隐私政策</a>
         <span aria-hidden="true">·</span>
-        <a :href="`${siteOrigin}/terms.html`">服务条款</a>
+        <a :href="`${siteOrigin}/terms`">服务条款</a>
       </p>
     </div>
   </div>
