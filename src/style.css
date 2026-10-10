@@ -253,3 +253,14 @@ html.motion-paused *::after {
   animation: gem-shine 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
 }
+
+.site-legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 24px 20px 36px;
+  font-size: 12px;
+}
+.site-legal-links a { color: inherit; opacity: .68; }
+.site-legal-links a:hover { opacity: 1; }

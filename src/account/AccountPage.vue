@@ -48,6 +48,11 @@
         </template>
         <p v-if="!config.email && !config.google && !config.github" class="notice">登录服务正在配置中，请稍后再试。</p>
       </template>
+      <p class="account-legal-links">
+        <a :href="`${siteOrigin}/privacy.html`">隐私政策</a>
+        <span aria-hidden="true">·</span>
+        <a :href="`${siteOrigin}/terms.html`">服务条款</a>
+      </p>
     </div>
   </div>
 </template>
@@ -169,6 +174,8 @@ label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
 input { width: 100%; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; font: inherit; }
 .divider { margin-top: 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
 .switch { border: 0; color: var(--accent); margin: 16px auto 0; }
+.account-legal-links { display: flex; justify-content: center; gap: 10px; margin: 24px 0 0; font-size: 12px; color: var(--text-muted); }
+.account-legal-links a { color: inherit; }
 .notice, .error { padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); line-height: 1.5; }
 .error { color: #a11919; background: #fff0f0; }
 .profile { display: grid; gap: 4px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; overflow-wrap: anywhere; }

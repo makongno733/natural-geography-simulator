@@ -27,6 +27,11 @@
         </transition>
       </router-view>
     </main>
+    <footer v-if="accountEnabled" class="site-legal-links" aria-label="网站信息">
+      <a href="/privacy.html">隐私政策</a>
+      <a href="/terms.html">服务条款</a>
+      <a href="mailto:makongno733@gmail.com">联系网站</a>
+    </footer>
     <LessonAssistant />
     <div class="sparkle-layer" aria-hidden="true">
       <span
