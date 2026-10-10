@@ -3,6 +3,7 @@ node_modules/
 
 # Build outputs
 dist/
+dist-account/
 build/
 coverage/
 *.tsbuildinfo
@@ -26,6 +27,8 @@ release/
 .env
 .env.*
 !.env.example
+/data/
+*.sqlite*
 
 # Logs
 *.log

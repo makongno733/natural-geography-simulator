@@ -135,6 +135,7 @@
             class="nav-link next"
           >下一节 →</router-link>
         </div>
+        <SectionComments v-if="accountEnabled" :section="[gradeId, bookId, chapterId, sectionId].join('|')" />
       </main>
     </div>
   </template>
@@ -169,6 +170,7 @@ import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
 import StudentLearningView from './components/StudentLearningView.vue'
 import TextbookExperimentCard from './components/TextbookExperimentCard.vue'
+import { accountEnabled } from '../account/config.js'
 import AsyncModuleError from './components/AsyncModuleError.vue'
 import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
 import { loadFigureAssets } from './data/figureAssets/loader.js'
@@ -183,6 +185,7 @@ const asyncTool = (loader, moduleName = '教学互动工具') => defineAsyncComp
 
 const MindMapViewer = asyncTool(() => import('./components/MindMapViewer.vue'), '思维导图')
 const DataVizViewer = asyncTool(() => import('./components/DataVizViewer.vue'), '数据可视化')
+const SectionComments = defineAsyncComponent(() => import('../account/SectionComments.vue'))
 
 const route = useRoute()
 const gradeId = computed(() => route.params.grade)

@@ -1,0 +1,24 @@
+services:
+  account:
+    build:
+      context: ../..
+      dockerfile: deploy/account/Dockerfile
+      args:
+        VITE_SITE_ORIGIN: https://geo.kongnoma279.com
+        VITE_ACCOUNT_ORIGIN: https://account.kongnoma279.com
+    image: geo-account:0.1.0
+    env_file: ../../.env
+    environment:
+      NODE_ENV: production
+      ACCOUNT_BIND: 0.0.0.0
+      ACCOUNT_PORT: 4100
+      ACCOUNT_DB_PATH: /var/lib/geo-account/account.sqlite
+      ACCOUNT_DIST_PATH: /app/dist-account
+    ports:
+      - "127.0.0.1:4100:4100"
+    volumes:
+      - account_data:/var/lib/geo-account
+    restart: unless-stopped
+
+volumes:
+  account_data:

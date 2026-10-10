@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+node_modules
+dist
+dist-account
+data
+release
+electron-release
+*.log
+*.pdf
+*.ppt
+*.pptx

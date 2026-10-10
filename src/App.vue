@@ -16,6 +16,7 @@
           <router-link to="/初中" class="nav-link" :class="{ active: grade === '初中' }">初中</router-link>
           <router-link to="/高中" class="nav-link" :class="{ active: grade === '高中' }">高中</router-link>
           <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">地理实验室</router-link>
+          <a v-if="accountEnabled" class="nav-link" :href="`${accountOrigin}/#/account`">登录 / 注册</a>
         </nav>
       </div>
     </header>
@@ -26,6 +27,7 @@
         </transition>
       </router-view>
     </main>
+    <LessonAssistant />
     <div class="sparkle-layer" aria-hidden="true">
       <span
         v-for="sparkle in sparkles"
@@ -40,6 +42,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import LessonAssistant from './assistant/LessonAssistant.vue'
+import { accountEnabled, accountOrigin } from './account/config.js'
 
 const route = useRoute()
 const router = useRouter()

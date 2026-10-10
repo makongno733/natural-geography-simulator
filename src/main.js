@@ -3,6 +3,11 @@ import { createRouter, createWebHashHistory, useRoute, useRouter } from 'vue-rou
 import App from './App.vue'
 import './style.css'
 import { getChapter } from './textbook/data/catalogLoader.js'
+import { accountEnabled, accountOrigin } from './account/config.js'
+
+if (accountEnabled && window.location.origin === new URL(accountOrigin).origin && !window.location.hash) {
+  window.location.hash = '#/account'
+}
 
 const TextbookHome = () => import('./textbook/TextbookHome.vue')
 const BookSelect = () => import('./textbook/BookSelect.vue')
@@ -11,6 +16,7 @@ const SectionContent = () => import('./textbook/SectionContent.vue')
 const ExperimentsHome = () => import('./experiments/ExperimentsHome.vue')
 const ExperimentCategory = () => import('./experiments/ExperimentCategory.vue')
 const ExperimentView = () => import('./experiments/ExperimentView.vue')
+const AccountPage = () => import('./account/AccountPage.vue')
 
 const ChapterRedirect = {
   name: 'ChapterRedirect',
@@ -48,6 +54,7 @@ const routes = [
   { path: '/experiments', name: 'experiments', component: ExperimentsHome },
   { path: '/experiments/:category', name: 'experiment-category', component: ExperimentCategory },
   { path: '/experiments/:category/:experiment', name: 'experiment-view', component: ExperimentView },
+  { path: '/account', name: 'account', component: AccountPage },
   { path: '/:grade', name: 'grade', component: BookSelect },
   { path: '/:grade/:book', name: 'book', component: ChapterList },
   { path: '/:grade/:book/:chapter', name: 'chapter', component: ChapterRedirect },
