@@ -2,46 +2,58 @@
   <div class="geography-home">
     <section class="earth-hero" aria-labelledby="home-title">
       <div class="hero-copy">
-        <p class="eyebrow">EARTH / GEOGRAPHY / LEARNING</p>
-        <h1 id="home-title">从地球出发，<br>读懂山河。</h1>
-        <p class="hero-intro">沿着地貌、气候与人类活动的线索，认识中国与世界。课程可以循序学习，也可以从一幅真实影像开始探索。</p>
+        <p class="eyebrow">地球 · 地貌 · 气候 · 空间</p>
+        <h1 id="home-title">把地理，<br>放到眼前。</h1>
+        <p class="hero-intro">转动地球，走进真实的地理过程。从三维模型开始观察，再进入适合自己的初中或高中课程。</p>
         <div class="hero-actions">
-          <router-link to="/初中" class="primary-action">开始初中课程 <span aria-hidden="true">↗</span></router-link>
-          <router-link to="/高中" class="secondary-action">进入高中课程</router-link>
+          <router-link to="/earth3d" class="primary-action">探索 3D 地球 <span aria-hidden="true">↗</span></router-link>
+          <button type="button" class="secondary-action" @click="scrollToSection('three-d-gallery')">查看三维模型 <span aria-hidden="true">↓</span></button>
         </div>
-        <div class="hero-index" aria-label="探索入口">
-          <button type="button" @click="scrollToSection('field-notes')">01 / 地球影像</button>
-          <button type="button" @click="scrollToSection('terrain')">02 / 地势阶梯</button>
-          <router-link to="/experiments">03 / 地理实验</router-link>
+        <div class="hero-courses" aria-label="按学段学习">
+          <router-link to="/初中"><strong>初中地理</strong><span>地球与地图 · 中国与世界 <span aria-hidden="true">↗</span></span></router-link>
+          <router-link to="/高中"><strong>高中地理</strong><span>自然过程 · 人地关系 <span aria-hidden="true">↗</span></span></router-link>
         </div>
       </div>
       <figure class="earth-portrait">
-        <picture>
-          <source :srcset="geoAvifAsset('earth-apollo17.jpg')" type="image/avif">
-          <img :src="geoAsset('earth-apollo17.jpg')" width="1881" height="1881" fetchpriority="high" alt="阿波罗17号宇航员拍摄的地球，画面可见非洲、阿拉伯半岛、印度洋和云系">
-        </picture>
-        <figcaption>地球，1972 年 12 月 7 日 · Apollo 17 / <a href="https://science.nasa.gov/resource/the-blue-marble/" target="_blank" rel="noopener noreferrer">NASA Johnson Space Center ↗</a></figcaption>
+        <HomeGlobe />
+        <figcaption>交互地球纹理：<a href="https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/" target="_blank" rel="noopener noreferrer">NASA Blue Marble: Next Generation ↗</a> · 静态备选：<a href="https://science.nasa.gov/resource/the-blue-marble/" target="_blank" rel="noopener noreferrer">Apollo 17 / NASA ↗</a></figcaption>
       </figure>
+    </section>
+
+    <section id="three-d-gallery" class="model-gallery section-frame" aria-labelledby="model-gallery-title">
+      <div class="model-gallery-intro">
+        <span class="eyebrow">观察 · 操作 · 理解</span>
+        <h2 id="model-gallery-title">从模型中，看见地理过程。</h2>
+        <p>选择一个现有三维模型，进入后直接拖动、观察和推演。每个模型都通向具体的地理问题。</p>
+      </div>
+      <div class="model-gallery-list">
+        <router-link v-for="(model, index) in featuredModels" :key="model.title" :to="model.to" class="model-gallery-item">
+          <span class="model-index">0{{ index + 1 }}</span>
+          <span class="model-main"><strong>{{ model.title }}</strong><small>{{ model.question }}</small></span>
+          <span class="model-action">打开模型 <span aria-hidden="true">↗</span></span>
+        </router-link>
+      </div>
+      <router-link to="/experiments" class="model-gallery-all">查看全部地理实验 <span aria-hidden="true">→</span></router-link>
     </section>
 
     <section class="learning-paths section-frame" aria-labelledby="paths-title">
       <div class="section-heading">
-        <span class="eyebrow">CHOOSE YOUR ROUTE</span>
-        <h2 id="paths-title">两种认识地球的路径</h2>
-        <p>依教材建立知识结构，或从地图和实验观察地理过程。</p>
+        <span class="eyebrow">按学段继续</span>
+        <h2 id="paths-title">初中与高中，各有一条清晰的学习路径。</h2>
+        <p>先选学段，再按教材章节学习；模型和实验可以随时穿插进课堂。</p>
       </div>
       <div class="path-grid">
         <router-link to="/初中" class="path-link path-school">
-          <span class="path-num">01 / 系统学习</span>
-          <h3>循着教材走</h3>
-          <p>从地球仪、地图判读到区域地理；再延伸到高中自然与人文地理。</p>
-          <span class="path-cta">查看初中与高中课程 <span aria-hidden="true">→</span></span>
+          <span class="path-num">01 / 七至八年级</span>
+          <h3>初中地理</h3>
+          <p>从地球仪与地图开始，认识中国与世界的自然环境和区域差异。</p>
+          <span class="path-cta">进入初中课程 <span aria-hidden="true">→</span></span>
         </router-link>
-        <router-link to="/experiments" class="path-link path-explore">
-          <span class="path-num">02 / 动手探索</span>
-          <h3>让地理过程可见</h3>
-          <p>在已有实验中观察大气、流水、地质与地球运动，并回到课程解释现象。</p>
-          <span class="path-cta">进入 3D 实验室 <span aria-hidden="true">→</span></span>
+        <router-link to="/高中" class="path-link path-explore">
+          <span class="path-num">02 / 必修与选择性必修</span>
+          <h3>高中地理</h3>
+          <p>进一步理解大气、水、地貌、人口与区域发展背后的过程和联系。</p>
+          <span class="path-cta">进入高中课程 <span aria-hidden="true">→</span></span>
         </router-link>
       </div>
     </section>
@@ -54,9 +66,9 @@
       </div>
       <div class="terrain-layout">
         <div class="terrain-diagram" role="img" aria-label="中国地势自西向东呈三级阶梯下降的教学示意图">
-          <div class="terrain-step first"><span>高原</span><small>第一级</small></div>
-          <div class="terrain-step second"><span>高原与盆地</span><small>第二级</small></div>
-          <div class="terrain-step third"><span>平原与丘陵</span><small>第三级</small></div>
+          <div class="terrain-step first" :class="{ selected: selectedTier === 1 }"><span>高原</span><small>第一级</small></div>
+          <div class="terrain-step second" :class="{ selected: selectedTier === 2 }"><span>高原与盆地</span><small>第二级</small></div>
+          <div class="terrain-step third" :class="{ selected: selectedTier === 3 }"><span>平原与丘陵</span><small>第三级</small></div>
           <div class="sea-line">海洋 <span aria-hidden="true">→</span></div>
           <div class="diagram-axis">西 <span>地势总体下降方向 →</span> 东</div>
         </div>
@@ -122,6 +134,14 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { geoAsset, geoAvifAsset } from './geoAssets.js'
+import HomeGlobe from './HomeGlobe.vue'
+
+const featuredModels = [
+  { title: '地球内部', question: '地壳、地幔与地核如何分层？', to: '/earth3d' },
+  { title: '水循环', question: '水如何在陆地、海洋与大气之间流动？', to: '/experiments/systems/water-cycle-3d' },
+  { title: '地貌沙盘', question: '侵蚀与堆积如何改变地表？', to: '/experiments/systems/landform-sandbox' },
+  { title: '月相变化', question: '日、地、月的位置如何决定月相？', to: '/experiments/astronomy/moon-phases' },
+]
 
 const tiers = [
   { id: 1, short: '第一阶梯', region: '青藏高原与柴达木盆地', title: '从高处认识水源', description: '高寒地势、冰雪与河流源头相互关联。观察高原时，也要留意地形对气温和水循环的影响。' },
@@ -167,24 +187,44 @@ function scrollToSection(id) {
 .geography-home { color: #172433; background: #f7f8f5; }
 .section-frame { padding: clamp(64px, 8vw, 112px) max(24px, calc((100vw - 1280px) / 2)); }
 .eyebrow { display: block; margin: 0 0 18px; font: 700 11px/1.4 ui-monospace, SFMono-Regular, monospace; letter-spacing: .16em; text-transform: uppercase; }
-.earth-hero { min-height: min(800px, calc(100svh - 64px)); display: grid; grid-template-columns: minmax(0,1fr) minmax(320px,1.04fr); align-items: center; gap: clamp(20px,4vw,70px); padding: 64px max(24px, calc((100vw - 1280px) / 2)) 36px; color: #f5f4ee; background: radial-gradient(circle at 80% 50%, #172c43, #06121e 60%); }
+.earth-hero { min-height: min(800px, calc(100svh - 64px)); display: grid; grid-template-columns: minmax(0,1fr) minmax(320px,1.04fr); align-items: center; gap: clamp(20px,4vw,70px); padding: 64px max(24px, calc((100vw - 1280px) / 2)) 36px; color: #f5f4ee; background: radial-gradient(circle at 75% 46%, #19364a 0%, #0b2332 48%, #06121e 100%); }
 .earth-hero h1 { margin: 0 0 28px; color: inherit; font-size: clamp(54px, 7vw, 104px); line-height: 1.04; letter-spacing: -.055em; font-weight: 650; }
 .hero-copy .eyebrow { color: #b5c7cb; }
 .hero-intro { max-width: 520px; color: #d3dce0; font-size: clamp(16px,1.5vw,19px); line-height: 1.9; }
 .hero-actions { display:flex; gap: 12px; flex-wrap:wrap; margin-top: 34px; }
-.hero-actions a { display:inline-flex; align-items:center; justify-content:space-between; gap:32px; min-height:48px; padding:11px 18px; text-decoration:none; font-weight:700; border:1px solid rgba(255,255,255,.5); }
+.hero-actions a, .hero-actions button { display:inline-flex; align-items:center; justify-content:space-between; gap:32px; min-height:48px; padding:11px 18px; text-decoration:none; font-family:inherit; font-size:14px; font-weight:700; line-height:1.4; cursor:pointer; border:1px solid rgba(255,255,255,.5); }
 .primary-action { color:#0b2230; background:#e6ebdf; }
-.secondary-action { color:#f5f4ee; }
-.hero-actions a:hover { transform:translateY(-2px); }
+.secondary-action { color:#f5f4ee; background:transparent; }
+.hero-actions a:hover, .hero-actions button:hover { background:#dce8da; color:#0b2230; }
+.hero-actions a:focus-visible, .hero-actions button:focus-visible { outline:2px solid white; outline-offset:3px; }
+.hero-courses { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-top:clamp(44px,6vw,80px); border-top:1px solid rgba(255,255,255,.4); }
+.hero-courses a { display:flex; flex-direction:column; gap:7px; padding:18px 16px 18px 0; text-decoration:none; color:#f2f5ed; }
+.hero-courses a + a { border-left:1px solid rgba(255,255,255,.3); padding-left:20px; }
+.hero-courses strong { font-size:18px; }
+.hero-courses span { color:#aebfc0; font-size:12px; }
+.hero-courses a:hover strong { text-decoration:underline; text-underline-offset:5px; }
+.hero-courses a:focus-visible { outline:2px solid #fff; outline-offset:3px; }
 .hero-index { display:flex; flex-wrap:wrap; gap:12px 24px; margin-top: clamp(44px,7vw,98px); font:600 11px ui-monospace,monospace; letter-spacing:.07em; }
 .hero-index a, .hero-index button { color:#a7b9bf; text-decoration:none; }
 .hero-index button { padding:0; border:0; background:transparent; cursor:pointer; font:inherit; letter-spacing:inherit; }
 .hero-index a:hover, .hero-index button:hover { color:#fff; }
 .hero-index a:focus-visible, .hero-index button:focus-visible { outline:2px solid #fff; outline-offset:4px; }
 .earth-portrait { margin:0; min-width:0; }
-.earth-portrait img { display:block; width:100%; height:auto; aspect-ratio:1; object-fit:contain; filter:drop-shadow(0 28px 54px rgba(0,0,0,.3)); }
 .earth-portrait figcaption { margin-top:8px; text-align:center; color:#aabdc5; font-size:11px; }
 .earth-portrait a { color:inherit; }
+.model-gallery { display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr); gap:clamp(32px,7vw,100px); background:#e8e9e0; }
+.model-gallery-intro h2 { margin:0 0 18px; color:#1a302e; font-size:clamp(34px,4.2vw,57px); line-height:1.1; letter-spacing:-.035em; }
+.model-gallery-intro p { max-width:450px; color:#4d625d; line-height:1.8; }
+.model-gallery-list { border-top:2px solid #264e42; }
+.model-gallery-item { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:12px; min-height:112px; padding:18px 4px; color:#1b3933; text-decoration:none; border-bottom:1px solid #aebdb1; transition:padding .2s ease, background .2s ease; }
+.model-gallery-item:hover { padding-left:15px; background:#dde7d9; }
+.model-gallery-item:focus-visible { outline:3px solid #244739; outline-offset:2px; }
+.model-index { align-self:start; padding-top:5px; color:#667e70; font:700 12px ui-monospace,monospace; }
+.model-main { display:flex; flex-direction:column; gap:7px; }
+.model-main strong { font-size:clamp(21px,2.4vw,28px); }
+.model-main small { color:#61736a; font-size:13px; }
+.model-action { white-space:nowrap; font-size:12px; font-weight:700; }
+.model-gallery-all { grid-column:2; justify-self:end; color:#244739; font-weight:700; }
 .section-heading { max-width:710px; margin-bottom:34px; }
 .section-heading .eyebrow { color:#587365; }
 .section-heading h2 { margin:0 0 14px; font-size:clamp(32px,4vw,54px); line-height:1.15; letter-spacing:-.035em; }
@@ -203,7 +243,8 @@ function scrollToSection(id) {
 .terrain-heading p { color:#c0cfd0; }
 .terrain-layout { display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(24px,5vw,72px); align-items:end; }
 .terrain-diagram { display:flex; align-items:flex-end; height:340px; position:relative; border-bottom:1px solid #afc6c3; padding-bottom:32px; }
-.terrain-step { flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding:18px; color:#10242d; }
+.terrain-step { flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding:18px; color:#10242d; transition:filter .35s ease, transform .35s ease; }
+.terrain-step.selected { filter:brightness(1.13); transform:translateY(-10px); }
 .terrain-step span { font-weight:800; }
 .terrain-step small { font-size:12px; }
 .terrain-step.first { height:82%; background:#d5d1b1; }
@@ -244,7 +285,8 @@ function scrollToSection(id) {
 .course-links { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; margin-top:38px; background:#aebdb0; border:1px solid #aebdb0; }
 .course-links a { display:flex; justify-content:space-between; gap:8px; padding:22px 16px; background:#f5f7f2; color:#214337; text-decoration:none; font-weight:700; }
 .course-links a:hover { background:#d8e5d8; }
-@media(max-width:850px) { .earth-hero { grid-template-columns:1fr; padding-top:62px; } .earth-portrait { max-width:620px; justify-self:center; } .terrain-layout { grid-template-columns:1fr; } .story-card.featured { display:block; } .story-card.featured img { height:310px; min-height:0; } .course-links { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:620px) { .section-frame { padding:62px 20px; } .earth-hero { padding:60px 20px 36px; } .earth-hero h1 { font-size:clamp(50px,12vw,70px); } .hero-index { margin-top:44px; } .path-grid,.story-grid { grid-template-columns:1fr; } .story-card.featured { grid-column:auto; } .path-link { min-height:270px; } .path-link h3 { margin-top:48px; } .terrain-diagram { height:255px; } .terrain-step { padding:10px 5px; font-size:12px; } .sea-line { font-size:10px; padding-left:3px; } .diagram-axis span { display:none; } .course-links { grid-template-columns:1fr; } }
-@media(prefers-reduced-motion:reduce) { .path-link,.hero-actions a { transition:none; } }
+@media(max-width:850px) { .earth-hero { grid-template-columns:1fr; padding-top:62px; } .earth-portrait { width:min(100%,620px); justify-self:center; } .model-gallery { grid-template-columns:1fr; } .model-gallery-all { grid-column:1; } .terrain-layout { grid-template-columns:1fr; } .story-card.featured { display:block; } .story-card.featured img { height:310px; min-height:0; } .course-links { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:620px) { .section-frame { padding:62px 20px; } .earth-hero { padding:60px 20px 36px; } .earth-hero h1 { font-size:clamp(50px,12vw,70px); } .hero-courses { margin-top:44px; } .hero-courses a { padding-right:10px; } .hero-courses a + a { padding-left:12px; } .hero-courses strong { font-size:16px; } .model-gallery-item { grid-template-columns:30px 1fr; } .model-action { grid-column:2; } .path-grid,.story-grid { grid-template-columns:1fr; } .story-card.featured { grid-column:auto; } .path-link { min-height:270px; } .path-link h3 { margin-top:48px; } .terrain-diagram { height:255px; } .terrain-step { padding:10px 5px; font-size:12px; } .sea-line { font-size:10px; padding-left:3px; } .diagram-axis span { display:none; } .course-links { grid-template-columns:1fr; } }
+@media(max-width:620px) { .earth-hero { display:flex; flex-direction:column; align-items:stretch; gap:0; padding-top:36px; } .hero-copy { display:contents; } .hero-copy .eyebrow { order:1; } .earth-hero h1 { order:2; margin-bottom:8px; } .earth-portrait { order:3; width:100%; } .hero-intro { order:4; margin:20px 0 0; } .hero-actions { order:5; margin-top:22px; } .hero-courses { order:6; margin-top:40px; } }
+@media(prefers-reduced-motion:reduce) { .path-link,.hero-actions a,.hero-actions button,.model-gallery-item,.terrain-step { transition:none; } }
 </style>

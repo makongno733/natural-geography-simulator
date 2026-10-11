@@ -38,7 +38,7 @@
           </div>
           <div class="brand-text">
             <span class="brand-name">中国地理教学系统</span>
-            <span class="brand-sub">EARTH SCALE · 人教版教学与 3D 实验室</span>
+            <span class="brand-sub">三维地球 · 地理过程 · 初高中课程</span>
           </div>
         </router-link>
 
@@ -50,15 +50,15 @@
           <router-link to="/" class="nav-link" :class="{ active: isHome }">
             <span class="nav-label">首页</span>
           </router-link>
+          <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">
+            <span class="nav-badge-dot" aria-hidden="true"></span>
+            <span class="nav-label">3D 探索</span>
+          </router-link>
           <router-link to="/初中" class="nav-link" :class="{ active: grade === '初中' }">
             <span class="nav-label">初中课程</span>
           </router-link>
           <router-link to="/高中" class="nav-link" :class="{ active: grade === '高中' }">
             <span class="nav-label">高中课程</span>
-          </router-link>
-          <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">
-            <span class="nav-badge-dot" aria-hidden="true"></span>
-            <span class="nav-label">3D 实验室</span>
           </router-link>
           <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="`${accountOrigin}/#/account`">
             <span>{{ accountUser ? '我的账号' : '登录 / 注册' }}</span>
@@ -121,7 +121,7 @@
       <a href="mailto:makongno733@gmail.com">联系网站</a>
     </div>
 
-    <LessonAssistant v-if="!isAccountHost" />
+    <LessonAssistant v-if="!isAccountHost && !isHome" />
   </div>
 </template>
 
@@ -135,7 +135,7 @@ const route = useRoute()
 const router = useRouter()
 const isAccountHost = accountEnabled && window.location.origin === new URL(accountOrigin).origin
 const isHome = computed(() => route.path === '/')
-const isExperiments = computed(() => route.path.startsWith('/experiments'))
+const isExperiments = computed(() => route.path.startsWith('/experiments') || route.path === '/earth3d')
 const grade = computed(() => route.params.grade || '')
 const accountUser = ref(null)
 

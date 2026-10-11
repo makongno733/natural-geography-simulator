@@ -12,7 +12,7 @@
         <button v-if="isSection && accountEnabled" type="button" class="comment-link" @click="goComments">查看本节评论 →</button>
       </div>
     </section>
-    <button class="assistant-fab" type="button" :aria-expanded="open" aria-label="打开课程助手" @click="open = !open">✦<span>AI</span></button>
+    <button class="assistant-fab" type="button" :aria-expanded="open" aria-label="打开课程助手" @click="open = !open">找课程</button>
   </div>
 </template>
 
@@ -58,8 +58,9 @@ function goComments() {
 
 <style scoped>
 .assistant-root { position: fixed; right: 22px; bottom: 22px; z-index: 80; }
-.assistant-fab { width: 62px; height: 62px; border: 0; border-radius: 50%; background: var(--lapis); color: #fff; box-shadow: var(--gem-glow); font-size: 28px; cursor: pointer; }
-.assistant-fab span { display: block; margin-top: -7px; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.assistant-fab { min-width: 74px; min-height: 44px; padding: 8px 14px; border: 1px solid #638172; border-radius: 3px; background: #244739; color: #fff; box-shadow: 0 5px 18px rgba(15,43,32,.16); font-family:inherit; font-size:13px; font-weight:700; line-height:1.2; cursor: pointer; }
+.assistant-fab:hover { background:#315b49; }
+.assistant-fab:focus-visible { outline:3px solid #244739; outline-offset:3px; }
 .assistant-panel { position: absolute; right: 0; bottom: 74px; width: min(360px, calc(100vw - 30px)); max-height: min(540px, calc(100vh - 120px)); overflow: auto; background: #fff; border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 20px 60px rgba(24,70,150,.2); }
 header { display: flex; align-items: center; justify-content: space-between; padding: 18px; background: var(--accent-soft); }
 header div { display: grid; gap: 3px; } header span { color: var(--text-muted); font-size: 12px; } header button { border: 0; background: none; font-size: 24px; cursor: pointer; }

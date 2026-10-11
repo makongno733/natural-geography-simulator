@@ -1,5 +1,16 @@
 [
   {
+    "file": "blue-marble-bathymetry-july-2048.jpg",
+    "title": "Blue Marble: Next Generation with Topography and Bathymetry, July",
+    "location": "全球卫星合成影像与海底地形",
+    "source": "https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/",
+    "creator": "NASA Earth Observatory / Jesse Allen / GEBCO",
+    "license": "NASA Images and Media Usage Guidelines",
+    "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "modification": "采用 NASA 5400×2700 像素 JPEG，缩放至 2048×1024 并压缩，用作三维地球球面纹理",
+    "usage": "首页交互地球"
+  },
+  {
     "file": "earth-apollo17.jpg",
     "title": "The Blue Marble / Apollo 17",
     "location": "地球全景，画面中心为非洲与印度洋",
@@ -8,7 +19,7 @@
     "license": "NASA Images and Media Usage Guidelines",
     "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
     "modification": "NASA 页面分辨率版本，页面按容器缩放；另编码为 AVIF，旧浏览器使用 JPEG 回退",
-    "usage": "首页首屏",
+    "usage": "首页三维地球不可用时的静态备选",
     "avif_file": "earth-apollo17.avif"
   },
   {

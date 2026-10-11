@@ -1,13 +1,26 @@
 <template>
   <div class="exp-home">
     <header class="exp-hero">
-      <div class="exp-badge">
-        <span>FIELD LAB / 地学探究</span>
-      </div>
-      <h1 class="exp-heading">地理数字化实验室</h1>
-      <p class="exp-lead">运用物理模型与数值模拟，推演大气、水文、地貌与天体运行的空间动力学规律</p>
+      <div class="exp-badge"><span>观察地理过程</span></div>
+      <h1 class="exp-heading">让地球动起来。</h1>
+      <p class="exp-lead">直接打开一个三维模型，拖动、观察，再回到教材解释看到的现象。</p>
     </header>
 
+    <section class="quick-models" aria-labelledby="quick-models-title">
+      <div class="quick-models-heading">
+        <h2 id="quick-models-title">从这里开始</h2>
+        <p>一次点击，进入模型</p>
+      </div>
+      <div class="quick-model-list">
+        <router-link v-for="model in quickModels" :key="model.to" :to="model.to" class="quick-model">
+          <span class="quick-model-topic">{{ model.topic }}</span>
+          <strong>{{ model.name }}</strong>
+          <span aria-hidden="true">↗</span>
+        </router-link>
+      </div>
+    </section>
+
+    <h2 class="exp-categories-title">按主题继续探索</h2>
     <div class="exp-grid">
       <router-link
         v-for="(category, index) in categories"
@@ -83,6 +96,12 @@ const categories = [
   { id: 'geology', en: 'LANDFORMS', label: '地质与地表形态', desc: '褶皱断层构造 · 沉积地层 · 矿物鉴定' },
   { id: 'astronomy', en: 'SPACE', label: '地球运动与天体', desc: '月相变化 · 四季昼夜交替 · 行星视运动' },
 ]
+const quickModels = [
+  { topic: '地球结构', name: '地球内部圈层', to: '/earth3d' },
+  { topic: '水与地貌', name: '水循环三维演示', to: '/experiments/systems/water-cycle-3d' },
+  { topic: '地表变化', name: '地貌沙盘', to: '/experiments/systems/landform-sandbox' },
+  { topic: '天体运动', name: '月相变化', to: '/experiments/astronomy/moon-phases' },
+]
 
 const curriculumGrades = grades.filter(grade => grade.id === '初中' || grade.id === '高中')
 const selectedGrade = ref('')
@@ -146,6 +165,17 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
   font-size: 15px;
   line-height: 1.6;
 }
+.quick-models { margin:0 0 58px; padding:28px; color:#f1f3eb; background:#15352f; }
+.quick-models-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.quick-models-heading h2 { margin:0; color:inherit; font-size:clamp(25px,3vw,36px); }
+.quick-models-heading p { margin:0; color:#b9d1c5; font-size:13px; }
+.quick-model-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; background:#628177; }
+.quick-model { display:grid; grid-template-columns:1fr auto; gap:5px 10px; min-height:105px; padding:20px; color:#f3f4ee; background:#23453b; text-decoration:none; }
+.quick-model:hover { background:#376150; }
+.quick-model:focus-visible { outline:3px solid white; outline-offset:-4px; }
+.quick-model-topic { grid-column:1/-1; color:#b8cfbd; font-size:12px; }
+.quick-model strong { font-size:20px; }
+.exp-categories-title { margin:0 0 18px; color:#1b3933; font-size:24px; }
 
 .exp-grid {
   display: grid;
@@ -311,6 +341,8 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 }
 
 @media (max-width: 600px) {
+  .quick-models { padding:20px; }
+  .quick-model-list { grid-template-columns:1fr; }
   .exp-home {
     padding: 20px 14px 32px;
   }
