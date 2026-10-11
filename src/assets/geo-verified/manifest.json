@@ -7,8 +7,9 @@
     "creator": "NASA Johnson Space Center / Apollo 17 crew",
     "license": "NASA Images and Media Usage Guidelines",
     "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-    "modification": "NASA 页面分辨率版本，页面按容器缩放",
-    "usage": "首页首屏"
+    "modification": "NASA 页面分辨率版本，页面按容器缩放；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页首屏",
+    "avif_file": "earth-apollo17.avif"
   },
   {
     "file": "everest-north-face.jpg",
@@ -18,8 +19,9 @@
     "creator": "Luca Galuzzi",
     "license": "CC BY-SA 4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
-    "usage": "首页山地影像"
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页山地影像",
+    "avif_file": "everest-north-face.avif"
   },
   {
     "file": "li-river-guilin.jpg",
@@ -29,8 +31,9 @@
     "creator": "Dcrjsr",
     "license": "CC BY-SA 3.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
-    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
-    "usage": "首页喀斯特影像"
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页喀斯特影像",
+    "avif_file": "li-river-guilin.avif"
   },
   {
     "file": "tibet-glacier-aster.jpg",
@@ -40,8 +43,9 @@
     "creator": "NASA Earth Observatory / Jesse Allen",
     "license": "NASA Images and Media Usage Guidelines",
     "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-    "modification": "NASA 页面 720 像素假彩色图，页面按容器裁切",
-    "usage": "首页冰川遥感影像"
+    "modification": "NASA 页面 720 像素假彩色图，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页冰川遥感影像",
+    "avif_file": "tibet-glacier-aster.avif"
   },
   {
     "file": "yarlung-tsangpo-aster.jpg",
@@ -51,8 +55,9 @@
     "creator": "NASA Earth Observatory",
     "license": "NASA Images and Media Usage Guidelines",
     "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-    "modification": "NASA 页面 720 像素版本，页面按容器裁切",
-    "usage": "首页河流遥感影像"
+    "modification": "NASA 页面 720 像素版本，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页河流遥感影像",
+    "avif_file": "yarlung-tsangpo-aster.avif"
   },
   {
     "file": "qinling-sunset.jpg",
@@ -62,8 +67,9 @@
     "creator": "Charlie439753",
     "license": "CC BY-SA 4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
-    "usage": "首页秦岭影像"
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页秦岭影像",
+    "avif_file": "qinling-sunset.avif"
   },
   {
     "file": "hani-terraces-honghe.jpg",
@@ -73,8 +79,9 @@
     "creator": "xiquinhosilva",
     "license": "CC BY 2.0",
     "license_url": "https://creativecommons.org/licenses/by/2.0/",
-    "modification": "采用 Wikimedia 1920 像素缩略版，进一步缩放至 1400 像素并压缩，页面按容器裁切",
-    "usage": "首页人地关系影像"
+    "modification": "采用 Wikimedia 1920 像素缩略版，进一步缩放至 1400 像素并压缩，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页人地关系影像",
+    "avif_file": "hani-terraces-honghe.avif"
   },
   {
     "file": "yangshan-port.jpg",
@@ -84,7 +91,8 @@
     "creator": "YHBEST1",
     "license": "作者释出公有领域",
     "license_url": "https://commons.wikimedia.org/wiki/File:Yangshan_Deepwater_Port.jpg#Licensing",
-    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
-    "usage": "首页港口区位影像"
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切；另编码为 AVIF，旧浏览器使用 JPEG 回退",
+    "usage": "首页港口区位影像",
+    "avif_file": "yangshan-port.avif"
   }
 ]

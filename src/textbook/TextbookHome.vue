@@ -16,7 +16,10 @@
         </div>
       </div>
       <figure class="earth-portrait">
-        <img :src="geoAsset('earth-apollo17.jpg')" width="1881" height="1881" fetchpriority="high" alt="阿波罗17号宇航员拍摄的地球，画面可见非洲、阿拉伯半岛、印度洋和云系">
+        <picture>
+          <source :srcset="geoAvifAsset('earth-apollo17.jpg')" type="image/avif">
+          <img :src="geoAsset('earth-apollo17.jpg')" width="1881" height="1881" fetchpriority="high" alt="阿波罗17号宇航员拍摄的地球，画面可见非洲、阿拉伯半岛、印度洋和云系">
+        </picture>
         <figcaption>地球，1972 年 12 月 7 日 · Apollo 17 / <a href="https://science.nasa.gov/resource/the-blue-marble/" target="_blank" rel="noopener noreferrer">NASA Johnson Space Center ↗</a></figcaption>
       </figure>
     </section>
@@ -83,7 +86,10 @@
       <div class="story-grid">
         <article v-for="(item, index) in visibleStories" :key="item.id" class="story-card" :class="{ featured: index === 0 && activeFilter === 'all' }">
           <figure>
-            <img :src="geoAsset(item.image)" :width="item.width" :height="item.height" loading="lazy" decoding="async" :alt="item.alt">
+            <picture>
+              <source :srcset="geoAvifAsset(item.image)" type="image/avif">
+              <img :src="geoAsset(item.image)" :width="item.width" :height="item.height" loading="lazy" decoding="async" :alt="item.alt">
+            </picture>
             <figcaption>{{ item.location }} · {{ item.type }}</figcaption>
           </figure>
           <div class="story-body">
@@ -115,7 +121,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { geoAsset } from './geoAssets.js'
+import { geoAsset, geoAvifAsset } from './geoAssets.js'
 
 const tiers = [
   { id: 1, short: '第一阶梯', region: '青藏高原与柴达木盆地', title: '从高处认识水源', description: '高寒地势、冰雪与河流源头相互关联。观察高原时，也要留意地形对气温和水循环的影响。' },
