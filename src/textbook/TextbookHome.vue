@@ -36,6 +36,19 @@
       <router-link to="/experiments" class="model-gallery-all">查看全部地理实验 <span aria-hidden="true">→</span></router-link>
     </section>
 
+    <section class="inquiry-entry section-frame" aria-labelledby="inquiry-entry-title">
+      <div>
+        <span class="eyebrow">从观察到解释</span>
+        <h2 id="inquiry-entry-title">地理不止在课本里。</h2>
+        <p>读一幅真实影像，分清观察与推断；改变一个条件，比较地表过程会怎样变化。用证据提出自己的地理解释。</p>
+        <router-link to="/inquiry" class="inquiry-entry-link">开始地理探究 <span aria-hidden="true">↗</span></router-link>
+      </div>
+      <picture>
+        <source :srcset="geoAvifAsset('yarlung-tsangpo-aster.jpg')" type="image/avif">
+        <img :src="geoAsset('yarlung-tsangpo-aster.jpg')" width="720" height="480" loading="lazy" decoding="async" alt="雅鲁藏布江在藏东南山地间形成深切河谷">
+      </picture>
+    </section>
+
     <section class="learning-paths section-frame" aria-labelledby="paths-title">
       <div class="section-heading">
         <span class="eyebrow">按学段继续</span>
@@ -225,6 +238,15 @@ function scrollToSection(id) {
 .model-main small { color:#61736a; font-size:13px; }
 .model-action { white-space:nowrap; font-size:12px; font-weight:700; }
 .model-gallery-all { grid-column:2; justify-self:end; color:#244739; font-weight:700; }
+.inquiry-entry { display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,6vw,80px); align-items:center; background:#f5f2e9; }
+.inquiry-entry .eyebrow { color:#6a694d; }
+.inquiry-entry h2 { margin:0 0 22px; color:#263e38; font-size:clamp(36px,4.4vw,60px); line-height:1.12; letter-spacing:-.04em; }
+.inquiry-entry p { max-width:550px; color:#465954; line-height:1.85; font-size:17px; }
+.inquiry-entry-link { display:inline-flex; justify-content:space-between; gap:48px; padding:14px 18px; margin-top:20px; color:#f3f5ee; background:#244739; text-decoration:none; font-weight:700; }
+.inquiry-entry-link:hover { background:#365f4e; }
+.inquiry-entry-link:focus-visible { outline:3px solid #244739; outline-offset:3px; }
+.inquiry-entry picture { display:block; min-width:0; }
+.inquiry-entry img { display:block; width:100%; height:clamp(280px,33vw,450px); object-fit:cover; }
 .section-heading { max-width:710px; margin-bottom:34px; }
 .section-heading .eyebrow { color:#587365; }
 .section-heading h2 { margin:0 0 14px; font-size:clamp(32px,4vw,54px); line-height:1.15; letter-spacing:-.035em; }
@@ -285,7 +307,7 @@ function scrollToSection(id) {
 .course-links { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; margin-top:38px; background:#aebdb0; border:1px solid #aebdb0; }
 .course-links a { display:flex; justify-content:space-between; gap:8px; padding:22px 16px; background:#f5f7f2; color:#214337; text-decoration:none; font-weight:700; }
 .course-links a:hover { background:#d8e5d8; }
-@media(max-width:850px) { .earth-hero { grid-template-columns:1fr; padding-top:62px; } .earth-portrait { width:min(100%,620px); justify-self:center; } .model-gallery { grid-template-columns:1fr; } .model-gallery-all { grid-column:1; } .terrain-layout { grid-template-columns:1fr; } .story-card.featured { display:block; } .story-card.featured img { height:310px; min-height:0; } .course-links { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:850px) { .earth-hero { grid-template-columns:1fr; padding-top:62px; } .earth-portrait { width:min(100%,620px); justify-self:center; } .model-gallery,.inquiry-entry { grid-template-columns:1fr; } .model-gallery-all { grid-column:1; } .terrain-layout { grid-template-columns:1fr; } .story-card.featured { display:block; } .story-card.featured img { height:310px; min-height:0; } .course-links { grid-template-columns:repeat(2,1fr); } }
 @media(max-width:620px) { .section-frame { padding:62px 20px; } .earth-hero { padding:60px 20px 36px; } .earth-hero h1 { font-size:clamp(50px,12vw,70px); } .hero-courses { margin-top:44px; } .hero-courses a { padding-right:10px; } .hero-courses a + a { padding-left:12px; } .hero-courses strong { font-size:16px; } .model-gallery-item { grid-template-columns:30px 1fr; } .model-action { grid-column:2; } .path-grid,.story-grid { grid-template-columns:1fr; } .story-card.featured { grid-column:auto; } .path-link { min-height:270px; } .path-link h3 { margin-top:48px; } .terrain-diagram { height:255px; } .terrain-step { padding:10px 5px; font-size:12px; } .sea-line { font-size:10px; padding-left:3px; } .diagram-axis span { display:none; } .course-links { grid-template-columns:1fr; } }
 @media(max-width:620px) { .earth-hero { display:flex; flex-direction:column; align-items:stretch; gap:0; padding-top:36px; } .hero-copy { display:contents; } .hero-copy .eyebrow { order:1; } .earth-hero h1 { order:2; margin-bottom:8px; } .earth-portrait { order:3; width:100%; } .hero-intro { order:4; margin:20px 0 0; } .hero-actions { order:5; margin-top:22px; } .hero-courses { order:6; margin-top:40px; } }
 @media(prefers-reduced-motion:reduce) { .path-link,.hero-actions a,.hero-actions button,.model-gallery-item,.terrain-step { transition:none; } }

@@ -10,6 +10,7 @@ if (accountEnabled && window.location.origin === new URL(accountOrigin).origin &
 }
 
 const TextbookHome = () => import('./textbook/TextbookHome.vue')
+const InquiryStudio = () => import('./inquiry/InquiryStudio.vue')
 const BookSelect = () => import('./textbook/BookSelect.vue')
 const ChapterList = () => import('./textbook/ChapterList.vue')
 const SectionContent = () => import('./textbook/SectionContent.vue')
@@ -46,6 +47,7 @@ const ChapterRedirect = {
 
 const routes = [
   { path: '/', name: 'home', component: TextbookHome },
+  { path: '/inquiry', name: 'inquiry', component: InquiryStudio },
   { path: '/earth3d', name: 'earth3d', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'earth-system' } } },
   { path: '/disasters', name: 'disasters', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'disaster-sandbox' } } },
   { path: '/map', name: 'map', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'map-projection' } } },

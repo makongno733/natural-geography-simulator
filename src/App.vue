@@ -54,6 +54,9 @@
             <span class="nav-badge-dot" aria-hidden="true"></span>
             <span class="nav-label">3D 探索</span>
           </router-link>
+          <router-link to="/inquiry" class="nav-link" :class="{ active: route.path === '/inquiry' }">
+            <span class="nav-label">地理探究</span>
+          </router-link>
           <router-link to="/初中" class="nav-link" :class="{ active: grade === '初中' }">
             <span class="nav-label">初中课程</span>
           </router-link>
@@ -94,6 +97,7 @@
             </div>
             <div class="footer-col">
               <h4>地学科学探究</h4>
+              <router-link to="/inquiry">地理探究任务</router-link>
               <router-link to="/experiments/meteorology">大气与气象实验</router-link>
               <router-link to="/experiments/hydrology">流水地貌与水循环</router-link>
               <router-link to="/experiments/geology">地质构造与岩石圈</router-link>
@@ -492,7 +496,7 @@ onBeforeUnmount(() => {
   .app-nav {
     overflow-x: auto;
     padding-bottom: 4px;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .footer-meta {
     flex-direction: column;
