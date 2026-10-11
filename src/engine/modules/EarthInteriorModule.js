@@ -157,11 +157,12 @@ export function EarthInteriorModule(scene, params, services) {
   const { labelSystem } = services
   const group = new THREE.Group()
   const isProfessional = params.mode === 'professional'
+  const sphereSegments = params.quality?.sphere || 48
 
   // Clean vertical cut through center — shows half-sphere cross-section
   const clipPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0.0)
 
-  const innerCoreGeo = GeometryFactory.sphere(0.3, 48)
+  const innerCoreGeo = GeometryFactory.sphere(0.3, sphereSegments)
   const innerCoreMat = MaterialLibrary.clipPBR({
     color: 0xf1c40f,
     clippingPlanes: [clipPlane],
@@ -172,7 +173,7 @@ export function EarthInteriorModule(scene, params, services) {
   const innerCore = new THREE.Mesh(innerCoreGeo, innerCoreMat)
   group.add(innerCore)
 
-  const outerCoreGeo = GeometryFactory.sphere(0.55, 48)
+  const outerCoreGeo = GeometryFactory.sphere(0.55, sphereSegments)
   const outerCoreMat = MaterialLibrary.clipPBR({
     color: 0xf39c12,
     clippingPlanes: [clipPlane],
@@ -182,7 +183,7 @@ export function EarthInteriorModule(scene, params, services) {
   const outerCore = new THREE.Mesh(outerCoreGeo, outerCoreMat)
   group.add(outerCore)
 
-  const mantleGeo = GeometryFactory.sphere(0.85, 48)
+  const mantleGeo = GeometryFactory.sphere(0.85, sphereSegments)
   const mantleMat = MaterialLibrary.clipPBR({
     color: 0xe67e22,
     clippingPlanes: [clipPlane],
@@ -192,7 +193,7 @@ export function EarthInteriorModule(scene, params, services) {
   const mantle = new THREE.Mesh(mantleGeo, mantleMat)
   group.add(mantle)
 
-  const crustGeo = GeometryFactory.sphere(1.0, 48)
+  const crustGeo = GeometryFactory.sphere(1.0, sphereSegments)
   const crustMat = MaterialLibrary.clipPBR({
     color: 0x4a90d9,
     clippingPlanes: [clipPlane],

@@ -8,11 +8,14 @@ export class PostProcessing {
   }
 
   enableBloom({ threshold = 0.1, strength = 0.8, radius = 0.5 } = {}) {
-    if (this._bloomPass) return
+    if (this._bloomPass) {
+      this._bloomPass.enabled = true
+      return
+    }
     const w = this.renderManager.container.clientWidth
     const h = this.renderManager.container.clientHeight
     this._bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), strength, radius, threshold)
-    this.renderManager.composer.addPass(this._bloomPass)
+    this.renderManager.addPass(this._bloomPass)
   }
 
   disableBloom() {

@@ -1,6 +1,7 @@
 // [M05] WaterCycleModule — 水循环·海陆间循环·洋流 — 必修一Ch3 · 选必1Ch4
 import * as THREE from 'three'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
+import { modelCount } from '../core/ModelQuality.js'
 
 function addTube(group, points, color, radius = 0.025, opacity = 0.85) {
   const curve = new THREE.CatmullRomCurve3(points)
@@ -29,6 +30,8 @@ export function WaterCycleModule(scene, params, services) {
   const { labelSystem } = services
   const group = new THREE.Group()
   const timeline = params.timeline || 0
+  const quality = params.quality || { particles: 1, terrain: { simple: 90, professional: 90 }, sphere: 48 }
+  const landSegments = Math.min(90, quality.terrain[params.mode] || quality.terrain.simple)
 
   const seaGeo = GeometryFactory.plane(4.2, 3.0, 60, 36)
   seaGeo.rotateX(-Math.PI / 2)
@@ -46,7 +49,7 @@ export function WaterCycleModule(scene, params, services) {
   sea.position.set(-1.5, -0.5, 0)
   group.add(sea)
 
-  const landGeo = GeometryFactory.plane(2.5, 2.7, 90, 90)
+  const landGeo = GeometryFactory.plane(2.5, 2.7, landSegments, landSegments)
   landGeo.rotateX(-Math.PI / 2)
   const landPos = landGeo.attributes.position
   const landColors = new Float32Array(landPos.count * 3)
@@ -87,17 +90,18 @@ export function WaterCycleModule(scene, params, services) {
   cloud.position.set(0, 1.2, 0)
   group.add(cloud)
 
+  const puff = new THREE.InstancedMesh(GeometryFactory.sphere(0.18, 16), cloudMat.clone(), 16)
+  const puffTransform = new THREE.Object3D()
   for (let i = 0; i < 16; i++) {
-    const puff = new THREE.Mesh(
-      GeometryFactory.sphere(0.16 + (i % 4) * 0.025, 20),
-      cloudMat.clone(),
-    )
-    puff.position.set(-0.7 + (i % 8) * 0.2, 1.08 + Math.sin(i) * 0.06, -0.4 + Math.floor(i / 8) * 0.42)
-    puff.scale.set(1.4, 0.42, 0.85)
-    group.add(puff)
+    puffTransform.position.set(-0.7 + (i % 8) * 0.2, 1.08 + Math.sin(i) * 0.06, -0.4 + Math.floor(i / 8) * 0.42)
+    puffTransform.scale.set(1.4 * (0.9 + (i % 4) * 0.05), 0.42, 0.85)
+    puffTransform.updateMatrix()
+    puff.setMatrixAt(i, puffTransform.matrix)
   }
+  puff.instanceMatrix.needsUpdate = true
+  group.add(puff)
 
-  const evapCount = 750
+  const evapCount = modelCount(750, quality)
   const evapPositions = new Float32Array(evapCount * 3)
   for (let i = 0; i < evapCount; i++) {
     evapPositions[i * 3] = -1.5 + (Math.random() - 0.5) * 2
@@ -113,7 +117,7 @@ export function WaterCycleModule(scene, params, services) {
   const evapParticles = new THREE.Points(evapGeo, evapMat)
   group.add(evapParticles)
 
-  const transCount = 520
+  const transCount = modelCount(520, quality)
   const transPositions = new Float32Array(transCount * 3)
   for (let i = 0; i < transCount; i++) {
     transPositions[i * 3] = 0.1 + Math.random() * 2.0
@@ -129,7 +133,7 @@ export function WaterCycleModule(scene, params, services) {
   const transParticles = new THREE.Points(transGeo, transMat)
   group.add(transParticles)
 
-  const rainCount = 520
+  const rainCount = modelCount(520, quality)
   const rainPositions = new Float32Array(rainCount * 3)
   for (let i = 0; i < rainCount; i++) {
     rainPositions[i * 3] = 0.5 + (Math.random() - 0.5) * 1.5
@@ -174,14 +178,18 @@ export function WaterCycleModule(scene, params, services) {
   ], 0x66c2ff, 0.018, 0.38)
 
   const treeMat = new THREE.MeshStandardMaterial({ color: 0x2f6b3f, roughness: 0.7 })
+  const trees = new THREE.InstancedMesh(new THREE.ConeGeometry(0.035, 0.16, 7), treeMat, 32)
+  const treeTransform = new THREE.Object3D()
   for (let i = 0; i < 32; i++) {
     const tx = 0.1 + Math.random() * 1.8
     const tz = -0.9 + Math.random() * 1.8
     const ty = terrainHeight(tx - 0.95, tz) - 0.06
-    const tree = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.16, 7), treeMat)
-    tree.position.set(tx, ty + 0.08, tz)
-    group.add(tree)
+    treeTransform.position.set(tx, ty + 0.08, tz)
+    treeTransform.updateMatrix()
+    trees.setMatrixAt(i, treeTransform.matrix)
   }
+  trees.instanceMatrix.needsUpdate = true
+  group.add(trees)
 
   if (labelSystem) {
     const lbls = [

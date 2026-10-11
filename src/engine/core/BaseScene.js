@@ -4,6 +4,7 @@ import { CameraRig } from './CameraRig.js'
 import { LightRig } from './LightRig.js'
 import { LabelSystem } from './LabelSystem.js'
 import { SceneActivity } from './SceneActivity.js'
+import { resolveModelQuality } from './ModelQuality.js'
 
 export class BaseScene {
   constructor(container, options = {}) {
@@ -16,6 +17,7 @@ export class BaseScene {
     this._moduleApi = null
     this._animFrameId = null
     this._sceneActivity = null
+    this.quality = resolveModelQuality(options)
 
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(options.bg || 0x0a0e27)
@@ -23,11 +25,11 @@ export class BaseScene {
       this.scene.fog = options.fog
     }
 
-    this.renderManager = new RenderManager(container, options)
+    this.renderManager = new RenderManager(container, { ...options, quality: this.quality })
     this.cameraRig = new CameraRig(container, this.renderManager.domElement, options)
     this.renderManager.initComposer(this.scene, this.cameraRig.camera)
 
-    this.lightRig = new LightRig(this.scene, options.lightPreset || 'studio')
+    this.lightRig = new LightRig(this.scene, options.lightPreset || 'studio', this.quality)
 
     if (options.labels !== false) {
       this.labelSystem = new LabelSystem(container)
@@ -53,7 +55,7 @@ export class BaseScene {
       this._disposeModule()
     }
 
-    this._params = { ...params, mode: this._mode }
+    this._params = { ...params, mode: this._mode, quality: this.quality }
 
     const result = moduleFactory(this.scene, this._params, {
       labelSystem: this.labelSystem,

@@ -4,7 +4,6 @@ import { createTerrainMaterial } from '../../lib/shaders/terrainMaterial.js'
 import { GeometryFactory } from '../utils/GeometryFactory.js'
 
 const SIZE = 4
-const SEGMENTS = { simple: 128, professional: 256 }
 
 const MODULE_IDS = {
   karst: 'karst', fluvial: 'fluvial', aeolian: 'aeolian',
@@ -52,10 +51,8 @@ const SECONDARY_LABELS = {
   ],
 }
 
-function noise2D(x, y) {
-  const dot = (a, b) => a[0] * b[0] + a[1] * b[1]
-  const grad3 = [[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]]
-  const p = [
+const grad3 = [[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]]
+const p = [
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
     190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,
     125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,
@@ -67,9 +64,11 @@ function noise2D(x, y) {
     106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,
     195,78,66,215,61,156,180,
   ]
-  const perm = new Uint8Array(512)
-  for (let i = 0; i < 512; i++) perm[i] = p[i & 255]
+const perm = new Uint8Array(512)
+for (let i = 0; i < 512; i++) perm[i] = p[i & 255]
 
+
+function noise2D(x, y) {
   const xi = Math.floor(x) & 255
   const yi = Math.floor(y) & 255
   const xf = x - Math.floor(x)
@@ -83,10 +82,10 @@ function noise2D(x, y) {
   const bb = perm[perm[xi + 1] + yi + 1]
 
   const x1 = xf - 1, y1 = yf - 1
-  let n = (1 - u) * (1 - v) * dot(grad3[aa % 8], [xf, yf])
-  n += (1 - u) * v * dot(grad3[ab % 8], [xf, y1])
-  n += u * (1 - v) * dot(grad3[ba % 8], [x1, yf])
-  n += u * v * dot(grad3[bb % 8], [x1, y1])
+  let n = (1 - u) * (1 - v) * (grad3[aa % 8][0] * xf + grad3[aa % 8][1] * yf)
+  n += (1 - u) * v * (grad3[ab % 8][0] * xf + grad3[ab % 8][1] * y1)
+  n += u * (1 - v) * (grad3[ba % 8][0] * x1 + grad3[ba % 8][1] * yf)
+  n += u * v * (grad3[bb % 8][0] * x1 + grad3[bb % 8][1] * y1)
   return n
 }
 
@@ -263,7 +262,7 @@ export function LandformModule(scene, params, services) {
   const climateFactor = params.climateFactor || 0.5
 
   const modId = MODULE_IDS[activeModule] || 'fluvial'
-  const seg = SEGMENTS[mode] || SEGMENTS.simple
+  const seg = params.quality?.terrain?.[mode] || (mode === 'professional' ? 256 : 128)
 
   const geo = new THREE.PlaneGeometry(SIZE, SIZE, seg, seg)
   geo.rotateX(-Math.PI / 2)
