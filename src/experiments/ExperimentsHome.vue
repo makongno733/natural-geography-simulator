@@ -2,7 +2,7 @@
   <div class="exp-home">
     <header class="exp-hero">
       <div class="exp-badge">
-        <span>🔬 地学探究实验中心</span>
+        <span>FIELD LAB / 地学探究</span>
       </div>
       <h1 class="exp-heading">地理数字化实验室</h1>
       <p class="exp-lead">运用物理模型与数值模拟，推演大气、水文、地貌与天体运行的空间动力学规律</p>
@@ -10,13 +10,13 @@
 
     <div class="exp-grid">
       <router-link
-        v-for="category in categories"
+        v-for="(category, index) in categories"
         :key="category.id"
         :to="`/experiments/${category.id}`"
-        :class="['exp-card', 'sheen-card', `exp-card-${category.id}`]"
+        :class="['exp-card', `exp-card-${category.id}`]"
       >
-        <div class="exp-card-icon">{{ category.icon }}</div>
-        <div class="exp-card-title">{{ category.label }}</div>
+        <div class="exp-card-icon">{{ String(index + 1).padStart(2, '0') }} / {{ category.en }}</div>
+        <h2 class="exp-card-title">{{ category.label }}</h2>
         <div class="exp-card-desc">{{ category.desc }}</div>
         <span class="exp-card-enter">进入实验模块 →</span>
       </router-link>
@@ -58,7 +58,7 @@
           :key="experiment.id"
           :to="`/experiments/${experiment.category}/${experiment.id}`"
           :data-experiment-result="experiment.id"
-          class="experiment-result sheen-card"
+          class="experiment-result"
         >
           <span class="res-title">{{ experiment.name }}</span>
           <small class="res-desc">{{ experiment.description }}</small>
@@ -78,10 +78,10 @@ import { getTextbooksForExperiment } from '../textbook/data/experimentLinks.js'
 import { grades } from '../textbook/data/index.js'
 
 const categories = [
-  { id: 'meteorology', icon: '🌤️', label: '气象与气候学', desc: '热力环流 · 地转偏向力 · 云与降水模拟' },
-  { id: 'hydrology', icon: '💧', label: '水文与流水地貌', desc: '河谷冲淤 · 地下水运移 · 自然水循环' },
-  { id: 'geology', icon: '⛏️', label: '地质与地表形态', desc: '褶皱断层构造 · 沉积地层 · 矿物鉴定' },
-  { id: 'astronomy', icon: '🔭', label: '地球运动与天体', desc: '月相变化 · 四季昼夜交替 · 行星视运动' },
+  { id: 'meteorology', en: 'ATMOSPHERE', label: '气象与气候学', desc: '热力环流 · 地转偏向力 · 云与降水模拟' },
+  { id: 'hydrology', en: 'WATER', label: '水文与流水地貌', desc: '河谷冲淤 · 地下水运移 · 自然水循环' },
+  { id: 'geology', en: 'LANDFORMS', label: '地质与地表形态', desc: '褶皱断层构造 · 沉积地层 · 矿物鉴定' },
+  { id: 'astronomy', en: 'SPACE', label: '地球运动与天体', desc: '月相变化 · 四季昼夜交替 · 行星视运动' },
 ]
 
 const curriculumGrades = grades.filter(grade => grade.id === '初中' || grade.id === '高中')
@@ -108,31 +108,32 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 <style scoped>
 .exp-home {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 36px 20px 48px;
+  padding: 40px 24px 80px;
 }
 
 .exp-hero {
-  text-align: center;
-  margin-bottom: 36px;
+  text-align: left;
+  margin-bottom: 34px;
+  padding: 34px 0 40px;
+  border-top: 2px solid #244739;
+  border-bottom: 1px solid var(--border);
 }
 
 .exp-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  background: var(--geo-ocean-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  font-size: 12.5px;
+  padding: 0;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--geo-ocean);
-  margin-bottom: 12px;
+  color: #587365;
+  letter-spacing: .14em;
+  margin-bottom: 18px;
 }
 
 .exp-heading {
-  font-size: clamp(28px, 5vw, 38px);
+  font-size: clamp(38px, 5vw, 64px);
   color: var(--geo-ocean-deep);
   margin: 0 0 10px;
   font-weight: 800;
@@ -140,7 +141,7 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 .exp-lead {
   max-width: 650px;
-  margin: 0 auto;
+  margin: 0;
   color: var(--text-muted);
   font-size: 15px;
   line-height: 1.6;
@@ -148,43 +149,47 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 .exp-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  margin: 0 auto 44px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 auto 64px;
 }
 
 .exp-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   text-decoration: none;
-  border-radius: var(--radius-card);
-  padding: 26px 18px 20px;
-  text-align: center;
+  padding: 28px 30px;
+  min-height: 232px;
+  text-align: left;
   cursor: pointer;
-  background: #ffffff;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
+  transition: transform .2s ease, border-color .2s ease;
 }
+.exp-card:hover { transform: translateY(-2px); border-color: #718f83; }
+.exp-card:focus-visible, .experiment-result:focus-visible { outline: 3px solid #244739; outline-offset: 3px; }
 
-.exp-card-meteorology { border-top: 4px solid #1f6feb; }
-.exp-card-hydrology { border-top: 4px solid #00897b; }
-.exp-card-geology { border-top: 4px solid #8d6e63; }
-.exp-card-astronomy { border-top: 4px solid #5c6bc0; }
+.exp-card-meteorology { background:#dce9e9; }
+.exp-card-hydrology { background:#d8e7e2; }
+.exp-card-geology { background:#e8e3d5; }
+.exp-card-astronomy { background:#dbe1e8; }
 
 .exp-card-icon {
-  font-size: 36px;
-  margin-bottom: 12px;
+  font: 700 11px ui-monospace, monospace;
+  letter-spacing: .1em;
+  color: #45645c;
+  margin-bottom: 34px;
 }
 
 .exp-card-title {
-  font-size: 17px;
+  font-size: clamp(20px, 2.6vw, 29px);
   font-weight: 700;
   color: var(--geo-ocean-deep);
-  margin-bottom: 6px;
+  margin: 0 0 8px;
 }
 
 .exp-card-desc {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-muted);
   line-height: 1.5;
   flex: 1;
@@ -192,17 +197,14 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 }
 
 .exp-card-enter {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--geo-ocean);
 }
 
 .exp-filter {
-  padding: 24px 22px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-box);
-  background: #ffffff;
-  box-shadow: var(--shadow-sm);
+  padding: 34px 0;
+  border-top: 2px solid #244739;
 }
 
 .filter-head {
@@ -218,7 +220,7 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 .filter-head h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: clamp(24px, 3vw, 34px);
   font-weight: 700;
   color: var(--geo-ocean-deep);
 }
@@ -267,20 +269,20 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 .experiment-results {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
 }
 
 .experiment-result {
   display: grid;
   gap: 6px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  padding: 18px 4px;
+  border-bottom: 1px solid var(--border);
   color: var(--text);
   text-decoration: none;
-  background: var(--bg-soft);
+  background: transparent;
 }
+.experiment-result:hover { background:#eef3ed; }
 
 .res-title {
   font-size: 14.5px;
@@ -305,9 +307,7 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 }
 
 @media (max-width: 900px) {
-  .exp-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .experiment-results { grid-template-columns:1fr; }
 }
 
 @media (max-width: 600px) {
@@ -318,9 +318,11 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
     grid-template-columns: 1fr;
     gap: 12px;
   }
+  .exp-card { min-height:195px; }
   .filter-controls {
     flex-direction: column;
     gap: 12px;
   }
 }
+@media (prefers-reduced-motion: reduce) { .exp-card { transition:none; } }
 </style>
