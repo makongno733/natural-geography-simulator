@@ -1,8 +1,7 @@
 <template>
   <div ref="stage" class="home-globe" aria-label="可拖动旋转的三维地球，使用 NASA Blue Marble 卫星合成影像">
     <picture v-if="!ready" class="globe-fallback">
-      <source :srcset="geoAvifAsset('earth-apollo17.jpg')" type="image/avif">
-      <img :src="geoAsset('earth-apollo17.jpg')" width="1881" height="1881" fetchpriority="high" alt="阿波罗 17 号拍摄的地球">
+      <img :src="geoOptimizedAsset('earth-apollo17.jpg', 960)" width="1881" height="1881" fetchpriority="high" alt="阿波罗 17 号拍摄的地球">
     </picture>
     <span v-if="ready" class="globe-hint">拖动地球，观察海陆分布</span>
   </div>
@@ -10,7 +9,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { geoAsset, geoAvifAsset } from './geoAssets.js'
+import { geoOptimizedAsset } from './geoAssets.js'
 import earthMap from '../assets/geo-verified/blue-marble-bathymetry-july-2048.jpg?url'
 
 const stage = ref(null)

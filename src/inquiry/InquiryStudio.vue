@@ -27,8 +27,7 @@
         <div class="case-layout">
           <figure class="case-image">
             <picture>
-              <source :srcset="geoAvifAsset(activeCase.image)" type="image/avif">
-              <img :src="geoAsset(activeCase.image)" :alt="activeCase.alt" :width="activeCase.width" :height="activeCase.height" decoding="async">
+              <img :src="geoOptimizedAsset(activeCase.image, 960)" :alt="activeCase.alt" :width="activeCase.width" :height="activeCase.height" decoding="async">
             </picture>
             <figcaption>{{ activeCase.location }} · {{ activeCase.type }} · <a :href="activeCase.source" target="_blank" rel="noopener noreferrer">影像来源：{{ activeCase.credit }} ↗</a> · <a :href="activeCase.licenseUrl" target="_blank" rel="noopener noreferrer">{{ activeCase.license }}</a></figcaption>
           </figure>
@@ -108,7 +107,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { geoAsset, geoAvifAsset } from '../textbook/geoAssets.js'
+import { geoOptimizedAsset } from '../textbook/geoAssets.js'
 import { runoffTendency, compareScenarios } from './runoffModel.js'
 
 const cases = [

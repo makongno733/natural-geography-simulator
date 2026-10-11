@@ -14,3 +14,13 @@ export function geoAsset(filename) {
 export function geoAvifAsset(jpegFilename) {
   return geoAsset(jpegFilename.replace(/\.jpg$/, '.avif'))
 }
+
+// Keep a small set of fixed transformations within the Images Free allowance.
+// Cloudflare currently cannot use our AVIF files as transformation sources, so
+// transform the verified JPEG originals and keep the originals as a fallback.
+export function geoOptimizedAsset(jpegFilename, width) {
+  const original = geoAsset(jpegFilename)
+  if (typeof window === 'undefined' || window.location.hostname !== 'geo.kongnoma279.com') return original
+  const source = new URL(original, window.location.href)
+  return `/cdn-cgi/image/width=${width},quality=82,format=auto,onerror=redirect${source.pathname}`
+}

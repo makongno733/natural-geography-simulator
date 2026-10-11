@@ -44,8 +44,7 @@
         <router-link to="/inquiry" class="inquiry-entry-link">开始地理探究 <span aria-hidden="true">↗</span></router-link>
       </div>
       <picture>
-        <source :srcset="geoAvifAsset('yarlung-tsangpo-aster.jpg')" type="image/avif">
-        <img :src="geoAsset('yarlung-tsangpo-aster.jpg')" width="720" height="480" loading="lazy" decoding="async" alt="雅鲁藏布江在藏东南山地间形成深切河谷">
+        <img :src="geoOptimizedAsset('yarlung-tsangpo-aster.jpg', 960)" width="720" height="480" loading="lazy" decoding="async" alt="雅鲁藏布江在藏东南山地间形成深切河谷">
       </picture>
     </section>
 
@@ -112,8 +111,7 @@
         <article v-for="(item, index) in visibleStories" :key="item.id" class="story-card" :class="{ featured: index === 0 && activeFilter === 'all' }">
           <figure>
             <picture>
-              <source :srcset="geoAvifAsset(item.image)" type="image/avif">
-              <img :src="geoAsset(item.image)" :width="item.width" :height="item.height" loading="lazy" decoding="async" :alt="item.alt">
+              <img :src="geoOptimizedAsset(item.image, 960)" :width="item.width" :height="item.height" loading="lazy" decoding="async" :alt="item.alt">
             </picture>
             <figcaption>{{ item.location }} · {{ item.type }}</figcaption>
           </figure>
@@ -146,7 +144,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { geoAsset, geoAvifAsset } from './geoAssets.js'
+import { geoOptimizedAsset } from './geoAssets.js'
 import HomeGlobe from './HomeGlobe.vue'
 
 const featuredModels = [
