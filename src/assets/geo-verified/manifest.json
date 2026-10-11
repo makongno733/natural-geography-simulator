@@ -1,0 +1,90 @@
+[
+  {
+    "file": "earth-apollo17.jpg",
+    "title": "The Blue Marble / Apollo 17",
+    "location": "地球全景，画面中心为非洲与印度洋",
+    "source": "https://science.nasa.gov/resource/the-blue-marble/",
+    "creator": "NASA Johnson Space Center / Apollo 17 crew",
+    "license": "NASA Images and Media Usage Guidelines",
+    "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "modification": "NASA 页面分辨率版本，页面按容器缩放",
+    "usage": "首页首屏"
+  },
+  {
+    "file": "everest-north-face.jpg",
+    "title": "Mount Everest North Face from Rongbuk Valley",
+    "location": "西藏绒布河谷",
+    "source": "https://commons.wikimedia.org/wiki/File:Everest_North_Face_toward_Base_Camp_Tibet_Luca_Galuzzi_2006.jpg",
+    "creator": "Luca Galuzzi",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
+    "usage": "首页山地影像"
+  },
+  {
+    "file": "li-river-guilin.jpg",
+    "title": "Li River hills in mist near Guilin",
+    "location": "广西桂林漓江",
+    "source": "https://commons.wikimedia.org/wiki/File:Li_River_8_hills_in_mist_near_Guilin.jpg",
+    "creator": "Dcrjsr",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
+    "usage": "首页喀斯特影像"
+  },
+  {
+    "file": "tibet-glacier-aster.jpg",
+    "title": "Glacier-capped Mountains in Tibet",
+    "location": "西藏拉萨西北约 110 公里",
+    "source": "https://science.nasa.gov/earth/earth-observatory/glacier-capped-mountains-in-tibet-41229/",
+    "creator": "NASA Earth Observatory / Jesse Allen",
+    "license": "NASA Images and Media Usage Guidelines",
+    "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "modification": "NASA 页面 720 像素假彩色图，页面按容器裁切",
+    "usage": "首页冰川遥感影像"
+  },
+  {
+    "file": "yarlung-tsangpo-aster.jpg",
+    "title": "Yarlung Tsangpo: The Everest of Rivers",
+    "location": "西藏东南部雅鲁藏布江大拐弯",
+    "source": "https://science.nasa.gov/earth/earth-observatory/yarlung-tsangpo-the-everest-of-rivers-80558/",
+    "creator": "NASA Earth Observatory",
+    "license": "NASA Images and Media Usage Guidelines",
+    "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "modification": "NASA 页面 720 像素版本，页面按容器裁切",
+    "usage": "首页河流遥感影像"
+  },
+  {
+    "file": "qinling-sunset.jpg",
+    "title": "Sunset on Qinling mountains",
+    "location": "陕西西安秦岭",
+    "source": "https://commons.wikimedia.org/wiki/File:Sunset_on_Qinling_mountains.jpg",
+    "creator": "Charlie439753",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
+    "usage": "首页秦岭影像"
+  },
+  {
+    "file": "hani-terraces-honghe.jpg",
+    "title": "Hani Rice Terraces",
+    "location": "云南红河元阳",
+    "source": "https://commons.wikimedia.org/wiki/File:Hani_Rice_Terraces_(53696480740).jpg",
+    "creator": "xiquinhosilva",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "modification": "采用 Wikimedia 1920 像素缩略版，进一步缩放至 1400 像素并压缩，页面按容器裁切",
+    "usage": "首页人地关系影像"
+  },
+  {
+    "file": "yangshan-port.jpg",
+    "title": "Yangshan Deepwater Port",
+    "location": "上海洋山深水港",
+    "source": "https://commons.wikimedia.org/wiki/File:Yangshan_Deepwater_Port.jpg",
+    "creator": "YHBEST1",
+    "license": "作者释出公有领域",
+    "license_url": "https://commons.wikimedia.org/wiki/File:Yangshan_Deepwater_Port.jpg#Licensing",
+    "modification": "采用 Wikimedia 1920 像素缩略版，页面按容器裁切",
+    "usage": "首页港口区位影像"
+  }
+]
