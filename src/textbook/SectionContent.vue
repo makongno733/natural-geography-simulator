@@ -32,6 +32,9 @@
 
       <main class="content">
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
+        <router-link v-if="knowledgeChapter" :to="knowledgeRoute({ book: knowledgeCode, chapter: knowledgeChapter.id })" class="knowledge-entry">
+          查看本节知识库草案 · 待教研复核 →
+        </router-link>
         <TextbookExperimentCard
           v-if="experimentLink"
           :link="experimentLink"
@@ -175,6 +178,7 @@ import AsyncModuleError from './components/AsyncModuleError.vue'
 import { normalizeStudentLearning } from './utils/studentLearningSchema.js'
 import { loadFigureAssets } from './data/figureAssets/loader.js'
 import { getSectionExperimentLink } from './data/experimentLinks.js'
+import { loadKnowledgeBook, knowledgeRoute } from './knowledge/loader.js'
 
 const asyncTool = (loader, moduleName = '教学互动工具') => defineAsyncComponent({
   loader,
@@ -198,6 +202,9 @@ const textbookContext = computed(() => ({
   chapter: chapterId.value,
   section: sectionId.value,
 }))
+const knowledgeCode = computed(() => ({ 必修第一册: 'BX1', 必修第二册: 'BX2', 选择性必修1: 'XB1', 选择性必修2: 'XB2', 选择性必修3: 'XB3' })[bookId.value])
+const knowledgeBook = ref(null)
+const knowledgeChapter = computed(() => knowledgeBook.value?.chapters.find((item) => item.site?.chapter === chapterId.value && item.site?.section === sectionId.value))
 const experimentLink = computed(() => getSectionExperimentLink(textbookContext.value))
 
 const loading = ref(true)
@@ -343,6 +350,7 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   sectionData.value = null
   loadedContent.value = null
   figureAssets.value = {}
+  knowledgeBook.value = null
   loading.value = true
 
   try {
@@ -362,6 +370,12 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
     sectionData.value = section
     loadedContent.value = content
     figureAssets.value = assets
+    const code = knowledgeCode.value
+    if (ids.grade === '高中' && code) {
+      loadKnowledgeBook(code).then((importedKnowledge) => {
+        if (generation === loadGeneration) knowledgeBook.value = importedKnowledge
+      }).catch(() => {})
+    }
   } finally {
     if (generation === loadGeneration) loading.value = false
   }
@@ -380,6 +394,8 @@ const nextSection = computed(() => {
 </script>
 
 <style scoped>
+.knowledge-entry { display: inline-flex; margin: 0 0 20px; padding: 9px 13px; border-left: 3px solid #326450; background: #edf4ef; color: #225542; font-size: 13px; font-weight: 700; text-decoration: none; }
+.knowledge-entry:hover { background: #dcece2; }
 .page-shell {
   max-width: 1100px;
   margin: 0 auto;

@@ -15,6 +15,7 @@ const GeographyPractice = () => import('./learning/GeographyPractice.vue')
 const BookSelect = () => import('./textbook/BookSelect.vue')
 const ChapterList = () => import('./textbook/ChapterList.vue')
 const SectionContent = () => import('./textbook/SectionContent.vue')
+const KnowledgeLibrary = () => import('./textbook/knowledge/KnowledgeLibrary.vue')
 const ExperimentsHome = () => import('./experiments/ExperimentsHome.vue')
 const ExperimentCategory = () => import('./experiments/ExperimentCategory.vue')
 const ExperimentView = () => import('./experiments/ExperimentView.vue')
@@ -55,6 +56,7 @@ const routes = [
   { path: '/map', name: 'map', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'map-projection' } } },
   { path: '/geo', name: 'geo', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'geologic-time' } } },
   { path: '/textbook', redirect: '/' },
+  { path: '/knowledge', name: 'knowledge', component: KnowledgeLibrary },
   { path: '/experiments', name: 'experiments', component: ExperimentsHome },
   { path: '/experiments/:category', name: 'experiment-category', component: ExperimentCategory },
   { path: '/experiments/:category/:experiment', name: 'experiment-view', component: ExperimentView },
