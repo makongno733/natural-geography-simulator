@@ -6,6 +6,14 @@
       <p class="exp-lead">直接打开一个三维模型，拖动、观察，再回到教材解释看到的现象。</p>
     </header>
 
+    <section class="quick-models" aria-labelledby="practice-link-title">
+      <div class="quick-models-heading">
+        <h2 id="practice-link-title">从模型走向练习</h2>
+        <p>太阳高度 · 昼夜长短 · 经纬网定位 · 国家知识卡</p>
+      </div>
+      <router-link class="quick-model" to="/practice"><span class="quick-model-topic">初高中地理</span><strong>打开互动练习</strong><span aria-hidden="true">↗</span></router-link>
+    </section>
+
     <section class="quick-models" aria-labelledby="quick-models-title">
       <div class="quick-models-heading">
         <h2 id="quick-models-title">从这里开始</h2>
