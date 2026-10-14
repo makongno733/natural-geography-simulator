@@ -9,6 +9,7 @@ describe('教材知识库导入', () => {
     const allChapters = books.flatMap((book) => book.chapters)
     expect(allPoints).toHaveLength(81)
     expect(allChapters).toHaveLength(89)
+    expect(allChapters.filter((chapter) => chapter.site)).toHaveLength(88)
     expect(new Set(allPoints.map((point) => point.id)).size).toBe(81)
     const ids = new Set(allPoints.map((point) => point.id))
     const siteBooks = grades.find((grade) => grade.id === '高中').books
@@ -27,5 +28,7 @@ describe('教材知识库导入', () => {
     }
     expect(allPoints.every((point) => point.reviewStatus === '待教研复核')).toBe(true)
     expect((await findKnowledgePoint('KP-BX1-001'))?.name).toBe('天体与天体系统')
+    expect((await findKnowledgePoint('KP-XB1-005'))?.cases).not.toContain('地转偏向力右偏影响，南岸')
+    expect((await findKnowledgePoint('KP-BX1-006'))?.explanation).not.toContain('塑性熔融状态')
   })
 })

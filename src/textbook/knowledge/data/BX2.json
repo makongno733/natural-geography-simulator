@@ -128,7 +128,12 @@
         "KP-BX2-004",
         "KP-BX2-005"
       ],
-      "site": null
+      "site": {
+        "grade": "高中",
+        "book": "必修第二册",
+        "chapter": "第二章",
+        "section": "问题研究"
+      }
     },
     {
       "id": "SEC-BX2-03-01",

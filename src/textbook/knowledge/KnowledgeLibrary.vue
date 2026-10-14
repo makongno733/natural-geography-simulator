@@ -53,7 +53,9 @@
                 <section v-if="point.distribution"><h4>空间分布</h4><p>{{ point.distribution }}</p></section>
                 <section v-if="point.cases"><h4>典型案例</h4><p>{{ point.cases }}</p></section>
                 <section v-if="point.misconceptions?.length"><h4>易错辨析</h4><ul><li v-for="item in point.misconceptions" :key="item">{{ item }}</li></ul></section>
-                <div class="source">整理依据：{{ point.source }}<br />原数据审核字段：{{ point.sourceAuditStatus }}。本站尚未独立核验，不代表教材或课标原文。</div>
+                <div class="source">交付包所列整理依据：{{ point.source }}。本站未取得逐项原文页码及完整教研复核记录，不代表教材或课标原文。
+                  <template v-if="point.reviewReferences?.length"><br />已复核的具体修正参考：<a v-for="reference in point.reviewReferences" :key="reference.url" :href="reference.url" target="_blank" rel="noopener noreferrer">{{ reference.title }} ↗</a></template>
+                </div>
               </div>
             </details>
           </article>
@@ -152,6 +154,7 @@ watch([selectedChapter, selectedPointId], async ([chapter, id]) => {
 .library-head h1 { color: #fff; }
 .library-context button { display: block; width: 100%; text-align: left; background: none; border: 0; color: #3d554e; padding: 8px 10px; line-height: 1.45; font-size: 13px; cursor: pointer; }
 .library-context button:hover { background: #edf4ef; }
+.source a { display: inline-block; margin: 3px 12px 0 0; color: #285948; }
 .library{max-width:1440px;margin:auto;padding:28px 24px 80px;color:var(--text)}
 .library-head{background:#102d34;color:#fff;padding:clamp(28px,5vw,70px);border-radius:5px;margin-bottom:24px;background-image:radial-gradient(circle at 90% 5%,#386b67 0,transparent 42%)}
 .eyebrow{font-size:12px;letter-spacing:.18em;color:#c4decf;font-weight:700}.library-head h1{font-size:clamp(30px,4vw,54px);margin:16px 0}.library-head p{max-width:760px;line-height:1.8;color:#d8e5e3}.summary{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.summary span{border:1px solid #73948d;padding:6px 12px;font-size:12px}

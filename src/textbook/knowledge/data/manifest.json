@@ -14,33 +14,37 @@
     "KP-BX1-03-01": "KP-BX1-011",
     "KP-BX1-05-02": "KP-BX1-017"
   },
+  "contentCorrectionIds": [
+    "KP-XB1-005",
+    "KP-BX1-006"
+  ],
   "books": [
     {
       "code": "BX1",
       "book": "必修第一册",
       "chapters": 20,
-      "mappedSections": 18,
+      "mappedSections": 19,
       "points": 20
     },
     {
       "code": "BX2",
       "book": "必修第二册",
       "chapters": 19,
-      "mappedSections": 18,
+      "mappedSections": 19,
       "points": 14
     },
     {
       "code": "XB1",
       "book": "选择性必修1",
       "chapters": 17,
-      "mappedSections": 16,
+      "mappedSections": 17,
       "points": 22
     },
     {
       "code": "XB2",
       "book": "选择性必修2",
       "chapters": 15,
-      "mappedSections": 14,
+      "mappedSections": 15,
       "points": 11
     },
     {

@@ -48,7 +48,12 @@
         "KP-XB2-001",
         "KP-XB2-002"
       ],
-      "site": null
+      "site": {
+        "grade": "高中",
+        "book": "选择性必修2",
+        "chapter": "第一章",
+        "section": "问题研究"
+      }
     },
     {
       "id": "SEC-XB2-02-01",
