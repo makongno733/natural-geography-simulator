@@ -11,7 +11,11 @@ const cache = new Map()
 export { manifest }
 export async function loadKnowledgeBook(code) {
   if (!loaders[code]) return null
-  if (!cache.has(code)) cache.set(code, loaders[code]().then((mod) => mod.default))
+  if (!cache.has(code)) {
+    const pending = loaders[code]().then((mod) => mod.default)
+    cache.set(code, pending)
+    pending.catch(() => cache.delete(code))
+  }
   return cache.get(code)
 }
 export async function findKnowledgePoint(id) {

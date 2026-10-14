@@ -34,6 +34,7 @@
       <main class="library-main" v-if="data && selectedChapter">
         <nav class="crumb" aria-label="当前位置"><router-link to="/">首页</router-link><span> / </span><span>{{ data.textbook.name }}</span><span> / </span><span>{{ selectedChapter.unit }}</span></nav>
         <div class="status">资料状态：待教研复核 · 印刷页码未核验</div>
+        <div class="reading-position" aria-label="本册阅读位置">本册第 {{ selectedIndex + 1 }} / {{ data.chapters.length }} 条</div>
         <h2>{{ selectedChapter.title }}</h2>
         <p class="chapter-summary">{{ selectedChapter.summary }}</p>
         <div class="chapter-meta"><span>{{ selectedChapter.unit }}</span><span>{{ selectedChapter.pointIds.length }} 个关联知识点</span></div>
@@ -44,6 +45,7 @@
             <div class="point-top"><span>{{ point.id }}</span><span>待教研复核</span></div>
             <h3>{{ point.name }}</h3>
             <p class="point-definition">{{ point.definition }}</p>
+            <ul v-if="point.terms?.length" class="term-list" aria-label="核心术语"><li v-for="term in point.terms" :key="term">{{ term }}</li></ul>
             <details><summary>展开原理、机制与案例</summary>
               <div class="point-body">
                 <p v-if="point.explanation">{{ point.explanation }}</p>
@@ -53,6 +55,7 @@
                 <section v-if="point.distribution"><h4>空间分布</h4><p>{{ point.distribution }}</p></section>
                 <section v-if="point.cases"><h4>典型案例</h4><p>{{ point.cases }}</p></section>
                 <section v-if="point.misconceptions?.length"><h4>易错辨析</h4><ul><li v-for="item in point.misconceptions" :key="item">{{ item }}</li></ul></section>
+                <section v-if="point.curriculum"><h4>交付包所列课标摘要 · 待核实</h4><p>{{ point.curriculum }}</p></section>
                 <div class="source">交付包所列整理依据：{{ point.source }}。本站未取得逐项原文页码及完整教研复核记录，不代表教材或课标原文。
                   <template v-if="point.reviewReferences?.length"><br />已复核的具体修正参考：<a v-for="reference in point.reviewReferences" :key="reference.url" :href="reference.url" target="_blank" rel="noopener noreferrer">{{ reference.title }} ↗</a></template>
                 </div>
@@ -67,11 +70,12 @@
       <aside class="library-context" v-if="data && selectedChapter" aria-label="本节知识导航">
         <h3>本节知识</h3>
         <button v-for="point in chapterPoints" :key="point.id" type="button" @click="focusPoint(point.id)">{{ point.name }}</button>
-        <template v-if="prerequisites.length"><h3>前置知识 · 待复核</h3><router-link v-for="item in prerequisites" :key="item.id" :to="knowledgeRoute({ book: item.book, chapter: item.chapter, point: item.id })">{{ item.name }}</router-link></template>
+        <template v-if="prerequisites.length"><h3>前置知识 · 待复核</h3><router-link v-for="item in prerequisites" :key="item.id" :to="knowledgeRoute({ book: item.book, chapter: item.chapter, point: item.id })">{{ item.name }}<small v-if="item.book !== bookCode"> · {{ bookName(item.book) }}</small></router-link></template>
         <p class="context-note">关联仅作学习线索，待逐条核实后才能用于正式教学推荐。</p>
       </aside>
     </div>
     <p v-if="loading" class="loading">正在加载本册资料…</p>
+    <p v-else-if="loadError" class="loading" role="alert">本册资料加载失败。<button type="button" @click="retryLoad">重试加载</button></p>
   </div>
 </template>
 
@@ -85,19 +89,28 @@ const router = useRouter()
 const bookCode = computed(() => manifest.books.some((book) => book.code === route.query.book) ? route.query.book : 'BX1')
 const data = ref(null)
 const loading = ref(false)
+const loadError = ref(false)
+const retry = ref(0)
 const search = ref('')
 const expanded = ref({})
 const selectedPointId = computed(() => route.query.point || '')
 let generation = 0
-watch(bookCode, async (code) => {
+watch([bookCode, retry], async ([code]) => {
   const current = ++generation
   loading.value = true
+  loadError.value = false
   data.value = null
-  const loaded = await loadKnowledgeBook(code)
-  if (current !== generation) return
-  data.value = loaded
-  loading.value = false
-  search.value = ''
+  try {
+    const loaded = await loadKnowledgeBook(code)
+    if (current !== generation) return
+    data.value = loaded
+    search.value = ''
+  } catch {
+    if (current !== generation) return
+    loadError.value = true
+  } finally {
+    if (current === generation) loading.value = false
+  }
 }, { immediate: true })
 const selectedChapter = computed(() => data.value?.chapters.find((item) => item.id === route.query.chapter) || data.value?.chapters[0] || null)
 const chapterPoints = computed(() => selectedChapter.value?.pointIds.map((id) => data.value.points.find((point) => point.id === id)).filter(Boolean) || [])
@@ -129,14 +142,13 @@ const previous = computed(() => data.value?.chapters[selectedIndex.value - 1])
 const next = computed(() => data.value?.chapters[selectedIndex.value + 1])
 const prerequisites = computed(() => {
   if (!data.value) return []
-  const ids = new Set(data.value.prerequisites.filter((edge) => chapterPoints.value.some((point) => point.id === edge.target_knowledge_point_id)).flatMap((edge) => edge.prerequisite_knowledge_point_ids))
-  return [...ids].map((id) => {
-    const point = data.value.points.find((item) => item.id === id)
-    const chapter = data.value.chapters.find((item) => item.pointIds.includes(id))
-    return point && chapter ? { id, name: point.name, book: bookCode.value, chapter: chapter.id } : null
-  }).filter(Boolean)
+  const currentIds = new Set(chapterPoints.value.map((point) => point.id))
+  const ids = new Set(data.value.prerequisites.filter((edge) => currentIds.has(edge.target_knowledge_point_id)).flatMap((edge) => edge.prerequisite_knowledge_point_ids).filter((id) => !currentIds.has(id)))
+  return [...ids].map((id) => manifest.pointIndex[id] ? { id, ...manifest.pointIndex[id] } : null).filter(Boolean)
 })
+function bookName(code) { return manifest.books.find((item) => item.code === code)?.book || code }
 function selectBook(code) { router.push(knowledgeRoute({ book: code })) }
+function retryLoad() { retry.value += 1 }
 function sectionPath(site) { return `/${site.grade}/${site.book}/${site.chapter}/${site.section}` }
 async function focusPoint(id) {
   await router.push(knowledgeRoute({ book: bookCode.value, chapter: selectedChapter.value.id, point: id }))
@@ -155,6 +167,10 @@ watch([selectedChapter, selectedPointId], async ([chapter, id]) => {
 .library-context button { display: block; width: 100%; text-align: left; background: none; border: 0; color: #3d554e; padding: 8px 10px; line-height: 1.45; font-size: 13px; cursor: pointer; }
 .library-context button:hover { background: #edf4ef; }
 .source a { display: inline-block; margin: 3px 12px 0 0; color: #285948; }
+.reading-position { display: inline-block; margin-left: 12px; color: #647b70; font-size: 12px; }
+.library-context small { color: #697c70; }
+.term-list { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 12px 0 0; }
+.term-list li { padding: 4px 8px; background: #edf4ef; color: #285948; font-size: 12px; }
 .library{max-width:1440px;margin:auto;padding:28px 24px 80px;color:var(--text)}
 .library-head{background:#102d34;color:#fff;padding:clamp(28px,5vw,70px);border-radius:5px;margin-bottom:24px;background-image:radial-gradient(circle at 90% 5%,#386b67 0,transparent 42%)}
 .eyebrow{font-size:12px;letter-spacing:.18em;color:#c4decf;font-weight:700}.library-head h1{font-size:clamp(30px,4vw,54px);margin:16px 0}.library-head p{max-width:760px;line-height:1.8;color:#d8e5e3}.summary{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.summary span{border:1px solid #73948d;padding:6px 12px;font-size:12px}

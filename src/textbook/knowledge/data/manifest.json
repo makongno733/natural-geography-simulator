@@ -15,6 +15,10 @@
     "KP-BX1-05-02": "KP-BX1-017"
   },
   "contentCorrectionIds": [
+    "KP-XB1-001",
+    "KP-XB1-004",
+    "KP-XB1-003",
+    "KP-XB1-008",
     "KP-XB1-005",
     "KP-BX1-006"
   ],
@@ -54,5 +58,412 @@
       "mappedSections": 18,
       "points": 14
     }
-  ]
+  ],
+  "pointIndex": {
+    "KP-BX1-001": {
+      "name": "天体与天体系统",
+      "book": "BX1",
+      "chapter": "SEC-BX1-01-01"
+    },
+    "KP-BX1-002": {
+      "name": "太阳系与地球生命存在条件",
+      "book": "BX1",
+      "chapter": "SEC-BX1-01-01"
+    },
+    "KP-BX1-003": {
+      "name": "太阳辐射及其对地球的影响",
+      "book": "BX1",
+      "chapter": "SEC-BX1-01-02"
+    },
+    "KP-BX1-004": {
+      "name": "太阳活动及其对地球的影响",
+      "book": "BX1",
+      "chapter": "SEC-BX1-01-02"
+    },
+    "KP-BX1-005": {
+      "name": "化石、地层与地质年代表",
+      "book": "BX1",
+      "chapter": "SEC-BX1-01-03"
+    },
+    "KP-BX1-006": {
+      "name": "地球内部与外部圈层结构",
+      "book": "BX1",
+      "chapter": "SEC-BX1-01-04"
+    },
+    "KP-BX1-007": {
+      "name": "对流层与平流层大气的垂直分层",
+      "book": "BX1",
+      "chapter": "SEC-BX1-02-01"
+    },
+    "KP-BX1-008": {
+      "name": "大气受热过程与温室效应",
+      "book": "BX1",
+      "chapter": "SEC-BX1-02-02"
+    },
+    "KP-BX1-009": {
+      "name": "热力环流原理与典型局地环流",
+      "book": "BX1",
+      "chapter": "SEC-BX1-02-02"
+    },
+    "KP-BX1-010": {
+      "name": "大气的水平运动（风）的受力分析",
+      "book": "BX1",
+      "chapter": "SEC-BX1-02-02"
+    },
+    "KP-BX1-011": {
+      "name": "水循环的类型、环节与地理意义",
+      "book": "BX1",
+      "chapter": "SEC-BX1-03-01"
+    },
+    "KP-BX1-012": {
+      "name": "海水温度与盐度的时空分布规律",
+      "book": "BX1",
+      "chapter": "SEC-BX1-03-02"
+    },
+    "KP-BX1-013": {
+      "name": "海水的运动（波浪、潮汐、洋流基础）",
+      "book": "BX1",
+      "chapter": "SEC-BX1-03-03"
+    },
+    "KP-BX1-014": {
+      "name": "喀斯特地貌的形成机制与形态特征",
+      "book": "BX1",
+      "chapter": "SEC-BX1-04-01"
+    },
+    "KP-BX1-015": {
+      "name": "河流、风沙与海岸常见地貌类型",
+      "book": "BX1",
+      "chapter": "SEC-BX1-04-01"
+    },
+    "KP-BX1-016": {
+      "name": "植被类型及其对地理环境的适应",
+      "book": "BX1",
+      "chapter": "SEC-BX1-05-01"
+    },
+    "KP-BX1-017": {
+      "name": "土壤的组成、剖面结构与形成因素",
+      "book": "BX1",
+      "chapter": "SEC-BX1-05-02"
+    },
+    "KP-BX1-018": {
+      "name": "气象灾害（洪涝、干旱、台风、寒潮）",
+      "book": "BX1",
+      "chapter": "SEC-BX1-06-01"
+    },
+    "KP-BX1-019": {
+      "name": "地质灾害（地震、滑坡、泥石流）",
+      "book": "BX1",
+      "chapter": "SEC-BX1-06-02"
+    },
+    "KP-BX1-020": {
+      "name": "地理信息技术（RS、GNSS、GIS）在防灾减灾中的应用",
+      "book": "BX1",
+      "chapter": "SEC-BX1-06-04"
+    },
+    "KP-BX2-001": {
+      "name": "世界与中国人口分布特征与影响因素",
+      "book": "BX2",
+      "chapter": "SEC-BX2-01-01"
+    },
+    "KP-BX2-002": {
+      "name": "人口迁移的机制与推拉力模型",
+      "book": "BX2",
+      "chapter": "SEC-BX2-01-02"
+    },
+    "KP-BX2-003": {
+      "name": "区域资源环境承载力与人口合理容量",
+      "book": "BX2",
+      "chapter": "SEC-BX2-01-03"
+    },
+    "KP-BX2-004": {
+      "name": "乡村和城镇土地利用与内部空间结构",
+      "book": "BX2",
+      "chapter": "SEC-BX2-02-01"
+    },
+    "KP-BX2-005": {
+      "name": "城镇化进程、动力机制与城镇化问题",
+      "book": "BX2",
+      "chapter": "SEC-BX2-02-02"
+    },
+    "KP-BX2-006": {
+      "name": "地域文化在城乡景观中的体现与保护",
+      "book": "BX2",
+      "chapter": "SEC-BX2-02-03"
+    },
+    "KP-BX2-007": {
+      "name": "农业区位因素及其动态变化",
+      "book": "BX2",
+      "chapter": "SEC-BX2-03-01"
+    },
+    "KP-BX2-008": {
+      "name": "工业区位因素、导向类型与集聚分散",
+      "book": "BX2",
+      "chapter": "SEC-BX2-03-02"
+    },
+    "KP-BX2-009": {
+      "name": "服务业区位因素及其现代特征",
+      "book": "BX2",
+      "chapter": "SEC-BX2-03-03"
+    },
+    "KP-BX2-010": {
+      "name": "区域发展对交通运输布局的影响",
+      "book": "BX2",
+      "chapter": "SEC-BX2-04-01"
+    },
+    "KP-BX2-011": {
+      "name": "交通运输布局对区域经济与聚落的影响",
+      "book": "BX2",
+      "chapter": "SEC-BX2-04-02"
+    },
+    "KP-BX2-012": {
+      "name": "人类面临的主要全球性环境问题",
+      "book": "BX2",
+      "chapter": "SEC-BX2-05-01"
+    },
+    "KP-BX2-013": {
+      "name": "可持续发展的内涵、基本原则与路径",
+      "book": "BX2",
+      "chapter": "SEC-BX2-05-02"
+    },
+    "KP-BX2-014": {
+      "name": "中国国家发展战略（主体功能区、京津冀、长江经济带）",
+      "book": "BX2",
+      "chapter": "SEC-BX2-05-03"
+    },
+    "KP-XB1-001": {
+      "name": "地球自转特征与周期速度规律",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-01"
+    },
+    "KP-XB1-002": {
+      "name": "地球公转轨道、速度与黄赤交角",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-01"
+    },
+    "KP-XB1-003": {
+      "name": "昼夜交替与晨昏圈几何特征",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-02"
+    },
+    "KP-XB1-004": {
+      "name": "地方时、区时与日界线计算",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-02"
+    },
+    "KP-XB1-005": {
+      "name": "地转偏向力及其地理效应",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-02"
+    },
+    "KP-XB1-006": {
+      "name": "太阳直射点的回归运动规律",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-02"
+    },
+    "KP-XB1-007": {
+      "name": "昼夜长短的纬度分布与季节变化规律",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-02"
+    },
+    "KP-XB1-008": {
+      "name": "正午太阳高度的计算与时空分布",
+      "book": "XB1",
+      "chapter": "SEC-XB1-01-02"
+    },
+    "KP-XB1-009": {
+      "name": "内力作用与三大类岩石圈物质循环",
+      "book": "XB1",
+      "chapter": "SEC-XB1-02-01"
+    },
+    "KP-XB1-010": {
+      "name": "褶皱与断层地质构造及其地貌倒置机制",
+      "book": "XB1",
+      "chapter": "SEC-XB1-02-02"
+    },
+    "KP-XB1-011": {
+      "name": "板块构造理论与宏观构造地貌演变",
+      "book": "XB1",
+      "chapter": "SEC-XB1-02-02"
+    },
+    "KP-XB1-012": {
+      "name": "河流侵蚀与堆积地貌发育演变过程",
+      "book": "XB1",
+      "chapter": "SEC-XB1-02-03"
+    },
+    "KP-XB1-013": {
+      "name": "锋面系统（冷锋、暖锋、准静止锋）与天气演变",
+      "book": "XB1",
+      "chapter": "SEC-XB1-03-01"
+    },
+    "KP-XB1-014": {
+      "name": "低压（气旋）、高压（反气旋）及锋面气旋系统",
+      "book": "XB1",
+      "chapter": "SEC-XB1-03-01"
+    },
+    "KP-XB1-015": {
+      "name": "三圈环流与气压带风带的形成及季节移动",
+      "book": "XB1",
+      "chapter": "SEC-XB1-03-02"
+    },
+    "KP-XB1-016": {
+      "name": "海陆热力差异、气压活动中心与季风环流",
+      "book": "XB1",
+      "chapter": "SEC-XB1-03-02"
+    },
+    "KP-XB1-017": {
+      "name": "气压带风带对世界气候类型的影响与气候判读",
+      "book": "XB1",
+      "chapter": "SEC-XB1-03-03"
+    },
+    "KP-XB1-018": {
+      "name": "陆地水体相互联系与补给排泄关系",
+      "book": "XB1",
+      "chapter": "SEC-XB1-04-01"
+    },
+    "KP-XB1-019": {
+      "name": "全球洋流分布模式与地理环境效应",
+      "book": "XB1",
+      "chapter": "SEC-XB1-04-02"
+    },
+    "KP-XB1-020": {
+      "name": "海—气相互作用、沃克环流与厄尔尼诺/拉尼娜",
+      "book": "XB1",
+      "chapter": "SEC-XB1-04-03"
+    },
+    "KP-XB1-021": {
+      "name": "自然地理环境的整体性机制与功能",
+      "book": "XB1",
+      "chapter": "SEC-XB1-05-01"
+    },
+    "KP-XB1-022": {
+      "name": "自然环境的地域分异规律（地带性与非地带性）",
+      "book": "XB1",
+      "chapter": "SEC-XB1-05-02"
+    },
+    "KP-XB2-001": {
+      "name": "区域的概念、特征与分类体系",
+      "book": "XB2",
+      "chapter": "SEC-XB2-01-01"
+    },
+    "KP-XB2-002": {
+      "name": "区域整体性与关联性机制",
+      "book": "XB2",
+      "chapter": "SEC-XB2-01-02"
+    },
+    "KP-XB2-003": {
+      "name": "自然环境基础对区域发展的支撑与约束",
+      "book": "XB2",
+      "chapter": "SEC-XB2-02-01"
+    },
+    "KP-XB2-004": {
+      "name": "生态脆弱区及其综合治理（以北方农牧交错带为例）",
+      "book": "XB2",
+      "chapter": "SEC-XB2-02-02"
+    },
+    "KP-XB2-005": {
+      "name": "资源枯竭型城市的转型发展路径（德国鲁尔区与焦作市）",
+      "book": "XB2",
+      "chapter": "SEC-XB2-02-03"
+    },
+    "KP-XB2-006": {
+      "name": "城市辐射功能及其对区域空间腹地的带动",
+      "book": "XB2",
+      "chapter": "SEC-XB2-03-01"
+    },
+    "KP-XB2-007": {
+      "name": "地区产业结构升级演进规律（以珠江三角洲为例）",
+      "book": "XB2",
+      "chapter": "SEC-XB2-03-02"
+    },
+    "KP-XB2-008": {
+      "name": "流域内部协调发展机制（以黄河流域为例）",
+      "book": "XB2",
+      "chapter": "SEC-XB2-04-01"
+    },
+    "KP-XB2-009": {
+      "name": "资源跨区域调配机制与影响（南水北调、西气东输、西电东送）",
+      "book": "XB2",
+      "chapter": "SEC-XB2-04-02"
+    },
+    "KP-XB2-010": {
+      "name": "产业转移的驱动机制与区域效应",
+      "book": "XB2",
+      "chapter": "SEC-XB2-04-03"
+    },
+    "KP-XB2-011": {
+      "name": "经济全球化与“一带一路”国际合作",
+      "book": "XB2",
+      "chapter": "SEC-XB2-04-04"
+    },
+    "KP-XB3-001": {
+      "name": "自然环境的四大服务功能及其协同演化",
+      "book": "XB3",
+      "chapter": "SEC-XB3-01-01"
+    },
+    "KP-XB3-002": {
+      "name": "自然资源的属性特征与科学利用法则",
+      "book": "XB3",
+      "chapter": "SEC-XB3-01-02"
+    },
+    "KP-XB3-003": {
+      "name": "环境问题的产生根源、危害与全球扩散",
+      "book": "XB3",
+      "chapter": "SEC-XB3-01-03"
+    },
+    "KP-XB3-004": {
+      "name": "资源安全对国家总体安全的影响机制",
+      "book": "XB3",
+      "chapter": "SEC-XB3-02-01"
+    },
+    "KP-XB3-005": {
+      "name": "中国的能源安全战略（富煤少油缺气、石油储备与新能源转型）",
+      "book": "XB3",
+      "chapter": "SEC-XB3-02-02"
+    },
+    "KP-XB3-006": {
+      "name": "中国的耕地资源与粮食安全（18亿亩红线与藏粮于地/技）",
+      "book": "XB3",
+      "chapter": "SEC-XB3-02-03"
+    },
+    "KP-XB3-007": {
+      "name": "海洋空间资源开发与国家海洋权益维护",
+      "book": "XB3",
+      "chapter": "SEC-XB3-02-04"
+    },
+    "KP-XB3-008": {
+      "name": "环境安全对国家安全的影响与环境风险防控",
+      "book": "XB3",
+      "chapter": "SEC-XB3-03-01"
+    },
+    "KP-XB3-009": {
+      "name": "突发环境事件与跨国环境污染对国家安全的威胁",
+      "book": "XB3",
+      "chapter": "SEC-XB3-03-02"
+    },
+    "KP-XB3-010": {
+      "name": "生态退化风险、生态安全屏障与生态保护红线",
+      "book": "XB3",
+      "chapter": "SEC-XB3-03-03"
+    },
+    "KP-XB3-011": {
+      "name": "全球气候变化对国家安全的全面冲击与国际博弈",
+      "book": "XB3",
+      "chapter": "SEC-XB3-03-04"
+    },
+    "KP-XB3-012": {
+      "name": "走向生态文明的理念演进与文明转型",
+      "book": "XB3",
+      "chapter": "SEC-XB3-04-01"
+    },
+    "KP-XB3-013": {
+      "name": "保障资源环境安全的国家战略与政策（主体功能区与双碳目标）",
+      "book": "XB3",
+      "chapter": "SEC-XB3-04-02"
+    },
+    "KP-XB3-014": {
+      "name": "应对全球环境危机的国际合作与责任机制",
+      "book": "XB3",
+      "chapter": "SEC-XB3-04-03"
+    }
+  }
 }
