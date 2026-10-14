@@ -39,7 +39,7 @@
       <path d="M80 20L81.4 24.6L86 26L81.4 27.4L80 32L78.6 27.4L74 26L78.6 24.6Z" fill="#E6C68A" />
     </g>
     <path class="orbit-front" d="M145.25 49.57A72 29 -25 0 1 14.75 110.43" :stroke="`url(#${id}-orbit)`" stroke-width="2.6" stroke-linecap="round" />
-    <circle class="orbit-node" cx="145.25" cy="49.57" r="2.9" fill="#E6C68A" />
+    <circle class="orbit-node" cx="0" cy="0" r="2.9" fill="#E6C68A" />
   </svg>
 </template>
 
@@ -70,7 +70,8 @@ onBeforeUnmount(stop)
 
 <style scoped>
 .brand-mark { width: 56px; height: 56px; overflow: visible; flex: none; --brand-ease: cubic-bezier(.22,.65,.18,1); }
-.globe, .graticule, .terrain, .compass, .orbit-front, .orbit-back, .orbit-node { transform-origin: 80px 80px; }
+.globe, .graticule, .terrain, .compass, .orbit-front, .orbit-back { transform-origin: 80px 80px; }
+.orbit-node { offset-path: path("M145.25 49.57 A72 29 -25 0 1 14.75 110.43 A72 29 -25 0 1 145.25 49.57"); offset-distance: 0%; offset-rotate: 0deg; }
 .orbit-front, .orbit-back { transition: transform .4s var(--brand-ease); }
 .compass { transition: filter .35s ease; }
 @media (hover: hover) {
@@ -94,11 +95,8 @@ onBeforeUnmount(stop)
 @keyframes orbit-near { 0%,66%,100% { transform: translate(0,0); opacity: 1; } 82% { transform: translate(2px,-1px); opacity: .72; } }
 @keyframes orbit-far { 0%,66%,100% { transform: translate(0,0); opacity: .65; } 82% { transform: translate(-2px,1px); opacity: .9; } }
 @keyframes node-travel {
-  0%,63% { transform: translate(0,0); }
-  72% { transform: translate(-53px,56px); }
-  81% { transform: translate(-130px,61px); }
-  90% { transform: translate(-77px,4px); }
-  100% { transform: translate(0,0); }
+  0%,63% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .brand-mark *, .brand-mark { animation: none !important; transition: none !important; } }
 </style>
