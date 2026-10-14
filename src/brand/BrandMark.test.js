@@ -49,6 +49,20 @@ describe('BrandMark animation lifecycle', () => {
     wrapper.unmount()
   })
 
+  it('stops immediately when reduced motion is enabled and removes its listener', async () => {
+    const preference = { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }
+    window.matchMedia.mockReturnValue(preference)
+    const wrapper = mount(BrandMark)
+    wrapper.vm.play()
+    const listener = preference.addEventListener.mock.calls[0][1]
+    listener({ matches: true })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.classes()).not.toContain('is-playing')
+    expect(vi.getTimerCount()).toBe(0)
+    wrapper.unmount()
+    expect(preference.removeEventListener).toHaveBeenCalledWith('change', listener)
+  })
+
   it('keeps SVG definition IDs unique between instances', () => {
     const host = mount(defineComponent({ render: () => h('div', [h(BrandMark), h(BrandMark)]) }))
     const ids = host.findAll('linearGradient').map(node => node.attributes('id'))
