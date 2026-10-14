@@ -66,6 +66,9 @@
           <router-link to="/高中" class="nav-link" :class="{ active: grade === '高中' }">
             <span class="nav-label">高中课程</span>
           </router-link>
+          <router-link to="/knowledge" class="nav-link" :class="{ active: route.path === '/knowledge' }">
+            <span class="nav-label">教材知识库</span>
+          </router-link>
           <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="`${accountOrigin}/#/account`">
             <span>{{ accountUser ? '我的账号' : '登录 / 注册' }}</span>
           </a>

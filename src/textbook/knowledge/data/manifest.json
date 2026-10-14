@@ -1,0 +1,58 @@
+{
+  "generatedFrom": "Geography-Knowledge-Base (2026-10-13)",
+  "reviewStatus": "待教研复核",
+  "counts": {
+    "textbooks": 9,
+    "highSchoolTextbooks": 5,
+    "chapters": 89,
+    "knowledgePoints": 81,
+    "visualProposals": 35,
+    "interactiveProposals": 20,
+    "prerequisiteRelations": 25
+  },
+  "corrections": {
+    "KP-BX1-03-01": "KP-BX1-011",
+    "KP-BX1-05-02": "KP-BX1-017"
+  },
+  "contentCorrectionIds": [
+    "KP-XB1-005",
+    "KP-BX1-006"
+  ],
+  "books": [
+    {
+      "code": "BX1",
+      "book": "必修第一册",
+      "chapters": 20,
+      "mappedSections": 19,
+      "points": 20
+    },
+    {
+      "code": "BX2",
+      "book": "必修第二册",
+      "chapters": 19,
+      "mappedSections": 19,
+      "points": 14
+    },
+    {
+      "code": "XB1",
+      "book": "选择性必修1",
+      "chapters": 17,
+      "mappedSections": 17,
+      "points": 22
+    },
+    {
+      "code": "XB2",
+      "book": "选择性必修2",
+      "chapters": 15,
+      "mappedSections": 15,
+      "points": 11
+    },
+    {
+      "code": "XB3",
+      "book": "选择性必修3",
+      "chapters": 18,
+      "mappedSections": 18,
+      "points": 14
+    }
+  ]
+}
