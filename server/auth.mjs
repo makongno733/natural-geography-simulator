@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth'
 import nodemailer from 'nodemailer'
 import { database } from './database.mjs'
-import { authOrigin, siteOrigin, mailReady, googleReady, githubReady, isProduction } from './config.mjs'
+import { authOrigin, siteOrigin, mailReady, isProduction } from './config.mjs'
 
 const mailer = mailReady ? nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -9,16 +9,6 @@ const mailer = mailReady ? nodemailer.createTransport({
   secure: process.env.SMTP_PORT === '465',
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 }) : null
-
-const socialProviders = {}
-if (googleReady) socialProviders.google = {
-  clientId: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET
-}
-if (githubReady) socialProviders.github = {
-  clientId: process.env.GITHUB_CLIENT_ID,
-  clientSecret: process.env.GITHUB_CLIENT_SECRET
-}
 
 export const auth = betterAuth({
   baseURL: authOrigin,
@@ -50,6 +40,5 @@ export const auth = betterAuth({
       }).catch((error) => console.error('Verification email failed', error))
     }
   } : undefined,
-  socialProviders,
   advanced: { useSecureCookies: isProduction }
 })

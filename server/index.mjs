@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.mjs'
 import { database } from './database.mjs'
-import { allowedOrigins, mailReady, googleReady, githubReady } from './config.mjs'
+import { allowedOrigins, mailReady } from './config.mjs'
 import { answerLessonQuestion } from './lesson-ai.mjs'
 
 const app = express()
@@ -39,7 +39,7 @@ function sectionKey(value) {
 }
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
-app.get('/api/config', (_req, res) => res.json({ email: mailReady, google: googleReady, github: githubReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
+app.get('/api/config', (_req, res) => res.json({ email: mailReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
 
 const aiRequests = []
 app.post('/api/assistant/ask', requireOrigin, async (req, res, next) => {

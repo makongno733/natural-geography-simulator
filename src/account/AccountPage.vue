@@ -19,13 +19,7 @@
         </div>
       </template>
       <template v-else>
-        <div v-if="mode === 'signin' && (config.google || config.github)" class="social-actions">
-          <button v-if="config.google" type="button" :disabled="busy" @click="social('google')">使用 Google 登录</button>
-          <button v-if="config.github" type="button" :disabled="busy" @click="social('github')">使用 GitHub 登录</button>
-        </div>
-
         <template v-if="config.email">
-          <div v-if="mode === 'signin' && (config.google || config.github)" class="divider">或使用邮箱</div>
           <form v-if="mode === 'reset'" @submit.prevent="resetPassword">
             <label>新密码<input v-model="password" type="password" required minlength="8" autocomplete="new-password" /></label>
             <button class="primary" type="submit" :disabled="busy">保存新密码</button>
@@ -46,7 +40,7 @@
           <button v-if="mode === 'signin'" type="button" class="switch" @click="mode = 'forgot'; error = ''; message = ''">忘记密码？</button>
           <button v-if="mode === 'forgot' || mode === 'reset'" type="button" class="switch" @click="mode = 'signin'; error = ''; message = ''">返回登录</button>
         </template>
-        <p v-if="!config.email && !config.google && !config.github" class="notice">登录服务正在配置中，请稍后再试。</p>
+        <p v-if="!config.email" class="notice">登录服务正在配置中，请稍后再试。</p>
       </template>
       <p class="account-legal-links">
         <a :href="`${siteOrigin}/privacy`">隐私政策</a>
@@ -62,7 +56,7 @@ import { onMounted, ref } from 'vue'
 import { accountEnabled, accountOrigin, apiRequest, authClient, siteOrigin } from './client.js'
 
 const mode = ref(new URLSearchParams(window.location.search).has('token') ? 'reset' : 'signin')
-const config = ref({ email: false, google: false, github: false })
+const config = ref({ email: false })
 const session = ref(null)
 const name = ref('')
 const email = ref('')
@@ -81,19 +75,6 @@ onMounted(async () => {
     error.value = '暂时无法连接账号服务'
   }
 })
-
-async function social(provider) {
-  error.value = ''
-  busy.value = true
-  try {
-    const result = await authClient.signIn.social({ provider, callbackURL: `${siteOrigin}/#/` })
-    if (result.error) error.value = result.error.message || '登录失败'
-  } catch {
-    error.value = '暂时无法连接登录服务'
-  } finally {
-    busy.value = false
-  }
-}
 
 async function submitEmail() {
   error.value = ''
@@ -165,14 +146,13 @@ async function resetPassword() {
 .eyebrow { color: var(--accent); letter-spacing: .16em; font-size: 11px; font-weight: 800; }
 h1 { margin: 8px 0; font-size: 30px; color: var(--text); }
 .intro { color: var(--text-muted); line-height: 1.7; }
-.social-actions, form, .actions { display: grid; gap: 12px; margin-top: 22px; }
+form, .actions { display: grid; gap: 12px; margin-top: 22px; }
 button, .primary { min-height: 44px; border-radius: 10px; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; cursor: pointer; text-align: center; text-decoration: none; display: grid; place-items: center; }
 button:hover { border-color: var(--accent); }
 .primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
 button:disabled { opacity: .6; cursor: wait; }
 label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
 input { width: 100%; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; font: inherit; }
-.divider { margin-top: 18px; text-align: center; color: var(--text-muted); font-size: 13px; }
 .switch { border: 0; color: var(--accent); margin: 16px auto 0; }
 .account-legal-links { display: flex; justify-content: center; gap: 10px; margin: 24px 0 0; font-size: 12px; color: var(--text-muted); }
 .account-legal-links a { color: inherit; }
