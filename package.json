@@ -12,7 +12,7 @@
     "account:dev": "node --env-file=.env server/index.mjs",
     "account:migrate": "node --env-file=.env server/migrate.mjs",
     "build": "vite build --config vite.config.mjs",
-    "build:account": "vite build --config vite.account.config.mjs",
+    "build:account": "node scripts/build-assistant-corpus.mjs && vite build --config vite.account.config.mjs",
     "build:standalone": "pnpm run build && node scripts/inline-dist.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --config vite.config.mjs",
     "deploy": "pnpm run build && cp dist/index.html dist/404.html && npx gh-pages -d dist",
