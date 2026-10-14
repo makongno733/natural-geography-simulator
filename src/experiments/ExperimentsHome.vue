@@ -4,6 +4,7 @@
       <div class="exp-badge"><span>观察地理过程</span></div>
       <h1 class="exp-heading">让地球动起来。</h1>
       <p class="exp-lead">直接打开一个三维模型，拖动、观察，再回到教材解释看到的现象。</p>
+      <router-link to="/geo-labs" class="evidence-entry">从真实地球数据进入全部模型 →</router-link>
     </header>
 
     <section class="quick-models" aria-labelledby="practice-link-title">
@@ -173,6 +174,7 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
   font-size: 15px;
   line-height: 1.6;
 }
+.evidence-entry{display:inline-block;margin-top:18px;color:#176a78;font-weight:700;text-underline-offset:4px}
 .quick-models { margin:0 0 58px; padding:28px; color:#f1f3eb; background:#15352f; }
 .quick-models-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; }
 .quick-models-heading h2 { margin:0; color:inherit; font-size:clamp(25px,3vw,36px); }

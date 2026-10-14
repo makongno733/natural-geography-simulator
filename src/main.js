@@ -78,8 +78,10 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-  scrollBehavior(_to, _from, savedPosition) {
-    return savedPosition || { top: 0 }
+  scrollBehavior(to, _from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash, top: 90 }
+    return { top: 0 }
   },
 })
 
