@@ -51,6 +51,9 @@
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --transition: 0.22s var(--ease);
+  --geo-flow-ease: cubic-bezier(0.2, 0.8, 0.25, 1);
+  --geo-press-ease: cubic-bezier(0.12, 0.72, 0.35, 1);
+  --geo-focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--geo-ocean);
 
   /* 真实大地与微物理阴影 */
   --shadow-sm: 0 1px 2px rgba(15, 39, 66, 0.05), 0 2px 8px rgba(15, 39, 66, 0.04);
@@ -156,13 +159,62 @@ h1, h2, h3, h4 {
   border-radius: 6px;
 }
 
-button {
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition), transform var(--transition);
+  touch-action: manipulation;
+  transition: background .2s var(--geo-flow-ease), border-color .2s var(--geo-flow-ease), color .18s var(--geo-flow-ease), box-shadow .22s var(--geo-flow-ease), transform .12s var(--geo-press-ease), opacity .18s var(--geo-flow-ease);
 }
 
-button:active {
-  transform: translateY(1px);
+button:active:not(:disabled),
+[role="button"]:active:not([aria-disabled="true"]),
+input[type="button"]:active:not(:disabled),
+input[type="submit"]:active:not(:disabled) {
+  transform: translateY(1px) scale(.985);
+  transition-duration: .08s;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+input[type="button"]:focus-visible,
+input[type="submit"]:focus-visible,
+a.primary-action:focus-visible,
+a.secondary-action:focus-visible,
+a.nav-link:focus-visible {
+  outline: none;
+  box-shadow: var(--geo-focus-ring);
+}
+
+button:disabled,
+button[aria-disabled="true"],
+[role="button"][aria-disabled="true"] {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+button[aria-busy="true"],
+button.is-loading {
+  cursor: wait;
+}
+
+@media (hover: hover) {
+  .primary-action:hover,
+  .secondary-action:hover,
+  .nav-link:hover,
+  .model-gallery-all:hover,
+  .inquiry-entry-link:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media (hover: none) {
+  button:hover:not(:active),
+  [role="button"]:hover:not(:active) {
+    transform: none;
+  }
 }
 
 ::-webkit-scrollbar {

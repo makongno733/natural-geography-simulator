@@ -4,7 +4,7 @@
       <div class="hero-copy">
         <p class="eyebrow">地球 · 地貌 · 气候 · 空间</p>
         <h1 id="home-title">把地理，<br>放到眼前。</h1>
-        <p class="hero-intro">转动地球，走进真实的地理过程。从三维模型开始观察，再进入适合自己的初中或高中课程。</p>
+        <p class="hero-intro">{{ selectedHomePlanet.id === 'earth' ? '转动地球，走进真实的地理过程。从三维模型开始观察，再进入适合自己的初中或高中课程。' : selectedHomePlanet.description }}</p>
         <div class="hero-actions">
           <router-link to="/earth3d" class="primary-action">探索 3D 地球 <span aria-hidden="true">↗</span></router-link>
           <button type="button" class="secondary-action" @click="scrollToSection('three-d-gallery')">查看三维模型 <span aria-hidden="true">↓</span></button>
@@ -15,8 +15,8 @@
         </div>
       </div>
       <figure class="earth-portrait">
-        <HomeGlobe />
-        <figcaption>交互地球纹理：<a href="https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/" target="_blank" rel="noopener noreferrer">NASA Blue Marble: Next Generation ↗</a> · 静态备选：<a href="https://science.nasa.gov/resource/the-blue-marble/" target="_blank" rel="noopener noreferrer">Apollo 17 / NASA ↗</a></figcaption>
+        <HomeEarth3D @planet-change="selectedHomePlanet = $event" />
+        <figcaption>天体外观仅供观察，展示大小不按真实比例。纹理：<a :href="selectedHomePlanet.id === 'earth' ? 'https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/' : selectedHomePlanet.id === 'pluto' ? 'https://science.nasa.gov/resource/pluto-global-color-map/' : 'https://www.solarsystemscope.com/textures/'" target="_blank" rel="noopener noreferrer">{{ selectedHomePlanet.id === 'earth' ? 'NASA' : selectedHomePlanet.id === 'pluto' ? 'NASA / JHUAPL / SwRI' : 'Solar System Scope · CC BY 4.0' }} ↗</a></figcaption>
       </figure>
     </section>
 
@@ -145,7 +145,10 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { geoOptimizedAsset } from './geoAssets.js'
-import HomeGlobe from './HomeGlobe.vue'
+import HomeEarth3D from './HomeEarth3D.vue'
+import { planets } from './planetCatalog.js'
+
+const selectedHomePlanet = ref(planets[2])
 
 const featuredModels = [
   { title: '地球内部', question: '地壳、地幔与地核如何分层？', to: '/earth3d' },
