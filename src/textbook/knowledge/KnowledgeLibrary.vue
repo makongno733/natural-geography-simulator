@@ -46,6 +46,8 @@
             <h3>{{ point.name }}</h3>
             <p class="point-definition">{{ point.definition }}</p>
             <ul v-if="point.terms?.length" class="term-list" aria-label="核心术语"><li v-for="term in point.terms" :key="term">{{ term }}</li></ul>
+            <CurriculumFigure v-for="figure in figuresByPoint[point.id] || []" :key="figure.id" :figure="figure" />
+            <CurriculumInteraction v-for="interaction in interactionsByPoint[point.id] || []" :key="interaction.id" :interaction="interaction" />
             <details><summary>展开原理、机制与案例</summary>
               <div class="point-body">
                 <p v-if="point.explanation">{{ point.explanation }}</p>
@@ -83,6 +85,10 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loadKnowledgeBook, manifest, knowledgeRoute } from './loader.js'
+import { figuresByPoint } from './visuals/catalog.js'
+import CurriculumFigure from './visuals/CurriculumFigure.vue'
+import { interactionsByPoint } from './interactions/catalog.js'
+import CurriculumInteraction from './interactions/CurriculumInteraction.vue'
 
 const route = useRoute()
 const router = useRouter()
