@@ -7,6 +7,7 @@ import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.mjs'
 import { database } from './database.mjs'
 import { allowedOrigins, mailReady, googleReady, githubReady } from './config.mjs'
+import { answerLessonQuestion } from './lesson-ai.mjs'
 
 const app = express()
 const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
@@ -38,7 +39,27 @@ function sectionKey(value) {
 }
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
-app.get('/api/config', (_req, res) => res.json({ email: mailReady, google: googleReady, github: githubReady }))
+app.get('/api/config', (_req, res) => res.json({ email: mailReady, google: googleReady, github: githubReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
+
+const aiRequests = []
+app.post('/api/assistant/ask', requireOrigin, async (req, res, next) => {
+  const question = typeof req.body?.question === 'string' ? req.body.question.trim() : ''
+  if (!question || question.length > 300) return res.status(400).json({ error: '问题须为 1–300 字' })
+  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: '课程问答尚未启用' })
+  const now = Date.now()
+  while (aiRequests.length && aiRequests[0] < now - 86_400_000) aiRequests.shift()
+  if (aiRequests.length >= 200 || aiRequests.filter((time) => time > now - 60_000).length >= 12) {
+    return res.status(429).json({ error: '今日或当前问答次数已达上限，请稍后再试' })
+  }
+  aiRequests.push(now)
+  try {
+    res.json(await answerLessonQuestion(question))
+  } catch (error) {
+    if (error.message === 'DEEPSEEK_429') return res.status(503).json({ error: '课程问答暂时繁忙，请稍后再试' })
+    if (error.name === 'TimeoutError') return res.status(504).json({ error: '课程问答超时，请稍后再试' })
+    next(error)
+  }
+})
 
 app.get('/api/comments', (req, res) => {
   const key = sectionKey(req.query.section)
