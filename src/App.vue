@@ -104,6 +104,7 @@
             <div class="footer-col">
               <h4>地学科学探究</h4>
               <router-link to="/inquiry">地理探究任务</router-link>
+              <router-link to="/geo-labs">真实数据探究</router-link>
               <router-link to="/practice">地理练习与互动模型</router-link>
               <router-link to="/experiments/meteorology">大气与气象实验</router-link>
               <router-link to="/experiments/hydrology">流水地貌与水循环</router-link>

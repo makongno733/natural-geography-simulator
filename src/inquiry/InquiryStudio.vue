@@ -6,6 +6,7 @@
         <h1>从一张图，<br>走向一个问题。</h1>
         <p class="lead">地理素养从观察真实世界开始。先区分“看到了什么”和“推测了什么”，再改变条件、比较结果，尝试解释一个地理过程。</p>
         <a href="#image-inquiry" class="hero-link">开始观察 <span aria-hidden="true">↓</span></a>
+        <router-link to="/geo-labs" class="hero-link data-labs-link">探索真实地球数据 <span aria-hidden="true">↗</span></router-link>
       </div>
       <span class="hero-coordinate" aria-hidden="true">OBSERVE → QUESTION → EXPLAIN</span>
     </header>
@@ -202,6 +203,7 @@ function saveScenario() {
 .inquiry-hero h1 { max-width:700px; margin:0; color:#f4f3e8; font-size:clamp(48px,7vw,94px); line-height:1.08; letter-spacing:-.055em; }
 .lead { max-width:600px; margin:28px 0 34px; color:#d2ded7; font-size:clamp(16px,1.5vw,19px); line-height:1.85; }
 .hero-link { display:inline-flex; justify-content:space-between; min-width:190px; gap:24px; padding:13px 16px; color:#14312c; background:#dce8cf; text-decoration:none; font-weight:700; }
+.data-labs-link { margin-left:12px; background:transparent; color:#e4f4ea; border:1px solid #b4d5ca; }
 .hero-coordinate { position:absolute; right:4vw; bottom:28px; color:#a9c3be; font:700 11px ui-monospace,monospace; letter-spacing:.15em; }
 .image-inquiry { padding-top:clamp(72px,8vw,112px); padding-bottom:clamp(80px,9vw,126px); scroll-margin-top:90px; }
 .section-intro { max-width:740px; margin-bottom:38px; }
@@ -277,5 +279,6 @@ function saveScenario() {
 button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid #d9eab9; outline-offset:3px; }
 @media(max-width:850px) { .case-layout,.lab-layout { grid-template-columns:1fr; }.lab-bridge { align-items:start; flex-direction:column; }.bridge-links { width:100%; }.hero-coordinate { display:none; } }
 @media(max-width:620px) { .wide { width:min(100% - 40px,1200px); }.inquiry-hero { padding:70px 0 65px; }.case-tabs button { min-width:0; font-size:13px; }.case-image img { height:270px; }.lab-controls { padding:20px; } }
+@media(max-width:620px) { .data-labs-link { margin:12px 0 0; } }
 @media(prefers-reduced-motion:reduce) { .stream { transition:none; } }
 </style>

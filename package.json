@@ -36,6 +36,7 @@
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
     "express": "^5.3.0",
+    "maplibre-gl": "5.14.0",
     "meshline": "^3.3.1",
     "nodemailer": "^10.0.16",
     "three": "^0.184.0",
