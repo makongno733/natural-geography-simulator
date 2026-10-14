@@ -1,284 +1,778 @@
 <template>
-  <div class="se-layout">
+  <div class="se-layout astro-theme">
     <aside class="se-panel">
-      <div class="preset-row">
-        <button class="preset-btn" :class="{ active: activePreset === 'spring' }" @click="setPreset('spring')">春分</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'summer' }" @click="setPreset('summer')">夏至</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'autumn' }" @click="setPreset('autumn')">秋分</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'winter' }" @click="setPreset('winter')">冬至</button>
+      <div class="panel-header">
+        <span class="station-tag">☀️ 日心天象与公转观测舱</span>
+        <h3 class="panel-title">四季成因与太阳直射点移动</h3>
       </div>
-      <label>公转位置 <span>{{ orbitAngle }}°</span></label>
-      <input type="range" min="0" max="360" v-model.number="orbitAngle" @input="onParam" />
-      <div class="se-season-label">当前节气：<strong>{{ seasonLabel }}</strong></div>
-      <div class="se-marker-list">
-        <span :class="{ active: near(0) }">春分 0°</span>
-        <span :class="{ active: near(90) }">夏至 90°</span>
-        <span :class="{ active: near(180) }">秋分 180°</span>
-        <span :class="{ active: near(270) }">冬至 270°</span>
+
+      <!-- 二分二至关键节点 -->
+      <div class="season-selector">
+        <span class="ctrl-subhead">二分二至预设节点</span>
+        <div class="preset-grid">
+          <button
+            v-for="s in seasonList"
+            :key="s.name"
+            :class="['preset-chip', { active: currentSeasonKey === s.key }]"
+            @click="selectSeason(s)"
+          >
+            <span class="chip-icon">{{ s.icon }}</span>
+            <span class="chip-name">{{ s.name }}</span>
+            <span class="chip-date">{{ s.date }}</span>
+          </button>
+        </div>
       </div>
-      <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
-      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
-        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+
+      <!-- 公转位置连续滑动 -->
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>地球公转位置</span>
+          <span class="val-badge">{{ orbitAngle }}° ({{ currentMonthText }})</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="360"
+          step="1"
+          v-model.number="orbitAngle"
+          @input="onAngleInput"
+          class="astro-slider"
+        />
+        <div class="angle-ticks">
+          <span>春分 0°</span>
+          <span>夏至 90°</span>
+          <span>秋分 180°</span>
+          <span>冬至 270°</span>
+        </div>
+      </div>
+
+      <!-- 直射点与昼夜遥测看板 -->
+      <div class="telemetry-card">
+        <div class="card-head">
+          <span>📡 太阳直射点实时遥测</span>
+          <span class="declination-badge">{{ declinationText }}</span>
+        </div>
+        <div class="telemetry-grid">
+          <div class="tele-item">
+            <span class="tele-label">直射纬度</span>
+            <strong>{{ subsolarLat.toFixed(1) }}° {{ subsolarLat >= 0 ? 'N' : 'S' }}</strong>
+          </div>
+          <div class="tele-item">
+            <span class="tele-label">极昼/极夜界限</span>
+            <strong>{{ polarBoundary.toFixed(1) }}° 纬线以内</strong>
+          </div>
+          <div class="tele-item">
+            <span class="tele-label">北半球昼夜</span>
+            <strong>{{ dayNightStateText }}</strong>
+          </div>
+          <div class="tele-item">
+            <span class="tele-label">公转线速度</span>
+            <span>{{ orbitalSpeedText }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作与引导 -->
+      <div class="action-row">
+        <button
+          @click="togglePlay"
+          :class="['action-btn', 'play-btn', { playing: autoRunning }]"
+        >
+          {{ autoRunning ? '⏸ 暂停公转' : '▶ 连续公转' }}
+        </button>
+        <button
+          @click="toggleOrbitPlane"
+          class="action-btn"
+        >
+          {{ showOrbitPlane ? '🌐 隐藏黄道面' : '🌐 显示黄道面' }}
+        </button>
+      </div>
+
+      <button
+        @click="toggleGuide"
+        :class="['guide-trigger', { active: guideActive }]"
+      >
+        {{ guideActive ? '⏸ 停止讲解' : '💡 核心考点动画引导' }}
       </button>
-      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
-      <p class="se-hint">🖱 拖动旋转 · 滚轮缩放</p>
+      <div v-if="guideActive" class="guide-box">{{ guideText }}</div>
+      <p class="nav-hint">🖱 拖动旋转 · 滚轮缩放 · 双击居中</p>
     </aside>
+
     <div class="se-canvas-wrap">
       <canvas ref="cvs"></canvas>
-      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
-        {{ locked ? '🔒' : '🔓' }}
-      </button>
+      <div class="view-overlay">
+        <span class="overlay-tag">黄赤交角 23°26′ · 地轴空间指向恒定</span>
+        <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由旋转' : '锁定视角'">
+          {{ locked ? '🔒 轴线锁定' : '🔓 自由旋转' }}
+        </button>
+      </div>
+      <div class="orbit-badge">
+        <span>近日点 (1月初) ↔ 远日点 (7月初)</span>
+      </div>
     </div>
   </div>
-  <div class="exp-desc">
-    <h4>实验说明</h4>
-    <p>本实验展示四季成因：地球绕日公转过程中，23.5°的地轴倾角保持不变，导致太阳直射点在南北回归线之间移动。夏至时北半球倾向太阳（昼长夜短），冬至时南半球倾向太阳。春分和秋分时太阳直射赤道，全球昼夜等长。</p>
-  </div>
+
+  <ModelPedagogyPanel
+    theme="astronomy"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: 'Copernicus 太阳高度与地貌日照', path: '/geo-labs/terrain', desc: '真实高程光照与阴影分析' }"
+    :textbook-link="{ grade: '高中', book: '选择性必修1', chapter: '第一章', section: '第一节' }"
+    practice-link="/practice"
+    @reset="resetObservation"
+  />
 </template>
 
 <script>
-import { ExperimentEngine } from '../../engine/ExperimentEngine.js'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
 
-const seasonNames = ['春分', '夏至', '秋分', '冬至']
+const SEASONS = [
+  { key: 'spring', name: '春分日', icon: '🌱', date: '3月21日前后', deg: 0, lat: 0 },
+  { key: 'summer', name: '夏至日', icon: '☀️', date: '6月22日前后', deg: 90, lat: 23.44 },
+  { key: 'autumn', name: '秋分日', icon: '🍂', date: '9月23日前后', deg: 180, lat: 0 },
+  { key: 'winter', name: '冬至日', icon: '❄️', date: '12月22日前后', deg: 270, lat: -23.44 },
+]
 
 export default {
   name: 'Seasons',
-  data() { return {
-    orbitAngle: 0, auto: false, seasonLabel: '春分', activePreset: 'spring', locked: true,
-    guideActive: false,
-    guideText: '',
-    _guideTexts: [
-      '地轴倾角 23.5° 是四季形成的根本原因',
-      '夏至时太阳直射北回归线，北半球昼长夜短',
-      '冬至时太阳直射南回归线，北半球昼短夜长',
-      '春分和秋分时太阳直射赤道，全球昼夜等长',
-    ],
-  } },
-  mounted() {
-    this._e = new SeasonsEngine()
-    this._e._vm = this
-    this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
-    window.addEventListener('resize', this._onResize)
+  components: {
+    ModelPedagogyPanel,
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
+  data() {
+    return {
+      orbitAngle: 0,
+      autoRunning: false,
+      locked: true,
+      showOrbitPlane: true,
+      guideActive: false,
+      guideIndex: 0,
+      guideText: '',
+      seasonList: SEASONS,
+      guideSteps: [
+        '【定轴公转】地轴倾斜23°26′，且北极始终指向北极星附近，空间朝向不变！',
+        '【夏至日】公转到90°，太阳直射北回归线（23°26′N），北半球昼最长夜最短，北极圈内极昼！',
+        '【秋分日】公转到180°，太阳直射赤道，全球各地昼夜平分，无极昼极夜！',
+        '【冬至日】公转到270°，太阳直射南回归线（23°26′S），北半球昼最短夜最长，北极圈内极夜！',
+        '【春分日】公转回到0°，太阳再次直射赤道，完成一个回归年的四季循环。',
+      ],
+      pedagogy: {
+        observe: [
+          '地球绕日公转时地轴空间指向保持平行（地轴倾角 23°26′ 恒定）。',
+          '直射光线在北回归线（夏至）、赤道（二分）、南回归线（冬至）之间往返移动。',
+          '晨昏圈与地轴夹角在 0°（二分）到 23°26′（二至）之间规律变化，产生昼夜长短差异与极昼极夜。',
+        ],
+        change: [
+          '拖动公转位置滑杆，连续观察一年 365 天太阳直射点纬度与地表光照迁移。',
+          '点击“二分二至”预设芯片，瞬间定位关键节气。',
+          '开启“连续公转”，动态演示四季回归运动。',
+        ],
+        mechanism: [
+          '根本原因：黄赤交角的存在以及地球公转过程中地轴的北端空间指向基本不变。',
+          '正午太阳高度角与昼夜长短的纬度分布随直射点回归移动而发生周期性季节变化。',
+          '地表不同纬度获得太阳辐射能的多少随季节变化，形成春暖、夏热、秋凉、冬寒的四季更替。',
+        ],
+        limitations: [
+          '为便教学观察，地球大小与公转轨道半径比例进行了非等比缩放（真实地球半径仅为日地距离的 1/23500）。',
+          '忽略了地球公转轨道的微小离心率（真实轨道为近日点 1.47 亿 km，远日点 1.52 亿 km 的轻微椭圆）。',
+          '忽略了地轴在数万年尺度上的岁差运动。',
+        ],
+      },
+    }
+  },
+  computed: {
+    currentSeasonKey() {
+      const deg = ((this.orbitAngle % 360) + 360) % 360
+      if (Math.abs(deg - 0) < 15 || Math.abs(deg - 360) < 15) return 'spring'
+      if (Math.abs(deg - 90) < 15) return 'summer'
+      if (Math.abs(deg - 180) < 15) return 'autumn'
+      if (Math.abs(deg - 270) < 15) return 'winter'
+      return ''
+    },
+    subsolarLat() {
+      const rad = (this.orbitAngle * Math.PI) / 180
+      return Math.sin(rad) * 23.44
+    },
+    declinationText() {
+      const lat = this.subsolarLat
+      if (Math.abs(lat) < 0.2) return '直射赤道 (0°)'
+      return lat > 0 ? `直射北半球 (+${lat.toFixed(1)}°)` : `直射南半球 (${lat.toFixed(1)}°)`
+    },
+    polarBoundary() {
+      return 90 - Math.abs(this.subsolarLat)
+    },
+    dayNightStateText() {
+      const lat = this.subsolarLat
+      if (Math.abs(lat) < 0.2) return '全球昼夜等长'
+      if (lat > 0) return '昼长夜短 (越北昼越长)'
+      return '昼短夜长 (越北昼越短)'
+    },
+    currentMonthText() {
+      const month = Math.floor((this.orbitAngle / 360) * 12) + 3
+      const normalizedMonth = ((month - 1) % 12) + 1
+      return `约 ${normalizedMonth} 月`
+    },
+    orbitalSpeedText() {
+      const deg = ((this.orbitAngle % 360) + 360) % 360
+      // winter is around Jan (perihelion), summer is around July (aphelion)
+      if (deg > 240 && deg < 300) return '近日点附近 (较快 ~30.3 km/s)'
+      if (deg > 60 && deg < 120) return '远日点附近 (较慢 ~29.3 km/s)'
+      return '平均速度 (~29.8 km/s)'
+    },
+  },
+  mounted() {
+    this.initScene()
+    window.addEventListener('resize', this.onResize)
+  },
+  beforeUnmount() {
+    this.disposeScene()
+    window.removeEventListener('resize', this.onResize)
+  },
   methods: {
-    _onResize() { this._e?.resize() },
-    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
-    onParam() { this._e.setParams({ orbitAngle: this.orbitAngle * Math.PI / 180 }) },
-    autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
-    near(deg) { return Math.abs(((this.orbitAngle % 360 + 360) % 360) - deg) < 10 },
+    initScene() {
+      const canvas = this.$refs.cvs
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const w = rect.width || 600
+      const h = rect.height || 420
+
+      this.scene = new THREE.Scene()
+      this.scene.background = new THREE.Color(0x050914)
+
+      this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
+      this.camera.position.set(0, 24, 28)
+
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      this.renderer.setSize(w, h)
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      this.renderer.shadowMap.enabled = true
+
+      this.controls = new OrbitControls(this.camera, canvas)
+      this.controls.enableDamping = true
+      this.controls.dampingFactor = 0.06
+      this.controls.target.set(0, 0, 0)
+      if (this.locked) {
+        this.controls.maxPolarAngle = Math.PI / 2.1
+        this.controls.minDistance = 10
+        this.controls.maxDistance = 60
+      }
+
+      this.buildScene()
+      this.animate()
+    },
+
+    buildScene() {
+      // 1. Stars background
+      const starCount = 300
+      const starGeo = new THREE.BufferGeometry()
+      const starPos = new Float32Array(starCount * 3)
+      for (let i = 0; i < starCount * 3; i += 3) {
+        starPos[i] = (Math.random() - 0.5) * 140
+        starPos[i + 1] = (Math.random() - 0.5) * 90
+        starPos[i + 2] = (Math.random() - 0.5) * 140
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
+      const starMat = new THREE.PointsMaterial({ color: 0x94a3b8, size: 0.35, transparent: true, opacity: 0.7 })
+      this.scene.add(new THREE.Points(starGeo, starMat))
+
+      // 2. Central Sun
+      const sunGeo = new THREE.SphereGeometry(2.5, 32, 32)
+      const sunMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b })
+      this.sunMesh = new THREE.Mesh(sunGeo, sunMat)
+      this.scene.add(this.sunMesh)
+
+      // Sun glow ring
+      const glowGeo = new THREE.RingGeometry(2.6, 3.8, 32)
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide, transparent: true, opacity: 0.25 })
+      const sunGlow = new THREE.Mesh(glowGeo, glowMat)
+      sunGlow.rotation.x = Math.PI / 2
+      this.scene.add(sunGlow)
+
+      const sunLight = new THREE.PointLight(0xffedd5, 4.0, 100)
+      this.scene.add(sunLight)
+      this.scene.add(new THREE.AmbientLight(0x1e293b, 0.6))
+
+      // 3. Orbit Plane & Ellipse Line
+      const orbitR = 12.0
+      this.orbitRadius = orbitR
+      const orbitCurve = new THREE.EllipseCurve(0, 0, orbitR, orbitR, 0, 2 * Math.PI, false, 0)
+      const orbitPoints = orbitCurve.getPoints(120)
+      const orbitGeo = new THREE.BufferGeometry().setFromPoints(
+        orbitPoints.map(p => new THREE.Vector3(p.x, 0, p.y))
+      )
+      const orbitMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.55 })
+      this.orbitLine = new THREE.Line(orbitGeo, orbitMat)
+      this.scene.add(this.orbitLine)
+
+      // Orbit plane disk
+      const planeGeo = new THREE.RingGeometry(2.8, orbitR + 1.5, 64)
+      const planeMat = new THREE.MeshBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.05, side: THREE.DoubleSide })
+      this.planeMesh = new THREE.Mesh(planeGeo, planeMat)
+      this.planeMesh.rotation.x = Math.PI / 2
+      this.scene.add(this.planeMesh)
+
+      // 4. Earth Assembly (with axial tilt)
+      this.earthGroup = new THREE.Group()
+
+      const earthSphereGeo = new THREE.SphereGeometry(1.4, 32, 32)
+      const earthMat = new THREE.MeshStandardMaterial({
+        color: 0x2563eb,
+        roughness: 0.7,
+        metalness: 0.1,
+      })
+      this.earthSphere = new THREE.Mesh(earthSphereGeo, earthMat)
+
+      // Obliquity of 23.44 degrees (tilted towards Z+)
+      this.earthTiltGroup = new THREE.Group()
+      this.earthTiltGroup.rotation.x = THREE.MathUtils.degToRad(-23.44)
+      this.earthTiltGroup.add(this.earthSphere)
+
+      // Earth rotation axis pin
+      const axisGeo = new THREE.CylinderGeometry(0.03, 0.03, 4.2, 16)
+      const axisMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+      const axisPin = new THREE.Mesh(axisGeo, axisMat)
+      this.earthTiltGroup.add(axisPin)
+
+      // Equator Ring
+      const eqGeo = new THREE.RingGeometry(1.42, 1.48, 48)
+      const eqMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e, side: THREE.DoubleSide })
+      const eqMesh = new THREE.Mesh(eqGeo, eqMat)
+      eqMesh.rotation.x = Math.PI / 2
+      this.earthTiltGroup.add(eqMesh)
+
+      // Tropic of Cancer (23.5° N) & Capricorn (23.5° S)
+      const rTropic = 1.4 * Math.cos(THREE.MathUtils.degToRad(23.44))
+      const yTropic = 1.4 * Math.sin(THREE.MathUtils.degToRad(23.44))
+      const tropicGeo = new THREE.RingGeometry(rTropic * 1.01, rTropic * 1.05, 36)
+      const tropicMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide })
+      const cancerMesh = new THREE.Mesh(tropicGeo, tropicMat)
+      cancerMesh.position.y = yTropic
+      cancerMesh.rotation.x = Math.PI / 2
+      this.earthTiltGroup.add(cancerMesh)
+
+      const capricornMesh = new THREE.Mesh(tropicGeo, tropicMat)
+      capricornMesh.position.y = -yTropic
+      capricornMesh.rotation.x = Math.PI / 2
+      this.earthTiltGroup.add(capricornMesh)
+
+      this.earthGroup.add(this.earthTiltGroup)
+      this.scene.add(this.earthGroup)
+
+      // 5. Laser Ray from Sun to Earth center
+      const rayGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+      ])
+      const rayMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, linewidth: 2 })
+      this.rayLine = new THREE.Line(rayGeo, rayMat)
+      this.scene.add(this.rayLine)
+
+      this.updatePositions()
+    },
+
+    updatePositions() {
+      if (!this.earthGroup) return
+      // Spring equinox at 0° (X=orbitR, Z=0)
+      // Summer solstice at 90° (X=0, Z=orbitR -> Earth tilted towards Sun)
+      const rad = (this.orbitAngle * Math.PI) / 180
+      const x = Math.cos(rad) * this.orbitRadius
+      const z = Math.sin(rad) * this.orbitRadius
+      this.earthGroup.position.set(x, 0, z)
+
+      // Update laser ray
+      if (this.rayLine) {
+        const pos = this.rayLine.geometry.attributes.position
+        pos.setXYZ(0, 0, 0, 0)
+        pos.setXYZ(1, x, 0, z)
+        pos.needsUpdate = true
+      }
+    },
+
+    animate() {
+      this.animId = requestAnimationFrame(this.animate)
+      if (this.autoRunning) {
+        this.orbitAngle = (this.orbitAngle + 0.3) % 360
+        this.updatePositions()
+      }
+      if (this.earthSphere) {
+        this.earthSphere.rotation.y += 0.02
+      }
+      if (this.controls) {
+        this.controls.update()
+      }
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
+      }
+    },
+
+    onAngleInput() {
+      this.autoRunning = false
+      this.updatePositions()
+    },
+
+    selectSeason(s) {
+      this.autoRunning = false
+      this.orbitAngle = s.deg
+      this.updatePositions()
+    },
+
+    togglePlay() {
+      this.autoRunning = !this.autoRunning
+    },
+
+    toggleOrbitPlane() {
+      this.showOrbitPlane = !this.showOrbitPlane
+      if (this.planeMesh) this.planeMesh.visible = this.showOrbitPlane
+      if (this.orbitLine) this.orbitLine.visible = this.showOrbitPlane
+    },
+
+    toggleLock() {
+      this.locked = !this.locked
+      if (this.controls) {
+        if (this.locked) {
+          this.controls.maxPolarAngle = Math.PI / 2.1
+          this.controls.minDistance = 10
+          this.controls.maxDistance = 60
+        } else {
+          this.controls.maxPolarAngle = Math.PI
+          this.controls.minDistance = 3
+          this.controls.maxDistance = 120
+        }
+      }
+    },
+
     toggleGuide() {
       this.guideActive = !this.guideActive
       if (this.guideActive) {
-        this._e.startGuidedMode(this._guideTexts)
-        this.guideText = this._e.getGuideText()
+        this.guideIndex = 0
+        this.guideText = this.guideSteps[0]
+        clearInterval(this.guideTimer)
+        this.guideTimer = setInterval(() => {
+          if (!this.guideActive) return
+          this.guideIndex = (this.guideIndex + 1) % this.guideSteps.length
+          this.guideText = this.guideSteps[this.guideIndex]
+        }, 5000)
       } else {
-        this._e.stopGuidedMode()
-        this.guideText = ''
+        clearInterval(this.guideTimer)
       }
     },
-    setPreset(key) {
-      this.activePreset = key
-      if (this.auto) { this.auto = false; this._e.auto = false }
-      const angles = { spring: 0, summer: 90, autumn: 180, winter: 270 }
-      this.orbitAngle = angles[key]
-      this.onParam()
+
+    resetObservation() {
+      this.orbitAngle = 0
+      this.autoRunning = false
+      this.updatePositions()
+      this.camera.position.set(0, 24, 28)
+      this.controls.target.set(0, 0, 0)
+      this.controls.update()
+    },
+
+    onResize() {
+      const canvas = this.$refs.cvs
+      if (!canvas || !this.renderer || !this.camera) return
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        this.camera.aspect = rect.width / rect.height
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(rect.width, rect.height)
+      }
+    },
+
+    disposeScene() {
+      if (this.animId) cancelAnimationFrame(this.animId)
+      if (this.guideTimer) clearInterval(this.guideTimer)
+      if (this.controls) this.controls.dispose()
+      if (this.renderer) this.renderer.dispose()
+      if (this.scene) {
+        this.scene.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose())
+            else obj.material.dispose()
+          }
+        })
+      }
     },
   },
-}
-
-class SeasonsEngine extends ExperimentEngine {
-  setupScene() {
-    this.scene.background = new THREE.Color(0x000011)
-    this.scene.fog = null
-
-    // Remove base warm ambient, replace with cool space lighting
-    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
-    if (existingAmbient) {
-      this.scene.remove(existingAmbient)
-    }
-    const ambient = new THREE.AmbientLight(0x334466, 1.5)
-    this.scene.add(ambient)
-
-    const sunGeo = new THREE.SphereGeometry(5.0, 64, 64)
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 })
-    const sun = new THREE.Mesh(sunGeo, sunMat)
-    this.scene.add(sun)
-
-    const coronaGeo = new THREE.SphereGeometry(6.5, 32, 32)
-    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.06 })
-    const corona = new THREE.Mesh(coronaGeo, coronaMat)
-    corona.position.copy(sun.position)
-    this.scene.add(corona)
-
-    const sunLight = new THREE.PointLight(0xfff8e8, 150, 80)
-    sunLight.position.copy(sun.position)
-    this.scene.add(sunLight)
-
-    const orbitGeo = new THREE.TorusGeometry(14, 0.08, 16, 128)
-    const orbitRing = new THREE.Mesh(orbitGeo, new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.5 }))
-    orbitRing.rotation.x = 0.05
-    this.scene.add(orbitRing)
-
-    this.orbitAngle = 0
-    this.auto = false
-    this.orbitRadius = 14
-    this.tiltAngle = 23.5 * Math.PI / 180
-
-    this.earthGroup = new THREE.Group()
-    this.scene.add(this.earthGroup)
-
-    const earthGeo = new THREE.SphereGeometry(2.5, 64, 64)
-    const earthMat = new THREE.MeshPhongMaterial({ color: 0x1a6fc4, specular: 0x5599ff, shininess: 25 })
-    this.earth = new THREE.Mesh(earthGeo, earthMat)
-    this.earthGroup.add(this.earth)
-
-    const atmoGeo = new THREE.TorusGeometry(2.7, 0.08, 16, 64)
-    const atmoMat = new THREE.MeshBasicMaterial({ color: 0x448aff, transparent: true, opacity: 0.3 })
-    const atmoRing = new THREE.Mesh(atmoGeo, atmoMat)
-    this.earthGroup.add(atmoRing)
-
-    const axisLen = 4.5
-    const axisGeo = new THREE.CylinderGeometry(0.2, 0.2, axisLen, 8)
-    const axisMat = new THREE.MeshStandardMaterial({ color: 0xff0000 })
-    const axis = new THREE.Mesh(axisGeo, axisMat)
-    axis.position.y = 0
-    this.earthGroup.add(axis)
-
-    const nubGeo = new THREE.SphereGeometry(0.3, 8, 8)
-    const nNorth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0xff0000 }))
-    nNorth.position.y = axisLen / 2
-    this.earthGroup.add(nNorth)
-    const nSouth = new THREE.Mesh(nubGeo, new THREE.MeshBasicMaterial({ color: 0x0066ff }))
-    nSouth.position.y = -axisLen / 2
-    this.earthGroup.add(nSouth)
-
-    this.earthGroup.rotation.x = this.tiltAngle
-
-    const markerPositions = [
-      { a: 0, label: '春分 3.21', color: '#81c784' },
-      { a: Math.PI / 2, label: '夏至 6.21', color: '#ef5350' },
-      { a: Math.PI, label: '秋分 9.23', color: '#ffb74d' },
-      { a: Math.PI * 1.5, label: '冬至 12.22', color: '#64b5f6' },
-    ]
-    for (const m of markerPositions) {
-      const pos = new THREE.Vector3(Math.cos(m.a) * 14, 1.5, Math.sin(m.a) * 14)
-      this.scene.add(this._makeLabel(m.label, pos, m.color, 48, 4.0))
-      const dotGeo = new THREE.SphereGeometry(0.25, 8, 8)
-      const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: m.color }))
-      dot.position.copy(pos)
-      this.scene.add(dot)
-    }
-
-    // Additional sprite labels
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(0, 5.8, 0), '#ffcc00', 64, 4.0))
-    this._earthLabel = this._makeLabel('地球', new THREE.Vector3(14, 3.0, 0), '#448aff', 64, 4.0)
-    this.scene.add(this._earthLabel)
-    this.scene.add(this._makeLabel('地轴 23.5°', new THREE.Vector3(3, 5.0, 0), '#ff0000', 48, 3.0))
-    this._northLabel = this._makeLabel('北半球', new THREE.Vector3(0, 3.5, 0), '#ff0000', 48, 3.0)
-    this.scene.add(this._northLabel)
-    this._southLabel = this._makeLabel('南半球', new THREE.Vector3(0, -3.0, 0), '#0066ff', 48, 3.0)
-    this.scene.add(this._southLabel)
-
-    this.camera.fov = 55; this.camera.updateProjectionMatrix()
-    this.camera.position.set(0, 16, 22)
-    this.controls.minDistance = 5
-    this.controls.maxDistance = 30
-    this.controls.target.set(0, 0, 0)
-
-    const starsGeo = new THREE.BufferGeometry()
-    const starsCount = 60
-    const starsPositions = new Float32Array(starsCount * 3)
-    for (let i = 0; i < starsCount * 3; i += 3) {
-      starsPositions[i] = (Math.random() - 0.5) * 50
-      starsPositions[i + 1] = (Math.random() - 0.5) * 40
-      starsPositions[i + 2] = (Math.random() - 0.5) * 30
-    }
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3))
-    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 })
-    const stars = new THREE.Points(starsGeo, starsMat)
-    this.scene.add(stars)
-  }
-
-  update(dt) {
-    if (this.auto) {
-      this.orbitAngle += dt * 0.5
-      if (this.orbitAngle > Math.PI * 2) this.orbitAngle -= Math.PI * 2
-      this._vm.orbitAngle = Math.round((this.orbitAngle * 180 / Math.PI) % 360)
-      this._vm.seasonLabel = seasonNames[Math.round(this.orbitAngle / (Math.PI / 2)) % 4]
-    }
-    const a = this.orbitAngle
-    this.earthGroup.position.set(Math.cos(a) * this.orbitRadius, 0, Math.sin(a) * this.orbitRadius)
-    const ep = this.earthGroup.position
-    if (this._earthLabel) this._earthLabel.position.copy(ep).add(new THREE.Vector3(0, 1.5, 0))
-    if (this._northLabel) this._northLabel.position.copy(ep).add(new THREE.Vector3(0, 3.5, 0))
-    if (this._southLabel) this._southLabel.position.copy(ep).add(new THREE.Vector3(0, -3.0, 0))
-  }
-
-  setParams({ orbitAngle }) {
-    if (orbitAngle !== undefined) {
-      this.orbitAngle = orbitAngle
-      this._vm.seasonLabel = seasonNames[Math.round(orbitAngle / (Math.PI / 2)) % 4]
-    }
-  }
 }
 </script>
 
 <style scoped>
-.se-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.se-panel { width: 210px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
-.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-.preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
-.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
-.preset-btn:hover { background: var(--button-green); }
-.preset-btn.active:hover { background: var(--red); }
-.se-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
-.se-panel input[type="range"] { width: 100%; accent-color: var(--red); }
-.se-season-label { font-size: 15px; color: var(--ink); text-align: center; padding: 8px; background: rgba(158,36,38,0.06); border-radius: var(--radius-sm); }
-.se-marker-list { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
-.se-marker-list span { padding: 2px 6px; border-radius: var(--radius-sm); background: rgba(184,165,122,0.12); color: var(--muted); }
-.se-marker-list span.active { background: var(--red); color: #fff; }
-.se-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
-.se-panel button:hover { background: var(--button-green); }
-.se-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
-.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
-.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
-.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.se-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; overflow: hidden; }
-.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lock-btn:hover { background: rgba(255,255,255,1); }
-.se-canvas-wrap canvas { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
+.astro-theme {
+  display: flex;
+  gap: 18px;
+  background: #080d1a;
+  border-radius: var(--radius-card, 16px);
+  padding: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #f1f5f9;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
 
-.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
-.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
-.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
+.se-panel {
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-@media (max-width: 720px) {
-  .se-layout { flex-direction: column; }
+.panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+.station-tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  font-weight: 700;
+}
+.panel-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ctrl-subhead {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.preset-chip {
+  padding: 8px 6px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s;
+}
+.preset-chip:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.preset-chip.active {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+.chip-icon { font-size: 16px; margin-bottom: 2px; }
+.chip-name { font-size: 11px; font-weight: 700; }
+.chip-date { font-size: 9px; opacity: 0.7; }
+
+.ctrl-group {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ctrl-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+}
+.val-badge {
+  color: #f59e0b;
+  font-weight: 700;
+}
+.astro-slider {
+  width: 100%;
+  accent-color: #f59e0b;
+}
+.angle-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.telemetry-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.declination-badge {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 11px;
+}
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tele-item {
+  background: rgba(2, 6, 23, 0.6);
+  padding: 6px 8px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+.tele-label {
+  font-size: 10px;
+  color: #94a3b8;
+}
+.tele-item strong {
+  font-size: 11px;
+  color: #f8fafc;
+  margin-top: 2px;
+}
+.tele-item span {
+  font-size: 10px;
+  color: #cbd5e1;
+  margin-top: 2px;
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.action-btn {
+  padding: 8px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+}
+.play-btn.playing {
+  background: #f59e0b;
+  color: #000;
+  font-weight: 700;
+}
+
+.guide-trigger {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide-trigger.active {
+  background: #f59e0b;
+  color: #000;
+}
+.guide-box {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fef08a;
+  line-height: 1.5;
+}
+
+.nav-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+.se-canvas-wrap {
+  flex: 1;
+  min-height: 480px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.se-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.view-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.overlay-tag {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #f8fafc;
+}
+.lock-btn {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.orbit-badge {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .astro-theme {
+    flex-direction: column;
+  }
   .se-panel {
     width: 100%;
-    border-right: 0;
-    border-bottom: 1px solid var(--brown-light);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
   }
-  .se-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
-  .se-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
-  .se-panel button { font-size: 12px; padding: 5px 8px; }
-  .se-canvas-wrap { min-height: 280px; }
-  .guide-text-box { width: 100%; font-size: 11px; }
-  .se-hint { font-size: 10px; }
-  .preset-row { width: 100%; }
-  .preset-btn { font-size: 10px; padding: 4px 6px; }
-  .exp-desc { padding: 10px 14px; margin-top: 12px; }
-  .exp-desc h4 { font-size: 13px; }
-  .exp-desc p { font-size: 13px; line-height: 1.6; }
-  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
+  .se-canvas-wrap {
+    min-height: 320px;
+  }
 }
 </style>

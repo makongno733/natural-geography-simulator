@@ -1,744 +1,869 @@
 <template>
-  <div class="tc-layout">
+  <div class="tc-layout aero-theme">
     <aside class="tc-panel">
-      <div class="tc-presets">
-        <button
-          v-for="p in presets"
-          :key="p.name"
-          :class="['preset-btn', { active: activePreset === p.name }]"
-          @click="applyPreset(p)"
-        >{{ p.label }}</button>
+      <div class="panel-header">
+        <span class="station-tag">🌪 大气边界层风洞实验舱</span>
+        <h3 class="panel-title">热力环流物理模拟与等压面</h3>
       </div>
-      <label>热源温差 <span>{{ tempDiff }}</span></label>
-      <input type="range" min="1" max="10" v-model.number="tempDiff" @input="onParam" />
 
-      <button @click="reset">↺ 重置</button>
-      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
-        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+      <!-- 典型场景模式选择 -->
+      <div class="tc-modes">
+        <span class="ctrl-subhead">地理典型热力环流场景</span>
+        <div class="preset-grid">
+          <button
+            v-for="p in scenarioList"
+            :key="p.key"
+            :class="['preset-chip', { active: currentScenarioKey === p.key }]"
+            @click="selectScenario(p.key)"
+          >
+            <span class="chip-icon">{{ p.icon }}</span>
+            <span class="chip-name">{{ p.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 温差强度与昼夜切换 -->
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>冷热源温差 ΔT</span>
+          <span class="val-badge">{{ tempDiff }} °C</span>
+        </div>
+        <input
+          type="range"
+          min="2"
+          max="15"
+          step="1"
+          v-model.number="tempDiff"
+          @input="onParamInput"
+          class="aero-slider"
+        />
+        <div class="angle-ticks">
+          <span>2°C 微弱</span>
+          <span>8°C 显著</span>
+          <span>15°C 强烈环流</span>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>昼夜时段 (海陆/山谷反转)</span>
+          <span class="val-badge">{{ isDaytime ? '☀️ 白昼模式' : '🌙 黑夜模式' }}</span>
+        </div>
+        <div class="diurnal-toggle">
+          <button
+            :class="['diurnal-btn', { active: isDaytime }]"
+            @click="setDaytime(true)"
+          >
+            ☀️ 白昼 (陆/峰吸热快)
+          </button>
+          <button
+            :class="['diurnal-btn', { active: !isDaytime }]"
+            @click="setDaytime(false)"
+          >
+            🌙 夜晚 (陆/峰散热快)
+          </button>
+        </div>
+      </div>
+
+      <!-- 大气气压剖面与等压面形变看板 -->
+      <div class="isobar-card">
+        <div class="card-head">
+          <span>📊 气压剖面与等压面形变</span>
+          <span class="isobar-badge">{{ isobarStatusText }}</span>
+        </div>
+        <div class="isobar-grid">
+          <div class="iso-row">
+            <span class="iso-pos">近地面：</span>
+            <span>{{ groundPressureDesc }}</span>
+          </div>
+          <div class="iso-row">
+            <span class="iso-pos">高空：</span>
+            <span>{{ aloftPressureDesc }}</span>
+          </div>
+          <div class="iso-row">
+            <span class="iso-pos">近地风向：</span>
+            <strong class="wind-dir">{{ surfaceWindDesc }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="action-row">
+        <button
+          @click="togglePlay"
+          :class="['action-btn', 'play-btn', { playing: autoRunning }]"
+        >
+          {{ autoRunning ? '⏸ 暂停粒子流' : '▶ 粒子运动' }}
+        </button>
+        <button
+          @click="toggleIsobars"
+          class="action-btn"
+        >
+          {{ showIsobars ? '📈 隐藏等压面' : '📈 凸显等压面' }}
+        </button>
+      </div>
+
+      <button
+        @click="toggleGuide"
+        :class="['guide-trigger', { active: guideActive }]"
+      >
+        {{ guideActive ? '⏸ 停止讲解' : '💡 热力环流推导核心逻辑' }}
       </button>
-      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
-      <p class="tc-hint">🖱 拖动旋转 · 滚轮缩放</p>
+      <div v-if="guideActive" class="guide-box">{{ guideText }}</div>
+      <p class="nav-hint">🖱 拖动旋转空间 · 滚轮缩放 · 双击居中</p>
     </aside>
+
     <div class="tc-canvas-wrap">
       <canvas ref="cvs"></canvas>
-      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
-        {{ locked ? '🔒' : '🔓' }}
-      </button>
+      <div class="view-overlay">
+        <span class="overlay-tag">{{ currentScenarioTitle }}</span>
+        <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由旋转' : '锁定正视观察'">
+          {{ locked ? '🔒 正视观察锁定' : '🔓 自由漫游' }}
+        </button>
+      </div>
+      <div class="temp-legend">
+        <span class="heat-pill">🔥 受热区 (空气膨胀上升 · 气压降低)</span>
+        <span class="cold-pill">❄️ 受冷区 (空气收缩下沉 · 气压升高)</span>
+      </div>
     </div>
   </div>
-  <div class="exp-desc">
-    <h4>实验说明</h4>
-    <p>本实验展示热力环流的形成机制。海陆风模式：白天陆地升温快（热源），海洋升温慢（冷源），陆地空气上升→高空流向海洋→海洋上空下沉→近地面从海洋吹向陆地。山谷风模式：白天山峰升温快（热源），山谷升温慢（冷源），谷风沿坡上升→高空流向山谷→山谷下沉→近地面从山谷吹向山峰。3D 箭头颜色和方向展示气流运动，暖色=上升，冷色=下沉。</p>
-  </div>
+
+  <ModelPedagogyPanel
+    theme="meteorology"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: 'NASA 卫星云图海陆下垫面热力特征', path: '/geo-labs/satellite', desc: '真实云层与海陆风积云线' }"
+    :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第二章', section: '第二节' }"
+    practice-link="/practice"
+    @reset="resetObservation"
+  />
 </template>
 
 <script>
-import { ExperimentEngine } from '../../engine/ExperimentEngine.js'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
+
+const SCENARIOS = [
+  { key: 'thermal-cell', name: '经典冷热槽', icon: '⚗️', title: '基础冷热不均热力环流实验槽' },
+  { key: 'land-sea-breeze', name: '海陆风环流', icon: '🌊', title: '海陆热力性质差异导致的海风与陆风' },
+  { key: 'valley-breeze', name: '山谷风环流', icon: '⛰️', title: '山坡与谷地上空温差导致的山风与谷风' },
+  { key: 'urban-heat-island', name: '城市热岛环流', icon: '🏙️', title: '城市人为热排放在郊野间的微环流' },
+]
 
 export default {
   name: 'ThermalCirculation',
+  components: {
+    ModelPedagogyPanel,
+  },
+  props: {
+    preset: {
+      type: Object,
+      default: () => ({}),
+    },
+    lessonContext: {
+      type: Object,
+      default: () => ({}),
+    },
+  },
   data() {
     return {
-      tempDiff: 7, locked: false,
-      activePreset: '海陆风',
+      currentScenarioKey: 'land-sea-breeze',
+      tempDiff: 8,
+      isDaytime: true,
+      showIsobars: true,
+      autoRunning: true,
+      locked: true,
       guideActive: false,
+      guideIndex: 0,
       guideText: '',
-      _guideTexts: [
-        '热力环流：冷热不均导致气压差，驱动大气运动',
-        '观察热源上方空气受热上升、向冷源方向流动',
-        '观察冷源上方空气冷却下沉、向热源方向流动',
-        '高空与近地面气流方向相反，形成闭合环流',
+      scenarioList: SCENARIOS,
+      guideSteps: [
+        '【第一步·冷热不均】太阳照射不同下垫面，产生升温快慢差异（受热区 vs 冷却区）！',
+        '【第二步·垂直运动】受热区空气受热膨胀上升，冷却区空气冷却收缩下沉！',
+        '【第三步·气压差异】热源近地面因气体上升形成低压、高空聚集形成高压；冷源反之！',
+        '【第四步·水平气压梯度力】在同一水平面上，气流由高压吹向低压，最终闭合形成完整热力环流！',
+        '【等压面法则】“高凸低凹”：高压处等压面向高空凸起，低压处等压面向近地面下凹！',
       ],
-      presets: [
-        { name: '海陆风', label: '🌊 海陆风', tempDiff: 7 },
-        { name: '山谷风', label: '⛰ 山谷风', tempDiff: 5 },
-      ],
+      pedagogy: {
+        observe: [
+          '热源上方空气垂直膨胀上升，冷源上方空气垂直收缩下沉。',
+          '等压面弯曲形态：“高凸低凹”——热源高空等压面上凸（高压），近地面等压线下凹（低压）。',
+          '近地面水平风向始终从冷源（高压区）吹向热源（低压区）；高空相反。',
+        ],
+        change: [
+          '调节冷热温差 ΔT（温差越大，垂直升降速率与水平风速越快）。',
+          '切换“白昼”与“夜晚”，观察海陆热力对比颠倒导致的“海风（白天）”与“陆风（夜间）”互换。',
+          '切换经典实验槽、海陆风、山谷风、城市热岛等典型地理场景。',
+        ],
+        mechanism: [
+          '冷热不均是大气运动的最根本原因。受热膨胀导致密度变小而上升，冷却收缩导致密度变大而下沉。',
+          '垂直运动引起同一水平面上的气压梯度差异，水平气压梯度力驱动空气由高气压流向低气压。',
+          '近地面与高空形成气压性质相反的闭合环流圈。',
+        ],
+        limitations: [
+          '本模型略去了地转偏向力（科里奥利力）的作用（局地微尺度热力环流偏转较弱，大尺度则受地转偏向力显著偏转）。',
+          '忽略了摩擦力在不同下垫面粗糙度上的差异衰减。',
+          '假定空气为干燥理想气体，略去了水汽相变潜热释放对对流上升的额外加热反馈。',
+        ],
+      },
     }
   },
+  computed: {
+    currentScenarioTitle() {
+      const target = SCENARIOS.find(s => s.key === this.currentScenarioKey)
+      return target ? target.title : '热力环流模拟'
+    },
+    isobarStatusText() {
+      return this.showIsobars ? '等压面已显示（高凸低凹）' : '等压面已隐藏'
+    },
+    groundPressureDesc() {
+      if (this.currentScenarioKey === 'land-sea-breeze') {
+        return this.isDaytime ? '陆地气温高=低气压；海洋气温低=高气压' : '陆地散热快=高气压；海洋散热慢=低气压'
+      }
+      return '受热源近地为低压；冷源近地为高压'
+    },
+    aloftPressureDesc() {
+      if (this.currentScenarioKey === 'land-sea-breeze') {
+        return this.isDaytime ? '陆地上空气压升高=高气压；海洋上空=低气压' : '陆地上空=低气压；海洋上空=高气压'
+      }
+      return '热源高空为高压（等压面上凸）；冷源高空为低压（等压线下凹）'
+    },
+    surfaceWindDesc() {
+      if (this.currentScenarioKey === 'land-sea-breeze') {
+        return this.isDaytime ? '从海洋吹向陆地（海风）' : '从陆地吹向海洋（陆风）'
+      }
+      if (this.currentScenarioKey === 'valley-breeze') {
+        return this.isDaytime ? '从谷底吹向山坡（谷风）' : '从山坡吹向谷底（山风）'
+      }
+      if (this.currentScenarioKey === 'urban-heat-island') {
+        return '由郊区吹向城市中心（市郊风）'
+      }
+      return '由冷源近地面吹向热源近地面'
+    },
+  },
   mounted() {
-    this._e = new ThermalCirculationEngine()
-    this._e.tempDiff = this.tempDiff
-    this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => {
-      this._e.init(this.$refs.cvs)
-      if (this.locked) this._e.controls.enabled = false
-    })
-    window.addEventListener('resize', this._onResize)
+    if (this.preset?.id) {
+      if (this.preset.id === 'land-sea-breeze') this.currentScenarioKey = 'land-sea-breeze'
+      else if (this.preset.id === 'thermal-cell') this.currentScenarioKey = 'thermal-cell'
+    }
+    this.initScene()
+    window.addEventListener('resize', this.onResize)
   },
   beforeUnmount() {
-    this._e?.dispose()
-    window.removeEventListener('resize', this._onResize)
+    this.disposeScene()
+    window.removeEventListener('resize', this.onResize)
   },
   methods: {
-    _onResize() { this._e?.resize() },
-    toggleLock() {
-      this.locked = !this.locked
-      if (this._e && this._e.controls) {
-        this._e.controls.enabled = !this.locked
+    initScene() {
+      const canvas = this.$refs.cvs
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const w = rect.width || 600
+      const h = rect.height || 420
+
+      this.scene = new THREE.Scene()
+      this.scene.background = new THREE.Color(0x0a1424)
+
+      this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
+      this.camera.position.set(0, 8, 22)
+
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      this.renderer.setSize(w, h)
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      this.renderer.shadowMap.enabled = true
+
+      this.controls = new OrbitControls(this.camera, canvas)
+      this.controls.enableDamping = true
+      this.controls.dampingFactor = 0.06
+      this.controls.target.set(0, 4.5, 0)
+      if (this.locked) {
+        this.controls.maxPolarAngle = Math.PI / 2.05
+        this.controls.minDistance = 8
+        this.controls.maxDistance = 45
+      }
+
+      this.buildThermalCirculationScene()
+      this.animate()
+    },
+
+    buildThermalCirculationScene() {
+      // 1. Ambient & directional light
+      const sun = new THREE.DirectionalLight(0xfff8e7, 2.5)
+      sun.position.set(5, 20, 10)
+      this.scene.add(sun)
+      this.scene.add(new THREE.AmbientLight(0x334155, 1.2))
+
+      // 2. Base platform
+      const baseGeo = new THREE.BoxGeometry(18, 0.6, 8)
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })
+      const base = new THREE.Mesh(baseGeo, baseMat)
+      base.position.y = -0.3
+      this.scene.add(base)
+
+      // Heat plate (left) and Cold plate (right)
+      this.plateGroup = new THREE.Group()
+      this.scene.add(this.plateGroup)
+
+      // 3. Air parcel particles
+      this.particleCount = 140
+      this.particles = []
+      this.particleGeo = new THREE.SphereGeometry(0.14, 12, 12)
+
+      for (let i = 0; i < this.particleCount; i++) {
+        const t = (i / this.particleCount) * Math.PI * 2
+        const pMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+        const mesh = new THREE.Mesh(this.particleGeo, pMat)
+        mesh.userData = { t: t, speed: 0.012 + Math.random() * 0.006, offsetZ: (Math.random() - 0.5) * 4 }
+        this.particles.push(mesh)
+        this.scene.add(mesh)
+      }
+
+      // 4. Isobar curves group
+      this.isobarGroup = new THREE.Group()
+      this.scene.add(this.isobarGroup)
+
+      // 5. High / Low pressure billboard labels
+      this.labelGroup = new THREE.Group()
+      this.scene.add(this.labelGroup)
+
+      this.rebuildPlatesAndLabels()
+    },
+
+    rebuildPlatesAndLabels() {
+      while (this.plateGroup.children.length > 0) {
+        const c = this.plateGroup.children[0]
+        if (c.geometry) c.geometry.dispose()
+        this.plateGroup.remove(c)
+      }
+      while (this.labelGroup.children.length > 0) {
+        const c = this.labelGroup.children[0]
+        if (c.geometry) c.geometry.dispose()
+        this.labelGroup.remove(c)
+      }
+
+      // Left is Heat source by default in daytime, Cold in nighttime
+      const leftIsHeat = this.isDaytime
+      const leftColor = leftIsHeat ? 0xef4444 : 0x0284c7
+      const rightColor = leftIsHeat ? 0x0284c7 : 0xef4444
+
+      const plateGeo = new THREE.BoxGeometry(7.5, 0.25, 7.5)
+      const p1 = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({ color: leftColor, roughness: 0.6 }))
+      p1.position.set(-4.5, 0.1, 0)
+      this.plateGroup.add(p1)
+
+      const p2 = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({ color: rightColor, roughness: 0.6 }))
+      p2.position.set(4.5, 0.1, 0)
+      this.plateGroup.add(p2)
+
+      // Add ground & aloft pressure badges
+      if (leftIsHeat) {
+        this.createPressureSprite('低压 (L)', -4.5, 0.8, 0, '#ef4444')
+        this.createPressureSprite('高压 (H)', -4.5, 8.5, 0, '#f59e0b')
+        this.createPressureSprite('高压 (H)', 4.5, 0.8, 0, '#38bdf8')
+        this.createPressureSprite('低压 (L)', 4.5, 8.5, 0, '#64748b')
+      } else {
+        this.createPressureSprite('高压 (H)', -4.5, 0.8, 0, '#38bdf8')
+        this.createPressureSprite('低压 (L)', -4.5, 8.5, 0, '#64748b')
+        this.createPressureSprite('低压 (L)', 4.5, 0.8, 0, '#ef4444')
+        this.createPressureSprite('高压 (H)', 4.5, 8.5, 0, '#f59e0b')
+      }
+
+      this.rebuildIsobars()
+    },
+
+    createPressureSprite(text, x, y, z, color) {
+      const canvas = document.createElement('canvas')
+      canvas.width = 160
+      canvas.height = 64
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = color
+      ctx.font = 'bold 28px "Noto Serif SC", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(text, 80, 32)
+
+      const tex = new THREE.CanvasTexture(canvas)
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true })
+      const sprite = new THREE.Sprite(mat)
+      sprite.position.set(x, y, z)
+      sprite.scale.set(2.4, 0.9, 1)
+      this.labelGroup.add(sprite)
+    },
+
+    rebuildIsobars() {
+      while (this.isobarGroup.children.length > 0) {
+        const c = this.isobarGroup.children[0]
+        if (c.geometry) c.geometry.dispose()
+        this.isobarGroup.remove(c)
+      }
+
+      if (!this.showIsobars) return
+
+      const leftIsHeat = this.isDaytime
+      // Ground Isobar (Near Y = 2.0)
+      // High P goes UP, Low P goes DOWN
+      const groundPts = []
+      for (let x = -7.5; x <= 7.5; x += 0.5) {
+        let dy = leftIsHeat ? (x < 0 ? -0.45 : 0.45) : (x < 0 ? 0.45 : -0.45)
+        // smooth bell curve
+        dy = dy * Math.cos((x / 7.5) * (Math.PI / 2))
+        groundPts.push(new THREE.Vector3(x, 2.0 + dy, 0))
+      }
+      const gIsoGeo = new THREE.BufferGeometry().setFromPoints(groundPts)
+      const gIsoLine = new THREE.Line(gIsoGeo, new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.7 }))
+      this.isobarGroup.add(gIsoLine)
+
+      // Aloft Isobar (Near Y = 7.0)
+      // Heat aloft is High P (UP), Cold aloft is Low P (DOWN)
+      const aloftPts = []
+      for (let x = -7.5; x <= 7.5; x += 0.5) {
+        let dy = leftIsHeat ? (x < 0 ? 0.55 : -0.55) : (x < 0 ? -0.55 : 0.55)
+        dy = dy * Math.cos((x / 7.5) * (Math.PI / 2))
+        aloftPts.push(new THREE.Vector3(x, 7.0 + dy, 0))
+      }
+      const aIsoGeo = new THREE.BufferGeometry().setFromPoints(aloftPts)
+      const aIsoLine = new THREE.Line(aIsoGeo, new THREE.LineBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.85 }))
+      this.isobarGroup.add(aIsoLine)
+    },
+
+    animate() {
+      this.animId = requestAnimationFrame(this.animate)
+
+      if (this.autoRunning && this.particles.length > 0) {
+        const leftIsHeat = this.isDaytime
+        // When left is heat: left rises (dy > 0), moves right aloft (dx > 0), sinks right (dy < 0), moves left surface (dx < 0)
+        // Clockwise in X-Y plane!
+        const direction = leftIsHeat ? 1 : -1
+        const speedScale = (this.tempDiff / 8) * 0.015
+
+        this.particles.forEach((p) => {
+          p.userData.t = (p.userData.t + p.userData.speed * speedScale * direction + Math.PI * 2) % (Math.PI * 2)
+          const t = p.userData.t
+
+          // Rectangular rounded circulation path:
+          // X in [-4.5, 4.5], Y in [1.5, 7.5]
+          const a = 5.2
+          const b = 3.2
+          const centerY = 4.5
+
+          const x = Math.cos(t) * a
+          const y = centerY + Math.sin(t) * b
+          p.position.set(x, y, p.userData.offsetZ)
+
+          // Color tint: warm when rising (y > 4.5 on heat side), cool when sinking
+          if ((leftIsHeat && x < 0) || (!leftIsHeat && x > 0)) {
+            p.material.color.setHex(0xf87171) // Rising warm
+          } else {
+            p.material.color.setHex(0x38bdf8) // Sinking cool
+          }
+        })
+      }
+
+      if (this.controls) this.controls.update()
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
       }
     },
-    onParam() { this.activePreset = null; this._e.setParams({ tempDiff: this.tempDiff }) },
-    applyPreset(p) {
-      this.activePreset = p.name
-      this.tempDiff = p.tempDiff
-      this._e.setParams({ tempDiff: this.tempDiff, sceneMode: p.name })
+
+    selectScenario(key) {
+      this.currentScenarioKey = key
+      this.rebuildPlatesAndLabels()
     },
+
+    setDaytime(day) {
+      this.isDaytime = day
+      this.rebuildPlatesAndLabels()
+    },
+
+    onParamInput() {
+      this.rebuildIsobars()
+    },
+
+    togglePlay() {
+      this.autoRunning = !this.autoRunning
+    },
+
+    toggleIsobars() {
+      this.showIsobars = !this.showIsobars
+      this.rebuildIsobars()
+    },
+
+    toggleLock() {
+      this.locked = !this.locked
+      if (this.controls) {
+        if (this.locked) {
+          this.controls.maxPolarAngle = Math.PI / 2.05
+          this.controls.minDistance = 8
+          this.controls.maxDistance = 45
+        } else {
+          this.controls.maxPolarAngle = Math.PI
+          this.controls.minDistance = 2
+          this.controls.maxDistance = 100
+        }
+      }
+    },
+
     toggleGuide() {
       this.guideActive = !this.guideActive
       if (this.guideActive) {
-        this._e.startGuidedMode(this._guideTexts)
-        this.guideText = this._e.getGuideText()
+        this.guideIndex = 0
+        this.guideText = this.guideSteps[0]
+        clearInterval(this.guideTimer)
+        this.guideTimer = setInterval(() => {
+          if (!this.guideActive) return
+          this.guideIndex = (this.guideIndex + 1) % this.guideSteps.length
+          this.guideText = this.guideSteps[this.guideIndex]
+        }, 5000)
       } else {
-        this._e.stopGuidedMode()
-        this.guideText = ''
+        clearInterval(this.guideTimer)
       }
     },
-    reset() {
-      this._e.dispose()
-      this.$nextTick(() => {
-        this._e = new ThermalCirculationEngine()
-        this._e.tempDiff = this.tempDiff
-        this._e._onGuideChange = (text) => { this.guideText = text }
-        this._e.init(this.$refs.cvs)
-        if (this.locked) this._e.controls.enabled = false
-      })
+
+    resetObservation() {
+      this.currentScenarioKey = 'land-sea-breeze'
+      this.tempDiff = 8
+      this.isDaytime = true
+      this.showIsobars = true
+      this.autoRunning = true
+      this.rebuildPlatesAndLabels()
+      this.camera.position.set(0, 8, 22)
+      this.controls.target.set(0, 4.5, 0)
+      this.controls.update()
+    },
+
+    onResize() {
+      const canvas = this.$refs.cvs
+      if (!canvas || !this.renderer || !this.camera) return
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        this.camera.aspect = rect.width / rect.height
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(rect.width, rect.height)
+      }
+    },
+
+    disposeScene() {
+      if (this.animId) cancelAnimationFrame(this.animId)
+      if (this.guideTimer) clearInterval(this.guideTimer)
+      if (this.controls) this.controls.dispose()
+      if (this.renderer) this.renderer.dispose()
+      if (this.scene) {
+        this.scene.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose())
+            else obj.material.dispose()
+          }
+        })
+      }
     },
   },
-}
-
-class ThermalCirculationEngine extends ExperimentEngine {
-  setupScene() {
-    this.tempDiff = 7
-    this.paused = false
-    this.sceneMode = '海陆风'
-
-    // Transparent box frame
-    const boxGeo = new THREE.BoxGeometry(8, 4, 4)
-    const boxEdges = new THREE.EdgesGeometry(boxGeo)
-    const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({ color: 0x8f7652, transparent: true, opacity: 0.55 }))
-    this.scene.add(boxLine)
-
-    // === TERRAIN GROUP (switched by scene mode) ===
-    this._terrainGroup = new THREE.Group()
-    this.scene.add(this._terrainGroup)
-
-    // -- Sea/Land terrain (海陆风) --
-    this._seaGroup = new THREE.Group()
-    // Ocean surface: flat blue plane on right (cold) side
-    const oceanGeo = new THREE.PlaneGeometry(4, 4)
-    const oceanMat = new THREE.MeshStandardMaterial({ color: 0x2196f3, roughness: 0.2, metalness: 0.3, transparent: true, opacity: 0.85 })
-    this._oceanPlane = new THREE.Mesh(oceanGeo, oceanMat)
-    this._oceanPlane.rotation.x = -Math.PI / 2
-    this._oceanPlane.position.set(2, -2.28, 0)
-    this._seaGroup.add(this._oceanPlane)
-    // Land: brown/green on left (hot) side
-    const landGeo = new THREE.PlaneGeometry(4, 4)
-    const landMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.8 })
-    const landPlane = new THREE.Mesh(landGeo, landMat)
-    landPlane.rotation.x = -Math.PI / 2
-    landPlane.position.set(-2, -2.27, 0)
-    this._seaGroup.add(landPlane)
-    // Small trees on land
-    for (let i = 0; i < 12; i++) {
-      const tree = this._makeTree()
-      tree.position.set(-3.5 + Math.random() * 3, -2.1, (Math.random() - 0.5) * 3)
-      this._seaGroup.add(tree)
-    }
-    this._terrainGroup.add(this._seaGroup)
-
-    // -- Mountain/Valley terrain (山谷风) --
-    this._valleyGroup = new THREE.Group()
-    this._valleyGroup.visible = false
-    // Mountain peak (left/hot side) - tall triangle
-    const peakShape = new THREE.Shape()
-    peakShape.moveTo(-1.5, 0); peakShape.lineTo(0, 2.2); peakShape.lineTo(1.5, 0); peakShape.closePath()
-    const peakGeo = new THREE.ExtrudeGeometry(peakShape, { depth: 3, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 3 })
-    const peakMat = new THREE.MeshStandardMaterial({ color: 0x795548, roughness: 0.7 })
-    const peak = new THREE.Mesh(peakGeo, peakMat)
-    peak.position.set(-3.8, -2.3, -1.5)
-    this._valleyGroup.add(peak)
-    // Snow cap
-    const snowGeo = new THREE.ConeGeometry(0.5, 0.7, 8)
-    const snowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, emissive: 0xffffff, emissiveIntensity: 0.2 })
-    const snow = new THREE.Mesh(snowGeo, snowMat)
-    snow.position.set(-3.8, 0.2, 0)
-    this._valleyGroup.add(snow)
-    // Valley floor (right/cold side) - flat green
-    const valleyFloorGeo = new THREE.PlaneGeometry(4, 4)
-    const valleyFloorMat = new THREE.MeshStandardMaterial({ color: 0x7cb342, roughness: 0.7 })
-    const valleyFloor = new THREE.Mesh(valleyFloorGeo, valleyFloorMat)
-    valleyFloor.rotation.x = -Math.PI / 2
-    valleyFloor.position.set(2, -2.27, 0)
-    this._valleyGroup.add(valleyFloor)
-    // Small hills on right
-    for (let i = 0; i < 3; i++) {
-      const hillGeo = new THREE.SphereGeometry(0.5, 12, 8, 0, Math.PI * 2, 0, Math.PI / 3)
-      const hill = new THREE.Mesh(hillGeo, new THREE.MeshStandardMaterial({ color: 0x8bc34a, roughness: 0.6 }))
-      hill.position.set(2.5 + i * 0.8, -2.1, (i - 1) * 1.2)
-      this._valleyGroup.add(hill)
-    }
-    this._terrainGroup.add(this._valleyGroup)
-
-    // Hot plate (red, glowing)
-    const hotGeo = new THREE.BoxGeometry(0.8, 0.3, 3.2)
-    this.hotMat = new THREE.MeshStandardMaterial({ color: 0xe53935, emissive: 0xff3d00, emissiveIntensity: 0.8, roughness: 0.3 })
-    this.hotPlate = new THREE.Mesh(hotGeo, this.hotMat)
-    this.hotPlate.position.set(-3.8, -2.1, 0)
-    this.scene.add(this.hotPlate)
-
-    // Hot glow ring
-    const glowGeo = new THREE.TorusGeometry(0.55, 0.06, 8, 24)
-    const glowMat = new THREE.MeshBasicMaterial({ color: 0xff6e40, transparent: true, opacity: 0.5 })
-    this.hotGlow = new THREE.Mesh(glowGeo, glowMat)
-    this.hotGlow.position.copy(this.hotPlate.position)
-    this.hotGlow.position.y += 0.15
-    this.scene.add(this.hotGlow)
-
-    // Cold plate (blue)
-    const coldGeo = new THREE.BoxGeometry(0.8, 0.3, 3.2)
-    this.coldMat = new THREE.MeshStandardMaterial({ color: 0x1e88e5, emissive: 0x1565c0, emissiveIntensity: 0.6, roughness: 0.3 })
-    this.coldPlate = new THREE.Mesh(coldGeo, this.coldMat)
-    this.coldPlate.position.set(3.8, -2.1, 0)
-    this.scene.add(this.coldPlate)
-
-    // Cold glow ring
-    const coldGlowGeo = new THREE.TorusGeometry(0.55, 0.06, 8, 24)
-    const coldGlowMat = new THREE.MeshBasicMaterial({ color: 0x448aff, transparent: true, opacity: 0.4 })
-    this.coldGlow = new THREE.Mesh(coldGlowGeo, coldGlowMat)
-    this.coldGlow.position.copy(this.coldPlate.position)
-    this.coldGlow.position.y += 0.15
-    this.scene.add(this.coldGlow)
-
-    // Translucent columns
-    const riseGeo = new THREE.CylinderGeometry(0.5, 0.6, 3.2, 16, 1, true)
-    const riseMat = new THREE.MeshBasicMaterial({ color: 0xff6e40, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
-    this.riseColumn = new THREE.Mesh(riseGeo, riseMat)
-    this.riseColumn.position.set(-3.8, -0.3, 0)
-    this.scene.add(this.riseColumn)
-
-    const sinkGeo = new THREE.CylinderGeometry(0.5, 0.6, 3.2, 16, 1, true)
-    const sinkMat = new THREE.MeshBasicMaterial({ color: 0x448aff, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
-    this.sinkColumn = new THREE.Mesh(sinkGeo, sinkMat)
-    this.sinkColumn.position.set(3.8, -0.3, 0)
-    this.scene.add(this.sinkColumn)
-
-    // Sprite labels
-    this._sprites = []
-    this._sprites.push(this._makeLabel('陆地 🔥', new THREE.Vector3(-3.8, -0.5, 2.2), '#c0392b', 36))
-    this._sprites.push(this._makeLabel('海洋 🧊', new THREE.Vector3(3.8, -0.5, 2.2), '#2471a3', 36))
-    this._sprites.push(this._makeLabel('上升气流', new THREE.Vector3(-2.6, 0.8, 2.2), '#ff6e40', 28))
-    this._sprites.push(this._makeLabel('下沉气流', new THREE.Vector3(2.6, 0.8, 2.2), '#448aff', 28))
-    this._sprites.push(this._makeLabel('高空：陆地 → 海洋', new THREE.Vector3(0, 2.1, 2.2), '#e67e22', 24))
-    this._sprites.push(this._makeLabel('地面：海洋 → 陆地（海风）', new THREE.Vector3(0, -2.3, 2.2), '#2196f3', 24))
-    this._hotLabel = this._sprites[0]
-    this._coldLabel = this._sprites[1]
-
-    // Pressure display sprites (4 corners)
-    this._pressureSprites = []
-    // Hot side ground (低压) - left bottom, on back face z=2.2
-    this._pressureSprites.push(this._makePressureLabel('1010 hPa', new THREE.Vector3(-3.8, -2.4, 2.2), '#e53935'))
-    // Hot side high (高压) - left top
-    this._pressureSprites.push(this._makePressureLabel('1016 hPa', new THREE.Vector3(-3.8, 2.2, 2.2), '#e53935'))
-    // Cold side ground (高压) - right bottom
-    this._pressureSprites.push(this._makePressureLabel('1014 hPa', new THREE.Vector3(3.8, -2.4, 2.2), '#1e88e5'))
-    // Cold side high (低压) - right top
-    this._pressureSprites.push(this._makePressureLabel('1011 hPa', new THREE.Vector3(3.8, 2.2, 2.2), '#1e88e5'))
-    // Store references for update
-    this._pHotLow = this._pressureSprites[0]
-    this._pHotHigh = this._pressureSprites[1]
-    this._pColdLow = this._pressureSprites[2]
-    this._pColdHigh = this._pressureSprites[3]
-
-    // === ISOBARIC SURFACES ===
-    this._isobars = []
-    this._createIsobars()
-
-    // 3D arrows
-    this._arrows = []
-    this._createArrows()
-
-    // Camera: 35° overhead angle
-    const angle = THREE.MathUtils.degToRad(35)
-    const dist = 11
-    this.camera.position.set(0, dist * Math.sin(angle), dist * Math.cos(angle))
-    this.controls.target.set(0, 0, 0)
-
-    // Initialize pressure display and isobars
-    this._updatePressureLabels()
-    this._updateIsobars()
-  }
-
-  _makeTree() {
-    const g = new THREE.Group()
-    const trunkGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.35, 6)
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41, roughness: 0.8 })
-    const trunk = new THREE.Mesh(trunkGeo, trunkMat)
-    trunk.position.y = 0.1
-    g.add(trunk)
-    const crownGeo = new THREE.ConeGeometry(0.15, 0.35, 6)
-    const crownMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.5 })
-    const crown = new THREE.Mesh(crownGeo, crownMat)
-    crown.position.y = 0.35
-    g.add(crown)
-    return g
-  }
-
-  _updateTerrain() {
-    const isSeaBreeze = this.sceneMode === '海陆风'
-    this._seaGroup.visible = isSeaBreeze
-    this._valleyGroup.visible = !isSeaBreeze
-
-    // Update label textures
-    const hotText = isSeaBreeze ? '陆地 🔥' : '山峰 🔥'
-    const coldText = isSeaBreeze ? '海洋 🧊' : '山谷 🧊'
-    this._updateSpriteText(this._hotLabel, hotText, '#c0392b')
-    this._updateSpriteText(this._coldLabel, coldText, '#2471a3')
-    // Update flow labels
-    if (isSeaBreeze) {
-      this._updateSpriteText(this._sprites[4], '高空：陆地 → 海洋', '#e67e22')
-      this._updateSpriteText(this._sprites[5], '地面：海洋 → 陆地（海风）', '#2196f3')
-    } else {
-      this._updateSpriteText(this._sprites[4], '高空：山峰 → 山谷', '#e67e22')
-      this._updateSpriteText(this._sprites[5], '地面：山谷 → 山峰（谷风）', '#2196f3')
-    }
-  }
-
-  _updateSpriteText(sprite, text, color) {
-    if (!sprite || !sprite.material || !sprite.material.map) return
-    sprite.material.map.dispose()
-    const canvas = document.createElement('canvas')
-    canvas.width = 512; canvas.height = 128
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = color
-    ctx.font = 'bold 36px "Noto Serif SC", "Kaiti SC", serif'
-    ctx.textAlign = 'center'
-    ctx.fillText(text, 256, 64)
-    sprite.material.map = new THREE.CanvasTexture(canvas)
-    sprite.material.map.minFilter = THREE.LinearFilter
-    sprite.material.needsUpdate = true
-  }
-
-  _makePressureLabel(text, position, color) {
-    const canvas = document.createElement('canvas')
-    canvas.width = 256; canvas.height = 80
-    const ctx = canvas.getContext('2d')
-    // Background pill
-    ctx.fillStyle = 'rgba(255,255,255,0.88)'
-    ctx.fillRect(10, 8, 236, 64)
-    ctx.strokeStyle = color
-    ctx.lineWidth = 2.5
-    ctx.strokeRect(10, 8, 236, 64)
-    // Text
-    ctx.fillStyle = color
-    ctx.font = 'bold 26px "Noto Serif SC", monospace'
-    ctx.textAlign = 'center'
-    ctx.fillText(text, 128, 50)
-    const tex = new THREE.CanvasTexture(canvas)
-    tex.minFilter = THREE.LinearFilter
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
-    const sprite = new THREE.Sprite(mat)
-    sprite.position.copy(position)
-    sprite.scale.set(2.4, 0.75, 1)
-    this.scene.add(sprite)
-    return sprite
-  }
-
-  _createIsobars() {
-    // Dispose old isobars
-    if (this._isobars) {
-      this._isobars.forEach(ib => {
-        ib.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
-        this.scene.remove(ib)
-      })
-    }
-    this._isobars = []
-
-    // 3 isobaric surfaces at different pressure levels
-    const levels = [
-      { baseY: -1.0, color: 0xe57373, label: '1005 hPa', opacity: 0.3 },
-      { baseY: 0.15, color: 0xffb74d, label: '1010 hPa', opacity: 0.3 },
-      { baseY: 1.2,  color: 0x64b5f6, label: '1015 hPa', opacity: 0.3 },
-    ]
-
-    levels.forEach((level) => {
-      const width = 7.6
-      const depth = 3.8
-      const segX = 48
-      const geo = new THREE.PlaneGeometry(width, depth, segX, 1)
-      geo.rotateX(-Math.PI / 2)
-
-      // Store original positions for animation
-      this._isoBaseY = this._isoBaseY || {}
-      this._isoBaseY[level.label] = level.baseY
-
-      const mat = new THREE.MeshBasicMaterial({
-        color: level.color,
-        transparent: true,
-        opacity: level.opacity,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      })
-
-      const ribbon = new THREE.Mesh(geo, mat)
-      ribbon.position.set(0, level.baseY, 0)
-      ribbon.renderOrder = 1
-      ribbon.userData = { baseY: level.baseY, label: level.label }
-      this.scene.add(ribbon)
-      this._isobars.push(ribbon)
-
-      // Label sprite for this isobar
-      const labelSprite = this._makePressureLabel(
-        level.label,
-        new THREE.Vector3(0, level.baseY + 0.15, 2.2),
-        '#' + level.color.toString(16).padStart(6, '0')
-      )
-      labelSprite.userData = { baseY: level.baseY, label: level.label }
-      this._isobars.push(labelSprite)
-    })
-  }
-
-  _updateIsobars() {
-    if (!this._isobars) return
-    const diff = this.tempDiff / 5 // 0.2 - 2
-
-    for (const ib of this._isobars) {
-      if (!ib.userData || ib.userData.label === undefined) continue
-
-      const baseY = ib.userData.baseY
-      // Amplitude decreases with height (lower isobars curve more)
-      const amp = (1.5 - baseY * 0.4) * diff * 0.6
-
-      if (ib.isSprite) {
-        // Update label position
-        const midY = baseY - amp * 0.1
-        ib.position.set(0, midY + 0.15, 2.2)
-        // Update text
-        const pBase = 1013
-        const pOffset = Math.round((baseY + 0.5) * 2)
-        const pValue = Math.round(pBase + pOffset * diff * 0.4)
-        this._updateSpriteText(ib, `${pValue} hPa`, '#' + ib.material.map ? '#e57373' : '#64b5f6')
-      } else if (ib.geometry && ib.geometry.attributes && ib.geometry.attributes.position) {
-        // Update ribbon vertices
-        const pos = ib.geometry.attributes.position
-        const arr = pos.array
-        for (let i = 0; i < pos.count; i++) {
-          const x = arr[i * 3]
-          // Convert x from [-3.8, 3.8] to normalized [-1, 1] for the curve
-          const t = x / 3.8
-          // Isobar curves DOWN from hot (left) to cold (right)
-          // y_displacement = -amp * t (linear) with slight cubic smoothing
-          const displacement = -amp * t + amp * 0.15 * Math.sin(t * Math.PI)
-          arr[i * 3 + 1] = displacement
-        }
-        pos.needsUpdate = true
-        ib.geometry.computeVertexNormals()
-        ib.position.y = baseY
-      }
-    }
-  }
-
-  _updatePressureLabels() {
-    if (!this._pressureSprites) return
-    const diff = this.tempDiff / 5 // 0.2 - 2
-    const base = 1013
-    // Hot side: surface heats → low pressure; aloft accumulates → high pressure
-    const hotLow = Math.round(base - diff * 4)
-    const hotHigh = Math.round(base + diff * 3)
-    // Cold side: surface cools → high pressure; aloft drains → low pressure
-    const coldLow = Math.round(base + diff * 2)
-    const coldHigh = Math.round(base - diff * 2)
-    this._updateSpriteText(this._pHotLow, `${hotLow} hPa`, '#e53935')
-    this._updateSpriteText(this._pHotHigh, `${hotHigh} hPa`, '#e53935')
-    this._updateSpriteText(this._pColdLow, `${coldLow} hPa`, '#1e88e5')
-    this._updateSpriteText(this._pColdHigh, `${coldHigh} hPa`, '#1e88e5')
-  }
-
-  _makeLabel(text, position, color = '#333333', fontSize = 32) {
-    const canvas = document.createElement('canvas')
-    canvas.width = 512; canvas.height = 128
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = color
-    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
-    ctx.textAlign = 'center'
-    ctx.fillText(text, 256, 64)
-    const tex = new THREE.CanvasTexture(canvas)
-    tex.minFilter = THREE.LinearFilter
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
-    const sprite = new THREE.Sprite(mat)
-    sprite.position.copy(position)
-    sprite.scale.set(3, 0.75, 1)
-    this.scene.add(sprite)
-    return sprite
-  }
-
-  _createArrow(color) {
-    const group = new THREE.Group()
-
-    // Shaft
-    const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8)
-    const shaftMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.3 })
-    const shaft = new THREE.Mesh(shaftGeo, shaftMat)
-    shaft.position.y = 0.15
-    group.add(shaft)
-
-    // Head
-    const headGeo = new THREE.ConeGeometry(0.16, 0.3, 8)
-    const headMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5, roughness: 0.2, metalness: 0.3 })
-    const head = new THREE.Mesh(headGeo, headMat)
-    head.position.y = 0.52
-    group.add(head)
-
-    return group
-  }
-
-  _createArrows() {
-    // Dispose old arrows
-    this._arrows.forEach(a => {
-      a.traverse(c => {
-        if (c.geometry) c.geometry.dispose()
-        if (c.material) c.material.dispose()
-      })
-      this.scene.remove(a)
-    })
-    this._arrows = []
-
-    const perRow = 3
-    const perRise = 3
-    const perSurface = 5
-
-    for (let zIdx = 0; zIdx < perRow; zIdx++) {
-      const z = (zIdx - (perRow - 1) / 2) * 1.1
-
-      // Segment 0: Rising over hot source (陆地上空上升)
-      for (let i = 0; i < perRise; i++) {
-        const t = (i + 0.5) / perRise
-        const arrow = this._createArrow(0xff5722)
-        arrow.position.set(-3.8, -1.8 + t * 3.4, z)
-        arrow.userData = { segment: 0, z, phase: t, speed: 0.1 + Math.random() * 0.05 }
-        this.scene.add(arrow)
-        this._arrows.push(arrow)
-      }
-
-      // Segment 1: High-altitude flow 陆地→海洋 (hot→cold, left→right)
-      for (let i = 0; i < perRise; i++) {
-        const t = (i + 0.5) / perRise
-        const arrow = this._createArrow(0xe67e22)
-        arrow.rotation.z = -Math.PI / 2
-        arrow.position.set(-3.8 + t * 7.6, 1.6, z)
-        arrow.userData = { segment: 1, z, phase: t, speed: 0.12 + Math.random() * 0.06 }
-        this.scene.add(arrow)
-        this._arrows.push(arrow)
-      }
-
-      // Segment 2: Sinking over cold source (海洋上空下沉)
-      for (let i = 0; i < perRise; i++) {
-        const t = (i + 0.5) / perRise
-        const arrow = this._createArrow(0x1976d2)
-        arrow.rotation.z = Math.PI
-        arrow.position.set(3.8, 1.6 - t * 3.4, z)
-        arrow.userData = { segment: 2, z, phase: t, speed: 0.1 + Math.random() * 0.05 }
-        this.scene.add(arrow)
-        this._arrows.push(arrow)
-      }
-
-      // Segment 3: Surface sea breeze 海洋→陆地 (cold→hot, right→left) — MAIN EVENT
-      for (let i = 0; i < perSurface; i++) {
-        const t = (i + 0.5) / perSurface
-        // Brighter blue for the sea breeze — this is what students need to see
-        const arrow = this._createArrow(0x2196f3)
-        arrow.rotation.z = Math.PI / 2
-        arrow.position.set(3.8 - t * 7.6, -1.82, z)
-        arrow.userData = { segment: 3, z, phase: t, speed: 0.18 + Math.random() * 0.1 }
-        // Make surface arrows slightly bigger
-        arrow.scale.setScalar(1.25)
-        this.scene.add(arrow)
-        this._arrows.push(arrow)
-      }
-    }
-  }
-
-  update(dt) {
-    if (this.paused) return
-    const diff = this.tempDiff / 5 // 0.2 - 2
-    const speed = diff * 3.5
-    this._flowTime = (this._flowTime || 0) + dt * speed
-
-    // Update hot/cold plate glow
-    this.hotMat.emissiveIntensity = 0.3 + diff * 1.0
-    this.coldMat.emissiveIntensity = 0.1 + diff * 0.7
-    this.hotGlow.material.opacity = 0.2 + diff * 0.5
-    this.coldGlow.material.opacity = 0.1 + diff * 0.4
-    this.riseColumn.material.opacity = 0.03 + diff * 0.08
-    this.sinkColumn.material.opacity = 0.03 + diff * 0.08
-
-    // Update pressure labels (throttle to every ~0.5s)
-    if (this._lastPressureUpdate === undefined) this._lastPressureUpdate = 0
-    this._lastPressureUpdate += dt
-    if (this._lastPressureUpdate > 0.5) {
-      this._lastPressureUpdate = 0
-      this._updatePressureLabels()
-      this._updateIsobars()
-    }
-
-    // Animate arrows along their segments
-    // The convection loop: segment 0 (rise) → 1 (top) → 2 (sink) → 3 (bottom) → 0
-    for (const arrow of this._arrows) {
-      arrow.userData.phase += dt * arrow.userData.speed * speed
-      if (arrow.userData.phase >= 1.0) arrow.userData.phase -= 1.0
-
-      const t = arrow.userData.phase
-      const z = arrow.userData.z
-      const seg = arrow.userData.segment
-
-      if (seg === 0) {
-        // Rise: x=-3.8, y from -1.8→1.6
-        arrow.position.set(-3.8, -1.8 + t * 3.4, z + Math.sin(t * Math.PI) * 0.15)
-        arrow.rotation.set(0, 0, 0)
-        // Color from warm to hot as it rises
-        const h = 0.08 + (1 - t) * 0.05
-        this._setArrowColor(arrow, h, 0.9, 0.35 + t * 0.35)
-      } else if (seg === 1) {
-        // Top flow: y=1.6, x from -3.8→3.8
-        arrow.position.set(-3.8 + t * 7.6, 1.6 + Math.sin(t * Math.PI) * 0.1, z)
-        arrow.rotation.set(0, 0, -Math.PI / 2)
-        // Cooling as it moves right
-        const h = 0.13 - t * 0.1
-        this._setArrowColor(arrow, h, 0.85, 0.35 + (1 - t) * 0.3)
-      } else if (seg === 2) {
-        // Sink: x=3.8, y from 1.6→-1.8
-        arrow.position.set(3.8, 1.6 - t * 3.4, z + Math.sin(t * Math.PI) * 0.15)
-        arrow.rotation.set(0, 0, Math.PI)
-        // Cooling further
-        const h = 0.55 + t * 0.08
-        this._setArrowColor(arrow, h, 0.8, 0.25 + (1 - t) * 0.35)
-      } else {
-        // Bottom flow: y=-1.8, x from 3.8→-3.8
-        arrow.position.set(3.8 - t * 7.6, -1.8 + Math.sin(t * Math.PI) * 0.1, z)
-        arrow.rotation.set(0, 0, Math.PI / 2)
-        // Warming as it approaches hot side
-        const h = 0.55 + (1 - t) * 0.05
-        this._setArrowColor(arrow, h, 0.75, 0.3 + t * 0.35)
-      }
-
-      // Pulse scale for flowing effect
-      const pulse = 1 + Math.sin(this._flowTime * 3 + arrow.userData.phase * 10) * 0.15
-      arrow.scale.setScalar(pulse)
-    }
-  }
-
-  _setArrowColor(arrow, hue, saturation, lightness) {
-    const color = new THREE.Color()
-    color.setHSL(hue % 1, saturation, lightness)
-    arrow.children.forEach(c => {
-      if (c.material && c.material.emissive) {
-        c.material.color.copy(color)
-        c.material.emissive.copy(color)
-      }
-    })
-  }
-
-  setParams({ tempDiff, sceneMode }) {
-    if (tempDiff !== undefined) this.tempDiff = tempDiff
-    if (sceneMode !== undefined && sceneMode !== this.sceneMode) {
-      this.sceneMode = sceneMode
-      this._updateTerrain()
-    }
-  }
-
-  dispose() {
-    if (this._sprites) {
-      this._sprites.forEach(s => { if (s.material.map) s.material.map.dispose(); s.material.dispose() })
-    }
-    if (this._pressureSprites) {
-      this._pressureSprites.forEach(s => { if (s.material.map) s.material.map.dispose(); s.material.dispose() })
-    }
-    if (this._isobars) {
-      this._isobars.forEach(ib => {
-        ib.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose() })
-      })
-    }
-    if (this._arrows) {
-      this._arrows.forEach(a => {
-        a.traverse(c => {
-          if (c.geometry) c.geometry.dispose()
-          if (c.material) c.material.dispose()
-        })
-      })
-    }
-    // Terrain group cleanup
-    if (this._terrainGroup) {
-      this._terrainGroup.traverse(c => {
-        if (c.geometry) c.geometry.dispose()
-        if (c.material) c.material.dispose()
-      })
-    }
-    if (this.hotGlow) { this.hotGlow.geometry.dispose(); this.hotGlow.material.dispose() }
-    if (this.coldGlow) { this.coldGlow.geometry.dispose(); this.coldGlow.material.dispose() }
-    if (this.riseColumn) { this.riseColumn.geometry.dispose(); this.riseColumn.material.dispose() }
-    if (this.sinkColumn) { this.sinkColumn.geometry.dispose(); this.sinkColumn.material.dispose() }
-    super.dispose()
-  }
 }
 </script>
 
 <style scoped>
-.tc-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.tc-panel { width: 200px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
-.tc-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
-.tc-panel input[type="range"] { width: 100%; accent-color: var(--red); }
-.tc-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
-.tc-panel button:hover { background: var(--button-green); }
-.preset-btn {
-  padding: 3px 8px; border: 1px solid var(--brown); border-radius: 4px;
-  background: var(--cream); color: var(--ink); cursor: pointer;
-  font-family: inherit; font-size: 11px;
+.aero-theme {
+  display: flex;
+  gap: 18px;
+  background: #08111e;
+  border-radius: var(--radius-card, 16px);
+  padding: 16px;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  color: #f1f5f9;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
-.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
-.tc-presets { display: flex; gap: 4px; flex-wrap: wrap; }
-.tc-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
-.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
-.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
-.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.tc-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
-.tc-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.tc-panel {
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+.station-tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #0284c7;
+  font-weight: 700;
+}
+.panel-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ctrl-subhead {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.preset-chip {
+  padding: 8px 6px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s;
+}
+.preset-chip:hover {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: rgba(2, 132, 199, 0.4);
+}
+.preset-chip.active {
+  background: rgba(2, 132, 199, 0.25);
+  border-color: #0284c7;
+  color: #38bdf8;
+}
+.chip-icon { font-size: 16px; margin-bottom: 2px; }
+.chip-name { font-size: 11px; font-weight: 700; }
+
+.ctrl-group {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ctrl-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+}
+.val-badge {
+  color: #38bdf8;
+  font-weight: 700;
+}
+.aero-slider {
+  width: 100%;
+  accent-color: #0284c7;
+}
+.angle-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.diurnal-toggle {
+  display: flex;
+  gap: 6px;
+}
+.diurnal-btn {
+  flex: 1;
+  padding: 6px 4px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.diurnal-btn.active {
+  background: rgba(2, 132, 199, 0.25);
+  border-color: #0284c7;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.isobar-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(2, 132, 199, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.isobar-badge {
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 10px;
+}
+.isobar-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+}
+.iso-row {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+}
+.iso-pos { color: #94a3b8; }
+.wind-dir { color: #38bdf8; font-weight: 700; }
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.action-btn {
+  padding: 8px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  background: rgba(2, 132, 199, 0.2);
+  border-color: #0284c7;
+}
+.play-btn.playing {
+  background: #0284c7;
+  color: #fff;
+  font-weight: 700;
+}
+
+.guide-trigger {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed rgba(2, 132, 199, 0.6);
+  background: rgba(2, 132, 199, 0.08);
+  color: #38bdf8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide-trigger.active {
+  background: #0284c7;
+  color: #fff;
+}
+.guide-box {
+  background: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(2, 132, 199, 0.3);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #bae6fd;
+  line-height: 1.5;
+}
+
+.nav-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+.tc-canvas-wrap {
+  flex: 1;
+  min-height: 480px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tc-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.view-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.overlay-tag {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #f8fafc;
+}
 .lock-btn {
-  position: absolute; top: 12px; right: 12px; z-index: 10;
-  width: 36px; height: 36px; border-radius: 8px;
-  border: 1px solid var(--brown); background: rgba(255,255,255,0.85);
-  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background var(--transition);
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
 }
-.lock-btn:hover { background: rgba(255,255,255,1); }
 
-.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
-.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
-.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
+.temp-legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.heat-pill {
+  background: rgba(239, 68, 68, 0.25);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #fca5a5;
+  font-weight: 600;
+}
+.cold-pill {
+  background: rgba(2, 132, 199, 0.25);
+  border: 1px solid rgba(2, 132, 199, 0.6);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #7dd3fc;
+  font-weight: 600;
+}
 
-@media (max-width: 720px) {
-  .tc-layout { flex-direction: column; }
+@media (max-width: 768px) {
+  .aero-theme {
+    flex-direction: column;
+  }
   .tc-panel {
     width: 100%;
-    border-right: 0;
-    border-bottom: 1px solid var(--brown-light);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
   }
-  .tc-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
-  .tc-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
-  .tc-panel button { font-size: 12px; padding: 5px 8px; }
-  .tc-canvas-wrap { min-height: 280px; }
-  .guide-text-box { width: 100%; font-size: 11px; }
-  .tc-hint { font-size: 10px; }
-  .tc-presets { width: 100%; }
-  .preset-btn { font-size: 10px; padding: 4px 6px; }
-  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
-  .exp-desc { padding: 10px 14px; margin-top: 12px; }
-  .exp-desc h4 { font-size: 13px; }
-  .exp-desc p { font-size: 13px; line-height: 1.6; }
+  .tc-canvas-wrap {
+    min-height: 320px;
+  }
+  .temp-legend {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 </style>

@@ -60,6 +60,19 @@
       </aside>
     </div>
 
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="geology"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'Copernicus 珠峰地区高山寒漠土与植被垂直带', path: '/geo-labs/terrain', desc: '真实高程DEM看高寒植被与土壤垂直带' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第五章', section: '第二节' }"
+      practice-link="/practice"
+      @reset="mode = 'simple'"
+    />
+
     <InfoPopup
       :visible="!!selectedLayer"
       :layer="selectedLayer"
@@ -75,6 +88,28 @@ import { BaseScene } from '../engine/core/BaseScene.js'
 import { SoilProfileModule } from '../engine/modules/SoilProfileModule.js'
 import { SOIL_LAYERS } from './soilData.js'
 import InfoPopup from './InfoPopup.vue'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '成熟森林土壤自地表向下清晰的层序结构：有机层（O层）、腐殖质层（A层）、淋溶层（E层）、淀积层（B层）、成土母质层（C层）。',
+    '颜色与肥力标志：A层因腐殖质富集呈深暗黑色；E层由于铁铝易溶成分淋失而呈灰白色；B层铁铝氧化物胶体沉淀富集呈红黄褐色彩。',
+    '土壤质地由表层的轻壤疏松向深层的紧实粘重和半风化岩块颗粒渐变过渡。',
+  ],
+  change: [
+    '在“简单模式（高中必修）”与“专业模式（USDA/WRB 亚层划分）”之间切换。',
+    '点击 3D 剖面各土层，弹出交互卡片查看该层位厚度、水分、透气性与腐殖质含量参数。',
+  ],
+  mechanism: [
+    '生物富集作用：植物根系从母质吸收矿质养分，地上茎叶枯落物经微生物分解合成为复杂的高分子腐殖质，维系土壤肥力。',
+    '降水淋溶作用：水分在重力作用下向下渗透，溶解并搬运可溶性盐分与黏粒胶体，产生上部淋溶与下部淀积的剖面分化。',
+    '成土五大因素：成土母质（物质基础）、气候（水热动力）、生物（主导活跃）、地形（水热再分配）、时间（成熟阶段）。',
+  ],
+  limitations: [
+    '本 3D 模型以温带湿润森林棕壤/黑土为典型代表，未展示热带砖红壤（有机质分解极快几乎无腐殖质层）或干旱荒漠土（强钙积层）的特殊层序。',
+    '土层界线在野外实际呈波状或舌状渐变过渡，模型为便于教学识别采用了清晰平滑分层。',
+  ],
+}
 
 const containerRef = ref(null)
 const mode = ref('simple')

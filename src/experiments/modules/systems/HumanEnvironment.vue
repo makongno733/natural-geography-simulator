@@ -14,6 +14,19 @@
       <p class="he-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
   </section>
+
+  <!-- 教学四要素机理与连贯性面板 -->
+  <ModelPedagogyPanel
+    theme="systems"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: 'NASA 卫星植被指数 (NDVI) 与地表退化监测', path: '/geo-labs/satellite', desc: '真实卫星数据监测荒漠化与生态修复' }"
+    :textbook-link="{ grade: '高中', book: '选择性必修3', chapter: '第一章', section: '第一节' }"
+    practice-link="/practice"
+    @reset="resetCamera"
+  />
 </template>
 
 <script setup>
@@ -21,6 +34,28 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BaseScene } from '../../../engine/core/BaseScene.js'
 import { createHumanEnvironmentModule } from '../../../engine/modules/HumanEnvironmentModule.js'
 import { getHumanEnvironmentConfig } from './sceneConfigs.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '自然生态子系统（水、土、气、生、矿）与人类社会经济子系统之间的物质能量双向循环通量。',
+    '环境承载力阈值红线：生态服务功能（供给、调节、支持、文化）的自净与再生上限。',
+    '废弃物排放与环境容量赤字之间的动态平衡关系。',
+  ],
+  change: [
+    '随教材各小节预设，切换生态系统服务、资源安全屏障、环境污染治理与国家安全战略模型。',
+    '旋转查看多维人地系统因果链与反馈环网络。',
+  ],
+  mechanism: [
+    '人地协调论：自然环境是人类生存的物质基础，人类生产活动必须以资源环境承载力为边界约束。',
+    '生态系统阈值效应：当污染排放速率超越环境自净能力或资源开采速率超过再生速率时，系统将发生失衡。',
+    '可持续发展准则：公平性（代内与代际公平）、持续性（生态与经济协调）、共同性（全球环境治理合作）。',
+  ],
+  limitations: [
+    '模型为系统动力学概念拓扑，未包含多重混沌气候反馈突变点（Tipping points）的随机微分方程模拟。',
+    '各国家地区差异显著，模型展示全球与区域尺度的普适性定性规律。',
+  ],
+}
 
 const props = defineProps({
   preset: { type: Object, default: () => ({}) },

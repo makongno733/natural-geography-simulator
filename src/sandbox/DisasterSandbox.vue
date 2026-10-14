@@ -76,6 +76,19 @@
       </aside>
     </div>
 
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="systems"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'NASA 遥感 AI 受灾区域快速解译与遮挡推断', path: '/geo-labs/ai', desc: '利用 Prithvi-EO 遥感模型识别灾害痕迹' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第六章', section: '第一节' }"
+      practice-link="/practice"
+      @reset="resetCamera"
+    />
+
     <Teleport to="body">
       <div v-if="activeGlossaryTerm" class="glossary-mask" @click="activeGlossaryTerm = null"></div>
       <div v-if="activeGlossaryTerm" class="glossary-popup" :style="{ top: glossaryPos.y + 'px', left: glossaryPos.x + 'px' }">
@@ -94,6 +107,27 @@ import { DisasterModule } from '../engine/modules/DisasterModule.js'
 import { disasterModules } from './modules/disasterModules.js'
 import { disasterGlossary as glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '不同灾害的时空动态：台风中心台风眼的无风晴朗与四周旋臂的狂风暴雨；洪涝随水位上涨对低洼居民区的淹没。',
+    '地质灾害链式反应：强震或暴雨削弱山体抗剪力，滑坡沿软弱滑动面整体下挫，泥石流携带巨石倾泻冲出沟口。',
+  ],
+  change: [
+    '切换台风、洪涝、地震、滑坡、泥石流五种典型自然灾害沙盘。',
+    '洪涝场景下拖动“水位”时间轴观察水体蔓延与防洪堤坝抗冲刷状态。',
+  ],
+  mechanism: [
+    '致灾因子与承灾体脆弱性相互作用：相同强度的自然变异，发生在人口密集经济繁荣区会酿成严重灾害。',
+    '灾害链效应：一次主灾（如暴雨）可串联引发滑坡、崩塌、泥石流、堰塞湖溃决等次生灾害链。',
+    '防灾减灾综合防线：“3S”技术精准监测预警 + 堤防/锚固工程措施 + 应急预案与公众自救互救。',
+  ],
+  limitations: [
+    '模型为教学定性三维视效，未接入真实气象雷达或水文站瞬时洪峰数值预报接口。',
+    '岩土破裂面进行了均质几何平滑处理，忽略了复杂地层各向异性节理裂隙网络。',
+  ],
+}
 
 defineEmits(['close'])
 const props = defineProps({

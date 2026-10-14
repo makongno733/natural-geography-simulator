@@ -1,423 +1,777 @@
 <template>
-  <div class="kl-layout">
+  <div class="kl-layout astro-theme">
     <aside class="kl-panel">
-      <div class="preset-row">
-        <button class="preset-btn" :class="{ active: activePreset === 'nearcircle' }" @click="setPreset('nearcircle')">近圆轨道</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'ellipse' }" @click="setPreset('ellipse')">椭圆轨道</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'comet' }" @click="setPreset('comet')">彗星轨道</button>
+      <div class="panel-header">
+        <span class="station-tag">📐 天体力学与天体测量舱</span>
+        <h3 class="panel-title">开普勒行星运动定律</h3>
       </div>
-      <label>离心率 <span>{{ eccentricity.toFixed(2) }}</span></label>
-      <input type="range" min="0" max="0.9" step="0.01" v-model.number="eccentricity" @input="onParam" />
-      <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
-      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
-        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+
+      <!-- 典型天体轨道预设 -->
+      <div class="orbit-presets">
+        <span class="ctrl-subhead">真实天体轨道对照</span>
+        <div class="preset-grid">
+          <button
+            v-for="p in presetPlanets"
+            :key="p.name"
+            :class="['preset-chip', { active: activePlanet === p.name }]"
+            @click="applyPlanet(p)"
+          >
+            <span class="chip-name">{{ p.name }}</span>
+            <span class="chip-val">e = {{ p.e.toFixed(3) }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 离心率连续调节 -->
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>轨道偏心率 e</span>
+          <span class="val-badge">{{ eccentricity.toFixed(3) }}</span>
+        </div>
+        <input
+          type="range"
+          min="0.0"
+          max="0.88"
+          step="0.01"
+          v-model.number="eccentricity"
+          @input="onParamInput"
+          class="astro-slider"
+        />
+        <div class="angle-ticks">
+          <span>0.00 正圆</span>
+          <span>0.20 近圆</span>
+          <span>0.60 显著椭圆</span>
+          <span>0.88 扁长轨道</span>
+        </div>
+      </div>
+
+      <!-- 定律遥测看板 -->
+      <div class="law-card">
+        <div class="card-head">
+          <span>⚡ 开普勒运动学参数</span>
+          <span class="law-badge">第二定律相等面积</span>
+        </div>
+        <div class="law-metrics">
+          <div class="metric-row">
+            <span class="m-label">近日距 (r_peri)：</span>
+            <strong>{{ (a * (1 - eccentricity)).toFixed(2) }} AU</strong>
+          </div>
+          <div class="metric-row">
+            <span class="m-label">远日距 (r_apo)：</span>
+            <strong>{{ (a * (1 + eccentricity)).toFixed(2) }} AU</strong>
+          </div>
+          <div class="metric-row">
+            <span class="m-label">速度比 (V_近 / V_远)：</span>
+            <strong class="highlight-val">{{ ((1 + eccentricity) / Math.max(0.01, 1 - eccentricity)).toFixed(2) }}x</strong>
+          </div>
+          <div class="metric-row">
+            <span class="m-label">公转周期 T：</span>
+            <span>{{ Math.sqrt(Math.pow(a, 3)).toFixed(2) }} 地球年 (a³/T² 恒定)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="action-row">
+        <button
+          @click="togglePlay"
+          :class="['action-btn', 'play-btn', { playing: autoRunning }]"
+        >
+          {{ autoRunning ? '⏸ 暂停公转' : '▶ 连续公转' }}
+        </button>
+        <button
+          @click="toggleSectors"
+          class="action-btn"
+        >
+          {{ showSectors ? '📐 隐藏扫掠扇形' : '📐 显示相等面积扇形' }}
+        </button>
+      </div>
+
+      <button
+        @click="toggleGuide"
+        :class="['guide-trigger', { active: guideActive }]"
+      >
+        {{ guideActive ? '⏸ 停止讲解' : '💡 核心三大定律分步引导' }}
       </button>
-      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
-      <p class="kl-hint">🖱 拖动旋转 · 滚轮缩放</p>
+      <div v-if="guideActive" class="guide-box">{{ guideText }}</div>
+      <p class="nav-hint">🖱 拖动旋转空间 · 滚轮缩放 · 双击居中</p>
     </aside>
+
     <div class="kl-canvas-wrap">
       <canvas ref="cvs"></canvas>
-      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
-        {{ locked ? '🔒' : '🔓' }}
-      </button>
+      <div class="view-overlay">
+        <span class="overlay-tag">开普勒三大定律力学可视化仿真</span>
+        <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由旋转' : '锁定视角'">
+          {{ locked ? '🔒 轴线锁定' : '🔓 自由旋转' }}
+        </button>
+      </div>
+      <div class="perihelion-label">
+        <span>近日点 (速度最快) ➔ 远日点 (速度最慢)</span>
+      </div>
     </div>
   </div>
-  <div class="exp-desc">
-    <h4>实验说明</h4>
-    <p>本实验可视化开普勒行星运动三大定律：第一定律——行星沿椭圆轨道运动，太阳位于焦点；第二定律——行星与太阳连线在相等时间内扫过相等面积（近日点速度快，远日点速度慢）；第三定律——轨道周期的平方与半长轴的立方成正比。调节离心率对比近圆轨道与彗星轨道。</p>
-  </div>
+
+  <ModelPedagogyPanel
+    theme="astronomy"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: 'NASA 卫星轨道高程探勘', path: '/geo-labs/terrain', desc: '行星引力位面与真实卫星轨道' }"
+    :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第一章', section: '第一节' }"
+    practice-link="/practice"
+    @reset="resetObservation"
+  />
 </template>
 
 <script>
-import { ExperimentEngine } from '../../engine/ExperimentEngine.js'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
 
 export default {
   name: 'KeplerLaws',
-  data() { return {
-    eccentricity: 0.5, auto: false, activePreset: 'ellipse', locked: true,
-    guideActive: false,
-    guideText: '',
-    _guideTexts: [
-      '第一定律：行星轨道为椭圆，太阳位于一个焦点上',
-      '第二定律：行星与太阳连线在相等时间内扫过相等面积',
-      '第三定律：轨道周期的平方与半长轴的立方成正比',
-      '观察近日点速度快、远日点速度慢的变化',
-    ],
-  } },
-  mounted() {
-    this._e = new KeplerLawsEngine()
-    this._e._vm = this
-    this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
-    window.addEventListener('resize', this._onResize)
+  components: {
+    ModelPedagogyPanel,
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
+  data() {
+    return {
+      a: 7.0, // semi-major axis in 3D units
+      eccentricity: 0.45,
+      autoRunning: true,
+      locked: true,
+      showSectors: true,
+      activePlanet: '火星',
+      guideActive: false,
+      guideIndex: 0,
+      guideText: '',
+      presetPlanets: [
+        { name: '金星', e: 0.007, a: 5.0 },
+        { name: '地球', e: 0.017, a: 7.0 },
+        { name: '火星', e: 0.093, a: 8.5 },
+        { name: '水星', e: 0.206, a: 4.2 },
+        { name: '矮行星冥王星', e: 0.244, a: 10.0 },
+        { name: '典型彗星', e: 0.750, a: 9.0 },
+      ],
+      guideSteps: [
+        '【第一定律·轨道定律】所有行星绕太阳运动的轨道都是椭圆，太阳处在椭圆的一个焦点上！',
+        '【第二定律·面积速度】行星和太阳的连线在相等时间内扫过相等的面积（近日点疾驰、远日点缓行）！',
+        '【近日点最大速率】在近日点距太阳最近，引力最大，角速度和线速度均达到全轨道峰值！',
+        '【第三定律·周期定律】所有行星半长轴的立方与公转周期的平方之比皆为恒量：a³/T² = k！',
+      ],
+      pedagogy: {
+        observe: [
+          '太阳不在椭圆中心，而处于偏向一侧的焦点 F1 处。',
+          '近日点附近行星运动弧长远大于远日点附近，但两区域与太阳连线扫过的扇形面积精确相等。',
+          '随着离心率 e 增大，轨道越扁平，近日点与远日点速度差异越显著。',
+        ],
+        change: [
+          '调节离心率 e（从 0.00 正圆到 0.88 极端扁长轨道）。',
+          '选择不同天体预设（金星近正圆、地球、火星、水星到扁长彗星）。',
+          '开闭相等面积扇形展示，对比近日区与远日区面积。',
+        ],
+        mechanism: [
+          '开普勒第一定律是万有引力平方反比定律下二体束缚态轨道的数学解（圆锥曲线之椭圆）。',
+          '开普勒第二定律本质是角动量守恒定律：由于万有引力是有心力，对力心力矩为零，故角动量恒定。',
+          '开普勒第三定律揭示了引力常数 G 与中心天体质量 M 的内在联系（k = GM / 4π²）。',
+        ],
+        limitations: [
+          '忽略了行星之间的相互引力摄动（真实太阳系存在三体及多体摄动）。',
+          '假定太阳质量极大且绝对静止（未计算地日质心运动及广义相对论水星进动微细修正）。',
+          '未考虑非引力效应（如光压和彗星喷气反冲力）。',
+        ],
+      },
+    }
+  },
+  mounted() {
+    this.initScene()
+    window.addEventListener('resize', this.onResize)
+  },
+  beforeUnmount() {
+    this.disposeScene()
+    window.removeEventListener('resize', this.onResize)
+  },
   methods: {
-    _onResize() { this._e?.resize() },
-    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
-    onParam() { this._e.setParams({ eccentricity: this.eccentricity }) },
-    autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    initScene() {
+      const canvas = this.$refs.cvs
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const w = rect.width || 600
+      const h = rect.height || 420
+
+      this.scene = new THREE.Scene()
+      this.scene.background = new THREE.Color(0x060914)
+
+      this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
+      this.camera.position.set(0, 20, 24)
+
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      this.renderer.setSize(w, h)
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      this.renderer.shadowMap.enabled = true
+
+      this.controls = new OrbitControls(this.camera, canvas)
+      this.controls.enableDamping = true
+      this.controls.dampingFactor = 0.06
+      this.controls.target.set(0, 0, 0)
+      if (this.locked) {
+        this.controls.maxPolarAngle = Math.PI / 2.1
+        this.controls.minDistance = 8
+        this.controls.maxDistance = 50
+      }
+
+      this.meanAnomaly = 0
+      this.buildKeplerSystem()
+      this.animate()
+    },
+
+    buildKeplerSystem() {
+      // 1. Stars background
+      const starCount = 300
+      const starGeo = new THREE.BufferGeometry()
+      const starPos = new Float32Array(starCount * 3)
+      for (let i = 0; i < starCount * 3; i += 3) {
+        starPos[i] = (Math.random() - 0.5) * 120
+        starPos[i + 1] = (Math.random() - 0.5) * 80
+        starPos[i + 2] = (Math.random() - 0.5) * 120
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
+      this.scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x64748b, size: 0.35 })))
+
+      // 2. Sun at Focus F1 (origin 0,0,0)
+      const sunGeo = new THREE.SphereGeometry(1.2, 32, 32)
+      const sunMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b })
+      this.sunMesh = new THREE.Mesh(sunGeo, sunMat)
+      this.scene.add(this.sunMesh)
+
+      const sunLight = new THREE.PointLight(0xfff7ed, 3.5, 60)
+      this.scene.add(sunLight)
+      this.scene.add(new THREE.AmbientLight(0x1e293b, 0.8))
+
+      // 3. Orbit geometry group
+      this.orbitGroup = new THREE.Group()
+      this.scene.add(this.orbitGroup)
+
+      // 4. Planet mesh
+      const planetGeo = new THREE.SphereGeometry(0.55, 32, 32)
+      const planetMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.5 })
+      this.planetMesh = new THREE.Mesh(planetGeo, planetMat)
+      this.scene.add(this.planetMesh)
+
+      // 5. Radius vector line from Sun to Planet
+      const radGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)])
+      this.radiusLine = new THREE.Line(radGeo, new THREE.LineBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.7 }))
+      this.scene.add(this.radiusLine)
+
+      // 6. Velocity arrow helper
+      const dir = new THREE.Vector3(0, 0, 1)
+      this.velocityArrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), 2, 0x10b981, 0.4, 0.25)
+      this.scene.add(this.velocityArrow)
+
+      this.rebuildOrbit()
+    },
+
+    rebuildOrbit() {
+      // Clear old orbit items
+      while (this.orbitGroup.children.length > 0) {
+        const c = this.orbitGroup.children[0]
+        if (c.geometry) c.geometry.dispose()
+        this.orbitGroup.remove(c)
+      }
+
+      const a = this.a
+      const e = this.eccentricity
+      const b = a * Math.sqrt(Math.max(0.001, 1 - e * e))
+      const c = a * e // Focus distance from center
+
+      // Orbit center is at (-c, 0) so Sun is at (0, 0)
+      const pts = []
+      for (let i = 0; i <= 128; i++) {
+        const theta = (i / 128) * Math.PI * 2
+        const x = a * Math.cos(theta) - c
+        const z = b * Math.sin(theta)
+        pts.push(new THREE.Vector3(x, 0, z))
+      }
+      const orbitGeo = new THREE.BufferGeometry().setFromPoints(pts)
+      const orbitLine = new THREE.Line(orbitGeo, new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 }))
+      this.orbitGroup.add(orbitLine)
+
+      // Major and minor axes
+      const majorGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-c - a, 0, 0),
+        new THREE.Vector3(-c + a, 0, 0),
+      ])
+      this.orbitGroup.add(new THREE.Line(majorGeo, new THREE.LineDashedMaterial({ color: 0x475569, dashSize: 0.3, gapSize: 0.2 })))
+
+      // Equal area sectors (one near perihelion, one near aphelion)
+      if (this.showSectors) {
+        this.buildEqualAreaSectors(a, b, c)
+      }
+    },
+
+    buildEqualAreaSectors(a, b, c) {
+      // Sector 1: Near Perihelion (right side, x > 0)
+      // dTheta is bigger near perihelion
+      const periPts = [new THREE.Vector3(0, 0, 0)]
+      const dE_peri = 0.55
+      for (let t = -dE_peri; t <= dE_peri; t += 0.05) {
+        const x = a * Math.cos(t) - c
+        const z = b * Math.sin(t)
+        periPts.push(new THREE.Vector3(x, 0.01, z))
+      }
+      periPts.push(new THREE.Vector3(0, 0, 0))
+
+      const periShape = new THREE.Shape()
+      periShape.moveTo(0, 0)
+      for (let i = 1; i < periPts.length - 1; i++) {
+        periShape.lineTo(periPts[i].x, periPts[i].z)
+      }
+      periShape.lineTo(0, 0)
+
+      const periGeo = new THREE.ShapeGeometry(periShape)
+      periGeo.rotateX(Math.PI / 2)
+      const periMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.28, side: THREE.DoubleSide })
+      this.orbitGroup.add(new THREE.Mesh(periGeo, periMat))
+
+      // Sector 2: Near Aphelion (left side, around PI)
+      // dE is smaller near aphelion for equal time
+      const dE_apo = dE_peri * ((1 - this.eccentricity) / (1 + this.eccentricity))
+      const apoShape = new THREE.Shape()
+      apoShape.moveTo(0, 0)
+      for (let t = Math.PI - dE_apo; t <= Math.PI + dE_apo; t += 0.03) {
+        const x = a * Math.cos(t) - c
+        const z = b * Math.sin(t)
+        apoShape.lineTo(x, z)
+      }
+      apoShape.lineTo(0, 0)
+      const apoGeo = new THREE.ShapeGeometry(apoShape)
+      apoGeo.rotateX(Math.PI / 2)
+      const apoMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.28, side: THREE.DoubleSide })
+      this.orbitGroup.add(new THREE.Mesh(apoGeo, apoMat))
+    },
+
+    // Solve Kepler equation: M = E - e*sin(E)
+    solveKepler(M, e) {
+      let E = M
+      for (let i = 0; i < 6; i++) {
+        const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E))
+        E -= dE
+        if (Math.abs(dE) < 1e-5) break
+      }
+      return E
+    },
+
+    updatePlanetPosition() {
+      if (!this.planetMesh) return
+      const a = this.a
+      const e = this.eccentricity
+      const b = a * Math.sqrt(Math.max(0.001, 1 - e * e))
+      const c = a * e
+
+      const E = this.solveKepler(this.meanAnomaly, e)
+      const x = a * Math.cos(E) - c
+      const z = b * Math.sin(E)
+      this.planetMesh.position.set(x, 0, z)
+
+      // Radius vector
+      if (this.radiusLine) {
+        const pos = this.radiusLine.geometry.attributes.position
+        pos.setXYZ(0, 0, 0, 0)
+        pos.setXYZ(1, x, 0, z)
+        pos.needsUpdate = true
+      }
+
+      // Velocity direction (tangent to ellipse)
+      // dx/dE = -a*sin(E), dz/dE = b*cos(E)
+      const vx = -a * Math.sin(E)
+      const vz = b * Math.cos(E)
+      const r = Math.sqrt(x * x + z * z)
+      // Vis-viva equation: v^2 = GM * (2/r - 1/a)
+      const vMag = Math.sqrt(Math.max(0.1, 2 / r - 1 / a)) * 2.2
+
+      const vDir = new THREE.Vector3(vx, 0, vz).normalize()
+      this.velocityArrow.position.set(x, 0, z)
+      this.velocityArrow.setDirection(vDir)
+      this.velocityArrow.setLength(vMag, 0.4, 0.2)
+    },
+
+    animate() {
+      this.animId = requestAnimationFrame(this.animate)
+      if (this.autoRunning) {
+        // n = sqrt(k / a^3)
+        const meanMotion = 0.02 * Math.sqrt(1 / Math.pow(this.a / 7, 3))
+        this.meanAnomaly = (this.meanAnomaly + meanMotion) % (Math.PI * 2)
+        this.updatePlanetPosition()
+      }
+      if (this.sunMesh) {
+        this.sunMesh.rotation.y += 0.005
+      }
+      if (this.controls) {
+        this.controls.update()
+      }
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
+      }
+    },
+
+    onParamInput() {
+      this.activePlanet = ''
+      this.rebuildOrbit()
+      this.updatePlanetPosition()
+    },
+
+    applyPlanet(p) {
+      this.activePlanet = p.name
+      this.eccentricity = p.e
+      this.a = p.a
+      this.rebuildOrbit()
+      this.updatePlanetPosition()
+    },
+
+    togglePlay() {
+      this.autoRunning = !this.autoRunning
+    },
+
+    toggleSectors() {
+      this.showSectors = !this.showSectors
+      this.rebuildOrbit()
+    },
+
+    toggleLock() {
+      this.locked = !this.locked
+      if (this.controls) {
+        if (this.locked) {
+          this.controls.maxPolarAngle = Math.PI / 2.1
+          this.controls.minDistance = 8
+          this.controls.maxDistance = 50
+        } else {
+          this.controls.maxPolarAngle = Math.PI
+          this.controls.minDistance = 2
+          this.controls.maxDistance = 100
+        }
+      }
+    },
+
     toggleGuide() {
       this.guideActive = !this.guideActive
       if (this.guideActive) {
-        this._e.startGuidedMode(this._guideTexts)
-        this.guideText = this._e.getGuideText()
+        this.guideIndex = 0
+        this.guideText = this.guideSteps[0]
+        clearInterval(this.guideTimer)
+        this.guideTimer = setInterval(() => {
+          if (!this.guideActive) return
+          this.guideIndex = (this.guideIndex + 1) % this.guideSteps.length
+          this.guideText = this.guideSteps[this.guideIndex]
+        }, 5000)
       } else {
-        this._e.stopGuidedMode()
-        this.guideText = ''
+        clearInterval(this.guideTimer)
       }
     },
-    setPreset(key) {
-      this.activePreset = key
-      if (this.auto) { this.auto = false; this._e.auto = false }
-      const ecc = { nearcircle: 0.1, ellipse: 0.5, comet: 0.85 }
-      this.eccentricity = ecc[key]
-      this.onParam()
+
+    resetObservation() {
+      this.eccentricity = 0.45
+      this.a = 7.0
+      this.meanAnomaly = 0
+      this.autoRunning = true
+      this.showSectors = true
+      this.activePlanet = '火星'
+      this.rebuildOrbit()
+      this.updatePlanetPosition()
+      this.camera.position.set(0, 20, 24)
+      this.controls.target.set(0, 0, 0)
+      this.controls.update()
+    },
+
+    onResize() {
+      const canvas = this.$refs.cvs
+      if (!canvas || !this.renderer || !this.camera) return
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        this.camera.aspect = rect.width / rect.height
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(rect.width, rect.height)
+      }
+    },
+
+    disposeScene() {
+      if (this.animId) cancelAnimationFrame(this.animId)
+      if (this.guideTimer) clearInterval(this.guideTimer)
+      if (this.controls) this.controls.dispose()
+      if (this.renderer) this.renderer.dispose()
+      if (this.scene) {
+        this.scene.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose())
+            else obj.material.dispose()
+          }
+        })
+      }
     },
   },
-}
-
-class KeplerLawsEngine extends ExperimentEngine {
-  _createStars() {
-    const starsGeo = new THREE.BufferGeometry()
-    const count = 100
-    const positions = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const r = 25 + Math.random() * 5
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      positions[i * 3 + 2] = r * Math.cos(phi)
-    }
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.9 })
-    this._stars = new THREE.Points(starsGeo, starsMat)
-    this.scene.add(this._stars)
-  }
-
-  setupScene() {
-    this.scene.background = new THREE.Color(0x000011)
-    this.scene.fog = null
-
-    // Remove base warm ambient, replace with cool space lighting
-    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
-    if (existingAmbient) {
-      this.scene.remove(existingAmbient)
-    }
-    const ambient = new THREE.AmbientLight(0x334466, 1.5)
-    this.scene.add(ambient)
-
-    // Deep space starfield
-    this._createStars()
-
-    // Sun at focus - HUGE, radius 3.5, intense golden glow
-    this.sunGeo = new THREE.SphereGeometry(3.5, 64, 64)
-    this.sun = new THREE.Mesh(this.sunGeo, new THREE.MeshBasicMaterial({ color: 0xffcc00 }))
-    this.scene.add(this.sun)
-
-    // Sun corona - large transparent gold sphere
-    const coronaGeo = new THREE.SphereGeometry(4.5, 32, 32)
-    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.05 })
-    this._sunCorona = new THREE.Mesh(coronaGeo, coronaMat)
-    this.scene.add(this._sunCorona)
-
-    // Bright point light at sun
-    const sunLight = new THREE.PointLight(0xfff8e8, 120, 80)
-    sunLight.position.set(0, 0, 0)
-    this.scene.add(sunLight)
-
-    // Planet - radius 1.0, bright blue/teal with emissive glow
-    this.planetGeo = new THREE.SphereGeometry(1.0, 32, 32)
-    this.planet = new THREE.Mesh(this.planetGeo, new THREE.MeshStandardMaterial({
-      color: 0x00bcd4, roughness: 0.2, emissive: 0x004466, emissiveIntensity: 0.6,
-    }))
-    this.scene.add(this.planet)
-
-    // Small moon orbiting planet
-    const moonGeo = new THREE.SphereGeometry(0.15, 16, 16)
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.5 })
-    this._moon = new THREE.Mesh(moonGeo, moonMat)
-    this.scene.add(this._moon)
-
-    this.ellipseLine = null
-
-    // Pre-allocate sector meshes (geometry updated per frame, not recreated)
-    this.areaSectors = []
-    this._maxSectors = 10
-    for (let i = 0; i < this._maxSectors; i++) {
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3))
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xffd700, side: THREE.DoubleSide,
-        transparent: true, opacity: 0.4,
-      })
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.visible = false
-      this.scene.add(mesh)
-      this.areaSectors.push(mesh)
-    }
-
-    this.semiMajor = 12
-    this.ecc = 0.5
-    this.meanAnomaly = 0
-    this.trail = []
-    this.auto = false
-
-    this._rebuildEllipse()
-    this._makeMarkers()
-
-    // Sprite labels - HUGE font 48-52, scale 3.5-5.0
-    this.scene.add(this._makeLabel('太阳 (焦点)', new THREE.Vector3(0, 5.5, 0), '#ffcc00', 52, 5.0))
-    this.scene.add(this._makeLabel('椭圆轨道', new THREE.Vector3(7, 4, 8), '#ffffff', 48, 4.5))
-    this._sectorLabel = this._makeLabel('等面积扇形', new THREE.Vector3(this.focusOffset + 5, 3, 4), '#ffd700', 48, 4.0)
-    this.scene.add(this._sectorLabel)
-    this._planetLabel = this._makeLabel('行星',
-      new THREE.Vector3(Math.cos(0) * this.semiMajor + this.focusOffset, 1.5, Math.sin(0) * this.semiMajor * Math.sqrt(1 - this.ecc * this.ecc)),
-      '#00bcd4', 48, 4.0)
-    this.scene.add(this._planetLabel)
-
-    // Dynamic eccentricity label - shows current e value and orbit type
-    this._eccLabel = this._makeLabel('', new THREE.Vector3(-9, 8, 0), '#ffffff', 48, 4.0)
-    this.scene.add(this._eccLabel)
-    this._updateEccLabel()
-
-    // Camera - pulled back to see the huge orbit
-    this.camera.fov = 55; this.camera.updateProjectionMatrix()
-    this.camera.position.set(0, 14, 18)
-    this.controls.minDistance = 5
-    this.controls.maxDistance = 30
-    this.controls.target.set(0, 0, 0)
-  }
-
-  _rebuildEllipse() {
-    if (this.ellipseLine) {
-      this.scene.remove(this.ellipseLine)
-      this.ellipseLine.geometry.dispose()
-      this.ellipseLine.material.dispose()
-    }
-    const a = this.semiMajor
-    const e = this.ecc
-    const b = a * Math.sqrt(1 - e * e)
-    const c = a * e
-    const pts = []
-    const n = 200
-    for (let i = 0; i <= n; i++) {
-      const theta = (i / n) * Math.PI * 2
-      pts.push(new THREE.Vector3(a * Math.cos(theta) + c, 0, b * Math.sin(theta)))
-    }
-    // TubeGeometry for thick, visible orbit line
-    const curve = new THREE.CatmullRomCurve3(pts, true)
-    const geo = new THREE.TubeGeometry(curve, 200, 0.04, 8, true)
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.65 })
-    this.ellipseLine = new THREE.Mesh(geo, mat)
-    this.scene.add(this.ellipseLine)
-
-    this.focusOffset = c
-    this.sun.position.set(this.focusOffset, 0, 0)
-    if (this._sunCorona) this._sunCorona.position.copy(this.sun.position)
-  }
-
-  _makeMarkers() {
-    const a = this.semiMajor
-    const e = this.ecc
-    const c = a * e
-
-    // Remove old labels
-    if (this._periLabel) { this.scene.remove(this._periLabel); this._sprites = this._sprites.filter(s => s !== this._periLabel); this._periLabel = null }
-    if (this._aphLabel) { this.scene.remove(this._aphLabel); this._sprites = this._sprites.filter(s => s !== this._aphLabel); this._aphLabel = null }
-
-    // Perihelion marker - red glowing sphere, radius 0.5
-    const periGeo = new THREE.SphereGeometry(0.5, 16, 16)
-    const periMat = new THREE.MeshBasicMaterial({ color: 0xef5350 })
-    this.periMarker = new THREE.Mesh(periGeo, periMat)
-    this.periMarker.position.set(a + c, 0, 0)
-    this.scene.add(this.periMarker)
-
-    // Aphelion marker - blue glowing sphere, radius 0.5
-    const aphGeo = new THREE.SphereGeometry(0.5, 16, 16)
-    const aphMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 })
-    this.aphMarker = new THREE.Mesh(aphGeo, aphMat)
-    this.aphMarker.position.set(-a + c, 0, 0)
-    this.scene.add(this.aphMarker)
-
-    this._periLabel = this._makeLabel('近日点', this.periMarker.position.clone().add(new THREE.Vector3(0.5, 1.8, 0)), '#ff6b6b', 52, 4.0)
-    this.scene.add(this._periLabel)
-    this._aphLabel = this._makeLabel('远日点', this.aphMarker.position.clone().add(new THREE.Vector3(-0.5, 1.8, 0)), '#64b5f6', 52, 4.0)
-    this.scene.add(this._aphLabel)
-  }
-
-  _removeMarkers() {
-    if (this.periMarker) { this.scene.remove(this.periMarker); this.periMarker.geometry.dispose(); this.periMarker.material.dispose(); this.periMarker = null }
-    if (this.aphMarker) { this.scene.remove(this.aphMarker); this.aphMarker.geometry.dispose(); this.aphMarker.material.dispose(); this.aphMarker = null }
-  }
-
-  _updateEccLabel() {
-    if (!this._eccLabel) return
-    let desc = '椭圆轨道'
-    if (this.ecc < 0.15) desc = '圆轨道'
-    else if (this.ecc > 0.75) desc = '彗星轨道'
-    const pos = this._eccLabel.position.clone()
-    this.scene.remove(this._eccLabel)
-    this._sprites = this._sprites.filter(s => s !== this._eccLabel)
-    if (this._eccLabel.material) {
-      if (this._eccLabel.material.map) this._eccLabel.material.map.dispose()
-      this._eccLabel.material.dispose()
-    }
-    this._eccLabel = this._makeLabel('e = ' + this.ecc.toFixed(2) + '  ' + desc, pos, '#ffffff', 48, 4.0)
-    this.scene.add(this._eccLabel)
-  }
-
-  _updateSectors() {
-    // Hide all pool sectors first
-    for (const s of this.areaSectors) {
-      s.visible = false
-    }
-
-    if (this.trail.length < 3) return
-
-    const sunPos = new THREE.Vector3(this.focusOffset, 0, 0)
-    const trail = this.trail
-    const n = Math.min(trail.length - 2, this._maxSectors - 1)
-
-    for (let i = 0; i < n; i++) {
-      const p1 = trail[trail.length - 3 - i]
-      const p2 = trail[trail.length - 2 - i]
-      const sector = this.areaSectors[i]
-
-      const positions = sector.geometry.attributes.position
-      positions.setXYZ(0, sunPos.x, sunPos.y, sunPos.z)
-      positions.setXYZ(1, p1.x, p1.y, p1.z)
-      positions.setXYZ(2, p2.x, p2.y, p2.z)
-      positions.needsUpdate = true
-
-      sector.geometry.computeVertexNormals()
-      // Gold gradient from focus outward - clearly shows "equal area in equal time"
-      sector.material.color.setHSL(0.13, 0.9, 0.5 + i * 0.05)
-      sector.material.opacity = 0.25 + i * 0.06
-      sector.visible = true
-    }
-  }
-
-  _solveKepler(M, e) {
-    let E = M
-    for (let i = 0; i < 10; i++) {
-      const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E))
-      E -= dE
-      if (Math.abs(dE) < 1e-8) break
-    }
-    return E
-  }
-
-  _planetPos(M, e) {
-    const E = this._solveKepler(M, e)
-    const a = this.semiMajor
-    const nu = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2))
-    const r = a * (1 - e * Math.cos(E))
-    return {
-      x: r * Math.cos(nu) + this.focusOffset,
-      z: r * Math.sin(nu),
-      r,
-      nu,
-    }
-  }
-
-  update(dt) {
-    if (this.auto) {
-      const meanMotion = 1.5
-      this.meanAnomaly += dt * meanMotion
-      if (this.meanAnomaly > Math.PI * 2) this.meanAnomaly -= Math.PI * 2
-    }
-
-    const pos = this._planetPos(this.meanAnomaly, this.ecc)
-    this.planet.position.set(pos.x, 0, pos.z)
-
-    // Moon orbits the planet 5x faster for visual drama
-    if (this._moon) {
-      const moonAngle = this.meanAnomaly * 5
-      this._moon.position.set(
-        pos.x + Math.cos(moonAngle) * 1.8,
-        0,
-        pos.z + Math.sin(moonAngle) * 1.8,
-      )
-    }
-
-    if (this._planetLabel) {
-      this._planetLabel.position.copy(this.planet.position).add(new THREE.Vector3(0, 1.5, 0))
-    }
-
-    this.trail.push(this.planet.position.clone())
-    if (this.trail.length > 100) this.trail.shift()
-
-    this._updateSectors()
-  }
-
-  setParams({ eccentricity }) {
-    if (eccentricity !== undefined && Math.abs(eccentricity - this.ecc) > 0.001) {
-      this.ecc = Math.max(0, Math.min(0.9, eccentricity))
-      this._removeMarkers()
-      this._updateSectors()
-      this._rebuildEllipse()
-      this._makeMarkers()
-      this._updateEccLabel()
-      this.meanAnomaly = 0
-      this.trail = []
-      this._vm.eccentricity = parseFloat(this.ecc.toFixed(2))
-    }
-  }
 }
 </script>
 
 <style scoped>
-.kl-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.kl-panel { width: 210px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
-.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-.preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
-.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
-.preset-btn:hover { background: var(--button-green); }
-.preset-btn.active:hover { background: var(--red); }
-.kl-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
-.kl-panel input[type="range"] { width: 100%; accent-color: var(--red); }
-.kl-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
-.kl-panel button:hover { background: var(--button-green); }
-.kl-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
-.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
-.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
-.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.kl-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; overflow: hidden; }
-.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lock-btn:hover { background: rgba(255,255,255,1); }
-.kl-canvas-wrap canvas { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
+.astro-theme {
+  display: flex;
+  gap: 18px;
+  background: #080d1a;
+  border-radius: var(--radius-card, 16px);
+  padding: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #f1f5f9;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
 
-.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
-.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
-.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
+.kl-panel {
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-@media (max-width: 720px) {
-  .kl-layout { flex-direction: column; }
+.panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+.station-tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  font-weight: 700;
+}
+.panel-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ctrl-subhead {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.preset-chip {
+  padding: 6px 4px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s;
+}
+.preset-chip:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.preset-chip.active {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+.chip-name { font-size: 11px; font-weight: 700; }
+.chip-val { font-size: 9px; opacity: 0.7; }
+
+.ctrl-group {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ctrl-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+}
+.val-badge {
+  color: #f59e0b;
+  font-weight: 700;
+}
+.astro-slider {
+  width: 100%;
+  accent-color: #f59e0b;
+}
+.angle-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.law-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.law-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.law-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+}
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+}
+.m-label { color: #94a3b8; }
+.highlight-val { color: #f59e0b; font-weight: 700; }
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.action-btn {
+  padding: 8px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+}
+.play-btn.playing {
+  background: #f59e0b;
+  color: #000;
+  font-weight: 700;
+}
+
+.guide-trigger {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide-trigger.active {
+  background: #f59e0b;
+  color: #000;
+}
+.guide-box {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fef08a;
+  line-height: 1.5;
+}
+
+.nav-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+.kl-canvas-wrap {
+  flex: 1;
+  min-height: 480px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.kl-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.view-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.overlay-tag {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #f8fafc;
+}
+.lock-btn {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.perihelion-label {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #34d399;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .astro-theme {
+    flex-direction: column;
+  }
   .kl-panel {
     width: 100%;
-    border-right: 0;
-    border-bottom: 1px solid var(--brown-light);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
   }
-  .kl-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
-  .kl-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
-  .kl-panel button { font-size: 12px; padding: 5px 8px; }
-  .kl-canvas-wrap { min-height: 280px; }
-  .guide-text-box { width: 100%; font-size: 11px; }
-  .kl-hint { font-size: 10px; }
-  .preset-row { width: 100%; }
-  .preset-btn { font-size: 10px; padding: 4px 6px; }
-  .exp-desc { padding: 10px 14px; margin-top: 12px; }
-  .exp-desc h4 { font-size: 13px; }
-  .exp-desc p { font-size: 13px; line-height: 1.6; }
-  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
+  .kl-canvas-wrap {
+    min-height: 320px;
+  }
 }
 </style>

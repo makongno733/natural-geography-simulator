@@ -14,6 +14,19 @@
       <p class="sn-hint">🖱 拖动旋转 · 滚轮缩放</p>
     </aside>
   </section>
+
+  <!-- 教学四要素机理与连贯性面板 -->
+  <ModelPedagogyPanel
+    theme="systems"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: 'NASA 卫星遥感看全球城镇群夜间灯光', path: '/geo-labs/satellite', desc: '真实卫星夜光影像反映城市空间网络密度' }"
+    :textbook-link="{ grade: '高中', book: '必修第二册', chapter: '第二章', section: '第一节' }"
+    practice-link="/practice"
+    @reset="resetCamera"
+  />
 </template>
 
 <script setup>
@@ -21,6 +34,28 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BaseScene } from '../../../engine/core/BaseScene.js'
 import { createSpatialNetworkModule } from '../../../engine/modules/SpatialNetworkModule.js'
 import { getSpatialNetworkConfig } from './sceneConfigs.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '中心节点等级规模（大都市、区域中心、中小城镇）及其引力辐射圈层范围。',
+    '客货流、信息流、技术流沿综合交通廊道（铁路、公路、航空）流动构成的空间拓扑网络。',
+    '核心区与外围边缘区在要素流动中的吸纳与回流效应。',
+  ],
+  change: [
+    '随教材不同章节预设，动态切换人口分布网络、城镇体系层级、产业区位选择或交通干线网络。',
+    '旋转与缩放三维全息节点网络，从不同倾角剖析空间联系。',
+  ],
+  mechanism: [
+    '中心地理论与集聚经济：中心城市聚集高阶生产性服务业，以更高效的规模经济辐射广阔腹地。',
+    '空间相互作用模型：两区域联系强度与各自经济体量乘积成正比，与空间距离阻抗成反比。',
+    '区域协同发展：通过交通网络打破行政壁垒，形成优势互补、分工协作的高质量国土空间开发保护格局。',
+  ],
+  limitations: [
+    '拓扑网络进行了几何抽象简化，未叠加复杂自然山系隔断与河流对交通选线的微观工程限制。',
+    '流线强度以定性相对粗细展示，非真实海关与交通部瞬时车次大数据。',
+  ],
+}
 
 const props = defineProps({
   preset: { type: Object, default: () => ({}) },

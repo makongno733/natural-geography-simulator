@@ -31,6 +31,8 @@
     <TutorialTemplate
       v-if="status === 'ready' && experiment?.kind === 'tutorial' && tutorialSteps.length"
       :steps="tutorialSteps"
+      :pedagogy="tutorialPedagogy"
+      :theme="experiment?.category"
     />
 
     <section v-if="!lessonContext && relatedTextbooks.length" class="ev-textbook-links" aria-label="关联教材">
@@ -98,6 +100,7 @@ const experiment = ref(null)
 const preset = ref(null)
 const loadedComponent = shallowRef(null)
 const tutorialSteps = ref([])
+const tutorialPedagogy = ref(null)
 let loadGeneration = 0
 
 const categoryLabel = computed(() => categoryLabels[experiment.value?.category] || experiment.value?.category || '')
@@ -156,8 +159,12 @@ async function loadExperiment() {
   try {
     const module = await experiment.value.load()
     if (generation !== loadGeneration) return
-    if (experiment.value.kind === 'tutorial') tutorialSteps.value = module.default?.steps || module.steps || []
-    else loadedComponent.value = module.default || module
+    if (experiment.value.kind === 'tutorial') {
+      tutorialSteps.value = module.default?.steps || module.steps || []
+      tutorialPedagogy.value = module.default?.pedagogy || module.pedagogy || null
+    } else {
+      loadedComponent.value = module.default || module
+    }
     status.value = 'ready'
   } catch (error) {
     if (generation === loadGeneration) status.value = 'error'

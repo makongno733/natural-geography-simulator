@@ -36,6 +36,18 @@
         <li>如果要说明一个地理过程，至少还需要比较几个日期？</li>
       </ol>
     </div>
+
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="meteorology"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第二章', section: '第一节' }"
+      practice-link="/practice"
+      @reset="split = 50"
+    />
   </section>
 </template>
 
@@ -43,6 +55,28 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Map } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '不同日期同一地点的下垫面颜色、纹理与云层覆盖范围变化。',
+    '积雪线消融退缩、大型湖泊湿地丰枯水位变化与农田植被季节性变绿。',
+    '辨别真实地表变化与假象：云层阴影、传感器曝光差异与卫星扫描数据条带缺口。',
+  ],
+  change: [
+    '选择不同地理区域（中国东部季风区、亚马孙平原雨林、喜马拉雅高山积雪、洞庭湖水体涨落）。',
+    '选择两天的对比日期（支持 2000 年至今每日 NASA MODIS Terra 卫星实测影像）。',
+    '左右拖动分屏对比卷帘滑杆。',
+  ],
+  mechanism: [
+    '卫星传感器记录地表对太阳辐射的反射光谱（红、绿、蓝波段真彩色合成）。',
+    '季节性水热变动驱动地表物候与水文循环：夏季气温升高导致高山积雪融化；雨带北移促成河湖水量暴涨。',
+  ],
+  limitations: [
+    '光学卫星无法穿透浓密厚云，云层下方的地表信息缺失。',
+    'MODIS Terra 空间分辨率约为 250 米至 1 公里，仅适合区域宏观观察，无法分辨单栋建筑或细小溪流。',
+  ],
+}
 
 const places = [
   { id: 'china', name: '中国东部 · 云与地表', center: [112, 31], zoom: 4 },
