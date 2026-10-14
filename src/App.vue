@@ -132,7 +132,7 @@
       <a href="mailto:makongno733@gmail.com">联系网站</a>
     </div>
 
-    <LessonAssistant v-if="!isAccountHost && !isHome" />
+    <LessonAssistant v-if="!isAccountHost" />
   </div>
 </template>
 

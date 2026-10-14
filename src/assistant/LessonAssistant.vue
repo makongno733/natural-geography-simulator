@@ -20,8 +20,9 @@
         <button v-if="isSection && accountEnabled" type="button" class="comment-link" @click="goComments">查看本节评论 →</button>
       </div>
     </section>
-    <button class="assistant-fab" type="button" :aria-expanded="open" aria-label="打开课程助手" @click="open = !open">
+    <button class="assistant-fab" type="button" :aria-expanded="open" aria-label="打开 AI 课程助手" @click="open = !open">
       <span class="assistant-fab-globe" aria-hidden="true"><img :src="earthJpeg" alt="" width="62" height="62" /></span>
+      <span class="assistant-fab-label" aria-hidden="true">AI 助手</span>
     </button>
   </div>
 </template>
@@ -93,11 +94,12 @@ async function ask() {
 
 <style scoped>
 .assistant-root { position: fixed; right: 22px; bottom: 22px; z-index: 80; }
-.assistant-fab { display: grid; place-items: center; width: 66px; height: 66px; padding: 3px; border: 1px solid rgba(173, 215, 250, .85); border-radius: 50%; background: #06172e; box-shadow: 0 0 0 3px rgba(26, 84, 148, .18), 0 10px 28px rgba(4, 27, 61, .36); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.assistant-fab { box-sizing: border-box; display: flex; align-items: center; gap: 8px; height: 66px; padding: 3px 15px 3px 3px; border: 1px solid rgba(173, 215, 250, .85); border-radius: 999px; background: #06172e; box-shadow: 0 0 0 3px rgba(26, 84, 148, .18), 0 10px 28px rgba(4, 27, 61, .36); color: #fff; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
 .assistant-fab:hover { transform: translateY(-3px); box-shadow: 0 0 0 4px rgba(26, 84, 148, .24), 0 15px 32px rgba(4, 27, 61, .4); }
 .assistant-fab:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
-.assistant-fab-globe { display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 50%; }
+.assistant-fab-globe { display: block; flex: 0 0 58px; width: 58px; height: 58px; overflow: hidden; border-radius: 50%; }
 .assistant-fab-globe img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.assistant-fab-label { white-space: nowrap; font-weight: 700; font-size: 14px; line-height: 1.2; letter-spacing: .02em; }
 .assistant-panel { position: absolute; right: 0; bottom: 74px; width: min(360px, calc(100vw - 30px)); max-height: min(540px, calc(100vh - 120px)); overflow: auto; background: #fff; border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 20px 60px rgba(24,70,150,.2); }
 header { display: flex; align-items: center; justify-content: space-between; padding: 18px; background: var(--accent-soft); }
 header div { display: grid; gap: 3px; } header span { color: var(--text-muted); font-size: 12px; } header button { border: 0; background: none; font-size: 24px; cursor: pointer; }
