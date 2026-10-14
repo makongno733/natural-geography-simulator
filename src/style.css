@@ -53,7 +53,20 @@
   --transition: 0.22s var(--ease);
   --geo-flow-ease: cubic-bezier(0.2, 0.8, 0.25, 1);
   --geo-press-ease: cubic-bezier(0.12, 0.72, 0.35, 1);
-  --geo-focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--geo-ocean);
+  --geo-spring-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --geo-focus-ring: 0 0 0 2px var(--surface), 0 0 0 4.5px var(--geo-ocean);
+  --geo-btn-elevate: translateY(-1.5px);
+  --geo-btn-elevate-lg: translateY(-3px);
+  --geo-btn-press: translateY(1px) scale(0.985);
+  --geo-btn-press-sm: translateY(0.75px) scale(0.988);
+  --geo-btn-primary-shadow: 0 3px 12px rgba(26, 68, 108, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --geo-btn-primary-hover-shadow: 0 8px 24px rgba(26, 68, 108, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  --geo-btn-transition: color 0.18s var(--geo-flow-ease),
+                        background 0.2s var(--geo-flow-ease),
+                        border-color 0.2s var(--geo-flow-ease),
+                        box-shadow 0.22s var(--geo-flow-ease),
+                        transform 0.12s var(--geo-press-ease),
+                        opacity 0.18s var(--geo-flow-ease);
 
   /* 真实大地与微物理阴影 */
   --shadow-sm: 0 1px 2px rgba(15, 39, 66, 0.05), 0 2px 8px rgba(15, 39, 66, 0.04);
@@ -159,6 +172,9 @@ h1, h2, h3, h4 {
   border-radius: 6px;
 }
 
+/* ==========================================================================
+   全局按钮与交互元素基底动效规范 (Geo Flow & Relief Motion)
+   ========================================================================== */
 button,
 [role="button"],
 input[type="button"],
@@ -166,53 +182,529 @@ input[type="submit"],
 input[type="reset"] {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: background .2s var(--geo-flow-ease), border-color .2s var(--geo-flow-ease), color .18s var(--geo-flow-ease), box-shadow .22s var(--geo-flow-ease), transform .12s var(--geo-press-ease), opacity .18s var(--geo-flow-ease);
+  user-select: none;
+  font-family: inherit;
+  transition: var(--geo-btn-transition);
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
-button:active:not(:disabled),
-[role="button"]:active:not([aria-disabled="true"]),
+/* 桌面端悬停：地层微抬升，水色柔光 */
+@media (hover: hover) {
+  button:hover:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:hover:not([aria-disabled="true"]):not(.disabled),
+  input[type="button"]:hover:not(:disabled),
+  input[type="submit"]:hover:not(:disabled) {
+    transform: var(--geo-btn-elevate);
+  }
+
+  a.nav-link:hover {
+    transform: translateY(-0.75px);
+  }
+}
+
+/* ==========================================================================
+   多维语义分类即时按下反馈 (0ms 物理按压，触屏与鼠标通用)
+   ========================================================================== */
+/* 1. 探索跳转类：乒乓蓄力下压 */
+.btn-primary:active:not(:disabled),
+.portal-enter-btn:active,
+.btn-explore-scroll:active,
+.btn-explore-ghost:active,
+.hero-action:active,
+.study-link-btn:active,
+.primary-experiment:active,
+.tb-link:active,
+.book-card:active,
+.chapter-card:active,
+.exp-card:active,
+.card-satellite:active,
+.card-terrain:active,
+.card-ai:active,
+.nav-account-btn:active,
+.skip-link:active,
+.exp-hero-link:active,
+.text-link:active,
+.scroll-down-indicator:active,
+.orbit-arrow-next:active,
+.assistant-fab:active,
+.account-card button.primary:active,
+a.nav-link:active,
+[data-anim="pop"]:active {
+  transform: scale(0.93) translateY(2px) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* 2. 课本折叠类：羊皮纸 3D 透视折痕 */
+[data-expand-all]:active,
+[data-collapse-all]:active,
+.learning-section-controls button:active,
+.learning-section header button:active,
+.brief-actions .ghost-action:active,
+.brief-actions .primary-action:active,
+.concept-defs button:active,
+.tutorial-step-header:active,
+.glossary-term:active,
+.mindmap-btn:active,
+[data-anim="fold"]:active {
+  transform: perspective(600px) rotateX(-14deg) scaleY(0.94) translateY(1.5px) !important;
+  box-shadow: inset 0 2px 5px rgba(15, 39, 66, 0.22) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* 3. 模式与分段类：地平线水平收缩 */
+.mode-btn:active,
+.level-btn:active,
+.zoom-btn:active,
+.coord-btn:active,
+.reset-btn:active,
+.region-tab-btn:active,
+.step-dot:active,
+.mode-tab:active,
+.planet-track button:active,
+.globe-actions button:active,
+.globe-shortcuts button:active,
+.category-tab:active,
+.filter-btn:active,
+.nav-toggle:active,
+[data-anim="horizon"]:active {
+  transform: scale(0.9, 0.42) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* 4. 实验操纵类：地质活塞坚实沉降 */
+.quick-btn:active,
+.tool-btn:active,
+.play-btn:active,
+.guide-btn:active,
+.he-reset:active,
+.sn-reset:active,
+.preset-btn:active,
+.fm-buttons button:active,
+.auto-btn:active,
+.comment-submit:active,
+.assistant-actions button:active,
+.controls button:active,
+[data-anim="seismic"]:active {
+  transform: translateY(2.5px) scale(0.95) !important;
+  box-shadow: inset 0 2px 4px rgba(15, 39, 66, 0.32) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* 5. 罗盘回旋与关闭类：指针偏转 */
+.info-close:active,
+.glossary-close:active,
+.mindmap-btn-close:active,
+.mindmap-tooltip-close:active,
+header button[aria-label*="关闭"]:active,
+.lock-btn:active,
+[data-anim="spin"]:active {
+  transform: scale(0.88) rotate(45deg) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* 6. 定向退回类：向左探退 */
+.back:active,
+.back-link:active,
+.orbit-arrow-prev:active,
+[data-anim="retreat"]:active {
+  transform: translateX(-6px) scale(0.95) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* 通用按键兜底按下反馈 */
+button:active:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:active:not([aria-disabled="true"]):not(.disabled),
 input[type="button"]:active:not(:disabled),
-input[type="submit"]:active:not(:disabled) {
-  transform: translateY(1px) scale(.985);
-  transition-duration: .08s;
+input[type="submit"]:active:not(:disabled),
+.sheen-card:active,
+.tier-card:active,
+.card:active {
+  transform: var(--geo-btn-press) !important;
+  transition-duration: 0.08s !important;
 }
 
+/* ==========================================================================
+   多维按钮点击动画 (Keyframes Animations & Visual Feedback)
+   ========================================================================== */
+
+/* 1. 探索跃迁 / 页面跳转类：乒乓球弹性回弹 + 视线引导光梭 */
+@keyframes geo-ping-pong-pop {
+  0% {
+    transform: scale(0.92) translateY(2px);
+  }
+  38% {
+    transform: scale(1.09) translateY(-6px);
+    box-shadow: 0 14px 28px rgba(26, 68, 108, 0.35), 0 0 16px rgba(56, 132, 199, 0.4);
+  }
+  70% {
+    transform: scale(0.98) translateY(1px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes geo-vision-beam {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(0) scaleX(0.4);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-50%) translateX(60px) scaleX(1.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(160px) scaleX(0.8);
+  }
+}
+
+.is-clicked-pop,
+.geo-anim-pop {
+  animation: geo-ping-pong-pop 0.22s cubic-bezier(0.2, 0.8, 0.25, 1.25) forwards !important;
+  position: relative;
+  overflow: visible !important;
+}
+
+.is-clicked-pop::after,
+.geo-anim-pop::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  width: 40px;
+  height: 2.5px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), var(--geo-ocean-light), transparent);
+  border-radius: 999px;
+  box-shadow: 0 0 10px var(--geo-ocean-light), 0 0 18px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  z-index: 20;
+  animation: geo-vision-beam 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 2. 课本折叠 / 导图文献类：羊皮纸 3D 透视翻折舒展 */
+@keyframes geo-origami-fold {
+  0% {
+    transform: perspective(600px) rotateX(0deg) scale(1);
+    box-shadow: var(--shadow-sm);
+  }
+  35% {
+    transform: perspective(600px) rotateX(-16deg) scaleY(0.92) translateY(1.5px);
+    box-shadow: inset 0 3px 6px rgba(15, 39, 66, 0.24), 0 1px 2px rgba(15, 39, 66, 0.1);
+  }
+  70% {
+    transform: perspective(600px) rotateX(6deg) scaleY(1.02) translateY(-1px);
+  }
+  100% {
+    transform: perspective(600px) rotateX(0deg) scale(1) translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.is-clicked-fold,
+.geo-anim-fold {
+  transform-origin: center bottom;
+  animation: geo-origami-fold 0.22s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+/* 3. 模式切换 / 坐标分段类：地平线收缩成线后展开 */
+@keyframes geo-horizon-pinch {
+  0% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+  32% {
+    transform: scale(0.86, 0.22);
+    filter: brightness(1.35);
+    box-shadow: 0 0 14px var(--geo-ocean-light), 0 0 2px #fff;
+    border-radius: 2px;
+  }
+  68% {
+    transform: scale(1.04, 1.06);
+    filter: brightness(1.08);
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+.is-clicked-horizon,
+.geo-anim-horizon {
+  animation: geo-horizon-pinch 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+/* 4. 实验操纵 / 仿真控制类：活塞沉降 + 地震波微脉冲扩散 */
+@keyframes geo-seismic-piston {
+  0% {
+    transform: translateY(2.5px) scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(15, 39, 66, 0.35);
+  }
+  45% {
+    transform: translateY(-1.5px) scale(1.03);
+    box-shadow: 0 4px 12px rgba(26, 68, 108, 0.25);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes geo-seismic-ring {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.32);
+  }
+}
+
+.is-clicked-seismic,
+.geo-anim-seismic {
+  animation: geo-seismic-piston 0.18s cubic-bezier(0.12, 0.8, 0.3, 1) forwards !important;
+  position: relative;
+}
+
+.is-clicked-seismic::before,
+.geo-anim-seismic::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 1.5px solid var(--geo-ocean-light);
+  pointer-events: none;
+  animation: geo-seismic-ring 0.26s ease-out forwards;
+}
+
+/* 5. 罗盘回旋与关闭类：指针偏转回旋与吸入 */
+@keyframes geo-compass-spin {
+  0% {
+    transform: scale(0.88) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.18) rotate(195deg);
+  }
+  100% {
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+.is-clicked-spin,
+.geo-anim-spin {
+  animation: geo-compass-spin 0.22s cubic-bezier(0.34, 1.3, 0.64, 1) forwards !important;
+}
+
+/* 6. 定向退回类：定向回退与快速回弹 */
+@keyframes geo-retreat-rebound {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  30% {
+    transform: translateX(-7px) scale(0.94);
+  }
+  65% {
+    transform: translateX(2px) scale(1.02);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+.is-clicked-retreat,
+.geo-anim-retreat {
+  animation: geo-retreat-rebound 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards !important;
+}
+
+/* 键盘聚焦轮廓 (清晰水纹微描边，高对比度与圆角适应) */
 button:focus-visible,
 [role="button"]:focus-visible,
 input[type="button"]:focus-visible,
 input[type="submit"]:focus-visible,
+a.nav-link:focus-visible,
+a.brand:focus-visible,
+a.portal-enter-btn:focus-visible,
 a.primary-action:focus-visible,
-a.secondary-action:focus-visible,
-a.nav-link:focus-visible {
-  outline: none;
-  box-shadow: var(--geo-focus-ring);
+a.ghost-action:focus-visible,
+a.primary-experiment:focus-visible,
+a.sheen-card:focus-visible,
+a.card:focus-visible,
+a.back:focus-visible,
+a.back-link:focus-visible,
+.btn-explore-scroll:focus-visible,
+.btn-explore-ghost:focus-visible,
+.tier-card:focus-visible,
+.scroll-down-indicator:focus-visible {
+  outline: none !important;
+  box-shadow: var(--geo-focus-ring) !important;
+  z-index: 2;
 }
 
+/* 禁用状态统一规范 */
 button:disabled,
+button[disabled],
 button[aria-disabled="true"],
-[role="button"][aria-disabled="true"] {
-  opacity: .5;
-  cursor: not-allowed;
+[role="button"][aria-disabled="true"],
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+.is-disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
+/* 加载中状态 (如 AI 问答中、登录提交中) */
 button[aria-busy="true"],
-button.is-loading {
-  cursor: wait;
+button.is-loading,
+button[disabled][aria-busy="true"] {
+  cursor: wait !important;
+  position: relative;
+  overflow: hidden;
+}
+
+button[aria-busy="true"]::after,
+button.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: geo-water-shimmer 1.8s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes geo-water-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 1. 主行动按钮 (Primary Actions) */
+.btn-primary,
+.portal-enter-btn,
+.primary-action,
+.btn-explore-scroll,
+.account-card .primary,
+.account-card button.primary {
+  box-shadow: var(--geo-btn-primary-shadow);
 }
 
 @media (hover: hover) {
+  .btn-primary:hover,
+  .portal-enter-btn:hover,
   .primary-action:hover,
-  .secondary-action:hover,
-  .nav-link:hover,
-  .model-gallery-all:hover,
-  .inquiry-entry-link:hover {
-    transform: translateY(-2px);
+  .btn-explore-scroll:hover,
+  .account-card .primary:hover,
+  .account-card button.primary:hover {
+    box-shadow: var(--geo-btn-primary-hover-shadow);
   }
 }
 
+/* 2. 次要与幽灵按钮 (Secondary & Ghost Actions) */
+.btn-secondary,
+.btn-ghost,
+.btn-explore-ghost,
+.ghost-action,
+.account-card .secondary,
+.tb-link,
+.back,
+.back-link {
+  transition: var(--geo-btn-transition);
+}
+
+@media (hover: hover) {
+  .btn-secondary:hover,
+  .btn-ghost:hover,
+  .btn-explore-ghost:hover,
+  .ghost-action:hover,
+  .account-card .secondary:hover,
+  .tb-link:hover {
+    transform: var(--geo-btn-elevate);
+    box-shadow: var(--geo-btn-shadow);
+  }
+}
+
+/* 3. 标签与分段切换按钮 (Tabs & Segmented Pills) */
+.region-tab-btn,
+.mode-btn,
+.level-btn,
+.zoom-btn,
+.coord-btn,
+.preset-btn,
+.step-dot,
+.mode-tab {
+  transition: var(--geo-btn-transition);
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .region-tab-btn:hover:not(.active),
+  .mode-btn:hover:not(.active),
+  .level-btn:hover:not(.active),
+  .zoom-btn:hover:not(.active),
+  .coord-btn:hover:not(.active),
+  .preset-btn:hover:not(.active),
+  .step-dot:hover:not(.active) {
+    transform: var(--geo-btn-elevate);
+  }
+}
+
+/* 4. 实验控制台微物理按键 (Lab Scientific Controls) */
+.quick-btn,
+.tool-btn,
+.play-btn,
+.guide-btn,
+.lock-btn,
+.mindmap-btn,
+.he-reset,
+.sn-reset {
+  transition: var(--geo-btn-transition);
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .quick-btn:hover,
+  .tool-btn:hover,
+  .play-btn:hover,
+  .guide-btn:hover,
+  .mindmap-btn:hover,
+  .he-reset:hover,
+  .sn-reset:hover {
+    transform: var(--geo-btn-elevate);
+    box-shadow: var(--geo-btn-shadow);
+  }
+  .lock-btn:hover {
+    transform: scale(1.08);
+  }
+}
+
+/* 5. 图标与关闭按钮 (Icon & Floating Action Buttons) */
+.info-close,
+.glossary-close,
+.mindmap-btn-close,
+.mindmap-tooltip-close {
+  transition: var(--geo-btn-transition);
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .info-close:hover,
+  .glossary-close:hover,
+  .mindmap-btn-close:hover,
+  .mindmap-tooltip-close:hover {
+    transform: scale(1.1) rotate(90deg);
+  }
+}
+
+/* 6. 触屏端防 sticky hover 适配 */
 @media (hover: none) {
   button:hover:not(:active),
-  [role="button"]:hover:not(:active) {
+  [role="button"]:hover:not(:active),
+  a:hover:not(:active) {
     transform: none;
   }
 }
@@ -272,5 +764,38 @@ button.is-loading {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  button,
+  [role="button"],
+  a,
+  input[type="button"],
+  input[type="submit"],
+  .sheen-card,
+  .tier-card,
+  .exp-card,
+  .card,
+  .assistant-fab,
+  .is-clicked-pop,
+  .geo-anim-pop,
+  .is-clicked-fold,
+  .geo-anim-fold,
+  .is-clicked-horizon,
+  .geo-anim-horizon,
+  .is-clicked-seismic,
+  .geo-anim-seismic,
+  .is-clicked-spin,
+  .geo-anim-spin,
+  .is-clicked-retreat,
+  .geo-anim-retreat {
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .is-clicked-pop::after,
+  .geo-anim-pop::after,
+  .is-clicked-seismic::before,
+  .geo-anim-seismic::before {
+    display: none !important;
   }
 }
