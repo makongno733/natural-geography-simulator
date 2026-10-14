@@ -10,6 +10,10 @@ describe('教材知识库导入', () => {
     expect(allPoints).toHaveLength(81)
     expect(allChapters).toHaveLength(89)
     expect(allChapters.filter((chapter) => chapter.site)).toHaveLength(88)
+    expect(Object.keys(manifest.pointIndex)).toHaveLength(81)
+    expect(manifest.pointIndex['KP-BX1-009']).toMatchObject({ book: 'BX1', chapter: 'SEC-BX1-02-02' })
+    expect(books.find((book) => book.textbook.id === 'TB-G-XB1').prerequisites.some((edge) =>
+      edge.target_knowledge_point_id === 'KP-XB1-015' && edge.prerequisite_knowledge_point_ids.includes('KP-BX1-009'))).toBe(true)
     expect(new Set(allPoints.map((point) => point.id)).size).toBe(81)
     const ids = new Set(allPoints.map((point) => point.id))
     const siteBooks = grades.find((grade) => grade.id === '高中').books
@@ -30,5 +34,8 @@ describe('教材知识库导入', () => {
     expect((await findKnowledgePoint('KP-BX1-001'))?.name).toBe('天体与天体系统')
     expect((await findKnowledgePoint('KP-XB1-005'))?.cases).not.toContain('地转偏向力右偏影响，南岸')
     expect((await findKnowledgePoint('KP-BX1-006'))?.explanation).not.toContain('塑性熔融状态')
+    expect((await findKnowledgePoint('KP-XB1-001'))?.distribution).toContain('角速度在地球各处近似相同')
+    expect((await findKnowledgePoint('KP-XB1-003'))?.explanation).toContain('不能说赤道全年恰在 6:00 日出')
+    expect((await findKnowledgePoint('KP-XB1-004'))?.cases).not.toContain('纽约时间（西五区区时）')
   })
 })
