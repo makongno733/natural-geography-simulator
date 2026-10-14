@@ -7,37 +7,17 @@
       <div class="header-inner">
         <!-- 账号中心环境与主站的品牌链接 -->
         <a v-if="isAccountHost" :href="`${siteOrigin}/#/`" class="brand" aria-label="返回地理教学系统">
-          <div class="brand-compass" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.75" />
-              <ellipse cx="16" cy="16" rx="7" ry="14" stroke="currentColor" stroke-width="1.25" stroke-dasharray="2 1.5" opacity="0.75" />
-              <line x1="2" y1="16" x2="30" y2="16" stroke="currentColor" stroke-width="1.25" opacity="0.6" />
-              <line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="1.25" opacity="0.6" />
-              <polygon points="16,6 18.5,16 16,14.5 13.5,16" fill="#c86446" />
-              <polygon points="16,26 18.5,16 16,17.5 13.5,16" fill="currentColor" opacity="0.8" />
-              <circle cx="16" cy="16" r="1.5" fill="#ffffff" />
-            </svg>
-          </div>
+          <BrandMark />
           <div class="brand-text">
             <span class="brand-name">中学地理教学系统</span>
             <span class="brand-sub">ACCOUNT CENTER · 账号服务</span>
           </div>
         </a>
 
-        <router-link v-else to="/" class="brand" aria-label="中学地理教学系统首页">
-          <div class="brand-compass" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.75" />
-              <ellipse cx="16" cy="16" rx="7.5" ry="14" stroke="currentColor" stroke-width="1.25" stroke-dasharray="2 1.5" opacity="0.75" />
-              <line x1="2" y1="16" x2="30" y2="16" stroke="currentColor" stroke-width="1.25" opacity="0.6" />
-              <line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="1.25" opacity="0.6" />
-              <polygon points="16,5 19,16 16,14.5 13,16" fill="#c86446" />
-              <polygon points="16,27 19,16 16,17.5 13,16" fill="currentColor" opacity="0.8" />
-              <circle cx="16" cy="16" r="1.5" fill="#ffffff" />
-            </svg>
-          </div>
+        <router-link v-else to="/" class="brand" aria-label="中学地理教学系统首页" @click="onBrandClick">
+          <BrandMark ref="brandMark" :dark="isHome && !isScrolled" />
           <div class="brand-text">
-            <span class="brand-name">中国地理教学系统</span>
+            <span class="brand-name">中学地理教学系统</span>
             <span class="brand-sub">三维地球 · 地理过程 · 初高中课程</span>
           </div>
         </router-link>
@@ -138,9 +118,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LessonAssistant from './assistant/LessonAssistant.vue'
+import BrandMark from './brand/BrandMark.vue'
 import { accountEnabled, accountOrigin, siteOrigin, authClient } from './account/client.js'
 
 const route = useRoute()
@@ -150,6 +131,14 @@ const isHome = computed(() => route.path === '/')
 const isExperiments = computed(() => route.path.startsWith('/experiments') || route.path === '/earth3d')
 const grade = computed(() => route.params.grade || '')
 const accountUser = ref(null)
+const brandMark = ref(null)
+
+function onBrandClick(event) {
+  if (route.path !== '/' || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  event.preventDefault()
+  brandMark.value?.play()
+}
+watch(() => route.path, path => { if (path !== '/') brandMark.value?.stop() })
 
 // 页面切换加载微指示
 const navLoading = ref(false)
@@ -259,22 +248,7 @@ onBeforeUnmount(() => {
   color: #f0f4f8;
 }
 
-.brand-compass {
-  width: 32px;
-  height: 32px;
-  flex: none;
-  color: var(--geo-ocean);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.4s ease, color 0.3s ease;
-}
-.is-dark-nav .brand-compass {
-  color: #a9cabc;
-}
-.brand:hover .brand-compass {
-  transform: rotate(20deg);
-}
+.brand:focus-visible { outline: 2px solid #c28a4b; outline-offset: 5px; border-radius: 4px; }
 
 .brand-text {
   display: flex;
@@ -498,9 +472,7 @@ onBeforeUnmount(() => {
     align-items: stretch;
     gap: 10px;
   }
-  .brand {
-    justify-content: center;
-  }
+  .brand { justify-content: center; min-height: 44px; }
   .app-nav {
     overflow-x: auto;
     padding-bottom: 4px;
@@ -518,6 +490,10 @@ onBeforeUnmount(() => {
     flex-direction: column;
     text-align: center;
   }
+}
+@media (max-width: 390px) {
+  .brand-sub { display: none; }
+  .brand-name { font-size: 14px; }
 }
 .site-legal-links { display:flex; justify-content:center; flex-wrap:wrap; gap:20px; padding:12px 20px 20px; background:#f4f6f3; }
 .site-legal-links a { color:#4d625e; font-size:12px; }

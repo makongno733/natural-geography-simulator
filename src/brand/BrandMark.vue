@@ -1,0 +1,102 @@
+<template>
+  <svg class="brand-mark" :class="{ 'is-playing': playing, 'is-compact': compact }" :style="{ '--brand-duration': `${ANIMATION_MS}ms` }" viewBox="0 0 160 160" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient :id="`${id}-sea`" x1="30" y1="31" x2="129" y2="132" gradientUnits="userSpaceOnUse">
+        <stop :stop-color="dark ? '#477E94' : '#205878'" /><stop offset=".56" :stop-color="dark ? '#285C76' : '#0F3B5B'" /><stop offset="1" :stop-color="dark ? '#173F5B' : '#092940'" />
+      </linearGradient>
+      <linearGradient :id="`${id}-land`" x1="38" y1="73" x2="116" y2="134" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#469473" /><stop offset=".55" stop-color="#2E7D5B" /><stop offset="1" stop-color="#1C5B49" />
+      </linearGradient>
+      <linearGradient :id="`${id}-orbit`" x1="20" y1="119" x2="146" y2="45" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#2E7D5B" /><stop offset=".57" stop-color="#9AA778" /><stop offset="1" stop-color="#E6C68A" />
+      </linearGradient>
+      <clipPath :id="`${id}-globe`"><circle cx="80" cy="80" r="53" /></clipPath>
+    </defs>
+
+    <!-- The distant half stays behind the sphere. -->
+    <ellipse class="orbit-back" cx="80" cy="80" rx="72" ry="29" transform="rotate(-25 80 80)" stroke="#6A9779" stroke-width="2.3" opacity=".65" />
+    <g class="globe">
+      <circle cx="80" cy="80" r="53" :fill="`url(#${id}-sea)`" />
+      <g :clip-path="`url(#${id}-globe)`">
+        <g class="graticule" stroke="#B3D5D6" stroke-linecap="round" opacity=".57">
+          <path d="M27 80H133M33 56C59 66 101 66 127 56M33 104C59 94 101 94 127 104" stroke-width="1.35" />
+          <path d="M80 27C61 47 61 113 80 133M80 27C99 47 99 113 80 133M80 27V133" stroke-width="1.25" />
+        </g>
+        <g class="terrain">
+          <path d="M24 101C38 94 44 91 50 83C55 78 60 67 66 68C72 68 73 78 79 78C84 77 89 61 96 63C102 65 106 78 112 82C118 87 126 88 138 93V145H24Z" :fill="`url(#${id}-land)`" />
+          <path d="M26 111C42 101 50 104 63 88C68 81 74 83 79 90C87 99 92 77 99 77C105 78 108 90 116 93C123 96 130 98 136 98" stroke="#9DC4A3" stroke-width="1.6" opacity=".86" />
+          <path v-if="!compact" d="M24 119C45 109 52 113 66 99C72 92 77 94 83 100C91 109 96 90 103 88C112 89 114 102 134 105M25 128C45 119 58 123 71 111C78 105 83 109 88 113C95 120 102 101 110 101C118 103 126 109 135 111" stroke="#D3D4A6" stroke-width="1.2" opacity=".73" />
+          <path v-if="!compact" d="M37 91C46 84 49 82 55 72M108 71C114 78 119 81 124 83" stroke="#C28A4B" stroke-width="1.35" opacity=".9" />
+        </g>
+      </g>
+      <circle cx="80" cy="80" r="53" stroke="#A3C8BF" stroke-width="2" />
+    </g>
+    <g class="compass">
+      <path d="M80 37L84.2 79L80 75.8L75.8 79Z" fill="#E6C68A" />
+      <path d="M80 123L84.2 81L80 84.2L75.8 81Z" fill="#C28A4B" />
+      <path d="M80 37V123" stroke="#F0D7A8" stroke-width=".8" opacity=".7" />
+      <circle cx="80" cy="80" r="3.2" fill="#F5F2E9" stroke="#C28A4B" stroke-width="1.2" />
+      <path d="M80 20L81.4 24.6L86 26L81.4 27.4L80 32L78.6 27.4L74 26L78.6 24.6Z" fill="#E6C68A" />
+    </g>
+    <path class="orbit-front" d="M145.25 49.57A72 29 -25 0 1 14.75 110.43" :stroke="`url(#${id}-orbit)`" stroke-width="2.6" stroke-linecap="round" />
+    <circle class="orbit-node" cx="0" cy="0" r="2.9" fill="#E6C68A" />
+  </svg>
+</template>
+
+<script setup>
+import { onBeforeUnmount, ref, useId } from 'vue'
+
+defineProps({ compact: { type: Boolean, default: true }, dark: { type: Boolean, default: false } })
+const id = useId().replace(/:/g, '-')
+const ANIMATION_MS = 1850
+const playing = ref(false)
+let timer
+
+function play() {
+  if (playing.value || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+  playing.value = true
+  timer = window.setTimeout(() => { playing.value = false; timer = undefined }, ANIMATION_MS)
+}
+
+function stop() {
+  if (timer) window.clearTimeout(timer)
+  timer = undefined
+  playing.value = false
+}
+
+defineExpose({ play, stop })
+onBeforeUnmount(stop)
+</script>
+
+<style scoped>
+.brand-mark { width: 56px; height: 56px; overflow: visible; flex: none; --brand-ease: cubic-bezier(.22,.65,.18,1); }
+.globe, .graticule, .terrain, .compass, .orbit-front, .orbit-back { transform-origin: 80px 80px; }
+.orbit-node { offset-path: path("M145.25 49.57 A72 29 -25 0 1 14.75 110.43 A72 29 -25 0 1 145.25 49.57"); offset-distance: 0%; offset-rotate: 0deg; }
+.orbit-front, .orbit-back { transition: transform .4s var(--brand-ease); }
+.compass { transition: filter .35s ease; }
+@media (hover: hover) {
+  .brand-mark:hover .orbit-front { transform: translate(1px,-1px); }
+  .brand-mark:hover .orbit-back { transform: translate(-1px,1px); }
+  .brand-mark:hover .compass { filter: brightness(1.13); }
+}
+.is-playing .globe { animation: globe-wake var(--brand-duration) var(--brand-ease) both; }
+.is-playing .graticule { animation: grid-wake var(--brand-duration) ease both; }
+.is-playing .terrain { animation: terrain-wake var(--brand-duration) ease both; }
+.is-playing .terrain path:not(:first-child) { stroke-dasharray: 250; animation: contour-trace var(--brand-duration) ease both; }
+.is-playing .compass { animation: compass-find var(--brand-duration) var(--brand-ease) both; }
+.is-playing .orbit-front { animation: orbit-near var(--brand-duration) var(--brand-ease) both; }
+.is-playing .orbit-back { animation: orbit-far var(--brand-duration) var(--brand-ease) both; }
+.is-playing .orbit-node { animation: node-travel var(--brand-duration) linear both; }
+@keyframes globe-wake { 0%,100% { transform: scale(1); } 17% { transform: scale(1.025); } 42% { transform: scale(1.01); } }
+@keyframes grid-wake { 0%,12%,100% { transform: translateX(0); opacity: .57; } 29% { transform: translateX(2px); opacity: .82; } 46% { transform: translateX(-1px); opacity: .7; } }
+@keyframes terrain-wake { 0%,31%,100% { opacity: 1; } 40% { opacity: .68; } 63% { opacity: 1; } }
+@keyframes contour-trace { 0%,30%,100% { stroke-dashoffset: 0; } 42% { stroke-dashoffset: 250; } 67% { stroke-dashoffset: 0; } }
+@keyframes compass-find { 0%,48%,100% { transform: rotate(0); } 62% { transform: rotate(11deg); } 78% { transform: rotate(-3deg); } }
+@keyframes orbit-near { 0%,66%,100% { transform: translate(0,0); opacity: 1; } 82% { transform: translate(2px,-1px); opacity: .72; } }
+@keyframes orbit-far { 0%,66%,100% { transform: translate(0,0); opacity: .65; } 82% { transform: translate(-2px,1px); opacity: .9; } }
+@keyframes node-travel {
+  0%,63% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .brand-mark *, .brand-mark { animation: none !important; transition: none !important; } }
+</style>
