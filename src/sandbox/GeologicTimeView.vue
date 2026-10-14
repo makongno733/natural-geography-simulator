@@ -74,6 +74,19 @@
         </div>
       </div>
     </div>
+
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="geology"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'Copernicus 喜马拉雅山脉古特提斯洋地层探勘', path: '/geo-labs/terrain', desc: '真实高程DEM分析青藏高原隆起与造山' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第一章', section: '第三节' }"
+      practice-link="/practice"
+      @reset="resetView"
+    />
   </div>
 </template>
 
@@ -81,6 +94,28 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { BaseScene } from '../engine/core/BaseScene.js'
 import { GeologicTimeModule, ERAS } from '../engine/modules/GeologicTimeModule.js'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '地球 46 亿年漫长历史中，前寒武纪长达近 40 亿年（占全史约 88%），生命长期处于微观单细胞阶段。',
+    '寒武纪生命大爆发瞬间拉开古生代序幕，海洋无脊椎动物繁盛，其后鱼类、两栖类相继登场。',
+    '二叠纪末与白垩纪末重大生物集群灭绝界线，分别终结了古生代和中生代，促成恐龙向哺乳动物与人类的主导权交替。',
+  ],
+  change: [
+    '沿时间轴滑动或点击特定代纪，观察地球古地理海陆变迁与标志性化石物种更迭。',
+    '开启自动演示巡游，沿时间螺旋鸟瞰生命演化长河。',
+  ],
+  mechanism: [
+    '生物演化规律：由简单到复杂、由低级到高级、由水生到陆生，演化过程不可逆。',
+    '环境与生物协同进化：早期蓝细菌光合产氧改变原始大气圈，促成臭氧层形成，生物方得以登上陆地繁衍。',
+    '地层与化石是记录地球历史的“天然书页”：同一时代地层含有相似标准化石，古生物演化构成了全球相对定年的核心依据。',
+  ],
+  limitations: [
+    '本表时间刻度为便观察，对前寒武纪进行了非线性几何压缩，否则显生宙仅占最后短暂一段。',
+    '地质年代起止数值随国际地层委员会（ICS）最新同位素测年精度持续动态修订微调。',
+  ],
+}
 
 const canvasRef = ref(null)
 const currentEra = ref(ERAS.length - 1)

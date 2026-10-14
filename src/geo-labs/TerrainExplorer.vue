@@ -25,6 +25,19 @@
       <p>本剖面约 {{ profileMin }}—{{ profileMax }} 米。找出最陡的一段，推测可能对应山脊、谷地还是山坡。</p>
     </div>
     <p class="source">数据：<a href="https://registry.opendata.aws/copernicus-dem/" target="_blank" rel="noopener">Copernicus DEM GLO-90 Public</a>，2021 版；原始瓦片 {{ dem.tile }}。本页保存的是从原始瓦片抽样出的高程数值，非手绘地形。<br />produced using Copernicus WorldDEM-90 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved</p>
+
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="geology"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'NASA 卫星真彩色珠峰山体影像对比', path: '/geo-labs/satellite', desc: '真实卫星影像看雪线与山体反照率' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第四章', section: '第一节' }"
+      practice-link="/practice"
+      @reset="resetTerrainView"
+    />
   </section>
 </template>
 
@@ -33,6 +46,32 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import dem from './data/everest-dem.json'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '喜马拉雅极高山地貌：山脊高耸陡峭呈线状延伸（分水岭），山谷深切幽闭（汇水线）。',
+    '东西向剖面线的陡缓起伏：坡陡处等高线密集，坡缓处等高线稀疏。',
+    '山地垂直高差超 5000 米（最低谷底约 3400 米，主峰群超 8000 米）。',
+  ],
+  change: [
+    '调节“高度夸张倍数”（0.5x~3.0x），增强地貌起伏微地貌的视觉可识别度。',
+    '滑动“剖面纬度”滑块，沿经线方向由南向北扫描整个珠峰山地的横向地形切面。',
+  ],
+  mechanism: [
+    '印度洋板块与亚欧陆块强力持续碰撞挤压，地壳强烈缩短加厚抬升形成青藏高原与喜马拉雅山脉。',
+    '极高山冰川侵蚀（角峰、刃脊、冰斗）与外力物理冰劈冻融风化，强烈雕琢出犬牙交错的锋利山形。',
+  ],
+  limitations: [
+    '高度夸张改变了几何垂直显示比例，不可直接在夸张视角下测量实际山坡坡度角。',
+    '数据来自 Copernicus GLO-90 公开数据集按 96×96 降采样提取，属于宏观课堂定性探究模型。',
+  ],
+}
+
+function resetTerrainView() {
+  exaggeration.value = 1.0
+  profileRow.value = 48
+}
 
 const sceneEl = ref(null)
 const exaggeration = ref(1)

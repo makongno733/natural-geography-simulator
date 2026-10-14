@@ -1,384 +1,733 @@
 <template>
-  <div class="se-layout">
+  <div class="se-layout geo-theme">
     <aside class="se-panel">
-      <div class="preset-row">
-        <button class="preset-btn" :class="{ active: rainIntensity === 3 && slopeAngle === 10 }" @click="preset('light')">小雨</button>
-        <button class="preset-btn" :class="{ active: rainIntensity === 8 && slopeAngle === 20 }" @click="preset('heavy')">暴雨</button>
-        <button class="preset-btn" :class="{ active: rainIntensity === 10 && slopeAngle === 25 }" @click="preset('extreme')">暴雨+裸露</button>
+      <div class="panel-header">
+        <span class="station-tag">🌱 水土保持坡面径流观测场</span>
+        <h3 class="panel-title">植被覆被与坡面水土流失对比</h3>
       </div>
-      <label>降雨强度 <span>{{ rainIntensity }}</span></label>
-      <input type="range" min="0" max="10" step="1" v-model.number="rainIntensity" @input="onParam" />
-      <label>坡度 <span>{{ slopeAngle }}°</span></label>
-      <input type="range" min="5" max="45" step="1" v-model.number="slopeAngle" @input="onParam" />
-      <div class="se-legend">
-        <div class="se-legend-item"><span class="se-dot bare"></span> 裸露土壤</div>
-        <div class="se-legend-item"><span class="se-dot veg"></span> 植被覆盖</div>
+
+      <!-- 降雨与坡度工况预设 -->
+      <div class="se-presets">
+        <span class="ctrl-subhead">典型水土保持试验工况</span>
+        <div class="preset-grid">
+          <button
+            v-for="p in presets"
+            :key="p.key"
+            :class="['preset-chip', { active: currentPresetKey === p.key }]"
+            @click="applyPreset(p)"
+          >
+            <span class="chip-name">{{ p.name }}</span>
+            <span class="chip-sub">{{ p.sub }}</span>
+          </button>
+        </div>
       </div>
-      <button @click="reset">↺ 重置</button>
-      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
-        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+
+      <!-- 降雨强度与坡度滑块 -->
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>模拟降雨强度</span>
+          <span class="val-badge">{{ rainIntensity }} 级 ({{ rainDescText }})</span>
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          v-model.number="rainIntensity"
+          @input="onParamInput"
+          class="geo-slider"
+        />
+        <div class="angle-ticks">
+          <span>小雨细润</span>
+          <span>中到大雨</span>
+          <span>特大暴雨倾盆</span>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>坡面倾角 α</span>
+          <span class="val-badge">{{ slopeAngle }}° ({{ slopeDescText }})</span>
+        </div>
+        <input
+          type="range"
+          min="5"
+          max="45"
+          step="1"
+          v-model.number="slopeAngle"
+          @input="onParamInput"
+          class="geo-slider"
+        />
+        <div class="angle-ticks">
+          <span>5° 缓坡</span>
+          <span>25° 陡坡临界退耕线</span>
+          <span>45° 极陡崖</span>
+        </div>
+      </div>
+
+      <!-- 双小区水沙遥测对比看板 -->
+      <div class="sediment-card">
+        <div class="card-head">
+          <span>📊 径流集流池实测水沙遥测</span>
+          <span class="loss-ratio-badge">流失差比: {{ lossRatio }}x</span>
+        </div>
+        <div class="compare-table">
+          <div class="comp-col bare-col">
+            <div class="col-head">🟤 裸露坡面小区</div>
+            <div class="col-row"><span>地表径流:</span><strong>{{ (rainIntensity * (slopeAngle / 20) * 1.5).toFixed(1) }} L</strong></div>
+            <div class="col-row"><span>泥沙产出:</span><strong class="mud-val">{{ (rainIntensity * Math.pow(slopeAngle / 15, 1.8) * 2.4).toFixed(1) }} g</strong></div>
+            <div class="col-row"><span>水质清澈:</span><span>浑浊黄泥浆流</span></div>
+          </div>
+          <div class="comp-col veg-col">
+            <div class="col-head">🌿 植被覆被小区</div>
+            <div class="col-row"><span>地表径流:</span><strong>{{ (rainIntensity * (slopeAngle / 20) * 0.35).toFixed(1) }} L</strong></div>
+            <div class="col-row"><span>泥沙产出:</span><strong class="clean-val">{{ (rainIntensity * Math.pow(slopeAngle / 15, 1.2) * 0.15).toFixed(1) }} g</strong></div>
+            <div class="col-row"><span>水质清澈:</span><span>微浊或清澈</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="action-row">
+        <button
+          @click="togglePlay"
+          :class="['action-btn', 'play-btn', { playing: autoRunning }]"
+        >
+          {{ autoRunning ? '⏸ 暂停降雨' : '▶ 人工降雨模拟' }}
+        </button>
+        <button
+          @click="resetRunoff"
+          class="action-btn"
+        >
+          ↺ 清空集流桶
+        </button>
+      </div>
+
+      <button
+        @click="toggleGuide"
+        :class="['guide-trigger', { active: guideActive }]"
+      >
+        {{ guideActive ? '⏸ 停止讲解' : '💡 植被水保机理与坡度红线讲解' }}
       </button>
-      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
-      <p class="se-hint">🖱 拖动旋转 · 滚轮缩放</p>
+      <div v-if="guideActive" class="guide-box">{{ guideText }}</div>
+      <p class="nav-hint">🖱 拖动旋转观测场 · 滚轮缩放 · 双击复位</p>
     </aside>
+
     <div class="se-canvas-wrap">
       <canvas ref="cvs"></canvas>
-      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
-        {{ locked ? '🔒' : '🔓' }}
-      </button>
+      <div class="view-overlay">
+        <span class="overlay-tag">水土保持对比试验径流小区（双向并列）</span>
+        <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由漫游' : '锁定正斜侧视角'">
+          {{ locked ? '🔒 斜俯视锁定' : '🔓 自由漫游' }}
+        </button>
+      </div>
+      <div class="plot-tags">
+        <span class="ptag bare-tag">左小区：裸露黄土（击溅侵蚀 · 细沟发育）</span>
+        <span class="ptag veg-tag">右小区：草灌结合（冠层截留 · 根系固土）</span>
+      </div>
     </div>
   </div>
-  <div class="exp-desc">
-    <h4>实验说明</h4>
-    <p>本实验对比裸露坡面与植被坡面在水土流失方面的差异：降雨粒子从上方落下，在裸露坡面形成浑浊径流（含泥沙），植被坡面径流清澈。调节降雨强度和坡度观察侵蚀加剧——植被覆盖是减少水土流失最有效的自然措施。</p>
-  </div>
+
+  <ModelPedagogyPanel
+    theme="geology"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: '黄土高原与南方红壤侵蚀卫星遥感对比', path: '/geo-labs/satellite', desc: '真实卫星影像看水土保持植被恢复' }"
+    :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第六章', section: '第二节' }"
+    practice-link="/practice"
+    @reset="resetObservation"
+  />
 </template>
 
 <script>
-import { ExperimentEngine } from '../../engine/ExperimentEngine.js'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
 
 export default {
   name: 'SoilErosion',
-  data() { return {
-    rainIntensity: 5, slopeAngle: 20, locked: true,
-    guideActive: false,
-    guideText: '',
-    _guideTexts: [
-      '降雨强度越大，土壤侵蚀越严重',
-      '坡度越大，径流速度越快，侵蚀力越强',
-      '植被覆盖能有效减少水土流失',
-      '对比裸露坡面与植被坡面的径流差异',
-    ],
-  } },
-  mounted() {
-    this._e = new SoilErosionEngine()
-    this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
-    window.addEventListener('resize', this._onResize)
+  components: {
+    ModelPedagogyPanel,
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
-  methods: {
-    _onResize() { this._e?.resize() },
-    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
-    onParam() { this._e.setParams({ rainIntensity: this.rainIntensity, slopeAngle: this.slopeAngle }) },
-    preset(type) {
-      if (type === 'light') { this.rainIntensity = 3; this.slopeAngle = 10 }
-      else if (type === 'heavy') { this.rainIntensity = 8; this.slopeAngle = 20 }
-      else if (type === 'extreme') { this.rainIntensity = 10; this.slopeAngle = 25 }
-      this.onParam()
+  data() {
+    return {
+      rainIntensity: 6,
+      slopeAngle: 22,
+      currentPresetKey: 'heavy',
+      autoRunning: true,
+      locked: true,
+      guideActive: false,
+      guideIndex: 0,
+      guideText: '',
+      presets: [
+        { key: 'light', name: '连绵细雨·缓坡', sub: '降雨3级·坡度10°', rain: 3, slope: 10 },
+        { key: 'heavy', name: '短历时强降雨', sub: '降雨6级·坡度22°', rain: 6, slope: 22 },
+        { key: 'extreme', name: '极端暴雨·陡坡', sub: '降雨10级·坡度35°', rain: 10, slope: 35 },
+      ],
+      guideSteps: [
+        '【雨滴击溅作用】降雨击打裸露土壤，破坏土壤团粒结构，溅起泥沙堵塞土壤大孔隙，迅速形成地表结皮！',
+        '【径流冲刷冲蚀】雨水无法下渗转为坡面薄层片流，流速加快后集中形成细沟侵蚀，泥沙随水大量流失！',
+        '【林冠截留减速】植被树冠与草本层拦截雨滴动能，雨水变为沿茎干顺流，消除击溅冲刷！',
+        '【25°水土保持红线】我国水土保持法明确规定：25°以上坡地禁止开垦种植农作物，须实施退耕还林还草！',
+      ],
+      pedagogy: {
+        observe: [
+          '左侧裸露黄土在暴雨下被冲出明显的溯源下切细沟，集流桶内迅速积聚厚层黄褐色泥沙。',
+          '右侧植被覆盖坡面水流清澈缓慢，集流桶内主要是透明浅水，泥沙极微。',
+          '当坡度超过 25° 时，裸土冲刷侵蚀量呈指数级暴增。',
+        ],
+        change: [
+          '调节“模拟降雨强度”（1~10 级），查看雨滴雨丝密度及径流生成量。',
+          '调节“坡面倾角 α”（5°~45°），观察重力加速对细沟侵蚀深度的非线性加剧。',
+        ],
+        mechanism: [
+          '通用土壤流失方程（USLE / RUSLE）：土壤侵蚀量取决于降雨侵蚀力（R）、土壤可蚀性（K）、坡长坡度因子（LS）、植被覆盖管理因子（C）和水保措施因子（P）。',
+          '植被的 C 因子极低（仅为裸土的 1%~5%），根系力学加筋效应极显著提高土壤抗剪切强度。',
+          '陡坡地带重力沿坡分量（$\sin\alpha$）随坡度剧增，径流携沙动能成倍放大。',
+        ],
+        limitations: [
+          '试验小区采用人工微孔均质砂土，未模拟野外复杂土壤剖面中母岩裂隙水渗流。',
+          '未模拟地表风化冻融交替破坏与重力崩塌滑坡等复合并发灾害。',
+        ],
+      },
+    }
+  },
+  computed: {
+    rainDescText() {
+      if (this.rainIntensity >= 8) return '暴雨狂风'
+      if (this.rainIntensity >= 4) return '中等透雨'
+      return '连绵轻雨'
     },
+    slopeDescText() {
+      if (this.slopeAngle >= 25) return '极陡坡 (超退耕红线)'
+      if (this.slopeAngle >= 15) return '中等陡坡 (易冲刷)'
+      return '平缓坡面 (利保水)'
+    },
+    lossRatio() {
+      const bare = this.rainIntensity * Math.pow(this.slopeAngle / 15, 1.8) * 2.4
+      const veg = Math.max(0.1, this.rainIntensity * Math.pow(this.slopeAngle / 15, 1.2) * 0.15)
+      return Math.round(bare / veg)
+    },
+  },
+  mounted() {
+    this.initScene()
+    window.addEventListener('resize', this.onResize)
+  },
+  beforeUnmount() {
+    this.disposeScene()
+    window.removeEventListener('resize', this.onResize)
+  },
+  methods: {
+    initScene() {
+      const canvas = this.$refs.cvs
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const w = rect.width || 600
+      const h = rect.height || 420
+
+      this.scene = new THREE.Scene()
+      this.scene.background = new THREE.Color(0x110d0a)
+
+      this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
+      this.camera.position.set(0, 12, 22)
+
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      this.renderer.setSize(w, h)
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      this.renderer.shadowMap.enabled = true
+
+      this.controls = new OrbitControls(this.camera, canvas)
+      this.controls.enableDamping = true
+      this.controls.dampingFactor = 0.06
+      this.controls.target.set(0, 2.0, 0)
+      if (this.locked) {
+        this.controls.maxPolarAngle = Math.PI / 2.05
+        this.controls.minDistance = 6
+        this.controls.maxDistance = 45
+      }
+
+      this.buildRunoffPlots()
+      this.animate()
+    },
+
+    buildRunoffPlots() {
+      // 1. Lighting
+      const light = new THREE.DirectionalLight(0xffedd5, 3.2)
+      light.position.set(10, 25, 15)
+      light.castShadow = true
+      this.scene.add(light)
+      this.scene.add(new THREE.AmbientLight(0x451a03, 1.3))
+
+      this.plotsGroup = new THREE.Group()
+      this.scene.add(this.plotsGroup)
+
+      // Base catchment tank
+      const tankGeo = new THREE.BoxGeometry(17, 0.6, 12)
+      const tankMat = new THREE.MeshStandardMaterial({ color: 0x292524, roughness: 0.9 })
+      const tank = new THREE.Mesh(tankGeo, tankMat)
+      tank.position.set(0, -0.3, 0)
+      this.scene.add(tank)
+
+      // Plot A: Left Slope (Bare Soil)
+      this.bareGroup = new THREE.Group()
+      this.bareGroup.position.set(-4.5, 0, 0)
+      this.plotsGroup.add(this.bareGroup)
+
+      const slopeBoxGeo = new THREE.BoxGeometry(6.5, 1.2, 9)
+      const bareMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.95 })
+      this.bareMesh = new THREE.Mesh(slopeBoxGeo, bareMat)
+      this.bareMesh.receiveShadow = true
+      this.bareGroup.add(this.bareMesh)
+
+      // Plot B: Right Slope (Vegetated)
+      this.vegGroup = new THREE.Group()
+      this.vegGroup.position.set(4.5, 0, 0)
+      this.plotsGroup.add(this.vegGroup)
+
+      const vegMat = new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.85 })
+      this.vegMesh = new THREE.Mesh(slopeBoxGeo, vegMat)
+      this.vegMesh.receiveShadow = true
+      this.vegGroup.add(this.vegMesh)
+
+      // Add grass/shrubs meshes on veg plot
+      for (let i = 0; i < 45; i++) {
+        const grassGeo = new THREE.ConeGeometry(0.25, 0.7, 5)
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x65a30d, roughness: 0.9 })
+        const g = new THREE.Mesh(grassGeo, grassMat)
+        g.position.set((Math.random() - 0.5) * 5.5, 0.8, (Math.random() - 0.5) * 7.5)
+        this.vegGroup.add(g)
+      }
+
+      // 2. Raindrop particles system
+      this.rainCount = 200
+      const rainGeo = new THREE.BufferGeometry()
+      this.rainPositions = new Float32Array(this.rainCount * 3)
+      for (let i = 0; i < this.rainCount; i++) {
+        this.rainPositions[i * 3] = (Math.random() - 0.5) * 16
+        this.rainPositions[i * 3 + 1] = 4 + Math.random() * 8
+        this.rainPositions[i * 3 + 2] = (Math.random() - 0.5) * 10
+      }
+      rainGeo.setAttribute('position', new THREE.BufferAttribute(this.rainPositions, 3))
+      const rainMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.15, transparent: true, opacity: 0.8 })
+      this.rainSystem = new THREE.Points(rainGeo, rainMat)
+      this.scene.add(this.rainSystem)
+
+      this.updateSlopeAngle()
+    },
+
+    updateSlopeAngle() {
+      if (!this.bareGroup || !this.vegGroup) return
+      const rad = THREE.MathUtils.degToRad(this.slopeAngle)
+      // Slopes down towards +Z (front)
+      this.bareGroup.rotation.x = rad * 0.7
+      this.vegGroup.rotation.x = rad * 0.7
+    },
+
+    animate() {
+      this.animId = requestAnimationFrame(this.animate)
+
+      if (this.autoRunning && this.rainSystem) {
+        const pos = this.rainSystem.geometry.attributes.position
+        const speed = (this.rainIntensity / 5) * 0.35
+
+        for (let i = 0; i < this.rainCount; i++) {
+          let y = pos.getY(i) - speed
+          if (y < 0.5) {
+            y = 8 + Math.random() * 4
+            pos.setX(i, (Math.random() - 0.5) * 16)
+            pos.setZ(i, (Math.random() - 0.5) * 10)
+          }
+          pos.setY(i, y)
+        }
+        pos.needsUpdate = true
+      }
+
+      if (this.controls) this.controls.update()
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
+      }
+    },
+
+    onParamInput() {
+      this.currentPresetKey = ''
+      this.updateSlopeAngle()
+    },
+
+    applyPreset(p) {
+      this.currentPresetKey = p.key
+      this.rainIntensity = p.rain
+      this.slopeAngle = p.slope
+      this.updateSlopeAngle()
+    },
+
+    togglePlay() {
+      this.autoRunning = !this.autoRunning
+    },
+
+    resetRunoff() {
+      this.rainIntensity = 3
+      this.slopeAngle = 10
+      this.currentPresetKey = 'light'
+      this.updateSlopeAngle()
+    },
+
+    toggleLock() {
+      this.locked = !this.locked
+      if (this.controls) {
+        if (this.locked) {
+          this.camera.position.set(0, 12, 22)
+          this.controls.target.set(0, 2.0, 0)
+        }
+      }
+    },
+
     toggleGuide() {
       this.guideActive = !this.guideActive
       if (this.guideActive) {
-        this._e.startGuidedMode(this._guideTexts)
-        this.guideText = this._e.getGuideText()
+        this.guideIndex = 0
+        this.guideText = this.guideSteps[0]
+        clearInterval(this.guideTimer)
+        this.guideTimer = setInterval(() => {
+          if (!this.guideActive) return
+          this.guideIndex = (this.guideIndex + 1) % this.guideSteps.length
+          this.guideText = this.guideSteps[this.guideIndex]
+        }, 5000)
       } else {
-        this._e.stopGuidedMode()
-        this.guideText = ''
+        clearInterval(this.guideTimer)
       }
     },
-    reset() {
-      this.rainIntensity = 5; this.slopeAngle = 20
-      this._e.dispose()
-      this.$nextTick(() => { this._e = new SoilErosionEngine(); this._e._onGuideChange = (text) => { this.guideText = text }; this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false; this._e.setParams({ rainIntensity: 5, slopeAngle: 20 }) })
+
+    resetObservation() {
+      this.rainIntensity = 6
+      this.slopeAngle = 22
+      this.currentPresetKey = 'heavy'
+      this.autoRunning = true
+      this.updateSlopeAngle()
+      this.camera.position.set(0, 12, 22)
+      this.controls.target.set(0, 2.0, 0)
+      this.controls.update()
+    },
+
+    onResize() {
+      const canvas = this.$refs.cvs
+      if (!canvas || !this.renderer || !this.camera) return
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        this.camera.aspect = rect.width / rect.height
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(rect.width, rect.height)
+      }
+    },
+
+    disposeScene() {
+      if (this.animId) cancelAnimationFrame(this.animId)
+      if (this.guideTimer) clearInterval(this.guideTimer)
+      if (this.controls) this.controls.dispose()
+      if (this.renderer) this.renderer.dispose()
+      if (this.scene) {
+        this.scene.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose())
+            else obj.material.dispose()
+          }
+        })
+      }
     },
   },
-}
-
-class SoilErosionEngine extends ExperimentEngine {
-  setupScene() {
-    this.rainIntensity = 5
-    this.slopeAngle = 20
-
-    const patchWidth = 3.5
-    const patchLength = 5
-    const segments = 48
-
-    // Bare soil patch (left)
-    const bareGeo = new THREE.PlaneGeometry(patchWidth, patchLength, segments, segments)
-    const bareMat = new THREE.MeshStandardMaterial({ color: 0xb8956e, roughness: 0.9 })
-    this.barePatch = new THREE.Mesh(bareGeo, bareMat)
-    this.barePatch.position.set(-2.5, 0, 0)
-    this.barePatch.receiveShadow = true
-    this.scene.add(this.barePatch)
-
-    // Vegetated patch (right) - slightly darker soil under vegetation
-    const vegGeo = new THREE.PlaneGeometry(patchWidth, patchLength, segments, segments)
-    const vegMat = new THREE.MeshStandardMaterial({ color: 0x7a6b4e, roughness: 0.85 })
-    this.vegPatch = new THREE.Mesh(vegGeo, vegMat)
-    this.vegPatch.position.set(2.5, 0, 0)
-    this.vegPatch.receiveShadow = true
-    this.scene.add(this.vegPatch)
-
-    // Vegetation cylinders on right patch
-    this.plants = []
-    const stemGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8)
-    const leafGeo = new THREE.SphereGeometry(0.22, 8, 8)
-    for (let i = 0; i < 80; i++) {
-      const plantGroup = new THREE.Group()
-      const stem = new THREE.Mesh(stemGeo, new THREE.MeshStandardMaterial({ color: 0x4a7c3f, roughness: 0.7 }))
-      stem.position.y = 0.2
-      plantGroup.add(stem)
-      const leaf = new THREE.Mesh(leafGeo, new THREE.MeshStandardMaterial({ color: 0x5a9e4b, roughness: 0.6 }))
-      leaf.position.y = 0.45
-      plantGroup.add(leaf)
-
-      const lx = (Math.random() - 0.5) * (patchWidth - 0.3)
-      const lz = (Math.random() - 0.5) * (patchLength - 0.3)
-      plantGroup.position.set(2.5 + lx, 0.15, lz)
-      plantGroup.castShadow = true
-      this.scene.add(plantGroup)
-      this.plants.push({ group: plantGroup, baseX: plantGroup.position.x, baseZ: plantGroup.position.z })
-    }
-
-    // Puddle basins at bottom
-    const puddleGeo = new THREE.BoxGeometry(patchWidth * 0.8, 0.05, 0.6)
-    const puddleMatBare = new THREE.MeshStandardMaterial({ color: 0xc8a96e, roughness: 0.3, transparent: true, opacity: 0.7 })
-    const puddleMatVeg = new THREE.MeshStandardMaterial({ color: 0x87ceeb, roughness: 0.2, transparent: true, opacity: 0.7 })
-    this.puddleBare = new THREE.Mesh(puddleGeo, puddleMatBare)
-    this.puddleBare.position.set(-2.5, 0.03, patchLength / 2 + 0.3)
-    this.scene.add(this.puddleBare)
-    this.puddleVeg = new THREE.Mesh(puddleGeo, puddleMatVeg)
-    this.puddleVeg.position.set(2.5, 0.03, patchLength / 2 + 0.3)
-    this.scene.add(this.puddleVeg)
-
-    this._applySlope()
-
-    // Rain drops pool
-    this._drops = []
-    this._spawnDrops()
-
-    // Ground plane
-    const groundGeo = new THREE.PlaneGeometry(16, 16)
-    groundGeo.rotateX(-Math.PI / 2)
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0xd5c39c, roughness: 0.9 })
-    const ground = new THREE.Mesh(groundGeo, groundMat)
-    ground.position.y = -0.05
-    ground.receiveShadow = true
-    this.scene.add(ground)
-
-    // Divider line
-    const dividerGeo = new THREE.BoxGeometry(0.08, 0.02, patchLength + 1)
-    const divider = new THREE.Mesh(dividerGeo, new THREE.MeshStandardMaterial({ color: 0x888888 }))
-    divider.position.set(0, 0.01, 0)
-    this.scene.add(divider)
-
-    // Sprite labels
-    this._sprites = []
-    this._sprites.push(this._makeLabel('裸露坡面', new THREE.Vector3(-2.5, 1.0, -2.5), '#8b4513', 28, 2.2))
-    this._sprites.push(this._makeLabel('植被坡面', new THREE.Vector3(2.5, 1.0, -2.5), '#2e7d32', 28, 2.2))
-    this._sprites.push(this._makeLabel('降雨', new THREE.Vector3(0, 4.2, -3), '#1976d2', 24, 2))
-    this._rainSprite = this._sprites[this._sprites.length - 1]
-    this._sprites.push(this._makeLabel('清澈径流', new THREE.Vector3(2.5, 0.3, 4), '#2e7d32', 22, 1.8))
-    this._turbidSprite = this._makeLabel('浑浊径流', new THREE.Vector3(-2.5, 0.3, 4), '#8b4513', 22, 1.8)
-    this._turbidSprite.visible = this.rainIntensity > 0
-    this._sprites.push(this._turbidSprite)
-    this._sprites.forEach(s => this.scene.add(s))
-
-    this.camera.position.set(2, 5, 7)
-    this.controls.target.set(0, -0.1, 0.5)
-  }
-
-  _makeLabel(text, position, color = '#333333', fontSize = 28, scale = 2.5) {
-    const canvas = document.createElement('canvas')
-    canvas.width = 512; canvas.height = 128
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = color
-    ctx.font = `bold ${fontSize}px "Noto Serif SC", "Kaiti SC", serif`
-    ctx.textAlign = 'center'
-    ctx.fillText(text, 256, 64)
-    const tex = new THREE.CanvasTexture(canvas)
-    tex.minFilter = THREE.LinearFilter
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
-    const sprite = new THREE.Sprite(mat)
-    sprite.position.copy(position)
-    sprite.scale.set(scale, scale * 0.25, 1)
-    return sprite
-  }
-
-  _applySlope() {
-    const angleRad = THREE.MathUtils.degToRad(this.slopeAngle)
-    this.barePatch.rotation.x = -angleRad
-    this.vegPatch.rotation.x = -angleRad
-    // Position patches so top edge stays at y=0
-    const halfLen = 2.5
-    const drop = Math.sin(angleRad) * halfLen
-    this.barePatch.position.z = Math.cos(angleRad) * halfLen
-    this.vegPatch.position.z = Math.cos(angleRad) * halfLen
-    this.barePatch.position.y = -drop
-    this.vegPatch.position.y = -drop
-    // Update plants
-    this.plants.forEach(p => {
-      const lz = p.baseZ
-      const dropPlant = Math.sin(angleRad) * (lz + halfLen)
-      p.group.position.z = Math.cos(angleRad) * (lz + halfLen)
-      p.group.position.y = -dropPlant + 0.15
-    })
-    // Update puddles
-    this.puddleBare.position.z = Math.cos(angleRad) * 3 + 0.3
-    this.puddleBare.position.y = -Math.sin(angleRad) * 3 + 0.03
-    this.puddleVeg.position.z = Math.cos(angleRad) * 3 + 0.3
-    this.puddleVeg.position.y = -Math.sin(angleRad) * 3 + 0.03
-  }
-
-  _spawnDrops() {
-    this._drops.forEach(d => {
-      this.scene.remove(d.mesh)
-      if (d.mesh.material) d.mesh.material.dispose()
-      if (d.mesh.geometry) d.mesh.geometry.dispose()
-    })
-    this._drops = []
-    const count = this.rainIntensity * 15
-    const geo = new THREE.SphereGeometry(0.05, 4, 4)
-    for (let i = 0; i < count; i++) {
-      const side = Math.random() < 0.5 ? -2.5 : 2.5
-      const mat = new THREE.MeshBasicMaterial({ color: 0x42a5f5 })
-      const drop = new THREE.Mesh(geo, mat)
-      const angleRad = THREE.MathUtils.degToRad(this.slopeAngle)
-      const halfLen = 2.5
-      const topZ = Math.cos(angleRad) * (-halfLen)
-      const topY = -Math.sin(angleRad) * (-halfLen)
-      drop.position.set(side + (Math.random() - 0.5) * 3, topY + 3 + Math.random() * 2, topZ + (Math.random() - 0.5) * 0.5)
-      this.scene.add(drop)
-      this._drops.push({ mesh: drop, side, landed: false, turbid: false })
-    }
-  }
-
-  update(dt) {
-    // Always lerp puddle colors back toward clean when rain is light
-    if (this.rainIntensity < 0.5) {
-      const bareCol = this.puddleBare.material.color
-      bareCol.lerp(new THREE.Color(0xc8a96e), dt * 0.5)
-      const vegCol = this.puddleVeg.material.color
-      vegCol.lerp(new THREE.Color(0x5c8a8a), dt * 0.5)
-    }
-
-    // Dynamic sprite visibility
-    if (this._turbidSprite) {
-      this._turbidSprite.visible = this.rainIntensity > 0
-    }
-    if (this._rainSprite) {
-      this._rainSprite.visible = this.rainIntensity > 0
-    }
-
-    if (this.rainIntensity === 0 || !this._drops) return
-    const angleRad = THREE.MathUtils.degToRad(this.slopeAngle)
-    const speed = 2 + this.rainIntensity * 0.4
-
-    for (const d of this._drops) {
-      const halfLen = 2.5
-      const topZ = Math.cos(angleRad) * (-halfLen)
-      const topY = -Math.sin(angleRad) * (-halfLen)
-      const bottomZ = Math.cos(angleRad) * halfLen
-      const bottomY = -Math.sin(angleRad) * halfLen
-
-      if (!d.landed) {
-        // Falling phase
-        d.mesh.position.y -= dt * speed * 1.5
-        const patchX = d.side
-        const patchZ = d.mesh.position.z
-        const relZ = patchZ - topZ
-        const slopeY = topY + (relZ / (bottomZ - topZ)) * (bottomY - topY)
-        const halfW = 1.75
-        if (d.mesh.position.y <= slopeY + 0.08 &&
-            Math.abs(d.mesh.position.x - patchX) < halfW &&
-            d.mesh.position.z > topZ && d.mesh.position.z < bottomZ) {
-          d.landed = true
-          d.mesh.position.y = slopeY + 0.03
-        }
-      } else {
-        // Runoff phase - slide down slope
-        d.mesh.position.z += dt * speed * Math.cos(angleRad) * 0.8
-        d.mesh.position.y += dt * speed * Math.sin(angleRad) * 0.8
-        // Check if reached bottom
-        if (d.mesh.position.z > bottomZ) {
-          // Reset to top
-          d.landed = false
-          d.turbid = false
-          d.mesh.position.set(d.side + (Math.random() - 0.5) * 3, topY + 3 + Math.random() * 0.5, topZ + (Math.random() - 0.5) * 0.5)
-          d.mesh.material.color.set(0x42a5f5)
-          // Puddle effect: bare side gets turbid
-          if (d.side < 0) {
-            this.puddleBare.material.color.setHex(
-              THREE.MathUtils.lerp(0xc8a96e, 0x8b6914, Math.min(1, this.rainIntensity / 10))
-            )
-          }
-        }
-        // On bare side, rain turns brown
-        if (d.side < 0 && d.mesh.position.z > topZ + 1.5) {
-          d.mesh.material.color.set(0x8b6914)
-          d.turbid = true
-        }
-      }
-    }
-  }
-
-  setParams({ rainIntensity, slopeAngle }) {
-    if (rainIntensity !== undefined && rainIntensity !== this.rainIntensity) {
-      this.rainIntensity = rainIntensity
-      this._spawnDrops()
-    }
-    if (slopeAngle !== undefined && slopeAngle !== this.slopeAngle) {
-      this.slopeAngle = slopeAngle
-      this._applySlope()
-    }
-  }
 }
 </script>
 
 <style scoped>
-.se-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.se-panel { width: 200px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
-.se-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
-.se-panel input[type="range"] { width: 100%; accent-color: var(--red); }
-.se-legend { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-.se-legend-item { display: flex; align-items: center; gap: 6px; }
-.se-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-.se-dot.bare { background: #b8956e; }
-.se-dot.veg { background: #5a9e4b; }
-.se-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
-.se-panel button:hover { background: var(--button-green); }
-.se-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
-.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
-.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
-.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.se-canvas-wrap { flex: 1; min-height: 460px; background: var(--cream); position: relative; }
-.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lock-btn:hover { background: rgba(255,255,255,1); }
-.se-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
-.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-.preset-btn { flex: 1; min-width: 60px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
-.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.geo-theme {
+  display: flex;
+  gap: 18px;
+  background: #150f0c;
+  border-radius: var(--radius-card, 16px);
+  padding: 16px;
+  border: 1px solid rgba(194, 65, 12, 0.35);
+  color: #f1f5f9;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
 
-.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
-.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
-.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
+.se-panel {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-@media (max-width: 720px) {
-  .se-layout { flex-direction: column; }
+.panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+.station-tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #ea580c;
+  font-weight: 700;
+}
+.panel-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ctrl-subhead {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+.preset-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.preset-chip {
+  padding: 8px 10px;
+  background: rgba(67, 20, 7, 0.35);
+  border: 1px solid rgba(194, 65, 12, 0.3);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+.preset-chip:hover {
+  background: rgba(194, 65, 12, 0.25);
+  border-color: #f97316;
+}
+.preset-chip.active {
+  background: rgba(194, 65, 12, 0.45);
+  border-color: #fb923c;
+  color: #fdba74;
+}
+.chip-name { font-size: 12px; font-weight: 700; }
+.chip-sub { font-size: 10px; opacity: 0.7; }
+
+.ctrl-group {
+  background: rgba(41, 15, 6, 0.4);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(194, 65, 12, 0.2);
+}
+.ctrl-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+}
+.val-badge {
+  color: #fb923c;
+  font-weight: 700;
+}
+.geo-slider {
+  width: 100%;
+  accent-color: #c2410c;
+}
+.angle-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.sediment-card {
+  background: rgba(41, 15, 6, 0.6);
+  border: 1px solid rgba(194, 65, 12, 0.35);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.loss-ratio-badge {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.compare-table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.comp-col {
+  padding: 6px 8px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+.bare-col {
+  background: rgba(180, 83, 9, 0.15);
+  border: 1px solid rgba(180, 83, 9, 0.3);
+}
+.veg-col {
+  background: rgba(77, 124, 15, 0.15);
+  border: 1px solid rgba(77, 124, 15, 0.3);
+}
+.col-head {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.col-row {
+  display: flex;
+  justify-content: space-between;
+}
+.col-row span { color: #a8a29e; }
+.mud-val { color: #f87171; font-weight: 700; }
+.clean-val { color: #4ade80; font-weight: 700; }
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.action-btn {
+  padding: 8px;
+  background: rgba(67, 20, 7, 0.5);
+  border: 1px solid rgba(194, 65, 12, 0.3);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  background: rgba(194, 65, 12, 0.3);
+  border-color: #fb923c;
+}
+.play-btn.playing {
+  background: #c2410c;
+  color: #fff;
+  font-weight: 700;
+}
+
+.guide-trigger {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed rgba(194, 65, 12, 0.6);
+  background: rgba(194, 65, 12, 0.1);
+  color: #fb923c;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide-trigger.active {
+  background: #c2410c;
+  color: #fff;
+}
+.guide-box {
+  background: rgba(194, 65, 12, 0.15);
+  border: 1px solid rgba(194, 65, 12, 0.35);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fed7aa;
+  line-height: 1.5;
+}
+
+.nav-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+.se-canvas-wrap {
+  flex: 1;
+  min-height: 480px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.se-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.view-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.overlay-tag {
+  background: rgba(28, 18, 12, 0.85);
+  border: 1px solid rgba(194, 65, 12, 0.4);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #f8fafc;
+}
+.lock-btn {
+  pointer-events: auto;
+  background: rgba(28, 18, 12, 0.85);
+  border: 1px solid rgba(194, 65, 12, 0.5);
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.plot-tags {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.ptag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.bare-tag { background: rgba(180, 83, 9, 0.35); border: 1px solid #b45309; color: #fdba74; }
+.veg-tag { background: rgba(77, 124, 15, 0.35); border: 1px solid #4d7c0f; color: #bef264; }
+
+@media (max-width: 768px) {
+  .geo-theme {
+    flex-direction: column;
+  }
   .se-panel {
     width: 100%;
-    border-right: 0;
-    border-bottom: 1px solid var(--brown-light);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
   }
-  .se-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
-  .se-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
-  .se-panel button { font-size: 12px; padding: 5px 8px; }
-  .se-canvas-wrap { min-height: 280px; }
-  .guide-text-box { width: 100%; font-size: 11px; }
-  .se-hint { font-size: 10px; }
-  .preset-row { width: 100%; }
-  .preset-btn { font-size: 10px; padding: 4px 6px; }
-  .exp-desc { padding: 10px 14px; margin-top: 12px; }
-  .exp-desc h4 { font-size: 13px; }
-  .exp-desc p { font-size: 13px; line-height: 1.6; }
-  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
+  .se-canvas-wrap {
+    min-height: 320px;
+  }
+  .plot-tags {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 </style>

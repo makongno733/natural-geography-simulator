@@ -27,6 +27,19 @@
         </div>
       </div>
     </div>
+
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="systems"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'NASA 卫星投影对比与全球瓦片系统', path: '/geo-labs/satellite', desc: '真实 Web 墨卡托切片与地球全貌' }"
+      :textbook-link="{ grade: '初中', book: '七年级上册', chapter: '第二章', section: '第一节' }"
+      practice-link="/practice"
+      @reset="switchProj('reset')"
+    />
   </div>
 </template>
 
@@ -34,6 +47,26 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { BaseScene } from '../engine/core/BaseScene.js'
 import { MapProjectionModule, PROJECTIONS, CATS } from '../engine/modules/MapProjectionModule.js'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '正轴圆柱投影（墨卡托）：经线彼此平行等距，纬线间距随纬度升高而急剧拉大，高纬度地区面积严重夸大（如格陵兰岛在图上看起来与非洲相当，实际仅为非洲的 1/14）。',
+    '圆锥投影（兰伯特）：适合中纬度沿纬线延伸的国家（如中国、美国），中纬度变形极小。',
+    '方位投影：从一个切点向四周放射，适合极地两极区域地图。',
+  ],
+  change: [
+    '点击各类投影按钮，观察球体几何网格如何拉伸或剪切展开为平面。',
+    '点击“原始状态”对比球面上真实的经纬网和海陆轮廓。',
+  ],
+  mechanism: [
+    '高斯绝妙定理：球面具有恒正的高斯曲率，而平面高斯曲率为零。由于高斯曲率是等距变换的不变量，球面不可能在没有任何变形的前提下展平为平面。',
+    '三种投影性质不可兼得：等角投影（保持局部形状和方向真实，但变形面积）、等积投影（保持各地区面积比例严谨，但扭曲形状）、任意投影（折中综合平衡）。',
+  ],
+  limitations: [
+    '模型动画采用三维顶点插值直观演示展开，不能直接用于高精度航海大地坐标求算。',
+  ],
+}
 
 const canvasRef = ref(null)
 const current = ref('reset')

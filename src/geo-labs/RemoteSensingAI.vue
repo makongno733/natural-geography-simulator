@@ -19,8 +19,45 @@
       <a href="https://ibm-nasa-geospatial-prithvi-eo-2-0-demo.hf.space/" target="_blank" rel="noopener noreferrer">打开模型实验 ↗</a>
     </div>
     <p class="source">模型与演示由 IBM 和 NASA 团队托管；运行依赖 Hugging Face 服务和网络。本站不接收上传影像，也不保存模型推断。模型权重与用法见 <a href="https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL" target="_blank" rel="noopener">官方模型卡</a>。</p>
+
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="systems"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'NASA 卫星真彩色影像对比', path: '/geo-labs/satellite', desc: '真实卫星影像看地表光谱特征' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第六章', section: '第四节' }"
+      practice-link="/practice"
+      @reset="() => {}"
+    />
   </section>
 </template>
+
+<script setup>
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '卫星多光谱通道（红、绿、蓝、近红外、短波红外）在不同地物上的反射率差异。',
+    '遮盖（Masking）部分区域后，AI 基础大模型根据周围环境语义补全出的地物纹理与假想边界。',
+    '辨别 AI 生成的合理推断与潜在的“AI 幻觉”（如将干涸河床误补全为公路）。',
+  ],
+  change: [
+    '在 IBM × NASA 演示平台中选择不同陆地植被、水体与城市示例影像。',
+    '观察不同遮挡比例（如 25%~75%）下模型补全精度的变化。',
+  ],
+  mechanism: [
+    '自监督掩码自编码器（Masked Autoencoder, MAE）：模型通过在大规模未标注地球观测卫星影像上学习遮掩补全任务，习得地表复杂的空间自相关结构。',
+    '光谱特征响应：不同地表覆盖在特定波段具有独特的“光谱指纹”，AI 模型通过融合多光谱通道识别地物物理属性。',
+  ],
+  limitations: [
+    'AI 补全属于概率统计推断，绝不能等同于真实遥感观测数据，更不能直接用于应急救灾法律定损。',
+    '模型推断可能存在区域偏差（例如在热带雨林训练的特征可能在青藏高原产生推断误差）。',
+  ],
+}
+</script>
 <style scoped>
 .lab-page{max-width:1180px;margin:auto;padding:46px 24px 90px;color:#15273b}.lab-intro{max-width:830px}.back{font-size:14px;color:#256d8b}.eyebrow{margin:28px 0 8px;color:#4b8498;font-size:12px;letter-spacing:.16em;font-weight:700}.lab-intro h1{font-size:clamp(32px,5vw,56px);margin:0 0 12px}.lab-intro p:last-child{line-height:1.8;color:#536679}.instructions{margin:30px 0;padding:24px 30px;background:#e9f2f2;border-radius:15px}.instructions h2{margin:0 0 10px}.instructions li{line-height:1.9}.demo-card{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:35px;margin-top:22px;border-radius:16px;background:#183a50;color:white}.demo-card span{font-size:12px;letter-spacing:.12em;color:#90c8d1}.demo-card h2{font-size:28px;margin:10px 0}.demo-card p{max-width:610px;line-height:1.7;color:#d6e7ea}.demo-card a{flex:none;padding:14px 20px;border-radius:9px;background:#bde9e1;color:#153b44;text-decoration:none;font-weight:800}.source{font-size:12px;line-height:1.7;color:#647688}.source a{color:#226f89}@media(max-width:760px){.demo-card{display:block}.demo-card a{display:inline-block;margin-top:12px}}
 </style>

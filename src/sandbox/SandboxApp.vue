@@ -98,6 +98,19 @@
       </aside>
     </div>
 
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="geology"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'Copernicus 喜马拉雅冰川与河流峡谷真实高程', path: '/geo-labs/terrain', desc: '真实高程DEM分析极高山与流水侵蚀' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第四章', section: '第一节' }"
+      practice-link="/practice"
+      @reset="resetLandform"
+    />
+
     <!-- Glossary popup -->
     <Teleport to="body">
       <div v-if="activeGlossaryTerm" class="glossary-mask" @click="activeGlossaryTerm = null"></div>
@@ -121,6 +134,35 @@ import { LandformModule } from '../engine/modules/LandformModule.js'
 import { landformModules } from './modules/landformModules.js'
 import { glossary } from './modules/glossary.js'
 import GlossaryText from './modules/GlossaryText.vue'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '不同营力塑造的独特形态：河流上游 V 形峡谷与下游冲积平原、喀斯特溶蚀洼地与地下钟乳溶洞、风沙新月形沙丘迎风坡缓背风坡陡。',
+    '侵蚀阶段与堆积阶段的空间分异：高山源头以剥蚀下切为主，平原与河口以泥沙堆积为主。',
+    '地表流水与地下暗河水力联系（喀斯特盲谷与伏流出露地表）。',
+  ],
+  change: [
+    '切换地貌类型（喀斯特、河流、风沙、海岸、冰川等）。',
+    '拖动“演变”时间轴，观察地表起伏从幼年期、壮年期到老年准平原化的漫长侵蚀过程。',
+    '专业模式下调节“气候”因子，改变降水水动力与风沙干旱度。',
+  ],
+  mechanism: [
+    '内外力共同作用：内力作用（板块构造、岩浆活动）使地表变得高低不平奠定宏观地势骨架；外力作用（流水、风力、波浪、冰川）进行风化剥蚀与堆积削高填低。',
+    '化学溶蚀与沉淀平衡：可溶性碳酸盐岩与含 CO2 水反应（CaCO3 + H2O + CO2 ⇌ Ca(HCO3)2），正向反应形成溶洞，逆向析出形成石笋钟乳石。',
+    '风沙动力学：风速减缓或遇阻挡物，挟沙气流发生减速沉降，形成新月形背风涡流。',
+  ],
+  limitations: [
+    '时间轴为定性教学加速演示，未对应绝对地质年限。',
+    '地貌三维网格采用了典型代表性景观拓扑，自然界真实地貌受断裂与复杂岩性多重叠加。',
+  ],
+}
+
+function resetLandform() {
+  timeline.value = 0
+  climateFactor.value = 0.5
+  onTimelineChange()
+}
 
 const props = defineProps({
   embedded: { type: Boolean, default: false },

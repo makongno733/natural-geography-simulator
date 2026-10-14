@@ -1,371 +1,771 @@
 <template>
-  <div class="ec-layout">
+  <div class="ec-layout astro-theme">
     <aside class="ec-panel">
-      <div class="preset-row">
-        <button class="preset-btn" :class="{ active: activePreset === 'lunar' }" @click="setPreset('lunar')">月全食</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'solar' }" @click="setPreset('solar')">日全食</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'annular' }" @click="setPreset('annular')">日环食</button>
-        <button class="preset-btn" :class="{ active: activePreset === 'auto' }" @click="setPreset('auto')">自动演示</button>
+      <div class="panel-header">
+        <span class="station-tag">🌑 日月掩食与空间光学舱</span>
+        <h3 class="panel-title">日月食成因与本影半影几何</h3>
       </div>
-      <label>食类型</label>
-      <select v-model="eclipseType" @change="onParam">
-        <option value="lunar-total">月全食</option>
-        <option value="solar-total">日全食</option>
-        <option value="solar-annular">日环食</option>
-      </select>
-      <label>对齐度 <span>{{ alignment.toFixed(0) }}%</span></label>
-      <input type="range" min="0" max="100" v-model.number="alignment" @input="onParam" />
-      <button @click="autoPlay">{{ auto ? '⏸ 暂停' : '▶ 自动演示' }}</button>
-      <button @click="toggleGuide" :class="['guide-btn', { active: guideActive }]">
-        {{ guideActive ? '⏸ 停止演示' : '▶ 引导演示' }}
+
+      <!-- 食类型预设选择 -->
+      <div class="eclipse-presets">
+        <span class="ctrl-subhead">日地月掩食模式</span>
+        <div class="preset-grid">
+          <button
+            v-for="p in eclipseModes"
+            :key="p.key"
+            :class="['preset-chip', { active: currentMode === p.key }]"
+            @click="setMode(p.key)"
+          >
+            <span class="chip-name">{{ p.name }}</span>
+            <span class="chip-note">{{ p.note }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 月球距离与交角变量 -->
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>地月距离 (决定全食或环食)</span>
+          <span class="val-badge">{{ moonDistanceText }}</span>
+        </div>
+        <input
+          type="range"
+          min="5.0"
+          max="8.5"
+          step="0.1"
+          v-model.number="moonDist"
+          @input="onParamInput"
+          class="astro-slider"
+        />
+        <div class="angle-ticks">
+          <span>5.0 近地点(全食)</span>
+          <span>6.8 平均距</span>
+          <span>8.5 远地点(环食)</span>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label-row">
+          <span>黄白交角偏离度 (食季几何条件)</span>
+          <span class="val-badge">{{ nodalAngle.toFixed(1) }}° {{ nodalAngle === 0 ? '(精准交点)' : '(错开交点)' }}</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="5.2"
+          step="0.2"
+          v-model.number="nodalAngle"
+          @input="onParamInput"
+          class="astro-slider"
+        />
+        <div class="angle-ticks">
+          <span>0.0° 严格共线(发生食)</span>
+          <span>5.1° 白道夹角(错过本影)</span>
+        </div>
+      </div>
+
+      <!-- 掩食几何遥测看板 -->
+      <div class="shadow-card">
+        <div class="card-head">
+          <span>📐 光学锥体遥测</span>
+          <span :class="['status-badge', { occluded: isEclipseOccurring }]">
+            {{ isEclipseOccurring ? '掩食发生中' : '交角过大 · 错过本影' }}
+          </span>
+        </div>
+        <div class="shadow-grid">
+          <div class="sh-item">
+            <span class="sh-label">农历相位条件：</span>
+            <strong>{{ currentMode.startsWith('solar') ? '朔日 (初一)' : '望日 (十五/十六)' }}</strong>
+          </div>
+          <div class="sh-item">
+            <span class="sh-label">本影投射位置：</span>
+            <strong>{{ shadowTargetText }}</strong>
+          </div>
+          <div class="sh-item">
+            <span class="sh-label">光学现象：</span>
+            <span>{{ opticalFeatureText }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="action-row">
+        <button
+          @click="togglePlay"
+          :class="['action-btn', 'play-btn', { playing: autoRunning }]"
+        >
+          {{ autoRunning ? '⏸ 暂停演示' : '▶ 掩食过程演化' }}
+        </button>
+        <button
+          @click="toggleShadowCones"
+          class="action-btn"
+        >
+          {{ showShadowCones ? '👁 隐藏本影半影锥' : '👁 显示本影半影锥' }}
+        </button>
+      </div>
+
+      <button
+        @click="toggleGuide"
+        :class="['guide-trigger', { active: guideActive }]"
+      >
+        {{ guideActive ? '⏸ 停止讲解' : '💡 日月食形成与交角奥秘讲解' }}
       </button>
-      <div v-if="guideActive" class="guide-text-box">{{ guideText }}</div>
-      <p class="ec-hint">🖱 拖动旋转 · 滚轮缩放</p>
+      <div v-if="guideActive" class="guide-box">{{ guideText }}</div>
+      <p class="nav-hint">🖱 拖动旋转空间 · 滚轮缩放 · 双击居中</p>
     </aside>
+
     <div class="ec-canvas-wrap">
       <canvas ref="cvs"></canvas>
-      <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁旋转' : '锁定旋转'">
-        {{ locked ? '🔒' : '🔓' }}
-      </button>
+      <div class="view-overlay">
+        <span class="overlay-tag">{{ modeTitleText }}</span>
+        <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由旋转' : '锁定视角'">
+          {{ locked ? '🔒 轴线锁定' : '🔓 自由旋转' }}
+        </button>
+      </div>
+      <div class="shadow-legend">
+        <span class="leg-item"><span class="dot umbra-dot"></span>本影 (完全遮挡)</span>
+        <span class="leg-item"><span class="dot penumbra-dot"></span>半影 (部分遮挡)</span>
+      </div>
     </div>
   </div>
-  <div class="exp-desc">
-    <h4>实验说明</h4>
-    <p>本实验展示日月食的形成几何条件：太阳-地球-月球三者接近直线排列（朔望）时才可能发生食。月全食时地球本影投射到月球；日全食时月球本影投射到地球表面；日环食时月球距地球较远，本影锥未能到达地表，形成光环。观察本影与半影锥的几何关系。</p>
-  </div>
+
+  <ModelPedagogyPanel
+    theme="astronomy"
+    :observe="pedagogy.observe"
+    :change="pedagogy.change"
+    :mechanism="pedagogy.mechanism"
+    :limitations="pedagogy.limitations"
+    :real-data-lab="{ title: 'NASA 卫星日影与地球反照率观测', path: '/geo-labs/satellite', desc: '真实卫星视场下的月球本影移动' }"
+    :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第一章', section: '第一节' }"
+    practice-link="/practice"
+    @reset="resetObservation"
+  />
 </template>
 
 <script>
-import { ExperimentEngine } from '../../engine/ExperimentEngine.js'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import ModelPedagogyPanel from '../../components/ModelPedagogyPanel.vue'
 
 export default {
   name: 'Eclipse',
-  data() { return {
-    eclipseType: 'lunar-total', alignment: 100, auto: false, activePreset: 'lunar', locked: true,
-    guideActive: false,
-    guideText: '',
-    _guideTexts: [
-      '日食发生在朔日，月球位于太阳和地球之间',
-      '月食发生在望日，地球位于太阳和月球之间',
-      '本影区完全遮挡阳光，半影区部分遮挡阳光',
-      '日环食：月球距地球较远，不能完全遮住太阳',
-    ],
-  } },
-  mounted() {
-    this._e = new EclipseEngine()
-    this._e._vm = this
-    this._e._onGuideChange = (text) => { this.guideText = text }
-    this.$nextTick(() => { this._e.init(this.$refs.cvs); if (this.locked) this._e.controls.enabled = false })
-    window.addEventListener('resize', this._onResize)
+  components: {
+    ModelPedagogyPanel,
   },
-  beforeUnmount() { this._e?.dispose(); window.removeEventListener('resize', this._onResize) },
+  data() {
+    return {
+      currentMode: 'solar-total',
+      moonDist: 5.6,
+      nodalAngle: 0.0,
+      showShadowCones: true,
+      autoRunning: false,
+      locked: true,
+      guideActive: false,
+      guideIndex: 0,
+      guideText: '',
+      transitProgress: 0,
+      eclipseModes: [
+        { key: 'solar-total', name: '日全食', note: '朔日·近地点·本影及地' },
+        { key: 'solar-annular', name: '日环食', note: '朔日·远地点·伪本影及地' },
+        { key: 'lunar-total', name: '月全食 (红月)', note: '望日·月球入地球本影' },
+      ],
+      guideSteps: [
+        '【朔望条件】日食必在初一（朔日，月球在中间），月食必在十五或十六（望日，地球在中间）！',
+        '【黄白交角】白道面与黄道面有约5°9′夹角，只有当日月地同时位于黄白交点附近时才发生食！',
+        '【日全食与日环食】月球在近地点时视直径大于太阳，本影触及地面成全食；在远地点成本影未及地的环食！',
+        '【月全食为何显红】地球大气层折射波长较长的红光洒落在月面上，形成壮丽的“血月/红月亮”！',
+      ],
+      pedagogy: {
+        observe: [
+          '本影（深黑锥体，完全无直射光）与半影（外侧渐变锥体，部分光线遮挡）的空间分布。',
+          '日全食与日环食时月球本影锥尖端是否触及地球表面的几何差异。',
+          '黄白交角调节大于 2° 时，月球完全从地球阴影上方或下方掠过，不发生任何食现象。',
+        ],
+        change: [
+          '切换日全食、日环食、月全食三种典型天文物理模式。',
+          '调节“地月距离”滑杆，直观改变本影锥顶点与地表的几何交截。',
+          '调节“黄白交角偏离度”，揭秘为什么不是每月初一和十五都有日食和月食。',
+        ],
+        mechanism: [
+          '日月食是光在真空中沿直线传播以及不透明天体互相遮挡产生阴影的宏观天体物理现象。',
+          '日全食发生时，月球角直径略大于太阳角直径（太阳与月球距离之比恰好接近其物理直径之比，约为 400:1）。',
+          '月食中月球呈现暗红色是因为地球浓厚大气对阳光产生瑞利散射，蓝紫光被散射，唯有长波红光经折射到达月面。',
+        ],
+        limitations: [
+          '天体间物理距离与体积按课堂可见比例进行了紧凑化建模（实际太阳直径为地球 109 倍，距离为 1.5 亿公里）。',
+          '未模拟月球表面复杂的环形山起伏导致的“贝利珠”（Baily’s beads）效应。',
+          '简化了地球大气厚度与大气折射率的精细波长色散模型。',
+        ],
+      },
+    }
+  },
+  computed: {
+    isEclipseOccurring() {
+      return this.nodalAngle < 1.2
+    },
+    moonDistanceText() {
+      if (this.moonDist <= 5.8) return '近地点 (~36.3万km)'
+      if (this.moonDist >= 7.8) return '远地点 (~40.5万km)'
+      return '平均距离 (~38.4万km)'
+    },
+    shadowTargetText() {
+      if (!this.isEclipseOccurring) return '偏离目标（无掩食）'
+      if (this.currentMode === 'solar-total') return '月球本影投射在地球表面'
+      if (this.currentMode === 'solar-annular') return '月球伪本影投射在地表(全影未及地)'
+      return '地球本影完全笼罩月球'
+    },
+    opticalFeatureText() {
+      if (!this.isEclipseOccurring) return '普通日光照射'
+      if (this.currentMode === 'solar-total') return '白昼变黑夜，显现壮观太阳日冕'
+      if (this.currentMode === 'solar-annular') return '形成金色光环（火之环）'
+      return '地球大气折射红光形成古铜色“红月”'
+    },
+    modeTitleText() {
+      const target = this.eclipseModes.find(m => m.key === this.currentMode)
+      return target ? `${target.name} · ${target.note}` : '日月食掩食模拟'
+    },
+  },
+  mounted() {
+    this.initScene()
+    window.addEventListener('resize', this.onResize)
+  },
+  beforeUnmount() {
+    this.disposeScene()
+    window.removeEventListener('resize', this.onResize)
+  },
   methods: {
-    _onResize() { this._e?.resize() },
-    toggleLock() { this.locked = !this.locked; if (this._e?.controls) this._e.controls.enabled = !this.locked },
-    onParam() { this._e.setParams({ eclipseType: this.eclipseType, alignment: this.alignment / 100 }) },
-    autoPlay() { this.auto = !this.auto; this._e.auto = this.auto },
+    initScene() {
+      const canvas = this.$refs.cvs
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const w = rect.width || 600
+      const h = rect.height || 420
+
+      this.scene = new THREE.Scene()
+      this.scene.background = new THREE.Color(0x050814)
+
+      this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
+      this.camera.position.set(0, 14, 24)
+
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      this.renderer.setSize(w, h)
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      this.renderer.shadowMap.enabled = true
+
+      this.controls = new OrbitControls(this.camera, canvas)
+      this.controls.enableDamping = true
+      this.controls.dampingFactor = 0.06
+      this.controls.target.set(0, 0, 0)
+      if (this.locked) {
+        this.controls.maxPolarAngle = Math.PI / 2.1
+        this.controls.minDistance = 8
+        this.controls.maxDistance = 55
+      }
+
+      this.buildSystem()
+      this.animate()
+    },
+
+    buildSystem() {
+      // 1. Stars background
+      const starCount = 300
+      const starGeo = new THREE.BufferGeometry()
+      const starPos = new Float32Array(starCount * 3)
+      for (let i = 0; i < starCount * 3; i += 3) {
+        starPos[i] = (Math.random() - 0.5) * 120
+        starPos[i + 1] = (Math.random() - 0.5) * 80
+        starPos[i + 2] = (Math.random() - 0.5) * 120
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
+      this.scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x64748b, size: 0.35 })))
+
+      // 2. Sun (far left or right, depending on layout. Let's put Sun at -X = -20)
+      const sunGeo = new THREE.SphereGeometry(3.0, 32, 32)
+      const sunMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b })
+      this.sunMesh = new THREE.Mesh(sunGeo, sunMat)
+      this.sunMesh.position.set(-20, 0, 0)
+      this.scene.add(this.sunMesh)
+
+      const sunLight = new THREE.DirectionalLight(0xfff7ed, 3.8)
+      sunLight.position.set(-25, 0, 0)
+      this.scene.add(sunLight)
+      this.scene.add(new THREE.AmbientLight(0x1e293b, 0.6))
+
+      // 3. Earth
+      const earthGeo = new THREE.SphereGeometry(1.6, 32, 32)
+      const earthMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.65 })
+      this.earthMesh = new THREE.Mesh(earthGeo, earthMat)
+      this.scene.add(this.earthMesh)
+
+      // 4. Moon
+      const moonGeo = new THREE.SphereGeometry(0.55, 32, 32)
+      this.moonMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.8 })
+      this.moonMesh = new THREE.Mesh(moonGeo, this.moonMat)
+      this.scene.add(this.moonMesh)
+
+      // 5. Shadow Cones Group
+      this.coneGroup = new THREE.Group()
+      this.scene.add(this.coneGroup)
+
+      this.updatePositionsAndShadows()
+    },
+
+    updatePositionsAndShadows() {
+      if (!this.earthMesh || !this.moonMesh) return
+
+      const yOffset = Math.sin(THREE.MathUtils.degToRad(this.nodalAngle)) * 2.5
+
+      if (this.currentMode.startsWith('solar')) {
+        // Solar Eclipse: Moon is between Sun (-20) and Earth (0)
+        // Earth at 0, Moon at -moonDist
+        this.earthMesh.position.set(0, 0, 0)
+        this.moonMesh.position.set(-this.moonDist, yOffset, 0)
+        this.moonMat.color.setHex(0xe2e8f0)
+      } else {
+        // Lunar Eclipse: Earth is between Sun (-20) and Moon (+moonDist)
+        this.earthMesh.position.set(0, 0, 0)
+        this.moonMesh.position.set(this.moonDist, yOffset, 0)
+        // Blood Moon color if in eclipse!
+        if (this.isEclipseOccurring) {
+          this.moonMat.color.setHex(0xb91c1c) // Crimson reddish
+        } else {
+          this.moonMat.color.setHex(0xe2e8f0)
+        }
+      }
+
+      this.rebuildShadowCones()
+    },
+
+    rebuildShadowCones() {
+      while (this.coneGroup.children.length > 0) {
+        const c = this.coneGroup.children[0]
+        if (c.geometry) c.geometry.dispose()
+        this.coneGroup.remove(c)
+      }
+
+      if (!this.showShadowCones) return
+
+      if (this.currentMode.startsWith('solar')) {
+        // Moon casts shadow towards +X
+        const moonPos = this.moonMesh.position
+        // Umbra cone from moon: tip is at moonPos.x + 6.0
+        // If distance is large (annular), tip is before Earth. If small, hits Earth.
+        const umbraLength = 6.0
+        const coneGeo = new THREE.ConeGeometry(0.55, umbraLength, 32, 1, true)
+        coneGeo.rotateZ(-Math.PI / 2)
+        coneGeo.translate(moonPos.x + umbraLength / 2, moonPos.y, moonPos.z)
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0x020617, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+        this.coneGroup.add(new THREE.Mesh(coneGeo, coneMat))
+
+        // Penumbra cylinder/cone
+        const penGeo = new THREE.CylinderGeometry(0.6, 2.2, umbraLength + 4, 32, 1, true)
+        penGeo.rotateZ(-Math.PI / 2)
+        penGeo.translate(moonPos.x + (umbraLength + 4) / 2, moonPos.y, moonPos.z)
+        const penMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
+        this.coneGroup.add(new THREE.Mesh(penGeo, penMat))
+      } else {
+        // Earth casts shadow towards +X
+        const earthPos = this.earthMesh.position
+        const umbraLength = 14.0
+        const coneGeo = new THREE.ConeGeometry(1.6, umbraLength, 32, 1, true)
+        coneGeo.rotateZ(-Math.PI / 2)
+        coneGeo.translate(earthPos.x + umbraLength / 2, earthPos.y, earthPos.z)
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0x450a0a, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+        this.coneGroup.add(new THREE.Mesh(coneGeo, coneMat))
+
+        // Penumbra
+        const penGeo = new THREE.CylinderGeometry(1.7, 4.0, umbraLength, 32, 1, true)
+        penGeo.rotateZ(-Math.PI / 2)
+        penGeo.translate(earthPos.x + umbraLength / 2, earthPos.y, earthPos.z)
+        const penMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
+        this.coneGroup.add(new THREE.Mesh(penGeo, penMat))
+      }
+    },
+
+    animate() {
+      this.animId = requestAnimationFrame(this.animate)
+      if (this.autoRunning) {
+        this.transitProgress += 0.015
+        this.nodalAngle = Math.abs(Math.sin(this.transitProgress) * 4.5)
+        this.updatePositionsAndShadows()
+      }
+      if (this.earthMesh) this.earthMesh.rotation.y += 0.008
+      if (this.controls) this.controls.update()
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
+      }
+    },
+
+    setMode(key) {
+      this.currentMode = key
+      if (key === 'solar-total') {
+        this.moonDist = 5.2
+        this.nodalAngle = 0
+      } else if (key === 'solar-annular') {
+        this.moonDist = 8.0
+        this.nodalAngle = 0
+      } else if (key === 'lunar-total') {
+        this.moonDist = 6.5
+        this.nodalAngle = 0
+      }
+      this.updatePositionsAndShadows()
+    },
+
+    onParamInput() {
+      this.autoRunning = false
+      this.updatePositionsAndShadows()
+    },
+
+    togglePlay() {
+      this.autoRunning = !this.autoRunning
+    },
+
+    toggleShadowCones() {
+      this.showShadowCones = !this.showShadowCones
+      this.rebuildShadowCones()
+    },
+
+    toggleLock() {
+      this.locked = !this.locked
+      if (this.controls) {
+        if (this.locked) {
+          this.controls.maxPolarAngle = Math.PI / 2.1
+          this.controls.minDistance = 8
+          this.controls.maxDistance = 55
+        } else {
+          this.controls.maxPolarAngle = Math.PI
+          this.controls.minDistance = 2
+          this.controls.maxDistance = 100
+        }
+      }
+    },
+
     toggleGuide() {
       this.guideActive = !this.guideActive
       if (this.guideActive) {
-        this._e.startGuidedMode(this._guideTexts)
-        this.guideText = this._e.getGuideText()
+        this.guideIndex = 0
+        this.guideText = this.guideSteps[0]
+        clearInterval(this.guideTimer)
+        this.guideTimer = setInterval(() => {
+          if (!this.guideActive) return
+          this.guideIndex = (this.guideIndex + 1) % this.guideSteps.length
+          this.guideText = this.guideSteps[this.guideIndex]
+        }, 5000)
       } else {
-        this._e.stopGuidedMode()
-        this.guideText = ''
+        clearInterval(this.guideTimer)
       }
     },
-    setPreset(key) {
-      this.activePreset = key
-      if (key === 'auto') { this.autoPlay(); return }
-      if (this.auto) { this.auto = false; this._e.auto = false }
-      const types = { lunar: 'lunar-total', solar: 'solar-total', annular: 'solar-annular' }
-      this.eclipseType = types[key]
-      this.alignment = 100
-      this._e.setParams({ eclipseType: this.eclipseType, alignment: 1.0 })
+
+    resetObservation() {
+      this.currentMode = 'solar-total'
+      this.moonDist = 5.2
+      this.nodalAngle = 0
+      this.autoRunning = false
+      this.showShadowCones = true
+      this.updatePositionsAndShadows()
+      this.camera.position.set(0, 14, 24)
+      this.controls.target.set(0, 0, 0)
+      this.controls.update()
+    },
+
+    onResize() {
+      const canvas = this.$refs.cvs
+      if (!canvas || !this.renderer || !this.camera) return
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        this.camera.aspect = rect.width / rect.height
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(rect.width, rect.height)
+      }
+    },
+
+    disposeScene() {
+      if (this.animId) cancelAnimationFrame(this.animId)
+      if (this.guideTimer) clearInterval(this.guideTimer)
+      if (this.controls) this.controls.dispose()
+      if (this.renderer) this.renderer.dispose()
+      if (this.scene) {
+        this.scene.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose())
+            else obj.material.dispose()
+          }
+        })
+      }
     },
   },
-}
-
-class EclipseEngine extends ExperimentEngine {
-  _createStars() {
-    const starsGeo = new THREE.BufferGeometry()
-    const count = 100
-    const positions = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const r = 25 + Math.random() * 5
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      positions[i * 3 + 2] = r * Math.cos(phi)
-    }
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.9 })
-    this._stars = new THREE.Points(starsGeo, starsMat)
-    this.scene.add(this._stars)
-  }
-
-  setupScene() {
-    this.scene.background = new THREE.Color(0x000011)
-    this.scene.fog = null
-
-    // Remove base warm ambient, replace with cool space lighting
-    const existingAmbient = this.scene.children.find(c => c.isAmbientLight)
-    if (existingAmbient) {
-      this.scene.remove(existingAmbient)
-    }
-    const ambient = new THREE.AmbientLight(0x334466, 1.5)
-    this.scene.add(ambient)
-
-    // Deep space starfield
-    this._createStars()
-
-    // Sun - HUGE radius 5.0, positioned far left at x=-25
-    const sunGeo = new THREE.SphereGeometry(5.0, 64, 64)
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 })
-    this.sun = new THREE.Mesh(sunGeo, sunMat)
-    this.sun.position.set(-25, 0, 0)
-    this.scene.add(this.sun)
-
-    // Sun corona - large transparent gold sphere
-    const coronaGeo = new THREE.SphereGeometry(6.5, 32, 32)
-    const coronaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.04 })
-    this._sunCorona = new THREE.Mesh(coronaGeo, coronaMat)
-    this._sunCorona.position.copy(this.sun.position)
-    this.scene.add(this._sunCorona)
-
-    // Powerful point light at sun
-    const sunLight = new THREE.PointLight(0xfff8e8, 250, 120)
-    sunLight.position.copy(this.sun.position)
-    this.scene.add(sunLight)
-
-    // Earth - radius 2.5, at origin, blue with atmosphere glow
-    const earthGeo = new THREE.SphereGeometry(2.5, 32, 32)
-    const earthMat = new THREE.MeshStandardMaterial({
-      color: 0x42a5f5, roughness: 0.3,
-      emissive: 0x001133, emissiveIntensity: 0.3,
-    })
-    this.earth = new THREE.Mesh(earthGeo, earthMat)
-    this.earth.position.set(0, 0, 0)
-    this.scene.add(this.earth)
-
-    // Earth atmosphere glow - transparent blue shell
-    const atmoGeo = new THREE.SphereGeometry(3.0, 32, 32)
-    const atmoMat = new THREE.MeshBasicMaterial({ color: 0x42a5f5, transparent: true, opacity: 0.08 })
-    this._earthAtmo = new THREE.Mesh(atmoGeo, atmoMat)
-    this._earthAtmo.position.copy(this.earth.position)
-    this.scene.add(this._earthAtmo)
-
-    // Moon - radius 1.0, base position at x=8 (further from Earth)
-    const moonGeo = new THREE.SphereGeometry(1.0, 32, 32)
-    const moonMat = new THREE.MeshStandardMaterial({
-      color: 0xcccccc, roughness: 0.5,
-      emissive: 0x111111, emissiveIntensity: 0.2,
-    })
-    this.moon = new THREE.Mesh(moonGeo, moonMat)
-    this.moon.position.set(8, 0, 0)
-    this.scene.add(this.moon)
-
-    // Umbra cone - DRAMATICALLY visible, dark purple/black, high opacity
-    const umbraGeo = new THREE.CylinderGeometry(0.3, 3.0, 1, 32)
-    const umbraMat = new THREE.MeshBasicMaterial({
-      color: 0x0a0020, transparent: true, opacity: 0.8,
-    })
-    this.umbraCone = new THREE.Mesh(umbraGeo, umbraMat)
-    this.scene.add(this.umbraCone)
-
-    // Penumbra cone - even bigger, dark purple, medium opacity
-    const penumbraGeo = new THREE.CylinderGeometry(0.3, 4.5, 1, 32)
-    const penumbraMat = new THREE.MeshBasicMaterial({
-      color: 0x0a0020, transparent: true, opacity: 0.4,
-    })
-    this.penumbraCone = new THREE.Mesh(penumbraGeo, penumbraMat)
-    this.scene.add(this.penumbraCone)
-
-    this.eclipseType = 'lunar-total'
-    this.alignment = 1.0
-    this.auto = false
-    this._animT = 0
-    this._flashTimer = 0
-
-    this._updateCones()
-
-    // Sprite labels - HUGE font 52, scale 4.5
-    this.scene.add(this._makeLabel('太阳', new THREE.Vector3(-25, 7.5, 0), '#ffcc00', 52, 4.5))
-    this.scene.add(this._makeLabel('地球', new THREE.Vector3(0, 5, 0), '#42a5f5', 52, 4.5))
-    this.scene.add(this._makeLabel('太阳光 →', new THREE.Vector3(-13, 2.5, 0), '#ffd54f', 48, 4.0))
-    this._moonLabel = this._makeLabel('月球', new THREE.Vector3(8, 2.5, 0), '#ffffff', 52, 4.5)
-    this.scene.add(this._moonLabel)
-    this._umbraLabel = this._makeLabel('本影', new THREE.Vector3(4, 2.5, 0), '#ff4444', 48, 3.5)
-    this.scene.add(this._umbraLabel)
-    this._penumbraLabel = this._makeLabel('半影', new THREE.Vector3(4, 4.5, 0), '#ff8888', 48, 3.5)
-    this.scene.add(this._penumbraLabel)
-
-    // "TO SCALE" disclaimer
-    this.scene.add(this._makeLabel('示意图（非真实比例）', new THREE.Vector3(0, -7, 0), '#666666', 32, 3.0))
-
-    this.camera.fov = 55; this.camera.updateProjectionMatrix()
-    this.camera.position.set(0, 8, 16)
-    this.controls.minDistance = 5
-    this.controls.maxDistance = 30
-    this.controls.target.set(0, 0, 0)
-  }
-
-  _updateCones() {
-    const align = this.alignment
-
-    if (this.eclipseType === 'lunar-total') {
-      // Earth casts shadow on Moon (Moon moves +X with alignment)
-      this.moon.position.set(8 * align, 0, 0)
-
-      const dist = this.moon.position.x - this.earth.position.x
-      // Cone starts at Earth's surface facing the Moon
-      this.umbraCone.position.copy(this.earth.position)
-      this.umbraCone.position.x += 2.5
-      this.umbraCone.rotation.z = 0
-      this.umbraCone.scale.set(1, dist, 1)
-      this.umbraCone.visible = align > 0.15
-
-      this.penumbraCone.position.copy(this.umbraCone.position)
-      this.penumbraCone.rotation.z = 0
-      this.penumbraCone.scale.set(1, dist * 1.2, 1)
-      this.penumbraCone.visible = align > 0.1
-    } else if (this.eclipseType === 'solar-total') {
-      // Moon casts shadow on Earth (Moon moves -X with alignment)
-      this.moon.position.set(-8 * align, 0, 0)
-
-      const dist = this.earth.position.x - this.moon.position.x
-      // Cone starts at Moon's surface facing Earth
-      this.umbraCone.position.copy(this.moon.position)
-      this.umbraCone.position.x += 1.0
-      this.umbraCone.rotation.z = Math.PI
-      this.umbraCone.scale.set(1, dist * 0.4, 1)
-      this.umbraCone.visible = align > 0.1
-
-      this.penumbraCone.position.copy(this.umbraCone.position)
-      this.penumbraCone.rotation.z = Math.PI
-      this.penumbraCone.scale.set(1, dist * 0.6, 1)
-      this.penumbraCone.visible = align > 0.05
-    } else if (this.eclipseType === 'solar-annular') {
-      this.moon.position.set(-8 * align, 0, 0)
-
-      const dist = this.earth.position.x - this.moon.position.x
-      // Umbra cone does NOT reach Earth (shorter scale)
-      this.umbraCone.position.copy(this.moon.position)
-      this.umbraCone.position.x += 1.0
-      this.umbraCone.rotation.z = Math.PI
-      this.umbraCone.scale.set(1, dist * 0.2, 1)
-      this.umbraCone.visible = align > 0.3
-
-      this.penumbraCone.position.copy(this.umbraCone.position)
-      this.penumbraCone.rotation.z = Math.PI
-      this.penumbraCone.scale.set(1, dist * 0.8, 1)
-      this.penumbraCone.visible = align > 0.05
-    }
-  }
-
-  update(dt) {
-    if (this.auto) {
-      this._animT += dt * 0.5
-      this.alignment = 0.5 + 0.5 * Math.sin(this._animT)
-      const alignPct = Math.round(this.alignment * 100)
-      if (this._vm) this._vm.alignment = alignPct
-      this._updateCones()
-    }
-
-    // Flash/glow effect when alignment is near perfect
-    if (this.alignment > 0.99 && this.sun && this.sun.material) {
-      this._flashTimer += dt
-      const flash = 1.0 + 0.3 * Math.sin(this._flashTimer * 8) * Math.sin(this._flashTimer * 8)
-      this.sun.material.color.setRGB(1.0 * flash, 0.85 * flash, 0.1 * flash)
-      if (this._sunCorona && this._sunCorona.material) {
-        this._sunCorona.material.opacity = 0.04 + 0.02 * Math.abs(Math.sin(this._flashTimer * 8))
-      }
-    } else if (this.sun && this.sun.material) {
-      this._flashTimer = 0
-      this.sun.material.color.set(0xffcc00)
-      if (this._sunCorona && this._sunCorona.material) {
-        this._sunCorona.material.opacity = 0.04
-      }
-    }
-
-    if (this._moonLabel) {
-      this._moonLabel.position.copy(this.moon.position).add(new THREE.Vector3(0, 1.8, 0))
-    }
-    if (this._umbraLabel) {
-      this._umbraLabel.position.copy(this.umbraCone.position).add(new THREE.Vector3(0.5, 0.8, 0))
-    }
-    if (this._penumbraLabel) {
-      this._penumbraLabel.position.copy(this.penumbraCone.position).add(new THREE.Vector3(0.5, 1.5, 0))
-    }
-  }
-
-  setParams({ eclipseType, alignment }) {
-    let changed = false
-    if (eclipseType !== undefined && eclipseType !== this.eclipseType) {
-      this.eclipseType = eclipseType
-      changed = true
-    }
-    if (alignment !== undefined && Math.abs(alignment - this.alignment) > 0.001) {
-      this.alignment = alignment
-      changed = true
-    }
-    if (changed) this._updateCones()
-  }
 }
 </script>
 
 <style scoped>
-.ec-layout { display: flex; gap: 0; border-radius: var(--radius-box); overflow: hidden; border: 1px solid var(--brown-light); }
-.ec-panel { width: 210px; flex-shrink: 0; background: var(--card-bg); padding: 16px; border-right: 1px solid var(--brown-light); display: flex; flex-direction: column; gap: 10px; }
-.preset-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-.preset-btn { flex: 1; min-width: 55px; padding: 4px 6px; border: 1px solid var(--brown); border-radius: 4px; background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 11px; white-space: nowrap; }
-.preset-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
-.preset-btn:hover { background: var(--button-green); }
-.preset-btn.active:hover { background: var(--red); }
-.ec-panel label { font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
-.ec-panel input[type="range"] { width: 100%; accent-color: var(--red); }
-.ec-panel select { padding: 4px 8px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); font-family: inherit; font-size: 13px; }
-.ec-panel button { padding: 6px 12px; border: 1px solid var(--brown); border-radius: var(--radius-sm); background: var(--cream); color: var(--ink); cursor: pointer; font-family: inherit; font-size: 13px; }
-.ec-panel button:hover { background: var(--button-green); }
-.ec-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: auto; }
-.guide-btn { width: 100%; padding: 8px; margin-top: 8px; border: 2px solid var(--red); border-radius: var(--radius-sm); background: var(--cream); color: var(--red); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all var(--transition); }
-.guide-btn.active { background: var(--red); color: #fff; animation: pulse 2s infinite; }
-.guide-text-box { font-size: 12px; color: var(--red); background: rgba(158,36,38,0.06); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(158,36,38,0.2); text-align: center; line-height: 1.5; }
-.ec-canvas-wrap { flex: 1; min-height: 460px; background: #000011; position: relative; overflow: hidden; }
-.lock-btn { position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--brown); background: rgba(255,255,255,0.85); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lock-btn:hover { background: rgba(255,255,255,1); }
-.ec-canvas-wrap canvas { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
+.astro-theme {
+  display: flex;
+  gap: 18px;
+  background: #080d1a;
+  border-radius: var(--radius-card, 16px);
+  padding: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #f1f5f9;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
 
-.exp-desc { margin-top: 16px; padding: 14px 18px; background: var(--card-bg); border-radius: var(--radius-card); border: 1px solid var(--brown-light); }
-.exp-desc h4 { font-size: 14px; color: var(--red); margin: 0 0 6px; }
-.exp-desc p { font-size: 14px; line-height: 1.7; color: var(--ink); margin: 0; }
+.ec-panel {
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-@media (max-width: 720px) {
-  .ec-layout { flex-direction: column; }
+.panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+.station-tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  font-weight: 700;
+}
+.panel-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ctrl-subhead {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+.preset-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.preset-chip {
+  padding: 8px 10px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+.preset-chip:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.preset-chip.active {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+.chip-name { font-size: 12px; font-weight: 700; }
+.chip-note { font-size: 10px; opacity: 0.7; }
+
+.ctrl-group {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ctrl-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+}
+.val-badge {
+  color: #f59e0b;
+  font-weight: 700;
+}
+.astro-slider {
+  width: 100%;
+  accent-color: #f59e0b;
+}
+.angle-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.shadow-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.status-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+.status-badge.occluded {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+.shadow-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+}
+.sh-item {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+}
+.sh-label { color: #94a3b8; }
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.action-btn {
+  padding: 8px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+}
+.play-btn.playing {
+  background: #f59e0b;
+  color: #000;
+  font-weight: 700;
+}
+
+.guide-trigger {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide-trigger.active {
+  background: #f59e0b;
+  color: #000;
+}
+.guide-box {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fef08a;
+  line-height: 1.5;
+}
+
+.nav-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+.ec-canvas-wrap {
+  flex: 1;
+  min-height: 480px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ec-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.view-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+.overlay-tag {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #f8fafc;
+}
+.lock-btn {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.shadow-legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #cbd5e1;
+  display: flex;
+  gap: 12px;
+  pointer-events: none;
+}
+.leg-item { display: flex; align-items: center; gap: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.umbra-dot { background: #020617; border: 1px solid #94a3b8; }
+.penumbra-dot { background: #38bdf8; }
+
+@media (max-width: 768px) {
+  .astro-theme {
+    flex-direction: column;
+  }
   .ec-panel {
     width: 100%;
-    border-right: 0;
-    border-bottom: 1px solid var(--brown-light);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
   }
-  .ec-panel label { font-size: 12px; flex: 1 1 auto; min-width: 80px; }
-  .ec-panel input[type="range"] { flex: 2 1 auto; min-width: 100px; }
-  .ec-panel button { font-size: 12px; padding: 5px 8px; }
-  .ec-canvas-wrap { min-height: 280px; }
-  .guide-text-box { width: 100%; font-size: 11px; }
-  .ec-hint { font-size: 10px; }
-  .preset-row { width: 100%; }
-  .preset-btn { font-size: 10px; padding: 4px 6px; }
-  .exp-desc { padding: 10px 14px; margin-top: 12px; }
-  .exp-desc h4 { font-size: 13px; }
-  .exp-desc p { font-size: 13px; line-height: 1.6; }
-  .lock-btn { width: 30px; height: 30px; top: 8px; right: 8px; font-size: 16px; }
+  .ec-canvas-wrap {
+    min-height: 320px;
+  }
 }
 </style>

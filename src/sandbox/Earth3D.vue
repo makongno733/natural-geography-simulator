@@ -94,6 +94,19 @@
         </div>
       </aside>
     </div>
+
+    <!-- 教学四要素机理与连贯性面板 -->
+    <ModelPedagogyPanel
+      theme="systems"
+      :observe="pedagogy.observe"
+      :change="pedagogy.change"
+      :mechanism="pedagogy.mechanism"
+      :limitations="pedagogy.limitations"
+      :real-data-lab="{ title: 'Copernicus 真实高程与地球表层几何', path: '/geo-labs/terrain', desc: '真实高程DEM分析地壳地貌起伏' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第一章', section: '第四节' }"
+      practice-link="/practice"
+      @reset="mode = 'simple'"
+    />
   </div>
 </template>
 
@@ -104,6 +117,28 @@ import { EarthInteriorModule } from '../engine/modules/EarthInteriorModule.js'
 import { CelestialSphereModule } from '../engine/modules/CelestialSphereModule.js'
 import { SolarSystemModule } from '../engine/modules/SolarSystemModule.js'
 import { PostProcessing } from '../engine/effects/PostProcessing.js'
+import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const pedagogy = {
+  observe: [
+    '地球内部圈层自外向内分为：地壳（平均厚度约 17km）、地幔（深约 2900km）、外核（液态铁镍）与内核（固态铁镍）。',
+    '两大致密地震波速突变面：莫霍界面（~33km 大陆处）与古登堡界面（~2900km 横波突然消失处）。',
+    '上地幔顶部的软流层是岩浆的重要发源地，其上方的地壳与上地幔顶部合称“岩石圈”。',
+  ],
+  change: [
+    '在“地球圈层 / 宇宙坐标 / 深空探索”三个主功能视图间切换。',
+    '深空模式下拖动霍曼地火转移轨道时间轴，观察航天器第二宇宙速度逃逸与椭圆转移。',
+  ],
+  mechanism: [
+    '地球形成初期的引力分异与放射性衰变加热促成重元素（铁、镍）下沉形成地核，轻元素（硅、铝）上浮形成地壳。',
+    '液态外核强烈对流产生自激发电机效应，驱动形成强大的地球主磁场，阻挡致命太阳风宇宙射线直击地表。',
+    '地球外部圈层（大气圈、水圈、生物圈）与内部圈层紧密耦合，共同维系生态圈稳态。',
+  ],
+  limitations: [
+    '地壳相对于地球 6371km 半径极薄（如苹果皮），模型剖切角为便于教学观察进行了视觉厚度强化。',
+    '地震波波速反演属于定性地球物理宏观分层，未包含局部地幔柱（Mantle plume）细微三维散射。',
+  ],
+}
 
 const tabs = [
   { id: 'simple', label: '🌍 地球圈层' },
