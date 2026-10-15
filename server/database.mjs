@@ -25,3 +25,26 @@ export function migrateComments() {
     CREATE INDEX IF NOT EXISTS lesson_comment_user_time ON lesson_comment(user_id, created_at);
   `)
 }
+
+export function migrateGeoEvents() {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS geo_earthquake (
+      id TEXT PRIMARY KEY,
+      occurred_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      magnitude REAL NOT NULL,
+      place TEXT NOT NULL,
+      longitude REAL NOT NULL,
+      latitude REAL NOT NULL,
+      depth_km REAL,
+      source_url TEXT NOT NULL,
+      fetched_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS geo_earthquake_occurred ON geo_earthquake(occurred_at);
+    CREATE TABLE IF NOT EXISTS geo_event_sync (
+      source TEXT PRIMARY KEY,
+      fetched_at TEXT NOT NULL,
+      status TEXT NOT NULL
+    );
+  `)
+}
