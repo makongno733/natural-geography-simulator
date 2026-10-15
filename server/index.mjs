@@ -8,6 +8,7 @@ import { auth } from './auth.mjs'
 import { database } from './database.mjs'
 import { allowedOrigins, mailReady } from './config.mjs'
 import { answerLessonQuestion } from './lesson-ai.mjs'
+import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 
 const app = express()
 const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
@@ -40,6 +41,10 @@ function sectionKey(value) {
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 app.get('/api/config', (_req, res) => res.json({ email: mailReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
+app.get('/api/geo-events', async (_req, res) => {
+  res.set('Cache-Control', 'public, max-age=300')
+  res.json(await getGeoEvents())
+})
 
 const aiRequests = []
 app.post('/api/assistant/ask', requireOrigin, async (req, res, next) => {
@@ -110,4 +115,5 @@ app.use((error, _req, res, _next) => {
 const bindAddress = process.env.ACCOUNT_BIND || '127.0.0.1'
 app.listen(Number(process.env.ACCOUNT_PORT || 4100), bindAddress, () => {
   console.log(`Account API listening on ${bindAddress}:${process.env.ACCOUNT_PORT || 4100}`)
+  startGeoEventSync()
 })
