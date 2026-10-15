@@ -190,6 +190,32 @@ function triggerAnimation(element, className, duration) {
   setTimeout(cleanup, duration + 60)
 }
 
+function preserveClosingAnimation(element, duration) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  const rect = element.getBoundingClientRect()
+  const ghost = element.cloneNode(true)
+  ghost.removeAttribute('id')
+  ghost.setAttribute('aria-hidden', 'true')
+  ghost.setAttribute('inert', '')
+  ghost.style.position = 'fixed'
+  ghost.style.left = `${rect.left}px`
+  ghost.style.top = `${rect.top}px`
+  ghost.style.width = `${rect.width}px`
+  ghost.style.height = `${rect.height}px`
+  ghost.style.margin = '0'
+  ghost.style.pointerEvents = 'none'
+  ghost.style.zIndex = '2147483647'
+
+  // Vue may remove a closing dialog before the button's animation can paint.
+  setTimeout(() => {
+    if (element.isConnected) return
+    ghost.classList.add('is-clicked-spin')
+    document.body.appendChild(ghost)
+    setTimeout(() => ghost.remove(), duration + 60)
+  }, 0)
+}
+
 /**
  * 初始化全局按钮微动效与路由跳转引导
  * @param {import('vue-router').Router} router
@@ -263,6 +289,7 @@ export function initButtonMotion(router) {
 
       // 对于其他所有操作类、模式类、折纸类、实验类及原位按钮：
       // 0ms 立即执行原始交互，视觉层无缝同步播放对应类别的物理动效
+      if (category === 'spin') preserveClosingAnimation(element, duration)
       triggerAnimation(element, className, duration)
     },
     { capture: true, passive: false }
