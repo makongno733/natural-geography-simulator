@@ -32,7 +32,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getGrades } from '../textbook/data/catalogLoader.js'
 import { accountEnabled } from '../account/config.js'
-import { apiRequest } from '../account/client.js'
+import { apiRequest } from '../account/api.js'
 import earthJpeg from '../assets/geo-verified/earth-apollo17.jpg'
 
 const route = useRoute()
