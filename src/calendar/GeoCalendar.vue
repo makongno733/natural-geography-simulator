@@ -32,36 +32,33 @@
       </div>
 
       <div class="calendar-tabs" role="group" aria-label="筛选事件类型">
-        <button v-for="option in filters" :key="option.value" type="button" :class="{ active: filter === option.value }" :aria-pressed="filter === option.value" @click="filter = option.value">{{ option.label }}</button>
+        <button v-for="option in filters" :key="option.value" type="button" :class="[`tab-${option.value}`, { active: filter === option.value }]" :aria-pressed="filter === option.value" @click="filter = option.value"><span class="tab-icon" aria-hidden="true">{{ option.icon }}</span>{{ option.label }}<small>{{ categoryCount(option.value) }}</small></button>
       </div>
 
       <div class="calendar-layout">
         <div class="calendar-grid-wrap">
-          <div class="weekday-grid" aria-hidden="true"><span v-for="day in weekdays" :key="day">{{ day }}</span></div>
-          <div class="date-grid">
-            <div v-for="blank in leadingDays" :key="`blank-${blank}`" class="date-cell date-cell-empty" aria-hidden="true"></div>
-            <button v-for="day in daysInMonth" :key="day" type="button" class="date-cell" :class="{ 'date-today': dateKey(day) === todayKey, 'date-selected': dateKey(day) === selectedDate, 'date-has-event': eventsOnDay(day).length }" :aria-label="`${selectedMonth}月${day}日，${eventsOnDay(day).length}条事件`" @click="selectedDate = dateKey(day)">
-              <span class="date-number">{{ day }}</span>
-              <span class="date-markers"><i v-for="type in [...new Set(eventsOnDay(day).map(event => event.type))]" :key="type" :class="`marker-${type}`"></i></span>
-              <span v-if="eventsOnDay(day).length" class="date-event-name">{{ eventsOnDay(day)[0].title }}</span>
-            </button>
-          </div>
+          <div v-if="monthSeason" class="season-band"><span class="season-band-label">本月的地理故事 · 整月观察</span><strong>{{ monthSeason.title }}</strong><p>{{ monthSeason.story }}</p></div>
+          <FullCalendar ref="calendarRef" :options="calendarOptions">
+            <template #eventContent="arg"><span class="calendar-event-label"><i :class="`marker-${arg.event.extendedProps.type}`" aria-hidden="true"></i><span>{{ arg.event.title }}</span></span></template>
+          </FullCalendar>
           <div class="calendar-legend"><span><i class="marker-astronomy"></i> 天象预测</span><span><i class="marker-earthquake"></i> 地震实录</span><span><i class="marker-season"></i> 季节观察</span></div>
         </div>
 
         <aside class="calendar-details" aria-live="polite">
           <span class="calendar-section-index">02 / EVENT NOTES</span>
           <h3>{{ selectedDateLabel }}</h3>
-          <p class="details-caption">{{ selectedDayEvents.length ? '选择事件，查看来源与观察提示' : '这一天没有具体事件。可查看本月的观察建议。' }}</p>
+          <p class="details-caption">{{ selectedDayEvents.length ? '读一则短故事，再核对事实与来源' : monthSeason ? '这一天没有具体事件。可读本月的观察故事。' : '这一天没有该类别的事件，请选择其他日期。' }}</p>
           <article v-for="event in selectedDayEvents" :key="event.id" class="event-card" :class="`event-${event.type}`">
             <div class="event-card-top"><span>{{ typeLabel(event.type) }}</span><small>{{ event.status }}</small></div>
             <h4>{{ event.title }}</h4>
-            <p>{{ event.description }}</p>
+            <span class="story-label">一则地理小故事</span>
+            <p class="event-story">{{ event.story }}</p>
+            <p class="event-fact">观察提示：{{ event.description }}</p>
             <div class="event-meta"><span>{{ event.time ? `${event.time} · ` : '' }}{{ event.region }}</span></div>
             <a v-if="event.sourceUrl" :href="event.sourceUrl" target="_blank" rel="noopener noreferrer">查看来源 · {{ event.sourceName }} ↗</a>
             <span v-else class="source-note">{{ event.sourceName }}</span>
           </article>
-          <div v-if="!selectedDayEvents.length && monthSeason" class="season-placeholder"><span>本月观察</span><h4>{{ monthSeason.title }}</h4><p>{{ monthSeason.description }}</p></div>
+          <div v-if="!selectedDayEvents.length && monthSeason" class="season-placeholder"><span>本月观察</span><h4>{{ monthSeason.title }}</h4><p>{{ monthSeason.story }}</p><p>{{ monthSeason.description }}</p></div>
         </aside>
       </div>
     </section>
@@ -76,16 +73,20 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import FullCalendar from '@fullcalendar/vue3'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import zhCnLocale from '@fullcalendar/core/locales/zh-cn'
 import { accountEnabled, accountOrigin } from '../account/config.js'
 import { astronomyEvents, normalizeQuakes, seasonalEvents, toChinaDate } from './events.js'
 
 const todayKey = toChinaDate(Date.now())
 const [todayYear, todayMonth] = todayKey.split('-').map(Number)
-const weekdays = ['一', '二', '三', '四', '五', '六', '日']
-const filters = [{ value: 'all', label: '全部' }, { value: 'astronomy', label: '天象' }, { value: 'earthquake', label: '地震' }, { value: 'season', label: '季节观察' }]
+const filters = [{ value: 'all', label: '全部合并', icon: '◫' }, { value: 'astronomy', label: '天象', icon: '✦' }, { value: 'earthquake', label: '地震', icon: '◈' }, { value: 'season', label: '季节观察', icon: '❧' }]
 const monthOffset = ref(0)
 const filter = ref('all')
 const selectedDate = ref(todayKey)
+const calendarRef = ref(null)
 const quakes = ref([])
 const loading = ref(true)
 const syncStatus = ref('正在连接服务器…')
@@ -93,8 +94,6 @@ const monthDate = computed(() => new Date(Date.UTC(todayYear, todayMonth - 1 + m
 const selectedYear = computed(() => monthDate.value.getUTCFullYear())
 const selectedMonth = computed(() => monthDate.value.getUTCMonth() + 1)
 const monthPrefix = computed(() => `${selectedYear.value}-${String(selectedMonth.value).padStart(2, '0')}`)
-const daysInMonth = computed(() => new Date(Date.UTC(selectedYear.value, selectedMonth.value, 0)).getUTCDate())
-const leadingDays = computed(() => (monthDate.value.getUTCDay() + 6) % 7)
 const allEvents = computed(() => [...astronomyEvents, ...seasonalEvents(selectedYear.value), ...quakes.value])
 const visibleEvents = computed(() => allEvents.value.filter(event => filter.value === 'all' || event.type === filter.value))
 const monthEvents = computed(() => visibleEvents.value.filter(event => event.date.startsWith(monthPrefix.value)))
@@ -103,13 +102,40 @@ const selectedDayEvents = computed(() => monthEvents.value
   .filter(event => event.date === selectedDate.value && !event.wholeMonth)
   .concat(selectedDate.value.startsWith(monthPrefix.value) && monthSeason.value ? [monthSeason.value] : []))
 const selectedDateLabel = computed(() => `${selectedMonth.value} 月 ${Number(selectedDate.value.slice(-2))} 日`)
-const monthSummary = computed(() => `${monthEvents.value.filter(event => !event.wholeMonth).length} 条日期事件 · ${monthSeason.value ? '含本月观察主题' : '按类型筛选查看'}`)
+const monthSummary = computed(() => filter.value === 'season'
+  ? '1 个整月观察主题 · 点击日期阅读故事'
+  : `${monthEvents.value.filter(event => !event.wholeMonth).length} 条日期事件 · ${monthSeason.value ? '含本月观察主题' : '按类型筛选查看'}`)
+const calendarOptions = computed(() => ({
+  plugins: [dayGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  initialDate: todayKey,
+  headerToolbar: false,
+  firstDay: 1,
+  locale: zhCnLocale,
+  height: 'auto',
+  fixedWeekCount: false,
+  showNonCurrentDates: false,
+  dayMaxEvents: 2,
+  dayCellClassNames: ({ date }) => {
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    return dateKey === selectedDate.value ? ['fc-geo-selected'] : []
+  },
+  events: monthEvents.value.filter(event => !event.wholeMonth).map(event => ({
+    id: event.id,
+    title: event.title,
+    start: event.date,
+    allDay: true,
+    classNames: [`fc-geo-${event.type}`],
+    extendedProps: { type: event.type }
+  })),
+  dateClick: ({ dateStr }) => { selectedDate.value = dateStr },
+  eventClick: ({ event, jsEvent }) => { jsEvent.preventDefault(); selectedDate.value = event.startStr.slice(0, 10) }
+}))
 
-function dateKey(day) { return `${monthPrefix.value}-${String(day).padStart(2, '0')}` }
-function eventsOnDay(day) { return monthEvents.value.filter(event => event.date === dateKey(day) && !event.wholeMonth) }
+function categoryCount(type) { return type === 'season' ? Number(Boolean(seasonalEvents(selectedYear.value).find(event => event.date.startsWith(monthPrefix.value)))) : allEvents.value.filter(event => event.date.startsWith(monthPrefix.value) && !event.wholeMonth && (type === 'all' || event.type === type)).length }
 function typeLabel(type) { return { astronomy: '天象', earthquake: '地震', season: '季节观察' }[type] }
 function goToday() { monthOffset.value = 0; selectedDate.value = todayKey }
-watch(monthPrefix, prefix => { selectedDate.value = `${prefix}-01` })
+watch(monthPrefix, prefix => { selectedDate.value = `${prefix}-01`; calendarRef.value?.getApi()?.gotoDate(`${prefix}-01`) })
 
 onMounted(async () => {
   if (!accountEnabled) { syncStatus.value = '服务器地址未配置，地震记录暂不可用。'; loading.value = false; return }
@@ -155,38 +181,57 @@ onMounted(async () => {
 .calendar-controls .today-button{font-size:12px;padding:0 14px}
 .calendar-controls button:disabled{opacity:.35;cursor:default}
 .calendar-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.calendar-tabs button{padding:8px 15px;font-size:12px}
-.calendar-tabs button.active{background:#193c43;color:white;border-color:#193c43}
+.calendar-tabs button{padding:10px 15px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:transform .18s,box-shadow .18s}
+.calendar-tabs button:hover{transform:translateY(-2px)}
+.calendar-tabs button small{font:700 11px ui-monospace,monospace;border-radius:99px;padding:2px 6px;background:#ffffff8c}
+.calendar-tabs .tab-icon{font-size:16px;line-height:1}
+.calendar-tabs .tab-all{background:#edf2f0;border-color:#c6d5d0;color:#2d5352}
+.calendar-tabs .tab-astronomy{background:#e5eff8;border-color:#b6d0e5;color:#245d88}
+.calendar-tabs .tab-earthquake{background:#f9e9e4;border-color:#e7bfb2;color:#a34f3f}
+.calendar-tabs .tab-season{background:#e7f2e6;border-color:#b7d3b1;color:#37724d}
+.calendar-tabs .tab-all.active{background:#244b50;color:#fff;border-color:#244b50}
+.calendar-tabs .tab-astronomy.active{background:#2872aa;color:#fff;border-color:#2872aa}
+.calendar-tabs .tab-earthquake.active{background:#b65a47;color:#fff;border-color:#b65a47}
+.calendar-tabs .tab-season.active{background:#4d8760;color:#fff;border-color:#4d8760}
+.calendar-tabs button.active{box-shadow:0 5px 15px #122f3424}
 .calendar-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr);gap:18px}
 .calendar-grid-wrap,.calendar-details{background:#fff;border:1px solid #dce5de;border-radius:16px;overflow:hidden}
-.weekday-grid,.date-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.weekday-grid{background:#f2f6f1;border-bottom:1px solid #dce5de}
-.weekday-grid span{text-align:center;padding:15px 0;color:#758b87;font-size:12px}
-.date-cell{height:107px;min-width:0;text-align:left;border:0;border-right:1px solid #e7ece7;border-bottom:1px solid #e7ece7;background:white;padding:11px;display:flex;flex-direction:column;align-items:flex-start;cursor:pointer;color:#29484e}
-.date-cell:nth-child(7n){border-right:0}
-.date-cell:hover{background:#f5f8f1}
-.date-cell-empty{background:#fafbf8;cursor:default}
-.date-selected{background:#e9f1e9!important;box-shadow:inset 0 0 0 2px #54796f}
-.date-today .date-number{background:#1d4950;color:white;border-radius:50%;width:25px;height:25px;display:grid;place-items:center;margin:-4px}
-.date-number{font:500 14px Georgia,serif}
-.date-markers{display:flex;gap:4px;margin-top:auto}
-.date-markers i,.calendar-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
-.marker-astronomy{background:#bf8555}
-.marker-earthquake{background:#c96054}
-.marker-season{background:#7a9d75}
-.date-event-name{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;margin-top:7px;color:#566c6b}
+.season-band{margin:18px;padding:17px 19px;background:#edf5eb;border:1px solid #d5e5d1;border-left:4px solid #5b9165;border-radius:10px}
+.season-band-label{display:block;font:700 10px ui-monospace,monospace;letter-spacing:.13em;color:#50815e;margin-bottom:5px}
+.season-band strong{font-size:15px;color:#315f3d}
+.season-band p{font-size:12px;line-height:1.7;color:#597264;margin:6px 0 0}
+.calendar-grid-wrap :deep(.fc){--fc-border-color:#e1e9e3;--fc-today-bg-color:#f0f6ed;font-size:12px;margin:0 18px}
+.calendar-grid-wrap :deep(.fc-scrollgrid){border-radius:10px;overflow:hidden}
+.calendar-grid-wrap :deep(.fc-col-header-cell){background:#f2f6f1;padding:9px 0;color:#65817a}
+.calendar-grid-wrap :deep(.fc-daygrid-day){height:104px;cursor:pointer}
+.calendar-grid-wrap :deep(.fc-daygrid-day:hover){background:#f7faf5}
+.calendar-grid-wrap :deep(.fc-daygrid-day-number){font:600 13px Georgia,serif;color:#355b5e;padding:8px}
+.calendar-grid-wrap :deep(.fc-geo-selected){box-shadow:inset 0 0 0 2px #3e786d;background:#e9f3e9}
+.calendar-grid-wrap :deep(.fc-day-today .fc-daygrid-day-number){background:#244f54;color:#fff;border-radius:50%;margin:4px;padding:4px 8px}
+.calendar-grid-wrap :deep(.fc-event){border:0;border-radius:5px;margin:2px 4px;padding:3px 5px;cursor:pointer}
+.calendar-grid-wrap :deep(.fc-geo-astronomy){background:#dfebf7;color:#225d88}
+.calendar-grid-wrap :deep(.fc-geo-earthquake){background:#f7e5df;color:#984938}
+.calendar-event-label{display:flex;align-items:center;gap:5px;min-width:0;font-size:10px;line-height:1.3;font-weight:700}
+.calendar-event-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.calendar-event-label i,.calendar-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.marker-astronomy{background:#3479ab}
+.marker-earthquake{background:#c0634f}
+.marker-season{background:#5d976a}
 .calendar-legend{display:flex;gap:18px;flex-wrap:wrap;padding:16px 18px;color:#71837e;font-size:11px}
 .calendar-legend span{display:flex;align-items:center;gap:6px}
 .calendar-details{padding:28px;max-height:750px;overflow:auto}
 .calendar-details h3{font:400 27px Georgia,serif;margin:9px 0}
 .details-caption{font-size:12px;color:#728581;line-height:1.7;margin-bottom:22px}
 .event-card{padding:18px;border-radius:12px;background:#f3f6f3;margin-bottom:13px;border-left:3px solid #819f80}
-.event-astronomy{border-color:#b77b4b;background:#faf5ec}
+.event-astronomy{border-color:#5594bd;background:#f0f6fb}
 .event-earthquake{border-color:#be685c;background:#fcf4f1}
 .event-card-top{display:flex;justify-content:space-between;color:#586f6c;font-size:11px}
 .event-card-top small{font-size:10px;border:1px solid #c6d0c8;padding:3px 7px;border-radius:99px}
 .event-card h4,.season-placeholder h4{margin:13px 0 8px;font-size:17px;color:#25434a}
 .event-card p,.season-placeholder p{font-size:12px;line-height:1.8;color:#58706e;margin:0 0 13px}
+.story-label{display:block;font:700 10px ui-monospace,monospace;color:#6b8675;letter-spacing:.12em;margin:15px 0 5px}
+.event-card .event-story{font-size:14px;line-height:1.9;color:#294b50}
+.event-card .event-fact{border-top:1px solid #d8e2db;padding-top:10px;font-size:11px}
 .event-meta{font-size:11px;color:#7c8b86;margin:11px 0}
 .event-card a,.calendar-footnote a{color:#3d6c77;font-size:11px;text-decoration:underline;text-underline-offset:3px}
 .source-note{font-size:11px;color:#7c8b86}
@@ -218,8 +263,9 @@ onMounted(async () => {
 .calendar-toolbar{align-items:start}
 .calendar-toolbar h2{font-size:29px}
 .calendar-controls{flex-wrap:wrap;justify-content:end}
-.date-cell{height:72px;padding:6px}
-.date-event-name{display:none}
+.calendar-grid-wrap :deep(.fc){margin:0 8px}
+.calendar-grid-wrap :deep(.fc-daygrid-day){height:72px}
+.calendar-event-label span{max-width:62px}
 .calendar-details{padding:20px}
 .calendar-legend{gap:10px}
 .recent-list a{grid-template-columns:78px 1fr 12px;font-size:11px;padding:12px 3px}

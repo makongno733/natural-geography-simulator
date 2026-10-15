@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeQuakes, seasonalEvents, toChinaDate } from './events.js'
+import { astronomyEvents, normalizeQuakes, seasonalEvents, toChinaDate } from './events.js'
 
 describe('geography calendar data', () => {
   it('places UTC events on the correct Beijing date', () => {
@@ -15,6 +15,11 @@ describe('geography calendar data', () => {
     const themes = seasonalEvents(2027)
     expect(themes).toHaveLength(12)
     expect(themes.every(event => event.wholeMonth && event.status === '典型观察时段')).toBe(true)
+    expect(themes.every(event => event.story && event.description)).toBe(true)
+  })
+
+  it('keeps a source and a readable story with each astronomy clue', () => {
+    expect(astronomyEvents.every(event => event.story && event.sourceUrl.startsWith('https://'))).toBe(true)
   })
 
   it('rejects earthquake links outside the source domain', () => {
