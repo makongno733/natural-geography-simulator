@@ -16,8 +16,8 @@
     <div class="globe-chrome">
       <div class="globe-status"><span class="status-dot" aria-hidden="true"></span>太阳系漫游 <span class="status-number">{{ String(activeIndex + 1).padStart(2, '0') }} / 09</span></div>
       <div v-if="activePlanet.id === 'earth' && !fallback" class="globe-actions" aria-label="地球模型视图">
-        <button type="button" :class="{ active: mode === 'surface' }" :aria-pressed="mode === 'surface'" @click="switchMode('surface')">表面</button>
-        <button type="button" :class="{ active: mode === 'interior' }" :aria-pressed="mode === 'interior'" @click="switchMode('interior')">内部</button>
+        <button type="button" :disabled="loading" :class="{ active: mode === 'surface' }" :aria-pressed="mode === 'surface'" @click="switchMode('surface')">表面</button>
+        <button type="button" :disabled="loading" :class="{ active: mode === 'interior' }" :aria-pressed="mode === 'interior'" @click="switchMode('interior')">内部</button>
       </div>
     </div>
     <div class="planet-caption" aria-live="polite">
@@ -26,7 +26,7 @@
       <p>{{ mode === 'interior' ? '从地壳到地核，观察脚下星球的圈层。' : activePlanet.description }}</p>
     </div>
     <div class="globe-bottom">
-      <span class="globe-hint">{{ loading ? '正在靠近下一颗天体…' : fallback ? '当前设备显示静态地球影像' : mode === 'interior' ? '地壳 / 地幔 / 外核 / 内核' : '拖动观察 · 展示大小并非真实比例' }}</span>
+      <span class="globe-hint">{{ loading ? (interiorLoading ? '正在打开地球内部模型…' : '正在靠近下一颗天体…') : fallback ? '当前设备显示静态地球影像' : mode === 'interior' ? '地壳 / 地幔 / 外核 / 内核' : '拖动观察 · 展示大小并非真实比例' }}</span>
       <div v-if="!fallback && mode === 'surface'" class="globe-shortcuts">
         <button v-if="activePlanet.id === 'earth'" type="button" @click="focusChina">中国视角</button>
         <button type="button" @click="toggleRotation">{{ rotating ? '暂停自转' : '继续自转' }}</button>
@@ -46,7 +46,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import * as THREE from 'three'
 import { BaseScene } from '../engine/core/BaseScene.js'
-import { EarthInteriorModule } from '../engine/modules/EarthInteriorModule.js'
 import { HomePlanetModule } from './HomePlanetScene.js'
 import { planets, saturnRingTexture } from './planetCatalog.js'
 import fallbackImage from '../assets/geo-verified/blue-marble-bathymetry-july-2048.jpg?url'
@@ -60,6 +59,7 @@ const nextPlanet = computed(() => planets[activeIndex.value + 1])
 const mode = ref('surface')
 const fallback = ref(false)
 const loading = ref(false)
+const interiorLoading = ref(false)
 const rotating = ref(true)
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const texturePromises = new Map()
@@ -99,10 +99,6 @@ function setCamera(distance) {
   rig.controls.update()
 }
 
-function homeInteriorModule(scene, params, services) {
-  return EarthInteriorModule(scene, { ...params, preview: true, showAtmosphere: false }, { ...services, labelSystem: null })
-}
-
 async function selectPlanet(index) {
   if (!engine || loading.value || index < 0 || index >= planets.length || index === activeIndex.value) return
   loading.value = true
@@ -131,15 +127,32 @@ async function selectPlanet(index) {
   }
 }
 
-function switchMode(nextMode) {
+async function switchMode(nextMode) {
   if (activePlanet.value.id !== 'earth' || mode.value === nextMode || !engine || loading.value) return
-  mode.value = nextMode
   if (nextMode === 'interior') {
+    loading.value = true
+    interiorLoading.value = true
+    let EarthInteriorModule
+    try {
+      const module = await import('../engine/modules/EarthInteriorModule.js')
+      EarthInteriorModule = module.EarthInteriorModule
+    } catch (error) {
+      console.error('地球内部模型加载失败', error)
+      return
+    } finally {
+      loading.value = false
+      interiorLoading.value = false
+    }
+    if (!mounted || !engine || activePlanet.value.id !== 'earth' || mode.value !== 'surface') return
+    mode.value = nextMode
     planetApi = null
-    engine.loadModule(homeInteriorModule, { mode: 'simple' })
+    engine.loadModule((scene, params, services) => EarthInteriorModule(
+      scene, { ...params, preview: true, showAtmosphere: false }, { ...services, labelSystem: null }
+    ), { mode: 'simple' })
     engine.lightRig.setPreset('dramatic')
     setCamera(3.8)
   } else {
+    mode.value = nextMode
     engine.loadModule(createPlanetScene())
     planetApi = engine._moduleApi
     engine.lightRig.setPreset('sunlit')

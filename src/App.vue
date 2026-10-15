@@ -126,7 +126,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LessonAssistant from './assistant/LessonAssistant.vue'
 import BrandMark from './brand/BrandMark.vue'
-import { accountEnabled, accountOrigin, siteOrigin, authClient } from './account/client.js'
+import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -168,9 +168,10 @@ function onScroll() {
 onMounted(() => {
   if (typeof window === 'undefined') return
   if (accountEnabled) {
-    authClient.getSession().then(({ data }) => {
-      accountUser.value = data?.user || null
-    }).catch(() => {})
+    import('./account/client.js')
+      .then(({ authClient }) => authClient.getSession())
+      .then(({ data }) => { accountUser.value = data?.user || null })
+      .catch(() => {})
   }
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()

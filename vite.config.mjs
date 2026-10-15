@@ -33,6 +33,7 @@ export default defineConfig({
           if (id.includes('/src/textbook/data/index.js')) return 'catalog-data';
 
           if (!id.includes('node_modules')) return null;
+          if (id.includes('/better-auth/') || id.includes('/@better-auth/') || id.includes('/better-call/')) return 'vendor-auth';
           if (id.includes('maplibre-gl') || id.includes('@maplibre')) return 'vendor-map';
           if (id.includes('three')) return 'vendor-three';
           if (id.includes('vue-router')) return 'vendor-vue';
