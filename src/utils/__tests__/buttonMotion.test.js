@@ -106,6 +106,36 @@ describe('buttonMotion - 地理教学系统按钮点击微动效系统', () => {
     expect(glossaryClose.classList.contains('is-clicked-spin')).toBe(true)
   })
 
+  it('关闭按钮被弹层移除后仍在原位置完成旋转动画', () => {
+    container.innerHTML = '<button class="info-close" id="dialog-close">✕</button>'
+    const closeBtn = container.querySelector('button')
+    closeBtn.addEventListener('click', () => closeBtn.remove())
+
+    closeBtn.click()
+    vi.advanceTimersByTime(0)
+
+    const ghost = document.body.querySelector('.is-clicked-spin[aria-hidden="true"]')
+    expect(ghost).not.toBeNull()
+    expect(ghost.hasAttribute('inert')).toBe(true)
+    expect(ghost.id).toBe('')
+
+    vi.advanceTimersByTime(300)
+    expect(document.body.querySelector('.is-clicked-spin[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('减少动态效果时关闭按钮不生成旋转残影', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    container.innerHTML = '<button class="info-close">✕</button>'
+    const closeBtn = container.querySelector('button')
+    closeBtn.addEventListener('click', () => closeBtn.remove())
+
+    closeBtn.click()
+    vi.advanceTimersByTime(300)
+
+    expect(document.body.querySelector('.is-clicked-spin')).toBeNull()
+    vi.unstubAllGlobals()
+  })
+
   it('6. 返回按钮触发向左定向探退与回弹动画', () => {
     container.innerHTML = `
       <button class="back-link">← 返回课文</button>
