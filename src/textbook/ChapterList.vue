@@ -102,8 +102,8 @@ watch(
 
 .book-banner {
   margin-bottom: 32px;
-  padding: 32px 0;
-  border-top: 2px solid #244739;
+  padding: 32px 0 24px;
+  border-top: 2px solid var(--geo-ocean);
   border-bottom: 1px solid var(--border);
 }
 
@@ -111,46 +111,58 @@ watch(
   display: inline-flex;
   padding: 0;
   font-size: 11px;
-  letter-spacing: .12em;
-  font-weight: 600;
+  letter-spacing: .14em;
+  font-weight: 700;
   color: var(--geo-ocean);
   margin-bottom: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
 .book-title {
-  margin: 0 0 8px;
-  font-size: clamp(30px, 4vw, 46px);
+  margin: 0 0 10px;
+  font-size: clamp(30px, 4vw, 44px);
   font-weight: 800;
   color: var(--geo-ocean-deep);
+  letter-spacing: -0.025em;
 }
 
 .book-desc {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 680px;
 }
 
 .chapter-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border-top: 1px solid var(--border);
+  gap: 8px;
 }
 
 .chapter-item {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 24px 10px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
+  padding: 20px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-xs);
   text-decoration: none;
   color: var(--text);
-  transition: background .2s ease;
+  transition: background .2s ease, transform .2s var(--geo-flow-ease), border-color .2s, box-shadow .2s;
 }
-.chapter-item:hover { background: #edf3ee; }
-.chapter-item:focus-visible { outline: 3px solid #315b4d; outline-offset: -3px; }
+.chapter-item:hover {
+  background: #ffffff;
+  border-color: var(--geo-ocean);
+  transform: var(--geo-btn-elevate);
+  box-shadow: var(--shadow-sm);
+}
+.chapter-item:focus-visible {
+  outline: 3px solid var(--geo-ocean);
+  outline-offset: 2px;
+}
 
 .chapter-num-col {
   flex: none;
@@ -162,11 +174,13 @@ watch(
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: #e4ede6;
+  background: var(--geo-ocean-surface);
   color: var(--geo-ocean);
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  border: 1px solid rgba(26, 68, 108, 0.12);
 }
 
 .chapter-main {

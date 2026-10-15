@@ -196,41 +196,44 @@ onBeforeUnmount(() => {
 }
 .quick-btn {
   border: 1px solid rgba(88, 166, 255, 0.4);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(88, 166, 255, 0.11);
   color: #8ac0ff;
-  padding: 4px 10px;
-  font-size: 11px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
+  transition: var(--geo-btn-transition);
 }
 .quick-btn:hover {
   border-color: #8ac0ff;
-  background: rgba(88, 166, 255, 0.2);
+  background: rgba(88, 166, 255, 0.22);
 }
 .geo-body { display: flex; height: 55vh; }
 .geo-3d { flex: 1; position: relative; overflow: hidden; }
-.geo-side { width: 320px; overflow-y: auto; padding: 12px; background: #111; border-left: 1px solid #222; }
-.timeline-module h3 { margin: 0 0 8px; font-size: 14px; color: #888; }
-.tl-bar { display: flex; flex-direction: column; gap: 2px; }
+.geo-side { width: 320px; overflow-y: auto; padding: 14px; background: #11141f; border-left: 1px solid rgba(255,255,255,0.1); }
+.timeline-module h3 { margin: 0 0 10px; font-size: 14px; color: #8ac0ff; font-weight: 700; }
+.tl-bar { display: flex; flex-direction: column; gap: 4px; }
 .tl-btn {
-  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
-  border: 1px solid #333; border-left-width: 3px; border-radius: 4px;
-  background: transparent; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,0.12); border-left-width: 3.5px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03); cursor: pointer; transition: var(--geo-btn-transition);
 }
-.tl-btn:hover { background: rgba(255,255,255,0.03); }
-.tl-btn.active { background: rgba(255,255,255,0.06); }
+.tl-btn:hover { background: rgba(255,255,255,0.08); }
+.tl-btn.active { background: rgba(88,166,255,0.15); border-color: #58a6ff; }
 .tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.tl-name { font-size: 13px; color: #ddd; font-weight: 600; }
-.tl-en { font-size: 10px; color: #666; flex: 1; }
-.tl-time { font-size: 10px; color: #888; }
-.time-scrubber { padding: 10px 16px 8px; }
-.scrub-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.tl-name { font-size: 13px; color: #edf2f7; font-weight: 600; }
+.tl-en { font-size: 10px; color: #8a99ad; flex: 1; }
+.tl-time { font-size: 10px; color: #a0aec0; }
+.time-scrubber { padding: 12px 16px 10px; background: #0b0e17; border-top: 1px solid rgba(255,255,255,0.08); }
+.scrub-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
 .scrubber { flex: 1; accent-color: #58a6ff; height: 6px; cursor: pointer; }
 .auto-btn {
-  padding: 4px 10px; border: 1px solid #58a6ff; border-radius: 4px;
-  background: rgba(88,166,255,0.1); color: #58a6ff; font-size: 14px; cursor: pointer;
+  padding: 5px 14px; border: 1px solid #58a6ff; border-radius: var(--radius-pill);
+  background: rgba(88,166,255,0.15); color: #8ac0ff; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: var(--geo-btn-transition);
 }
-.auto-btn:hover { background: rgba(88,166,255,0.2); }
+.auto-btn:hover { background: rgba(88,166,255,0.28); color: #fff; }
 .scrub-labels { display: flex; justify-content: space-between; padding: 0 2px; }
 .scrub-labels { overflow-x: auto; flex-wrap: nowrap; }
 .scrub-labels span { font-size: 12px; color: #555; cursor: pointer; padding: 0 1px; white-space: nowrap; flex-shrink: 0; }

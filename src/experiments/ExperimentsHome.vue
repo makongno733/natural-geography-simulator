@@ -238,13 +238,16 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 
 .exp-card-enter {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--geo-ocean);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .exp-filter {
-  padding: 34px 0;
-  border-top: 2px solid #244739;
+  padding: 36px 0;
+  border-top: 2px solid var(--geo-ocean);
 }
 
 .filter-head {
@@ -253,20 +256,21 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 14px;
+  padding-bottom: 16px;
 }
 
 .filter-head h2 {
   margin: 0;
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 700;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
   color: var(--geo-ocean-deep);
+  letter-spacing: -0.02em;
 }
 
 .filter-tip {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--text-muted);
 }
 
@@ -274,7 +278,7 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .filter-controls label {
@@ -287,42 +291,62 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 }
 
 .ctrl-label {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--geo-ocean);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
 }
 
 .filter-controls select {
   width: 100%;
+  min-height: 40px;
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-soft);
+  background: var(--surface);
   color: var(--text);
   font-size: 14px;
   cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.filter-controls select:focus-visible {
+  outline: none;
+  border-color: var(--geo-ocean);
+  box-shadow: var(--geo-focus-ring);
 }
 
 .filter-controls select:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  background: var(--bg-soft);
 }
 
 .experiment-results {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 24px;
+  gap: 12px 24px;
 }
 
 .experiment-result {
   display: grid;
   gap: 6px;
-  padding: 18px 4px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
   color: var(--text);
   text-decoration: none;
-  background: transparent;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 }
-.experiment-result:hover { background:#eef3ed; }
+.experiment-result:hover {
+  background: #ffffff;
+  border-color: var(--geo-ocean);
+  transform: var(--geo-btn-elevate);
+  box-shadow: var(--shadow-sm);
+}
 
 .res-title {
   font-size: 14.5px;

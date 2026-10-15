@@ -685,20 +685,21 @@ const nextSection = computed(() => {
 .section-figures {
   margin-top: 22px;
   padding-top: 18px;
-  border-top: 1px solid var(--brown-light);
+  border-top: 1px solid var(--border);
 }
 .figures-title {
   margin: 0 0 12px;
   font-size: 17px;
   font-weight: 700;
-  color: var(--red);
+  color: var(--geo-ocean-deep);
 }
 .figure-card {
   margin: 0 0 18px;
-  padding: 12px;
-  border: 1px solid rgba(31, 111, 235, 0.16);
-  border-radius: 14px;
-  background: rgba(248, 251, 255, 0.6);
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
 }
 .figure-images {
   display: grid;

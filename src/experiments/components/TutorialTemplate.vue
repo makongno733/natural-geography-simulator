@@ -189,16 +189,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   background: var(--border, #cbd5e1);
 }
 .step-dot.active {
-  background: #0284c7;
-  border-color: #0284c7;
+  background: var(--geo-ocean);
+  border-color: var(--geo-ocean);
   color: #ffffff;
   transform: scale(1.1);
-  box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+  box-shadow: 0 0 10px rgba(26, 68, 108, 0.4);
 }
 .step-dot.done {
-  background: rgba(2, 132, 199, 0.12);
-  border-color: #0284c7;
-  color: #0284c7;
+  background: var(--geo-ocean-surface);
+  border-color: var(--geo-ocean);
+  color: var(--geo-ocean);
 }
 
 .tutorial-main { flex: 1; min-width: 0; }
@@ -213,28 +213,28 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #0284c7;
-  background: rgba(2, 132, 199, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
+  color: var(--geo-ocean);
+  background: var(--geo-ocean-surface);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
 }
 .step-hint-tag {
   font-size: 11px;
-  color: var(--muted, #94a3b8);
+  color: var(--text-muted);
 }
 
 .tutorial-step-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--ink, #0f172a);
+  color: var(--geo-ocean-deep);
   margin: 0 0 14px;
 }
 
 .tutorial-illustration {
   margin-bottom: 16px;
-  background: #f8fafc;
-  border-radius: var(--radius-box, 12px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--bg-soft);
+  border-radius: var(--radius-box);
+  border: 1px solid var(--border);
   padding: 18px;
   display: flex;
   justify-content: center;
@@ -245,15 +245,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .tutorial-content {
   font-size: 15px;
   line-height: 1.8;
-  color: var(--ink, #1e293b);
+  color: var(--text);
   margin-bottom: 14px;
 }
 .tutorial-highlight {
-  background: linear-gradient(90deg, rgba(2, 132, 199, 0.08), transparent);
-  border-left: 3px solid #0284c7;
+  background: linear-gradient(90deg, var(--geo-ocean-surface), transparent);
+  border-left: 3px solid var(--geo-ocean);
   padding: 10px 14px;
   font-size: 13px;
-  color: #0369a1;
+  color: var(--geo-ocean-deep);
   border-radius: 0 8px 8px 0;
   margin-bottom: 18px;
   line-height: 1.6;

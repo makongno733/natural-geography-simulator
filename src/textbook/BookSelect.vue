@@ -94,8 +94,8 @@ watch(
 
 .grade-banner {
   margin-bottom: 36px;
-  padding: 32px 0;
-  border-top: 2px solid #244739;
+  padding: 32px 0 24px;
+  border-top: 2px solid var(--geo-ocean);
   border-bottom: 1px solid var(--border);
 }
 
@@ -103,83 +103,99 @@ watch(
   display: inline-flex;
   padding: 0;
   font-size: 11px;
-  letter-spacing: .12em;
-  font-weight: 600;
+  letter-spacing: .14em;
+  font-weight: 700;
   color: var(--geo-ocean);
   margin-bottom: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
 .grade-title {
-  margin: 0 0 8px;
-  font-size: clamp(30px, 4vw, 46px);
+  margin: 0 0 10px;
+  font-size: clamp(30px, 4vw, 44px);
   font-weight: 800;
   color: var(--geo-ocean-deep);
+  letter-spacing: -0.025em;
 }
 
 .grade-desc {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 680px;
 }
 
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
 
 .card {
   display: flex;
   position: relative;
   text-decoration: none;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: border-color .2s ease, transform .2s ease;
+  transition: border-color .2s ease, transform .2s var(--geo-flow-ease), box-shadow .2s;
 }
-.card:hover { border-color: #315b4d; transform: translateY(-2px); }
-.card:focus-visible { outline: 3px solid #315b4d; outline-offset: 3px; }
+.card:hover {
+  border-color: var(--geo-ocean);
+  transform: var(--geo-btn-elevate);
+  box-shadow: var(--shadow-md);
+}
+.card:focus-visible {
+  outline: 3px solid var(--geo-ocean);
+  outline-offset: 3px;
+}
 
 .card-spine {
-  width: 3px;
-  background: var(--geo-ocean);
+  width: 4px;
+  background: linear-gradient(180deg, var(--geo-ocean) 0%, var(--geo-ocean-medium) 100%);
   flex: none;
 }
 
 .card-content {
-  padding: 25px 24px;
+  padding: 24px 22px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .card-tag {
-  font-size: 11px;
-  color: #587365;
+  font-size: 11.5px;
+  color: var(--geo-ocean);
   font-weight: 700;
-  letter-spacing: 0.04em;
-  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
 .card-title {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--geo-ocean-deep);
   margin: 0 0 10px;
 }
 
 .card-meta {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .card-link {
   margin-top: auto;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--geo-ocean);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 @media (max-width: 600px) {

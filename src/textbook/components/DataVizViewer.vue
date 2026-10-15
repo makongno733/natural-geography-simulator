@@ -131,10 +131,11 @@ const spokeCities = [
 </script>
 
 <style scoped>
-.dv-shell { max-width: 680px; margin: 16px auto; border: 1px solid #e2c9b4; border-radius: 10px; background: #fff; overflow: hidden; }
-.dv-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #eee; }
-.dv-top h2 { margin: 0; font-size: 16px; color: #333; }
-.dv-close { border: 1px solid #ddd; border-radius: 4px; padding: 4px 12px; background: #f5f5f5; font-size: 12px; cursor: pointer; }
-.dv-body { padding: 16px; background: #fafafa; }
+.dv-shell { max-width: 680px; margin: 16px auto; border: 1px solid var(--border); border-radius: var(--radius-box); background: var(--surface); box-shadow: var(--shadow-md); overflow: hidden; }
+.dv-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.dv-top h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--geo-ocean-deep); }
+.dv-close { border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 5px 14px; background: var(--geo-ocean-surface); color: var(--geo-ocean); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--geo-btn-transition); }
+.dv-close:hover { background: #dceaf5; border-color: var(--geo-ocean); }
+.dv-body { padding: 18px; background: var(--bg-soft); }
 .dv-svg { width: 100%; display: block; }
 </style>

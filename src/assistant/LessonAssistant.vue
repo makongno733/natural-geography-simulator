@@ -100,13 +100,13 @@ async function ask() {
 .assistant-fab-globe { display: block; flex: 0 0 58px; width: 58px; height: 58px; overflow: hidden; border-radius: 50%; }
 .assistant-fab-globe img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .assistant-fab-label { white-space: nowrap; font-weight: 700; font-size: 14px; line-height: 1.2; letter-spacing: .02em; }
-.assistant-panel { position: absolute; right: 0; bottom: 74px; width: min(360px, calc(100vw - 30px)); max-height: min(540px, calc(100vh - 120px)); overflow: auto; background: #fff; border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 20px 60px rgba(24,70,150,.2); }
-header { display: flex; align-items: center; justify-content: space-between; padding: 18px; background: var(--accent-soft); }
-header div { display: grid; gap: 3px; } header span { color: var(--text-muted); font-size: 12px; } header button { border: 0; background: none; font-size: 24px; cursor: pointer; }
+.assistant-panel { position: absolute; right: 0; bottom: 74px; width: min(360px, calc(100vw - 30px)); max-height: min(540px, calc(100vh - 120px)); overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-box); box-shadow: var(--shadow-lg); }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; background: var(--geo-ocean-surface); border-bottom: 1px solid var(--border); }
+header div { display: grid; gap: 3px; } header span { color: var(--text-muted); font-size: 12px; } header button { border: 0; background: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
 .assistant-body { padding: 18px; }
 .assistant-body p { margin: 0 0 14px; line-height: 1.6; color: var(--text-muted); }
-form { display: grid; gap: 8px; } input { min-width: 0; width: 100%; box-sizing: border-box; padding: 9px; border: 1px solid var(--border); border-radius: 8px; font: inherit; } .assistant-actions { display: flex; gap: 8px; } form button { min-height: 38px; border: 0; border-radius: 8px; padding: 0 12px; background: var(--accent); color: #fff; font: inherit; cursor: pointer; } form button:disabled { opacity: .65; cursor: wait; }
-.assistant-answer { margin-top: 16px; padding: 13px; border-radius: 12px; background: var(--accent-soft); color: var(--text); }
+form { display: grid; gap: 8px; } input { min-width: 0; width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; } .assistant-actions { display: flex; gap: 8px; } form button { min-height: 38px; border: 0; border-radius: var(--radius-pill); padding: 0 16px; background: var(--geo-ocean); color: #fff; font: inherit; font-weight: 700; cursor: pointer; box-shadow: var(--geo-btn-primary-shadow); transition: var(--geo-btn-transition); } form button:hover:not(:disabled) { background: var(--geo-ocean-deep); transform: var(--geo-btn-elevate); box-shadow: var(--geo-btn-primary-hover-shadow); } form button:disabled { opacity: .65; cursor: wait; }
+.assistant-answer { margin-top: 16px; padding: 14px; border-radius: var(--radius-card); background: var(--geo-ocean-surface); color: var(--text); border: 1px solid rgba(26,68,108,0.12); }
 .assistant-answer strong { display: block; margin-bottom: 6px; font-size: 13px; }
 .assistant-answer p { margin: 0; color: inherit; white-space: pre-wrap; }
 .assistant-sources { margin-top: 8px; }

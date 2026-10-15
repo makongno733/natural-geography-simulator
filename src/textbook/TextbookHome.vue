@@ -198,118 +198,169 @@ function scrollToSection(id) {
 </script>
 
 <style scoped>
-.geography-home { color: #172433; background: #f7f8f5; }
+.geography-home { color: var(--text); background: var(--bg); }
 .section-frame { padding: clamp(64px, 8vw, 112px) max(24px, calc((100vw - 1280px) / 2)); }
-.eyebrow { display: block; margin: 0 0 18px; font: 700 11px/1.4 ui-monospace, SFMono-Regular, monospace; letter-spacing: .16em; text-transform: uppercase; }
+.eyebrow { display: block; margin: 0 0 16px; font: 700 11px/1.4 ui-monospace, SFMono-Regular, monospace; letter-spacing: .16em; text-transform: uppercase; }
 .earth-hero { min-height: min(800px, calc(100svh - 64px)); display: grid; grid-template-columns: minmax(0,1fr) minmax(320px,1.04fr); align-items: center; gap: clamp(20px,4vw,70px); padding: 64px max(24px, calc((100vw - 1280px) / 2)) 36px; color: #f5f4ee; background: radial-gradient(circle at 75% 46%, #19364a 0%, #0b2332 48%, #06121e 100%); }
-.earth-hero h1 { margin: 0 0 28px; color: inherit; font-size: clamp(54px, 7vw, 104px); line-height: 1.04; letter-spacing: -.055em; font-weight: 650; }
-.hero-copy .eyebrow { color: #b5c7cb; }
-.hero-intro { max-width: 520px; color: #d3dce0; font-size: clamp(16px,1.5vw,19px); line-height: 1.9; }
-.hero-actions { display:flex; gap: 12px; flex-wrap:wrap; margin-top: 34px; }
-.hero-actions a, .hero-actions button { display:inline-flex; align-items:center; justify-content:space-between; gap:32px; min-height:48px; padding:11px 18px; text-decoration:none; font-family:inherit; font-size:14px; font-weight:700; line-height:1.4; cursor:pointer; border:1px solid rgba(255,255,255,.5); }
-.primary-action { color:#0b2230; background:#e6ebdf; }
-.secondary-action { color:#f5f4ee; background:transparent; }
-.hero-actions a:hover, .hero-actions button:hover { background:#dce8da; color:#0b2230; }
-.hero-actions a:focus-visible, .hero-actions button:focus-visible { outline:2px solid white; outline-offset:3px; }
-.hero-courses { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-top:clamp(44px,6vw,80px); border-top:1px solid rgba(255,255,255,.4); }
-.hero-courses a { display:flex; flex-direction:column; gap:7px; padding:18px 16px 18px 0; text-decoration:none; color:#f2f5ed; }
-.hero-courses a + a { border-left:1px solid rgba(255,255,255,.3); padding-left:20px; }
-.hero-courses strong { font-size:18px; }
-.hero-courses span { color:#aebfc0; font-size:12px; }
-.hero-courses a:hover strong { text-decoration:underline; text-underline-offset:5px; }
-.hero-courses a:focus-visible { outline:2px solid #fff; outline-offset:3px; }
-.hero-index { display:flex; flex-wrap:wrap; gap:12px 24px; margin-top: clamp(44px,7vw,98px); font:600 11px ui-monospace,monospace; letter-spacing:.07em; }
-.hero-index a, .hero-index button { color:#a7b9bf; text-decoration:none; }
-.hero-index button { padding:0; border:0; background:transparent; cursor:pointer; font:inherit; letter-spacing:inherit; }
-.hero-index a:hover, .hero-index button:hover { color:#fff; }
-.hero-index a:focus-visible, .hero-index button:focus-visible { outline:2px solid #fff; outline-offset:4px; }
-.earth-portrait { margin:0; min-width:0; }
-.earth-portrait figcaption { margin-top:8px; text-align:center; color:#aabdc5; font-size:11px; }
-.earth-portrait a { color:inherit; }
-.model-gallery { display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr); gap:clamp(32px,7vw,100px); background:#e8e9e0; }
-.model-gallery-intro h2 { margin:0 0 18px; color:#1a302e; font-size:clamp(34px,4.2vw,57px); line-height:1.1; letter-spacing:-.035em; }
-.model-gallery-intro p { max-width:450px; color:#4d625d; line-height:1.8; }
-.model-gallery-list { border-top:2px solid #264e42; }
-.model-gallery-item { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:12px; min-height:112px; padding:18px 4px; color:#1b3933; text-decoration:none; border-bottom:1px solid #aebdb1; transition:padding .2s ease, background .2s ease; }
-.model-gallery-item:hover { padding-left:15px; background:#dde7d9; }
-.model-gallery-item:focus-visible { outline:3px solid #244739; outline-offset:2px; }
-.model-index { align-self:start; padding-top:5px; color:#667e70; font:700 12px ui-monospace,monospace; }
-.model-main { display:flex; flex-direction:column; gap:7px; }
-.model-main strong { font-size:clamp(21px,2.4vw,28px); }
-.model-main small { color:#61736a; font-size:13px; }
-.model-action { white-space:nowrap; font-size:12px; font-weight:700; }
-.model-gallery-all { grid-column:2; justify-self:end; color:#244739; font-weight:700; }
-.inquiry-entry { display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,6vw,80px); align-items:center; background:#f5f2e9; }
-.inquiry-entry .eyebrow { color:#6a694d; }
-.inquiry-entry h2 { margin:0 0 22px; color:#263e38; font-size:clamp(36px,4.4vw,60px); line-height:1.12; letter-spacing:-.04em; }
-.inquiry-entry p { max-width:550px; color:#465954; line-height:1.85; font-size:17px; }
-.inquiry-entry-link { display:inline-flex; justify-content:space-between; gap:48px; padding:14px 18px; margin-top:20px; color:#f3f5ee; background:#244739; text-decoration:none; font-weight:700; }
-.inquiry-entry-link:hover { background:#365f4e; }
-.inquiry-entry-link:focus-visible { outline:3px solid #244739; outline-offset:3px; }
-.inquiry-entry picture { display:block; min-width:0; }
-.inquiry-entry img { display:block; width:100%; height:clamp(280px,33vw,450px); object-fit:cover; }
-.section-heading { max-width:710px; margin-bottom:34px; }
-.section-heading .eyebrow { color:#587365; }
-.section-heading h2 { margin:0 0 14px; font-size:clamp(32px,4vw,54px); line-height:1.15; letter-spacing:-.035em; }
-.section-heading p { margin:0; color:#586973; font-size:16px; line-height:1.8; }
-.path-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.path-link { display:flex; flex-direction:column; min-height:310px; padding:30px; text-decoration:none; border:1px solid #cbd6d0; transition:transform .2s ease, border-color .2s ease; }
-.path-link:hover { transform:translateY(-3px); border-color:#567969; }
-.path-school { color:#f1f4ec; background:#244739; }
-.path-explore { color:#f3f4f0; background:#21394d; }
-.path-num { font:700 11px ui-monospace,monospace; letter-spacing:.12em; opacity:.8; }
-.path-link h3 { margin:64px 0 10px; color:inherit; font-size:clamp(26px,3vw,36px); }
-.path-link p { max-width:450px; margin:0 0 22px; line-height:1.7; opacity:.87; }
-.path-cta { margin-top:auto; font-weight:700; }
-.terrain-story { background:#142b37; color:#edf2ed; }
-.terrain-heading .eyebrow, .terrain-heading h2 { color:#f0f3ed; }
-.terrain-heading p { color:#c0cfd0; }
-.terrain-layout { display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(24px,5vw,72px); align-items:end; }
-.terrain-diagram { display:flex; align-items:flex-end; height:340px; position:relative; border-bottom:1px solid #afc6c3; padding-bottom:32px; }
-.terrain-step { flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding:18px; color:#10242d; transition:filter .35s ease, transform .35s ease; }
-.terrain-step.selected { filter:brightness(1.13); transform:translateY(-10px); }
-.terrain-step span { font-weight:800; }
-.terrain-step small { font-size:12px; }
-.terrain-step.first { height:82%; background:#d5d1b1; }
-.terrain-step.second { height:55%; background:#b0ba9a; }
-.terrain-step.third { height:30%; background:#9ab8a0; }
-.sea-line { width:15%; height:30%; padding:18px 0 0 10px; color:#cae3e5; background:#355a6c; font-size:13px; }
-.diagram-axis { position:absolute; bottom:0; left:0; right:0; display:flex; justify-content:space-between; font:600 11px ui-monospace,monospace; color:#b2c5c4; }
-.tier-switch { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:24px; }
-.tier-switch button, .filter-row button { cursor:pointer; font-size:13px; font-weight:700; font-family:inherit; }
-.tier-switch button { color:#d3e0dc; border:1px solid #6b8585; background:transparent; padding:9px 13px; }
-.tier-switch button.active { background:#dce8da; color:#142b37; border-color:#dce8da; }
-.tier-detail { min-height:210px; border-top:1px solid #6b8585; padding-top:24px; }
-.detail-kicker { font:700 11px ui-monospace,monospace; color:#b9d7ce; letter-spacing:.1em; }
-.tier-detail h3 { margin:9px 0; color:#fff; font-size:27px; }
-.tier-detail p { color:#c9d5d5; line-height:1.8; }
-.tier-detail a { color:#e7f1df; font-weight:700; }
-.field-notes { background:#f2f3ee; }
-.filter-row { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 26px; }
-.filter-row button { padding:9px 16px; border:1px solid #b8c8c1; background:transparent; color:#34514d; }
-.filter-row button.active { background:#244739; border-color:#244739; color:#fff; }
-.story-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
-.story-card { min-width:0; background:#fff; border:1px solid #dce2db; }
-.story-card.featured { grid-column:span 2; display:grid; grid-template-columns:1.1fr 1fr; }
-.story-card figure { margin:0; position:relative; overflow:hidden; background:#dbe3de; }
-.story-card img { display:block; width:100%; height:310px; object-fit:cover; }
-.story-card.featured img { height:100%; min-height:390px; }
-.story-card figcaption { position:absolute; left:14px; bottom:14px; padding:5px 9px; color:white; background:rgba(13,32,40,.8); font-size:11px; }
-.story-body { padding:24px; display:flex; flex-direction:column; }
-.story-number { font:700 11px ui-monospace,monospace; letter-spacing:.08em; color:#597064; }
-.story-body h3 { margin:16px 0 10px; font-size:clamp(22px,2.4vw,31px); }
-.story-body p { margin:0 0 22px; color:#4a5d62; line-height:1.75; }
-.story-links { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:auto; }
-.story-links a { color:#1d5749; font-size:13px; font-weight:700; }
-.image-license a { color:inherit; }
-.image-license { margin-top:14px; color:#667876; font-size:11px; }
-.course-footer { background:#e2e9df; }
-.course-footer h2 { max-width:680px; font-size:clamp(32px,4vw,52px); }
-.course-links { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; margin-top:38px; background:#aebdb0; border:1px solid #aebdb0; }
-.course-links a { display:flex; justify-content:space-between; gap:8px; padding:22px 16px; background:#f5f7f2; color:#214337; text-decoration:none; font-weight:700; }
-.course-links a:hover { background:#d8e5d8; }
-@media(max-width:850px) { .earth-hero { grid-template-columns:1fr; padding-top:62px; } .earth-portrait { width:min(100%,620px); justify-self:center; } .model-gallery,.inquiry-entry { grid-template-columns:1fr; } .model-gallery-all { grid-column:1; } .terrain-layout { grid-template-columns:1fr; } .story-card.featured { display:block; } .story-card.featured img { height:310px; min-height:0; } .course-links { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:620px) { .section-frame { padding:62px 20px; } .earth-hero { padding:60px 20px 36px; } .earth-hero h1 { font-size:clamp(50px,12vw,70px); } .hero-courses { margin-top:44px; } .hero-courses a { padding-right:10px; } .hero-courses a + a { padding-left:12px; } .hero-courses strong { font-size:16px; } .model-gallery-item { grid-template-columns:30px 1fr; } .model-action { grid-column:2; } .path-grid,.story-grid { grid-template-columns:1fr; } .story-card.featured { grid-column:auto; } .path-link { min-height:270px; } .path-link h3 { margin-top:48px; } .terrain-diagram { height:255px; } .terrain-step { padding:10px 5px; font-size:12px; } .sea-line { font-size:10px; padding-left:3px; } .diagram-axis span { display:none; } .course-links { grid-template-columns:1fr; } }
-@media(max-width:620px) { .earth-hero { display:flex; flex-direction:column; align-items:stretch; gap:0; padding-top:36px; } .hero-copy { display:contents; } .hero-copy .eyebrow { order:1; } .earth-hero h1 { order:2; margin-bottom:8px; } .earth-portrait { order:3; width:100%; } .hero-intro { order:4; margin:20px 0 0; } .hero-actions { order:5; margin-top:22px; } .hero-courses { order:6; margin-top:40px; } }
-@media(prefers-reduced-motion:reduce) { .path-link,.hero-actions a,.hero-actions button,.model-gallery-item,.terrain-step { transition:none; } }
+.earth-hero h1 { margin: 0 0 24px; color: inherit; font-size: clamp(52px, 7vw, 98px); line-height: 1.05; letter-spacing: -.045em; font-weight: 700; }
+.hero-copy .eyebrow { color: #9bb0be; }
+.hero-intro { max-width: 520px; color: #d3dce0; font-size: clamp(16px,1.5vw,18.5px); line-height: 1.85; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 36px; }
+.hero-actions a, .hero-actions button { display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 48px; padding: 12px 22px; text-decoration: none; font-family: inherit; font-size: 14.5px; font-weight: 700; line-height: 1.4; cursor: pointer; border-radius: var(--radius-pill); border: 1px solid rgba(255,255,255,.4); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.primary-action { color: #0b2230; background: #eef3eb; border-color: rgba(255,255,255,0.8) !important; }
+.secondary-action { color: #f5f4ee; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); }
+.hero-actions a:hover, .hero-actions button:hover { background: #ffffff; color: #0b2230; transform: var(--geo-btn-elevate); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+.hero-actions a:focus-visible, .hero-actions button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.hero-courses { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: clamp(40px,5vw,72px); border-top: 1px solid rgba(255,255,255,.25); }
+.hero-courses a { display: flex; flex-direction: column; gap: 6px; padding: 18px 16px 18px 0; text-decoration: none; color: #f2f5ed; border-radius: var(--radius-sm); transition: background 0.2s; }
+.hero-courses a + a { border-left: 1px solid rgba(255,255,255,.2); padding-left: 20px; }
+.hero-courses strong { font-size: 17px; }
+.hero-courses span { color: #9bb0be; font-size: 12.5px; }
+.hero-courses a:hover { background: rgba(255,255,255,0.04); }
+.hero-courses a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.hero-courses a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.earth-portrait { margin: 0; min-width: 0; }
+.earth-portrait figcaption { margin-top: 10px; text-align: center; color: #9bb0be; font-size: 11.5px; }
+.earth-portrait a { color: inherit; text-decoration: underline; }
+
+/* 3D 实验精选导览 */
+.model-gallery { display: grid; grid-template-columns: minmax(260px,.8fr) minmax(0,1.2fr); gap: clamp(32px,7vw,100px); background: #f0f3ee; border-bottom: 1px solid var(--border); }
+.model-gallery-intro h2 { margin: 0 0 16px; color: var(--geo-ocean-deep); font-size: clamp(32px,4.2vw,54px); line-height: 1.15; letter-spacing: -.03em; }
+.model-gallery-intro p { max-width: 450px; color: var(--text-muted); line-height: 1.8; }
+.model-gallery-list { border-top: 2px solid var(--geo-ocean); }
+.model-gallery-item { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: center; gap: 14px; min-height: 108px; padding: 18px 12px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); border-radius: var(--radius-sm); transition: padding .2s var(--geo-flow-ease), background .2s var(--geo-flow-ease), transform .18s var(--geo-flow-ease); }
+.model-gallery-item:hover { padding-left: 20px; background: #ffffff; box-shadow: var(--shadow-sm); }
+.model-gallery-item:focus-visible { outline: 3px solid var(--geo-ocean); outline-offset: 2px; }
+.model-index { align-self: start; padding-top: 4px; color: var(--geo-ocean); font: 700 13px ui-monospace,monospace; }
+.model-main { display: flex; flex-direction: column; gap: 6px; }
+.model-main strong { font-size: clamp(20px,2.2vw,26px); color: var(--geo-ocean-deep); }
+.model-main small { color: var(--text-muted); font-size: 13.5px; }
+.model-action { white-space: nowrap; font-size: 13px; font-weight: 700; color: var(--geo-ocean); }
+.model-gallery-all { grid-column: 2; justify-self: end; color: var(--geo-ocean); font-weight: 700; padding: 8px 16px; border-radius: var(--radius-pill); background: var(--geo-ocean-surface); text-decoration: none; transition: background 0.2s; }
+.model-gallery-all:hover { background: #dceaf5; }
+
+/* 探究导引 */
+.inquiry-entry { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,6vw,80px); align-items: center; background: #faf8f2; border-bottom: 1px solid var(--border); }
+.inquiry-entry .eyebrow { color: var(--geo-earth); }
+.inquiry-entry h2 { margin: 0 0 20px; color: var(--geo-ocean-deep); font-size: clamp(34px,4.4vw,56px); line-height: 1.15; letter-spacing: -.035em; }
+.inquiry-entry p { max-width: 550px; color: var(--text-muted); line-height: 1.85; font-size: 16.5px; }
+.inquiry-entry-link { display: inline-flex; justify-content: space-between; gap: 36px; padding: 13px 24px; margin-top: 20px; color: #ffffff; background: var(--geo-ocean); text-decoration: none; font-weight: 700; border-radius: var(--radius-pill); box-shadow: var(--geo-btn-primary-shadow); transition: background 0.2s, transform 0.12s; }
+.inquiry-entry-link:hover { background: var(--geo-ocean-deep); transform: var(--geo-btn-elevate); box-shadow: var(--geo-btn-primary-hover-shadow); }
+.inquiry-entry-link:focus-visible { outline: 3px solid var(--geo-ocean); outline-offset: 3px; }
+.inquiry-entry picture { display: block; min-width: 0; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+.inquiry-entry img { display: block; width: 100%; height: clamp(280px,33vw,450px); object-fit: cover; }
+
+/* 学段路径 */
+.section-heading { max-width: 710px; margin-bottom: 34px; }
+.section-heading .eyebrow { color: var(--geo-ocean); }
+.section-heading h2 { margin: 0 0 14px; font-size: clamp(30px,4vw,50px); line-height: 1.18; letter-spacing: -.03em; color: var(--geo-ocean-deep); }
+.section-heading p { margin: 0; color: var(--text-muted); font-size: 16px; line-height: 1.8; }
+.path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.path-link { display: flex; flex-direction: column; min-height: 310px; padding: 32px; text-decoration: none; border-radius: var(--radius-box); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform .2s var(--geo-flow-ease), box-shadow .2s var(--geo-flow-ease), border-color .2s; }
+.path-link:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.path-school { color: #f1f4ec; background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%); border-color: rgba(45, 106, 79, 0.3); }
+.path-explore { color: #f3f4f0; background: linear-gradient(135deg, #0f2742 0%, #1a446c 100%); border-color: rgba(26, 68, 108, 0.3); }
+.path-num { font: 700 11.5px ui-monospace,monospace; letter-spacing: .12em; opacity: .85; }
+.path-link h3 { margin: 56px 0 10px; color: inherit; font-size: clamp(26px,3vw,34px); font-weight: 700; }
+.path-link p { max-width: 450px; margin: 0 0 22px; line-height: 1.7; opacity: .9; font-size: 15px; }
+.path-cta { margin-top: auto; font-weight: 700; font-size: 14.5px; display: inline-flex; align-items: center; gap: 6px; }
+
+/* 地势三大阶梯交互展板 */
+.terrain-story { background: #0c1c28; color: #edf2ed; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.terrain-heading .eyebrow, .terrain-heading h2 { color: #f0f3ed; }
+.terrain-heading p { color: #b8cbd2; }
+.terrain-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: clamp(24px,5vw,72px); align-items: end; }
+.terrain-diagram { display: flex; align-items: flex-end; height: 340px; position: relative; border-bottom: 1px solid rgba(175,198,195,0.4); padding-bottom: 32px; }
+.terrain-step { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; padding: 18px; color: #10242d; border-radius: 8px 8px 0 0; transition: filter .35s ease, transform .35s ease; cursor: pointer; }
+.terrain-step.selected { filter: brightness(1.15); transform: translateY(-10px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.terrain-step span { font-weight: 800; font-size: 16px; }
+.terrain-step small { font-size: 12px; margin-top: 4px; opacity: 0.85; }
+.terrain-step.first { height: 82%; background: #d5d1b1; }
+.terrain-step.second { height: 55%; background: #b0ba9a; }
+.terrain-step.third { height: 30%; background: #9ab8a0; }
+.sea-line { width: 15%; height: 30%; padding: 18px 0 0 10px; color: #cae3e5; background: #264a5c; font-size: 13px; border-radius: 8px 8px 0 0; }
+.diagram-axis { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; font: 600 11px ui-monospace,monospace; color: #9bb0be; }
+.tier-switch { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.tier-switch button, .filter-row button { cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; border-radius: var(--radius-pill); }
+.tier-switch button { color: #d3e0dc; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 9px 16px; transition: var(--geo-btn-transition); }
+.tier-switch button.active { background: #dce8da; color: #142b37; border-color: #dce8da; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.tier-detail { min-height: 210px; border-top: 1px solid rgba(255,255,255,0.18); padding-top: 24px; }
+.detail-kicker { font: 700 11px ui-monospace,monospace; color: #a4ccc1; letter-spacing: .1em; }
+.tier-detail h3 { margin: 9px 0; color: #fff; font-size: 26px; }
+.tier-detail p { color: #c9d5d5; line-height: 1.8; font-size: 15px; }
+.tier-detail a { color: #dce8da; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.tier-detail a:hover { text-decoration: underline; }
+
+/* 实景与遥感笔记卡片 */
+.field-notes { background: var(--bg); }
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; }
+.filter-row button { padding: 9px 18px; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: var(--geo-btn-transition); }
+.filter-row button.active { background: var(--geo-ocean); border-color: var(--geo-ocean); color: #fff; box-shadow: var(--geo-btn-primary-shadow); }
+.story-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.story-card { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-box); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s var(--geo-flow-ease), box-shadow 0.2s; }
+.story-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.story-card.featured { grid-column: span 2; display: grid; grid-template-columns: 1.15fr 1fr; }
+.story-card figure { margin: 0; position: relative; overflow: hidden; background: var(--bg-soft); }
+.story-card img { display: block; width: 100%; height: 310px; object-fit: cover; transition: transform 0.4s ease; }
+.story-card:hover img { transform: scale(1.02); }
+.story-card.featured img { height: 100%; min-height: 380px; }
+.story-card figcaption { position: absolute; left: 14px; bottom: 14px; padding: 5px 12px; color: white; background: rgba(10,25,45,.82); backdrop-filter: blur(6px); border-radius: var(--radius-pill); font-size: 11.5px; font-weight: 600; border: 1px solid rgba(255,255,255,0.2); }
+.story-body { padding: 26px; display: flex; flex-direction: column; }
+.story-number { font: 700 11px ui-monospace,monospace; letter-spacing: .08em; color: var(--geo-ocean); }
+.story-body h3 { margin: 14px 0 10px; font-size: clamp(21px,2.2vw,28px); color: var(--geo-ocean-deep); }
+.story-body p { margin: 0 0 22px; color: var(--text-muted); line-height: 1.75; font-size: 14.5px; }
+.story-links { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: auto; }
+.story-links a { color: var(--geo-ocean); font-size: 13.5px; font-weight: 700; text-decoration: none; }
+.story-links a:hover { text-decoration: underline; }
+.image-license a { color: inherit; }
+.image-license { margin-top: 14px; color: var(--text-faint); font-size: 11px; }
+
+/* 底部行动召集 */
+.course-footer { background: var(--geo-ocean-surface); border-top: 1px solid var(--border); }
+.course-footer h2 { max-width: 680px; font-size: clamp(30px,4vw,48px); color: var(--geo-ocean-deep); margin: 0 0 12px; }
+.course-links { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 36px; }
+.course-links a { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 20px 22px; background: var(--surface); color: var(--geo-ocean-deep); text-decoration: none; font-weight: 700; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-xs); transition: var(--geo-btn-transition); }
+.course-links a:hover { transform: var(--geo-btn-elevate); box-shadow: var(--shadow-sm); border-color: var(--geo-ocean); color: var(--geo-ocean); }
+
+/* 响应式断点 */
+@media(max-width:850px) {
+  .earth-hero { grid-template-columns: 1fr; padding-top: 56px; }
+  .earth-portrait { width: min(100%, 600px); justify-self: center; }
+  .model-gallery, .inquiry-entry { grid-template-columns: 1fr; }
+  .model-gallery-all { grid-column: 1; justify-self: start; }
+  .terrain-layout { grid-template-columns: 1fr; }
+  .story-card.featured { display: block; }
+  .story-card.featured img { height: 300px; min-height: 0; }
+  .course-links { grid-template-columns: repeat(2,1fr); }
+}
+
+@media(max-width:620px) {
+  .section-frame { padding: 56px 18px; }
+  .earth-hero { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 48px 18px 32px; }
+  .hero-copy { display: contents; }
+  .hero-copy .eyebrow { order: 1; }
+  .earth-hero h1 { order: 2; margin-bottom: 8px; font-size: clamp(44px,11vw,64px); }
+  .earth-portrait { order: 3; width: 100%; }
+  .hero-intro { order: 4; margin: 18px 0 0; }
+  .hero-actions { order: 5; margin-top: 22px; }
+  .hero-courses { order: 6; margin-top: 36px; }
+  .model-gallery-item { grid-template-columns: 32px 1fr; }
+  .model-action { grid-column: 2; }
+  .path-grid, .story-grid { grid-template-columns: 1fr; }
+  .story-card.featured { grid-column: auto; }
+  .path-link { min-height: 260px; }
+  .path-link h3 { margin-top: 40px; }
+  .terrain-diagram { height: 240px; }
+  .terrain-step { padding: 8px 4px; font-size: 11.5px; }
+  .sea-line { font-size: 10px; padding-left: 2px; }
+  .diagram-axis span { display: none; }
+  .course-links { grid-template-columns: 1fr; }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .path-link, .hero-actions a, .hero-actions button, .model-gallery-item, .terrain-step, .story-card img {
+    transition: none !important;
+    transform: none !important;
+  }
+}
 </style>
