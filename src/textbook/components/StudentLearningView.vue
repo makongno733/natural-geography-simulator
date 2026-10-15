@@ -159,13 +159,13 @@ const setAllSections = (open) => {
 .learning-path,
 .learning-time {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .learning-time {
   margin-top: 2px;
-  color: var(--button-green-deep);
+  color: var(--geo-ocean);
   font-weight: 700;
 }
 
@@ -178,32 +178,35 @@ const setAllSections = (open) => {
 
 [data-learning-card],
 .learning-overview {
-  border: 1px solid var(--brown-light);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 14px;
-  background: var(--card-bg);
+  padding: 18px;
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
 [data-learning-card] h2,
 .learning-overview h2 {
-  margin: 0 0 8px;
-  color: var(--red);
+  margin: 0 0 10px;
+  color: var(--geo-ocean-deep);
   font-size: 16px;
+  font-weight: 700;
 }
 
 [data-learning-card] ul {
   margin: 0;
   padding-left: 20px;
+  line-height: 1.7;
 }
 
 .learning-overview {
-  margin-bottom: 14px;
-  background: var(--paper);
+  margin-bottom: 16px;
+  background: var(--bg-soft);
 }
 
 .learning-overview p {
   margin: 0;
+  line-height: 1.75;
 }
 
 .learning-tools {
@@ -215,47 +218,61 @@ const setAllSections = (open) => {
 
 .learning-tools button {
   min-height: 40px;
-  border: 1px solid var(--button-green-deep);
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  color: var(--button-green-ink);
-  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  color: var(--geo-ocean);
+  background: var(--geo-ocean-surface);
   font: inherit;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: background var(--transition), transform var(--transition);
+  transition: var(--geo-btn-transition);
 }
 
-.learning-tools button.primary,
-.learning-tools button:hover {
-  background: var(--button-green);
+.learning-tools button.primary {
+  background: var(--geo-ocean);
+  color: #ffffff;
+  border-color: var(--geo-ocean);
+  box-shadow: var(--geo-btn-primary-shadow);
 }
 
-.learning-tools button:hover {
-  transform: translateY(-1px);
+.learning-tools button:hover:not(.primary) {
+  background: #dceaf5;
+  border-color: var(--geo-ocean);
 }
 
 .learning-tools button:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--geo-ocean);
   outline-offset: 2px;
+  box-shadow: var(--geo-focus-ring);
 }
 
 .learning-section-controls {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .learning-section-controls button {
-  min-height: 40px;
-  border: 1px solid var(--brown);
-  border-radius: var(--radius-sm);
-  padding: 7px 12px;
-  color: var(--button-green-ink);
-  background: var(--card-bg);
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  color: var(--text-muted);
+  background: var(--surface);
   font: inherit;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: var(--geo-btn-transition);
+}
+
+.learning-section-controls button:hover {
+  color: var(--geo-ocean);
+  border-color: var(--geo-ocean);
+  background: var(--geo-ocean-surface);
 }
 
 .learning-section-controls button:focus-visible {

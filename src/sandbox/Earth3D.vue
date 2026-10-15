@@ -291,20 +291,21 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 .back-link { color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600; }
-.mode-tabs { display: flex; gap: 2px; margin: 0 auto; }
+.mode-tabs { display: flex; gap: 6px; margin: 0 auto; }
 .mode-tab {
-  padding: 8px 18px; border: none; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: transparent; color: #7a8899; font-size: 0.85rem; cursor: pointer;
-  border-bottom: 2px solid transparent;
+  padding: 6px 16px; border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.04); color: #9bb0c0; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  transition: var(--geo-btn-transition);
 }
-.mode-tab:hover { color: #c5d4e8; }
-.mode-tab.active { background: rgba(36,86,214,0.22); color: #8bb4ff; border-bottom-color: var(--accent); }
-.mode-hint { display: flex; gap: 4px; }
+.mode-tab:hover { color: #ffffff; background: rgba(255,255,255,0.08); }
+.mode-tab.active { background: var(--geo-ocean); color: #ffffff; border-color: var(--geo-ocean-light); }
+.mode-hint { display: flex; gap: 6px; }
 .level-btn {
-  padding: 4px 10px; border: 1px solid rgba(255,255,255,0.18); border-radius: var(--radius-sm);
-  background: transparent; color: #8a97a6; font-size: 0.7rem; cursor: pointer;
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: var(--radius-pill);
+  background: transparent; color: #8a97a6; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  transition: var(--geo-btn-transition);
 }
-.level-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.level-btn.active { background: var(--geo-ocean); color: #ffffff; border-color: var(--geo-ocean-light); }
 #main { display: flex; flex: 1; overflow: hidden; }
 #canvas-container { flex: 1; position: relative; overflow: hidden; }
 .controls-hint {

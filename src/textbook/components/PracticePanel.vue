@@ -140,46 +140,55 @@ const answerStatus = (item, index) => {
 
 .practice-answer-toggle {
   min-height: 40px;
-  border: 1px solid var(--button-green-deep);
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  color: var(--button-green-ink);
-  background: var(--button-green);
+  border: 1px solid var(--geo-ocean);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  color: #ffffff;
+  background: var(--geo-ocean);
+  box-shadow: var(--geo-btn-primary-shadow);
   font: inherit;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
+  transition: var(--geo-btn-transition);
 }
 
 .practice-hint {
   margin: 0 0 12px;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .practice-answer-toggle:hover {
-  background: var(--button-green-strong);
+  background: var(--geo-ocean-deep);
+  transform: var(--geo-btn-elevate);
+  box-shadow: var(--geo-btn-primary-hover-shadow);
 }
 
 .practice-answer-toggle:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--geo-ocean);
   outline-offset: 2px;
+  box-shadow: var(--geo-focus-ring);
 }
 
 .answer-feedback {
-  margin-top: 12px;
-  border: 1px solid var(--brown);
+  margin-top: 14px;
+  border: 1px solid var(--border);
   border-left-width: 4px;
   border-radius: var(--radius-card);
-  padding: 12px 14px;
-  background: var(--card-bg);
+  padding: 14px 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .answer-feedback.is-correct {
-  border-left-color: var(--button-green-deep);
+  border-left-color: var(--geo-green);
+  background: #f4faf6;
 }
 
 .answer-feedback.is-incorrect,
 .answer-feedback.is-unanswered {
-  border-left-color: var(--red);
+  border-left-color: var(--geo-terracotta);
+  background: #fdf6f4;
 }
 
 .answer-feedback p {

@@ -746,6 +746,223 @@ button.is-loading::after {
   box-shadow: var(--shadow-sm);
 }
 
+/* ==========================================================================
+   全站共享 UI 组件系统 (Shared Design System Components)
+   ========================================================================== */
+
+/* 1. 地学排版与科学标签体系 */
+.geo-display-title {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--geo-ocean-deep);
+  margin: 0 0 16px;
+}
+
+.geo-lead {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.75;
+  color: var(--text-muted);
+  max-width: 680px;
+  margin: 0 0 24px;
+}
+
+.geo-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.geo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--geo-ocean-surface);
+  color: var(--geo-ocean);
+  border: 1px solid rgba(26, 68, 108, 0.12);
+  white-space: nowrap;
+}
+
+.geo-badge-success {
+  background: var(--geo-green-soft);
+  color: var(--geo-green-deep);
+  border-color: rgba(45, 106, 79, 0.2);
+}
+
+.geo-badge-earth {
+  background: var(--geo-sand);
+  color: var(--geo-earth-deep);
+  border-color: rgba(111, 78, 55, 0.2);
+}
+
+.geo-badge-alert {
+  background: #fdf2f0;
+  color: var(--geo-terracotta);
+  border-color: rgba(200, 100, 70, 0.25);
+}
+
+/* 2. 表单与实验参数控制规范 */
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--geo-ocean);
+  box-shadow: var(--geo-focus-ring);
+}
+
+/* 实验参数控制滑块规范 */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  outline: none;
+  margin: 10px 0;
+  transition: background var(--transition);
+}
+
+input[type="range"]:focus-visible {
+  outline: none;
+  box-shadow: var(--geo-focus-ring);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--geo-ocean);
+  box-shadow: 0 1px 4px rgba(15, 39, 66, 0.25);
+  cursor: pointer;
+  transition: transform 0.12s var(--geo-press-ease), box-shadow 0.12s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(26, 68, 108, 0.35);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(0.92);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--geo-ocean);
+  box-shadow: 0 1px 4px rgba(15, 39, 66, 0.25);
+  cursor: pointer;
+  transition: transform 0.12s var(--geo-press-ease), box-shadow 0.12s;
+}
+
+/* 3. 模态弹窗与浮层遮罩规范 */
+.geo-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(10, 25, 45, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: geo-fade-in 0.2s ease-out;
+}
+
+.geo-modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-box);
+  box-shadow: var(--shadow-lg);
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: geo-scale-in 0.22s var(--geo-spring-ease);
+}
+
+@keyframes geo-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes geo-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 4. 分段选择控制器规范 */
+.geo-segmented-control {
+  display: inline-flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+}
+
+.geo-segmented-control button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--geo-btn-transition);
+}
+
+.geo-segmented-control button.active,
+.geo-segmented-control button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--geo-ocean);
+  box-shadow: 0 1px 4px rgba(15, 39, 66, 0.1);
+}
+
 /* 经纬度微标记风格 */
 .coord-badge {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

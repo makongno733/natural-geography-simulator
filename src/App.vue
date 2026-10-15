@@ -283,22 +283,23 @@ onBeforeUnmount(() => {
 .app-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .nav-link {
   position: relative;
   text-decoration: none;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-  padding: 7px 14px;
+  padding: 6px 11px;
   border-radius: var(--radius-sm);
-  transition: color var(--transition), background var(--transition);
+  transition: color var(--transition), background var(--transition), transform var(--transition);
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 .is-dark-nav .nav-link {
   color: #d5e0de;
@@ -327,8 +328,8 @@ onBeforeUnmount(() => {
   content: "";
   position: absolute;
   bottom: 0;
-  left: 14px;
-  right: 14px;
+  left: 10px;
+  right: 10px;
   height: 2px;
   background: var(--geo-ocean);
   border-radius: 2px;
@@ -481,6 +482,11 @@ onBeforeUnmount(() => {
     overflow-x: auto;
     padding-bottom: 4px;
     justify-content: flex-start;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .app-nav::-webkit-scrollbar {
+    display: none;
   }
   .footer-meta {
     flex-direction: column;

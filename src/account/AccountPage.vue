@@ -142,22 +142,24 @@ async function resetPassword() {
 
 <style scoped>
 .account-shell { min-height: calc(100vh - 60px); display: grid; place-items: center; padding: 28px 20px 80px; }
-.account-card { width: min(100%, 440px); padding: 32px; border: 1px solid var(--border); border-radius: 24px; background: #fff; box-shadow: var(--shadow-sm); }
-.eyebrow { color: var(--accent); letter-spacing: .16em; font-size: 11px; font-weight: 800; }
-h1 { margin: 8px 0; font-size: 30px; color: var(--text); }
-.intro { color: var(--text-muted); line-height: 1.7; }
-form, .actions { display: grid; gap: 12px; margin-top: 22px; }
-button, .primary { min-height: 44px; border-radius: 10px; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; cursor: pointer; text-align: center; text-decoration: none; display: grid; place-items: center; }
-button:hover { border-color: var(--accent); }
-.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.account-card { width: min(100%, 440px); padding: 36px; border: 1px solid var(--border); border-radius: var(--radius-box); background: var(--surface); box-shadow: var(--shadow-md); }
+.eyebrow { color: var(--geo-ocean); letter-spacing: .16em; font-size: 11px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, monospace; }
+h1 { margin: 8px 0; font-size: 28px; font-weight: 800; color: var(--geo-ocean-deep); letter-spacing: -0.02em; }
+.intro { color: var(--text-muted); line-height: 1.7; font-size: 14.5px; }
+form, .actions { display: grid; gap: 14px; margin-top: 24px; }
+button, .primary { min-height: 42px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: grid; place-items: center; transition: var(--geo-btn-transition); }
+button:hover { border-color: var(--geo-ocean); background: var(--geo-ocean-surface); }
+.primary { background: var(--geo-ocean); border-color: var(--geo-ocean); color: #fff; font-weight: 700; box-shadow: var(--geo-btn-primary-shadow); }
+.primary:hover { background: var(--geo-ocean-deep); box-shadow: var(--geo-btn-primary-hover-shadow); transform: var(--geo-btn-elevate); }
 button:disabled { opacity: .6; cursor: wait; }
-label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
-input { width: 100%; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; font: inherit; }
-.switch { border: 0; color: var(--accent); margin: 16px auto 0; }
-.account-legal-links { display: flex; justify-content: center; gap: 10px; margin: 24px 0 0; font-size: 12px; color: var(--text-muted); }
+label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; color: var(--geo-ocean-deep); }
+input { width: 100%; min-height: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 14px; font: inherit; box-sizing: border-box; }
+input:focus { outline: none; border-color: var(--geo-ocean); box-shadow: var(--geo-focus-ring); }
+.switch { border: 0; color: var(--geo-ocean); margin: 16px auto 0; font-weight: 600; }
+.account-legal-links { display: flex; justify-content: center; gap: 14px; margin: 24px 0 0; font-size: 12px; color: var(--text-muted); }
 .account-legal-links a { color: inherit; }
-.notice, .error { padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); line-height: 1.5; }
-.error { color: #a11919; background: #fff0f0; }
-.profile { display: grid; gap: 4px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; overflow-wrap: anywhere; }
+.notice, .error { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--geo-ocean-surface); line-height: 1.5; font-size: 13px; border: 1px solid var(--border); }
+.error { color: var(--geo-terracotta); background: #fdf5f3; border-color: rgba(200,100,70,0.25); }
+.profile { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--bg-soft); overflow-wrap: anywhere; font-size: 13.5px; }
 .profile span { color: var(--text-muted); }
 </style>

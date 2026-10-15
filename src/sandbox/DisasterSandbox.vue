@@ -261,31 +261,28 @@ function onResize() { if (engine) engine.resize() }
   position: absolute; bottom: 14px; left: 14px; right: 14px;
   display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
   z-index: 10; background: var(--surface);
-  border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 8px 12px;
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 8px 16px;
+  box-shadow: var(--shadow-md);
 }
 .tool-item { display: flex; align-items: center; gap: 6px; }
-.tool-label { font-size: 12px; color: var(--text); min-width: 2em; }
-.timeline-slider { width: 100px; accent-color: var(--accent); }
+.tool-label { font-size: 12px; color: var(--text); min-width: 2em; font-weight: 600; }
+.timeline-slider { width: 100px; accent-color: var(--geo-ocean); }
 .tool-btn {
-  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);
-  padding: 4px 10px; font-size: 12px; color: var(--text); cursor: pointer;
+  border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface);
+  padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--geo-ocean); cursor: pointer;
+  transition: var(--geo-btn-transition);
 }
-.tool-btn:hover { background: var(--accent-softer); border-color: var(--accent); }
+.tool-btn:hover { background: var(--geo-ocean-surface); border-color: var(--geo-ocean); }
 .viewport-hint { position: absolute; top: 10px; right: 14px; font-size: 11px; color: var(--text-faint); z-index: 10; }
 
 .info-panel {
-  width: 260px; flex-shrink: 0; border-left: 1px solid var(--glass-border);
-  padding: 12px; overflow-y: auto; background: var(--surface-soft);
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
+  width: 260px; flex-shrink: 0; border-left: 1px solid var(--border);
+  padding: 14px; overflow-y: auto; background: var(--surface);
 }
 .panel-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 12px; }
 .knowledge-box {
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 12px 14px; background: var(--bg-soft); box-shadow: var(--shadow-xs);
 }
 .knowledge-box h4 { margin: 0 0 8px; font-size: 13px; color: var(--accent); }
 .knowledge-box ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.7; color: var(--text); }

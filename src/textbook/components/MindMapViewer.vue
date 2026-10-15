@@ -507,46 +507,47 @@ onUnmounted(() => {
 }
 .mindmap-search-input {
   width: 160px;
-  padding: 6px 10px 6px 32px;
-  border: 1px solid var(--brown);
-  border-radius: 2px;
+  padding: 6px 12px 6px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 13px;
-  font-family: "Noto Serif SC", "Songti SC", serif;
-  background: rgba(255,255,255,0.8);
-  color: var(--ink);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s, width 0.2s;
 }
 .mindmap-search-input:focus {
   outline: none;
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(31,111,235,0.1);
+  border-color: var(--geo-ocean);
+  box-shadow: var(--geo-focus-ring);
   width: 200px;
 }
 
 /* Buttons */
 .mindmap-btn {
-  border: 1px solid var(--brown);
-  border-radius: 2px;
-  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
   font-size: 13px;
   font-family: inherit;
-  color: var(--button-green-ink);
-  background: var(--card-bg);
+  color: var(--geo-ocean);
+  background: var(--surface);
   cursor: pointer;
-  transition: border-color 0.2s, transform 0.15s;
+  transition: var(--geo-btn-transition);
   white-space: nowrap;
 }
 .mindmap-btn:hover {
-  border-color: var(--brown-dark);
-  transform: translateY(-1px);
+  border-color: var(--geo-ocean);
+  background: var(--geo-ocean-surface);
+  transform: var(--geo-btn-elevate);
 }
 .mindmap-btn-zoom { font-weight: 700; font-size: 14px; min-width: 28px; text-align: center; }
 .mindmap-btn-reset { font-size: 14px; }
 .mindmap-btn-close {
-  border-color: var(--brown-light);
-  color: var(--muted);
+  border-color: var(--border);
+  color: var(--text-muted);
 }
-.mindmap-btn-close:hover { color: var(--red); border-color: var(--red); }
+.mindmap-btn-close:hover { color: var(--geo-terracotta); border-color: var(--geo-terracotta); }
 .mindmap-zoom-label {
   font-size: 12px;
   color: var(--muted);

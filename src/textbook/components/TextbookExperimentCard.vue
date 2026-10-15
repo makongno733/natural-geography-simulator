@@ -159,8 +159,8 @@ function warmPrimary() {
 }
 .primary-experiment:focus-visible,
 .related-experiments a:focus-visible {
-  outline: 2px solid var(--red);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--geo-focus-ring);
 }
 .related-experiments {
   display: flex;
@@ -171,10 +171,10 @@ function warmPrimary() {
 }
 .related-experiments span { color: var(--text-muted); }
 .related-experiments a {
-  color: var(--button-green-ink);
+  color: var(--geo-ocean);
   font-weight: 700;
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
 
 @media (max-width: 720px) {

@@ -175,22 +175,24 @@ watch(() => route.fullPath, loadExperiment, { immediate: true })
 </script>
 
 <style scoped>
-.ev-shell { padding: 20px 20px 40px; max-width: 1100px; margin: 0 auto; }
-.ev-breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-.ev-breadcrumb a { color: var(--muted); text-decoration: none; }
-.ev-breadcrumb a:hover { color: var(--accent); }
-.ev-title { font-size: clamp(22px, 4.5vw, 30px); color: var(--text); margin: 0 0 20px; }
-.ev-source { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 0 0 18px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 12px; font-size: 13px; color: var(--text); }
-.ev-source a { color: var(--accent); font-weight: 600; }
-.ev-concepts, .ev-related, .ev-textbook-links { margin-top: 28px; }
-.ev-concepts h4, .ev-related h4, .ev-textbook-links h4 { font-size: 14px; color: var(--text-muted); margin: 0 0 8px; }
-.concept-list, .textbook-link-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.textbook-link-list a { font-size: 12px; color: var(--accent); }
-.concept-tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-.related-grid { display: flex; gap: 12px; flex-wrap: wrap; }
-.related-card { -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--radius-card); background: var(--surface); border: 1px solid var(--glass-border); text-decoration: none; transition: box-shadow var(--transition), border-color var(--transition); min-width: 180px; flex: 1; }
-.related-card:hover { box-shadow: var(--shadow-hover); border-color: var(--accent); }
-.related-name { font-size: 14px; font-weight: 600; color: var(--ink); }
-.related-shared { font-size: 11px; color: var(--muted); }
+.ev-shell { padding: 24px 20px 48px; max-width: 1100px; margin: 0 auto; }
+.ev-breadcrumb { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.ev-breadcrumb a { color: var(--geo-ocean); text-decoration: none; font-weight: 500; }
+.ev-breadcrumb a:hover { text-decoration: underline; }
+.ev-title { font-size: clamp(24px, 4.5vw, 34px); color: var(--geo-ocean-deep); margin: 0 0 20px; font-weight: 800; letter-spacing: -0.02em; }
+.ev-source { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 0 0 20px; padding: 12px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-xs); font-size: 13.5px; color: var(--text); }
+.ev-source a { color: var(--geo-ocean); font-weight: 700; text-decoration: none; }
+.ev-source a:hover { text-decoration: underline; }
+.ev-concepts, .ev-related, .ev-textbook-links { margin-top: 32px; }
+.ev-concepts h4, .ev-related h4, .ev-textbook-links h4 { font-size: 14px; font-weight: 700; color: var(--geo-ocean-deep); margin: 0 0 10px; letter-spacing: 0.02em; }
+.concept-list, .textbook-link-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.textbook-link-list a { font-size: 12.5px; color: var(--geo-ocean); text-decoration: none; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--bg-soft); border: 1px solid var(--border); transition: var(--geo-btn-transition); }
+.textbook-link-list a:hover { background: var(--geo-ocean-surface); border-color: var(--geo-ocean); }
+.concept-tag { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--geo-ocean-surface); color: var(--geo-ocean); border: 1px solid rgba(26,68,108,0.14); }
+.related-grid { display: flex; gap: 14px; flex-wrap: wrap; }
+.related-card { display: flex; flex-direction: column; gap: 5px; padding: 16px 18px; border-radius: var(--radius-card); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-xs); text-decoration: none; transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition); min-width: 180px; flex: 1; }
+.related-card:hover { box-shadow: var(--shadow-sm); border-color: var(--geo-ocean); transform: var(--geo-btn-elevate); }
+.related-name { font-size: 14.5px; font-weight: 700; color: var(--geo-ocean-deep); }
+.related-shared { font-size: 11.5px; color: var(--text-muted); }
 @media (max-width: 720px) { .ev-shell { padding: 12px 12px 28px; } .ev-breadcrumb { font-size: 11px; } .ev-title { font-size: 20px; } }
 </style>
