@@ -9,6 +9,7 @@ import { database } from './database.mjs'
 import { allowedOrigins, mailReady } from './config.mjs'
 import { answerLessonQuestion } from './lesson-ai.mjs'
 import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
+import { setupInquiryRoutes } from './inquiry.mjs'
 
 const app = express()
 const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
@@ -98,6 +99,8 @@ app.delete('/api/comments/:id', requireOrigin, requireUser, (req, res) => {
   if (!result.changes) return res.status(404).json({ error: '评论不存在' })
   res.status(204).end()
 })
+
+setupInquiryRoutes(app, { requireOrigin, requireUser })
 
 app.get('/api/*splat', (_req, res) => res.status(404).json({ error: '接口不存在' }))
 app.use(express.static(distPath, { index: false }))
