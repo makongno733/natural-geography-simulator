@@ -22,6 +22,20 @@ const relatedExperiments = computed(() => (props.link?.related || [])
   .map(reference => ({ reference, route: routeFor(reference) }))
   .filter(item => item.route))
 
+const relatedInquiry = computed(() => {
+  const expId = props.link?.primary?.experimentId
+  if (['infiltration', 'water-cycle-3d', 'disaster-sandbox', 'stream-table', 'soil-erosion'].includes(expId)) {
+    return { id: 'urban-flood', title: '城市为什么会“看海”？' }
+  }
+  if (['map-projection', 'geologic-time', 'stratigraphy'].includes(expId)) {
+    return { id: 'landscape-variation', title: '同一地点为什么呈现不同景观？' }
+  }
+  if (['human-environment', 'spatial-network'].includes(expId)) {
+    return { id: 'human-environment-decision', title: '重工业搬迁与生态红线决策' }
+  }
+  return null
+})
+
 function warmPrimary() {
   const experimentId = props.link?.primary?.experimentId
   if (!experimentId) return
@@ -52,6 +66,14 @@ function warmPrimary() {
         @touchstart="warmPrimary"
       >
         进入{{ link.primary.title }}
+      </router-link>
+
+      <router-link
+        v-if="relatedInquiry"
+        class="inquiry-hub-link"
+        :to="`/inquiry?task=${relatedInquiry.id}`"
+      >
+        🌟 探究中心：{{ relatedInquiry.title }} ➔
       </router-link>
 
       <div v-if="relatedExperiments.length" class="related-experiments" aria-label="相关实验">
@@ -175,6 +197,23 @@ function warmPrimary() {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.inquiry-hub-link {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  padding: 4px 10px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.inquiry-hub-link:hover {
+  background: #e0f2fe;
+  color: #0284c7;
 }
 
 @media (max-width: 720px) {

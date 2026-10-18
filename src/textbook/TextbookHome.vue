@@ -37,13 +37,42 @@
     </section>
 
     <section class="inquiry-entry section-frame" aria-labelledby="inquiry-entry-title">
-      <div>
-        <span class="eyebrow">从观察到解释</span>
-        <h2 id="inquiry-entry-title">地理不止在课本里。</h2>
-        <p>读一幅真实影像，分清观察与推断；改变一个条件，比较地表过程会怎样变化。用证据提出自己的地理解释。</p>
-        <router-link to="/inquiry" class="inquiry-entry-link">开始地理探究 <span aria-hidden="true">↗</span></router-link>
+      <div class="inquiry-intro-wrap">
+        <span class="eyebrow">GEOGRAPHY INNOVATION INQUIRY CENTER · 创新探究</span>
+        <h2 id="inquiry-entry-title">地理创新探究中心：从一个模型，走向科学解释。</h2>
+        <p>连接课本章节、三维仿真与真实遥感。三大旗舰任务覆盖自然过程、空间数据与人地决策；提供完整证据链采集、思维支架与 7 维量规评价。</p>
+
+        <div class="inquiry-flagship-chips">
+          <router-link to="/inquiry?task=urban-flood" class="flagship-chip">
+            <span class="c-badge">自然过程</span>
+            <strong>城市为什么会“看海”？</strong>
+            <small>下渗 · 径流 · 海绵城市 ➔</small>
+          </router-link>
+          <router-link to="/inquiry?task=landscape-variation" class="flagship-chip">
+            <span class="c-badge">真实数据</span>
+            <strong>同一地点为什么呈现不同景观？</strong>
+            <small>多时相遥感 · 水位台站 ➔</small>
+          </router-link>
+          <router-link to="/inquiry?task=human-environment-decision" class="flagship-chip">
+            <span class="c-badge">区域决策</span>
+            <strong>重工业搬迁还是就地升级？</strong>
+            <small>生态红线 · 多目标权衡 ➔</small>
+          </router-link>
+        </div>
+
+        <div class="dual-inquiry-actions">
+          <router-link to="/inquiry?tab=workbench" class="inquiry-entry-link student-portal">
+            🎓 进入学生探究工作台 <span aria-hidden="true">➔</span>
+          </router-link>
+          <router-link to="/inquiry?tab=teacher" class="inquiry-entry-link teacher-portal">
+            👩‍🏫 教师工作台与量规看板 <span aria-hidden="true">➔</span>
+          </router-link>
+          <router-link to="/inquiry?tab=demo" class="inquiry-entry-link demo-portal">
+            ⚡ 5-7分钟演示向导 <span aria-hidden="true">➔</span>
+          </router-link>
+        </div>
       </div>
-      <picture>
+      <picture class="inquiry-visual">
         <img :src="geoOptimizedAsset('yarlung-tsangpo-aster.jpg', 960)" width="720" height="480" loading="lazy" decoding="async" alt="雅鲁藏布江在藏东南山地间形成深切河谷">
       </picture>
     </section>
@@ -240,12 +269,70 @@ function scrollToSection(id) {
 .model-gallery-all:hover { background: #dceaf5; }
 
 /* 探究导引 */
-.inquiry-entry { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,6vw,80px); align-items: center; background: #faf8f2; border-bottom: 1px solid var(--border); }
+.inquiry-entry { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: clamp(28px,5vw,60px); align-items: center; background: #faf8f2; border-bottom: 1px solid var(--border); }
 .inquiry-entry .eyebrow { color: var(--geo-earth); }
-.inquiry-entry h2 { margin: 0 0 20px; color: var(--geo-ocean-deep); font-size: clamp(34px,4.4vw,56px); line-height: 1.15; letter-spacing: -.035em; }
-.inquiry-entry p { max-width: 550px; color: var(--text-muted); line-height: 1.85; font-size: 16.5px; }
-.inquiry-entry-link { display: inline-flex; justify-content: space-between; gap: 36px; padding: 13px 24px; margin-top: 20px; color: #ffffff; background: var(--geo-ocean); text-decoration: none; font-weight: 700; border-radius: var(--radius-pill); box-shadow: var(--geo-btn-primary-shadow); transition: background 0.2s, transform 0.12s; }
-.inquiry-entry-link:hover { background: var(--geo-ocean-deep); transform: var(--geo-btn-elevate); box-shadow: var(--geo-btn-primary-hover-shadow); }
+.inquiry-entry h2 { margin: 0 0 16px; color: var(--geo-ocean-deep); font-size: clamp(28px,3.8vw,46px); line-height: 1.18; letter-spacing: -.03em; }
+.inquiry-entry p { max-width: 600px; color: var(--text-muted); line-height: 1.75; font-size: 15.5px; }
+
+.inquiry-flagship-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.flagship-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+.flagship-chip:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-2px);
+}
+
+.c-badge {
+  font-size: 10px;
+  font-weight: bold;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 1px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.flagship-chip strong {
+  font-size: 13px;
+  color: var(--geo-ocean-deep);
+}
+
+.flagship-chip small {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.dual-inquiry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.inquiry-entry-link { display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 11px 18px; color: #ffffff; background: var(--geo-ocean); text-decoration: none; font-weight: 700; font-size: 13.5px; border-radius: var(--radius-pill); box-shadow: var(--geo-btn-primary-shadow); transition: background 0.2s, transform 0.12s; }
+.inquiry-entry-link.student-portal { background: #0284c7; }
+.inquiry-entry-link.teacher-portal { background: #166534; }
+.inquiry-entry-link.demo-portal { background: #1e293b; }
+.inquiry-entry-link:hover { transform: var(--geo-btn-elevate); filter: brightness(1.1); }
 .inquiry-entry-link:focus-visible { outline: 3px solid var(--geo-ocean); outline-offset: 3px; }
 .inquiry-entry picture { display: block; min-width: 0; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
 .inquiry-entry img { display: block; width: 100%; height: clamp(280px,33vw,450px); object-fit: cover; }
