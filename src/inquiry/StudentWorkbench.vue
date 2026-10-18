@@ -427,7 +427,7 @@ const syncStatusClass = computed(() => {
 const syncStatusText = computed(() => {
   if (inquiryState.syncStatus === 'saving') return '正在保存草稿…'
   if (inquiryState.syncStatus === 'error') return '保存异常（支持本地离线）'
-  return '已实时同步保存'
+  return '已在本机自动保存'
 })
 
 const teacherAdviceNotice = computed(() => {

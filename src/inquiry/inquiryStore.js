@@ -339,7 +339,6 @@ export async function syncStudentReviews() {
   if (!accountEnabled) return []
   const data = await apiRequest('/api/inquiry/reviews')
   for (const row of data.reviews || []) {
-    if (inquiryState.reviews[row.task_id]) continue
     let scores = {}
     try { scores = JSON.parse(row.scores || '{}') } catch {}
     inquiryState.reviews[row.task_id] = {

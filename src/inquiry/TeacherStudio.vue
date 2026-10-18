@@ -5,7 +5,7 @@
       <div class="title-group">
         <span class="studio-badge">TEACHER COCKPIT · 教研评估与学情看板</span>
         <h3>地理创新探究教师工作台</h3>
-        <p class="studio-lead">查看学生探究提交、比对认知转变（V1猜想 vs V2结论）、追踪证据链使用、按表现性量规打分，并一键去标识化发布至课堂展示墙。</p>
+        <p class="studio-lead">获授权的教师可查看班级正式提交、比对猜想与结论、追踪证据链，并按表现性量规批阅。真实学生作品暂不公开展示。</p>
       </div>
 
       <div class="header-stat-cards">
@@ -19,7 +19,7 @@
         </div>
         <div class="stat-card">
           <span class="stat-num">{{ stats.showcaseCount }}</span>
-          <span class="stat-lbl">已推展示墙</span>
+          <span class="stat-lbl">演示展示数</span>
         </div>
         <div class="stat-card demo-stat">
           <span class="stat-num">{{ stats.demoCount }}</span>
@@ -41,7 +41,7 @@
     <div class="misconception-audit-card">
       <div class="audit-head">
         <h5>🚨 班级典型地理概念误解预警与证据归因：</h5>
-        <span class="audit-tag">基于前概念与证据标注聚类分析</span>
+        <span class="audit-tag">教研预设常见误解</span>
       </div>
       <div class="misconceptions-grid">
         <div
@@ -77,7 +77,7 @@
 
       <div class="filter-right">
         <button type="button" class="btn-demo-load" @click="loadSampleSubmissions">
-          📥 注入演示学生提交样例
+          📥 查看演示学生提交样例
         </button>
       </div>
     </div>
@@ -227,12 +227,13 @@ function loadInitialSubmissions() {
 }
 
 function loadSampleSubmissions() {
-  submissionsList.value = [
+  const realSubmissions = submissionsList.value.filter(sub => !sub.isDemo)
+  submissionsList.value = [...realSubmissions,
     {
       id: 'sub-sample-1',
       taskId: 'urban-flood',
       taskTitle: '城市内涝与海绵城市',
-      studentName: '林思源（高一2班）',
+      studentName: '演示学员 01号',
       gradeLevel: '高中',
       classCode: '高一示范班',
       versionCount: 2,
@@ -270,7 +271,7 @@ function loadSampleSubmissions() {
       id: 'sub-sample-2',
       taskId: 'landscape-variation',
       taskTitle: '多时相遥感与景观变迁',
-      studentName: '周致远（高二5班）',
+      studentName: '演示学员 02号',
       gradeLevel: '高中',
       classCode: '高二地理研讨组',
       versionCount: 2,
