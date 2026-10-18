@@ -92,7 +92,8 @@
           </button>
         </div>
 
-        <StudentWorkbench :task="activeTask" />
+        <StudentWorkbench v-if="inquiryState.storageReady" :task="activeTask" />
+        <p v-else role="status">正在读取当前账号的本机探究草稿…</p>
       </section>
 
       <!-- 2. 三大旗舰探究课题介绍 -->
