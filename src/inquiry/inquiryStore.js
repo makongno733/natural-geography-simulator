@@ -10,6 +10,11 @@ import { accountEnabled } from '../account/config.js'
 
 const STORAGE_KEY = 'geo-inquiry-hub-v2'
 const REVIEW_STORAGE_KEY = 'geo-inquiry-reviews-v2'
+let storageScope = 'anonymous'
+
+function scopedKey(key) {
+  return storageScope === 'anonymous' ? key : `${key}:${storageScope}`
+}
 
 function createDefaultDraft(taskId) {
   const task = INQUIRY_TASKS.find(t => t.id === taskId) || INQUIRY_TASKS[0]
@@ -55,14 +60,31 @@ export const inquiryState = reactive({
   // 教师评分字典：submissionId -> review
   reviews: {},
   // 课堂展示墙条目 (已脱敏)
-  showcaseList: []
+  showcaseList: [],
+  storageReady: false
 })
 
 // 初始化与本地加载
-export function initInquiryStore() {
+export async function initInquiryStore() {
   if (typeof window === 'undefined') return
+  clearTimeout(saveTimeout)
+  inquiryState.storageReady = false
+  inquiryState.drafts = {}
+  inquiryState.versionHistory = {}
+  inquiryState.reviews = {}
+  inquiryState.showcaseList = []
+  inquiryState.activeTaskId = 'urban-flood'
+  storageScope = 'anonymous'
+  if (accountEnabled) {
+    try {
+      const session = await apiRequest('/api/auth/get-session')
+      if (session?.user?.id) storageScope = `user:${session.user.id}`
+    } catch {
+      // Anonymous drafts retain their own local scope when the account service is unavailable.
+    }
+  }
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const raw = window.localStorage.getItem(scopedKey(STORAGE_KEY))
     if (raw) {
       const parsed = JSON.parse(raw)
       if (parsed && typeof parsed === 'object') {
@@ -84,7 +106,7 @@ export function initInquiryStore() {
 
   // 读取教师批注
   try {
-    const rawRev = window.localStorage.getItem(REVIEW_STORAGE_KEY)
+    const rawRev = window.localStorage.getItem(scopedKey(REVIEW_STORAGE_KEY))
     if (rawRev) {
       const parsedRev = JSON.parse(rawRev)
       if (parsedRev && typeof parsedRev === 'object') {
@@ -94,6 +116,7 @@ export function initInquiryStore() {
   } catch (err) {
     console.warn('[InquiryStore] Review storage read error:', err)
   }
+  inquiryState.storageReady = true
 
   // 监听网络状态
   if (typeof window !== 'undefined') {
@@ -105,9 +128,11 @@ export function initInquiryStore() {
 // 保存当前草稿到本地存储
 let saveTimeout = null
 export function persistStore() {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined' || !inquiryState.storageReady) return
   inquiryState.syncStatus = 'saving'
   clearTimeout(saveTimeout)
+  const draftKey = scopedKey(STORAGE_KEY)
+  const reviewKey = scopedKey(REVIEW_STORAGE_KEY)
   saveTimeout = setTimeout(() => {
     try {
       const payload = {
@@ -115,8 +140,8 @@ export function persistStore() {
         versionHistory: inquiryState.versionHistory,
         activeTaskId: inquiryState.activeTaskId
       }
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-      window.localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(inquiryState.reviews))
+      window.localStorage.setItem(draftKey, JSON.stringify(payload))
+      window.localStorage.setItem(reviewKey, JSON.stringify(inquiryState.reviews))
       inquiryState.syncStatus = 'synced'
     } catch (err) {
       console.warn('[InquiryStore] Local storage write error:', err)
@@ -338,7 +363,10 @@ export async function syncCloudDraft(taskId = inquiryState.activeTaskId) {
 export async function syncStudentReviews() {
   if (!accountEnabled) return []
   const data = await apiRequest('/api/inquiry/reviews')
+  const seenTasks = new Set()
   for (const row of data.reviews || []) {
+    if (seenTasks.has(row.task_id)) continue
+    seenTasks.add(row.task_id)
     let scores = {}
     try { scores = JSON.parse(row.scores || '{}') } catch {}
     inquiryState.reviews[row.task_id] = {
