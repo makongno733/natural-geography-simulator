@@ -973,7 +973,109 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* 减弱动态效果支持 */
+/* 首屏文字按阅读顺序进入；课程和实验首页沿用各自的原有视觉样式。 */
+@keyframes geo-intro-rise {
+  from { opacity: 0; translate: 0 16px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+.geography-home .hero-copy > *,
+.geography-home .earth-portrait,
+.exp-home .exp-hero > *,
+.labs > header > *,
+.page-shell > header > * {
+  animation: geo-intro-rise 0.58s var(--geo-flow-ease) both;
+}
+
+.geography-home .hero-copy > :nth-child(2),
+.exp-home .exp-hero > :nth-child(2),
+.labs > header > :nth-child(2),
+.page-shell > header > :nth-child(2) { animation-delay: 70ms; }
+.geography-home .hero-copy > :nth-child(3),
+.exp-home .exp-hero > :nth-child(3),
+.labs > header > :nth-child(3),
+.page-shell > header > :nth-child(3) { animation-delay: 140ms; }
+.geography-home .hero-copy > :nth-child(n+4),
+.exp-home .exp-hero > :nth-child(n+4),
+.labs > header > :nth-child(n+4) { animation-delay: 210ms; }
+.geography-home .earth-portrait { animation-delay: 120ms; }
+
+/* 目录与首页的内容进入视野时轻轻上浮；translate 不覆盖卡片原有 hover transform。 */
+.geo-reveal-ready {
+  opacity: 0;
+  translate: 0 20px;
+  transition: opacity 0.48s ease, translate 0.48s var(--geo-flow-ease);
+}
+
+.geo-reveal-ready.geo-reveal-visible {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* 原创等高线纹理：只用于明确可点击的表面，避免把正文和资料来源做成按钮。 */
+.app-root main :is(
+  .primary-action, .btn-explore-scroll, .model-gallery-all,
+  .exp-hero-link, .exp-card, .experiment-result,
+  .page-shell .card, .page-shell .chapter-item,
+  .labs .card, .labs .model-link, .labs .jump-links a, .labs .more-links a
+) {
+  background-image: url('./assets/ui/contours-ink.svg');
+  background-size: 240px 165px;
+  background-position: right -28px top -28px;
+  background-repeat: no-repeat;
+}
+
+.app-root main :is(.secondary-action, .labs .journey a) {
+  background-image: url('./assets/ui/contours-light.svg');
+  background-size: 240px 165px;
+  background-position: right -28px top -28px;
+  background-repeat: no-repeat;
+}
+
+/* 探究路径用可触摸的轻量入口代替正文式下划线。 */
+.app-root main .labs .journey a,
+.app-root main .exp-home .evidence-entry {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 11px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, translate 0.2s var(--geo-flow-ease);
+}
+.app-root main .labs .journey a {
+  border: 1px solid rgba(199, 229, 228, 0.3);
+  background-color: rgba(255, 255, 255, 0.07);
+}
+.app-root main .labs .journey h3 { color: #ffffff; }
+.app-root main .labs .journey a:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(199, 229, 228, 0.7);
+  translate: 3px 0;
+}
+.app-root main .exp-home .evidence-entry {
+  border: 1px solid #95bdb9;
+  background-color: #eaf5f1;
+}
+.app-root main .exp-home .evidence-entry:hover {
+  background-color: #d6ece5;
+  translate: 3px 0;
+}
+
+.app-root main :is(.hero-actions, .model-gallery-item, .model-gallery-all, .path-link) span[aria-hidden="true"] {
+  display: inline-block;
+  transition: translate 0.22s var(--geo-flow-ease);
+}
+.app-root main :is(.hero-actions a, .hero-actions button, .model-gallery-item, .model-gallery-all, .path-link):hover span[aria-hidden="true"] {
+  translate: 3px -2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .geo-reveal-ready,
+  .geo-reveal-ready.geo-reveal-visible {
+    opacity: 1;
+    translate: none;
+  }
   *,
   *::before,
   *::after {

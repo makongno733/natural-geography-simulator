@@ -246,7 +246,7 @@ function scrollToSection(id) {
 .hero-courses strong { font-size: 17px; }
 .hero-courses span { color: #9bb0be; font-size: 12.5px; }
 .hero-courses a:hover { background: rgba(255,255,255,0.04); }
-.hero-courses a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.hero-courses a:hover strong { color: #ffffff; }
 .hero-courses a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .earth-portrait { margin: 0; min-width: 0; }
 .earth-portrait figcaption { margin-top: 10px; text-align: center; color: #9bb0be; font-size: 11.5px; }
@@ -427,8 +427,8 @@ function scrollToSection(id) {
   .hero-copy { display: contents; }
   .hero-copy .eyebrow { order: 1; }
   .earth-hero h1 { order: 2; margin-bottom: 8px; font-size: clamp(44px,11vw,64px); }
-  .earth-portrait { order: 3; width: 100%; }
-  .hero-intro { order: 4; margin: 18px 0 0; }
+  .hero-intro { order: 3; margin: 18px 0 20px; }
+  .earth-portrait { order: 4; width: min(100%, 390px); align-self: center; }
   .hero-actions { order: 5; margin-top: 22px; }
   .hero-courses { order: 6; margin-top: 36px; }
   .model-gallery-item { grid-template-columns: 32px 1fr; }
