@@ -114,4 +114,11 @@ form { display: grid; gap: 8px; } input { min-width: 0; width: 100%; box-sizing:
 ul { padding: 0; list-style: none; } li { border-bottom: 1px solid var(--border); } li a { display: grid; gap: 4px; padding: 10px 0; color: var(--text); text-decoration: none; } li small { color: var(--text-muted); }
 .comment-link { border: 0; padding: 8px 0; color: var(--accent); background: none; cursor: pointer; font: inherit; }
 .hint { margin-top: 14px !important; }
+@media (max-width: 650px) {
+  .assistant-root { right: 10px; bottom: 10px; }
+  .assistant-fab { width: 46px; height: 46px; padding: 2px; justify-content: center; }
+  .assistant-fab-globe { flex-basis: 40px; width: 40px; height: 40px; }
+  .assistant-fab-label { display: none; }
+  .assistant-panel { bottom: 56px; }
+}
 </style>
