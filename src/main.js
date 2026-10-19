@@ -5,6 +5,7 @@ import './style.css'
 import { getChapter } from './textbook/data/catalogLoader.js'
 import { accountEnabled, accountOrigin } from './account/config.js'
 import { initButtonMotion } from './utils/buttonMotion.js'
+import { initSectionMotion } from './utils/sectionMotion.js'
 
 if (accountEnabled && window.location.origin === new URL(accountOrigin).origin && !window.location.hash) {
   window.location.hash = '#/account'
@@ -91,3 +92,4 @@ const router = createRouter({
 initButtonMotion(router)
 
 createApp(App).use(router).mount('#app')
+initSectionMotion()

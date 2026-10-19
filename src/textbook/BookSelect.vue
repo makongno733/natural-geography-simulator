@@ -77,10 +77,15 @@ watch(
   color: var(--geo-ocean);
   text-decoration: none;
   font-weight: 500;
+  padding: 3px 6px;
+  margin: -3px -6px;
+  border-radius: 5px;
+  transition: color .18s ease, background .18s ease;
 }
 
 .breadcrumb a:hover {
-  text-decoration: underline;
+  color: var(--geo-ocean-deep);
+  background: var(--geo-ocean-surface);
 }
 
 .sep {

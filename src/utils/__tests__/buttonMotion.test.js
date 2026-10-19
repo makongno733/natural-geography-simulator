@@ -165,4 +165,14 @@ describe('buttonMotion - 地理教学系统按钮点击微动效系统', () => {
     ariaDisabledBtn.click()
     expect(ariaDisabledBtn.classList.contains('is-clicked-horizon')).toBe(false)
   })
+
+  it('普通课程链接也有反馈，并保持站内跳转', () => {
+    container.innerHTML = '<a class="chapter-item" href="#/初中/七年级上册">七年级上册</a>'
+    const link = container.querySelector('a')
+
+    link.click()
+    expect(link.classList.contains('is-clicked-pop')).toBe(true)
+    vi.advanceTimersByTime(160)
+    expect(routerMock.push).toHaveBeenCalledWith('/初中/七年级上册')
+  })
 })

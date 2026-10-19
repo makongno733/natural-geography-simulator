@@ -377,15 +377,27 @@ onBeforeUnmount(() => {
 /* 页面切换过渡 */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  will-change: opacity, translate;
+}
+.page-enter-active {
+  transition: opacity 0.3s ease, translate 0.3s var(--geo-flow-ease);
+}
+.page-leave-active {
+  transition: opacity 0.12s ease, translate 0.12s ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(6px);
+  translate: 0 12px;
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  translate: 0 -4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active { transition: none; }
+  .page-enter-from,
+  .page-leave-to { opacity: 1; translate: none; }
 }
 
 /* 页脚 */
@@ -448,11 +460,11 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
   text-decoration: none;
   margin-bottom: 8px;
-  transition: color var(--transition);
+  transition: color var(--transition), translate 0.2s var(--geo-flow-ease);
 }
 .footer-col a:hover {
   color: var(--geo-ocean);
-  text-decoration: underline;
+  translate: 3px 0;
 }
 
 .footer-bottom {

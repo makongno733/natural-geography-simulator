@@ -66,12 +66,13 @@ function makeBody(planet, texture, ringTexture) {
 }
 
 // 只维护一个 WebGL 场景。切换时短暂同时渲染前后两颗天体，再回收旧几何体。
-export function HomePlanetModule({ reduceMotion, onTransitionDone }) {
+export function HomePlanetModule({ reduceMotion, onTransitionDone, distanceScale = 1 }) {
   return (scene, params, services) => {
     const group = new THREE.Group()
     let current = null
     let transition = null
     let disposed = false
+    let cameraDistanceScale = distanceScale
     const camera = services.cameraRig.camera
 
     const api = {
@@ -86,7 +87,7 @@ export function HomePlanetModule({ reduceMotion, onTransitionDone }) {
         if (!current || reduceMotion) {
           if (current) disposeBody(current)
           current = next
-          camera.position.z = planet.distance || 4.8
+          camera.position.z = (planet.distance || 4.8) * cameraDistanceScale
           onTransitionDone()
           return
         }
@@ -95,12 +96,16 @@ export function HomePlanetModule({ reduceMotion, onTransitionDone }) {
         setOpacity(next, 0)
         transition = {
           from: current, to: next, direction, elapsed: 0,
-          startDistance: camera.position.z, endDistance: planet.distance || 4.8,
+          startDistance: camera.position.z, endDistance: (planet.distance || 4.8) * cameraDistanceScale,
         }
         current = next
       },
       focusChina() {
         current?.userData.surface.rotation.set(0.55, 2.4, 0)
+      },
+      setDistanceScale(scale, distance) {
+        cameraDistanceScale = scale
+        if (transition) transition.endDistance = distance * scale
       },
       update(dt) {
         if (!transition) return

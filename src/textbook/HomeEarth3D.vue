@@ -1,5 +1,5 @@
 <template>
-  <div class="home-globe" :style="{ '--planet-accent': activePlanet.accent }" :aria-busy="loading" aria-label="可交互的三维太阳系天体">
+  <div class="home-globe" :class="{ 'is-compact': isCompact }" :style="{ '--planet-accent': activePlanet.accent }" :aria-busy="loading" aria-label="可交互的三维太阳系天体">
     <div ref="sceneHost" class="globe-canvas" :class="{ 'is-fallback': fallback }">
       <img v-if="fallback" :src="fallbackImage" alt="NASA 地球影像。当前设备未能运行三维视图。" />
     </div>
@@ -27,12 +27,12 @@
     </div>
     <div class="globe-bottom">
       <span class="globe-hint">{{ loading ? (interiorLoading ? '正在打开地球内部模型…' : '正在靠近下一颗天体…') : fallback ? '当前设备显示静态地球影像' : mode === 'interior' ? '地壳 / 地幔 / 外核 / 内核' : '拖动观察 · 展示大小并非真实比例' }}</span>
-      <div v-if="!fallback && mode === 'surface'" class="globe-shortcuts">
+      <div v-if="!fallback && mode === 'surface' && !isCompact" class="globe-shortcuts">
         <button v-if="activePlanet.id === 'earth'" type="button" @click="focusChina">中国视角</button>
         <button type="button" @click="toggleRotation">{{ rotating ? '暂停自转' : '继续自转' }}</button>
       </div>
     </div>
-    <div v-if="!fallback" class="planet-track" aria-label="选择太阳系天体">
+      <div v-if="!fallback && !isCompact" class="planet-track" aria-label="选择太阳系天体">
       <button v-for="(planet, index) in planets" :key="planet.id" type="button" :disabled="loading"
         :class="{ active: index === activeIndex }" :aria-label="`查看${planet.name}`"
         :aria-current="index === activeIndex ? 'true' : undefined" @click="selectPlanet(index)">
@@ -60,8 +60,10 @@ const mode = ref('surface')
 const fallback = ref(false)
 const loading = ref(false)
 const interiorLoading = ref(false)
-const rotating = ref(true)
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const rotating = ref(!reduceMotion)
+const compactQuery = window.matchMedia('(max-width: 650px)')
+const isCompact = ref(compactQuery.matches)
 const texturePromises = new Map()
 let engine = null
 let resizeObserver = null
@@ -85,6 +87,7 @@ function loadTexture(url) {
 function createPlanetScene() {
   return HomePlanetModule({
     reduceMotion,
+    distanceScale: isCompact.value ? 1.3 : 1,
     onTransitionDone: () => { loading.value = false },
   })
 }
@@ -92,7 +95,7 @@ function createPlanetScene() {
 function setCamera(distance) {
   const rig = engine?.cameraRig
   if (!rig) return
-  rig.camera.position.set(0, 0, distance)
+  rig.camera.position.set(0, 0, distance * (isCompact.value ? 1.3 : 1))
   rig.controls.target.set(0, 0, 0)
   rig.controls.enablePan = false
   rig.controls.enableZoom = false
@@ -163,7 +166,7 @@ async function switchMode(nextMode) {
     })
     setCamera(4.8)
   }
-  engine.setAutoRotate(rotating.value)
+  engine.setAutoRotate(!isCompact.value && rotating.value)
 }
 
 function focusChina() {
@@ -179,18 +182,36 @@ function toggleRotation() {
   engine?.setAutoRotate(rotating.value)
 }
 
+function updateCompactMode(event) {
+  isCompact.value = event.matches
+  if (!engine) return
+  const controls = engine.cameraRig.controls
+  controls.enabled = !isCompact.value
+  controls.enableRotate = !isCompact.value
+  engine.setAutoRotate(!isCompact.value && rotating.value)
+  if (mode.value === 'surface') {
+    const distance = activePlanet.value.distance || 4.8
+    planetApi?.setDistanceScale(isCompact.value ? 1.3 : 1, distance)
+    setCamera(distance)
+  } else {
+    setCamera(3.8)
+  }
+}
+
 onMounted(async () => {
   if (!sceneHost.value) return
   mounted = true
+  compactQuery.addEventListener('change', updateCompactMode)
   try {
     engine = new BaseScene(sceneHost.value, {
       bg: 0x040b19, fov: 38, near: 0.1, far: 100,
-      autoRotate: !reduceMotion, autoRotateSpeed: 0.38, lightPreset: 'sunlit', labels: false,
+      autoRotate: !reduceMotion && !isCompact.value, autoRotateSpeed: 0.38, lightPreset: 'sunlit', labels: false,
       shadows: false, antialias: true,
     })
+    engine.cameraRig.controls.enabled = !isCompact.value
+    engine.cameraRig.controls.enableRotate = !isCompact.value
     engine.scene.background = null
     engine.renderManager.renderer.setClearColor(0x040b19, 0)
-    rotating.value = engine.cameraRig.controls.autoRotate
     engine.loadModule(createPlanetScene())
     planetApi = engine._moduleApi
     engine.lightRig.lights.ambient.color.set(0x9bc0d7)
@@ -210,6 +231,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   mounted = false
+  compactQuery.removeEventListener('change', updateCompactMode)
   resizeObserver?.disconnect()
   engine?.dispose()
   engine = null
@@ -230,6 +252,23 @@ onBeforeUnmount(() => {
 .planet-switcher{position:absolute;inset:0;z-index:3;pointer-events:none}.orbit-arrow{position:absolute;top:44%;display:flex;align-items:center;gap:8px;border:0;background:transparent;color:#e7f5ff;cursor:pointer;pointer-events:auto;padding:12px 2px;font:600 12px/1 ui-monospace,SFMono-Regular,monospace;letter-spacing:.12em;text-shadow:0 2px 12px #000;transition:color .25s,transform .25s}.orbit-arrow-prev{left:-4%}.orbit-arrow-next{right:-4%}.orbit-arrow:hover:not(:disabled){color:var(--planet-accent);transform:scale(1.06)}.orbit-arrow:disabled{opacity:.3;cursor:default}.orbit-arrow-line{width:clamp(24px,4vw,64px);height:1px;background:linear-gradient(90deg,transparent,currentColor);opacity:.7}.orbit-arrow-next .orbit-arrow-line{transform:rotate(180deg)}.orbit-arrow-head{font:300 42px/.45 Georgia,serif}.orbit-arrow-name{min-width:30px}.orbit-arrow:focus-visible,.planet-track button:focus-visible,.globe-actions button:focus-visible,.globe-shortcuts button:focus-visible{outline:2px solid var(--planet-accent);outline-offset:4px}
 .planet-caption{position:absolute;left:8%;bottom:20%;z-index:2;max-width:175px;pointer-events:none;text-shadow:0 2px 12px #000}.planet-caption-kicker{font:700 9px/1.3 ui-monospace,SFMono-Regular,monospace;letter-spacing:.19em;color:var(--planet-accent)}.planet-caption-kicker span{color:#a4bbcb}.planet-caption-name{font-size:clamp(27px,4vw,42px);font-weight:800;line-height:1.16;color:#f4f9fc}.planet-caption p{margin:5px 0 0;color:#b7cbd9;font-size:10px;line-height:1.55}
 .planet-track{position:absolute;z-index:4;left:8%;right:8%;bottom:2%;display:flex;align-items:center;justify-content:center;gap:0}.planet-track:before{content:'';position:absolute;left:4%;right:4%;top:7px;height:1px;background:linear-gradient(90deg,transparent,rgba(174,214,240,.45) 15%,rgba(174,214,240,.45) 85%,transparent)}.planet-track button{position:relative;flex:1;min-width:0;border:0;background:none;color:#9bb0c0;cursor:pointer;padding:0 1px;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:9px;white-space:nowrap}.planet-track button:hover,.planet-track button.active{color:#f5fbff}.track-dot{display:block;width:7px;height:7px;border-radius:50%;background:#6f8ca5;box-shadow:0 0 0 3px #07172a;transition:transform .25s,background .25s}.planet-track button.active .track-dot{background:var(--planet-accent);transform:scale(1.55);box-shadow:0 0 0 3px #07172a,0 0 16px var(--planet-accent)}
-@media(max-width:650px){.home-globe{min-height:300px}.globe-chrome{top:2%}.globe-bottom{bottom:13%;left:4%;right:4%;justify-content:center}.globe-status{display:none}.globe-hint{display:none}.globe-actions{margin-left:auto}.globe-actions button,.globe-shortcuts button{padding:6px 9px;font-size:10px}.planet-caption{left:4%;bottom:25%;max-width:112px}.planet-caption-name{font-size:23px}.planet-caption p{display:none}.planet-caption-kicker{font-size:8px}.orbit-arrow{min-width:44px;min-height:44px;justify-content:center}.orbit-arrow-prev{left:-7%}.orbit-arrow-next{right:-7%}.orbit-arrow-name{display:none}.orbit-arrow-line{width:20px}.orbit-arrow-head{font-size:38px}.planet-track{left:0;right:0;bottom:2%}.planet-track button{font-size:9px;min-height:32px}.track-dot{width:6px;height:6px}}
+@media(max-width:650px){
+  .home-globe{height:310px;min-height:310px;overflow:hidden;border:1px solid rgba(183,220,246,.16);border-radius:20px}
+  .globe-canvas,.globe-canvas :deep(canvas){pointer-events:none;touch-action:pan-y;cursor:default}
+  .globe-chrome{top:5%;left:6%;right:6%}
+  .globe-status{display:flex;font-size:9px}
+  .globe-actions{margin-left:auto}
+  .globe-actions button{padding:7px 9px;font-size:10px}
+  .globe-bottom,.planet-track{display:none}
+  .planet-caption{left:6%;bottom:26%;max-width:140px}
+  .planet-caption-name{font-size:24px}
+  .planet-caption p{display:none}
+  .planet-caption-kicker{font-size:8px}
+  .planet-switcher{inset:auto 12px 12px;display:flex;justify-content:space-between;gap:12px}
+  .orbit-arrow{position:relative;top:auto;left:auto;right:auto;min-width:104px;min-height:44px;justify-content:center;gap:7px;padding:7px 12px;border:1px solid rgba(183,220,246,.4);border-radius:999px;background:rgba(6,18,34,.78);font-size:11px;letter-spacing:.04em;text-shadow:none}
+  .orbit-arrow-name{display:inline;min-width:0}
+  .orbit-arrow-line{display:none}
+  .orbit-arrow-head{font-size:30px;line-height:.7}
+}
 @media(prefers-reduced-motion:reduce){.orbit-arrow,.track-dot{transition:none}}
 </style>

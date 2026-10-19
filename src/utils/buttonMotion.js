@@ -149,8 +149,19 @@ function matchButtonCategory(target) {
     }
   }
 
-  // 3. 通用兜底：若是普通 button 或带有 role="button" 的元素，使用轻快地震波按压
-  const fallbackBtn = target.closest('button, [role="button"], input[type="button"]')
+  // 3. 普通站内链接也提供反馈，覆盖课程目录、实验结果与页脚导航。
+  const fallbackLink = target.closest('a[href]')
+  if (fallbackLink && !fallbackLink.hasAttribute('download')) {
+    return {
+      element: fallbackLink,
+      category: 'pop',
+      className: 'is-clicked-pop',
+      duration: 240
+    }
+  }
+
+  // 4. 通用兜底：普通按钮使用轻快地震波按压
+  const fallbackBtn = target.closest('button, [role="button"], input[type="button"], input[type="submit"]')
   if (fallbackBtn) {
     return {
       element: fallbackBtn,
