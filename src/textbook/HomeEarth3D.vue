@@ -264,8 +264,8 @@ onBeforeUnmount(() => {
   .planet-caption-name{font-size:24px}
   .planet-caption p{display:none}
   .planet-caption-kicker{font-size:8px}
-  .planet-switcher{inset:auto 12px 12px;display:flex;justify-content:space-between;gap:12px}
-  .orbit-arrow{position:relative;top:auto;left:auto;right:auto;min-width:104px;min-height:44px;justify-content:center;gap:7px;padding:7px 12px;border:1px solid rgba(183,220,246,.4);border-radius:999px;background:rgba(6,18,34,.78);font-size:11px;letter-spacing:.04em;text-shadow:none}
+  .planet-switcher{inset:auto 62px 12px 12px;display:flex;justify-content:space-between;gap:8px}
+  .orbit-arrow{position:relative;top:auto;left:auto;right:auto;min-width:90px;min-height:44px;justify-content:center;gap:7px;padding:7px 9px;border:1px solid rgba(183,220,246,.4);border-radius:999px;background:rgba(6,18,34,.78);font-size:11px;letter-spacing:.04em;text-shadow:none}
   .orbit-arrow-name{display:inline;min-width:0}
   .orbit-arrow-line{display:none}
   .orbit-arrow-head{font-size:30px;line-height:.7}
