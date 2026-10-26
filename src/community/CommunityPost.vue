@@ -58,11 +58,24 @@
           </div>
         </div>
 
-        <div class="community-prose detail-body">{{ post.body }}</div>
+        <div class="community-prose detail-body" v-html="renderGeoScholarlyText(post.body)"></div>
 
         <!-- 标签列表 -->
         <div v-if="post.tags && post.tags.length" class="detail-tags-list">
           <span v-for="t in post.tags" :key="t" class="detail-tag-item">#{{ t }}</span>
+        </div>
+
+        <!-- 挂载的探究实测证据卡 -->
+        <div v-if="attachedEvidence" class="evidence-attach-box baroque-frame">
+          <div class="evidence-header">
+            <span class="evidence-badge">📊 地学探究实测证据卡</span>
+            <small class="evidence-task-title">{{ attachedEvidence.taskTitle }}</small>
+          </div>
+          <h4 class="evidence-title">{{ attachedEvidence.title }}</h4>
+          <p class="evidence-facts">{{ attachedEvidence.facts }}</p>
+          <router-link :to="attachedEvidence.route" class="evidence-action-link">
+            前往探究仿真模型进行多变量验证 ↗
+          </router-link>
         </div>
 
         <!-- 挂载的 3D 实验验证联动卡片 -->
@@ -140,7 +153,7 @@
 
           <p v-if="reply.parentId" class="community-reply-context">引用回复 #{{ reply.parentId }}</p>
 
-          <div class="community-prose reply-prose">{{ reply.body }}</div>
+          <div class="community-prose reply-prose" v-html="renderGeoScholarlyText(reply.body)"></div>
 
           <div class="reply-actions-row">
             <button class="baroque-reply-trigger" type="button" @click="parentId = reply.id; replyInput?.focus()">
@@ -159,6 +172,22 @@
             正在引用回复 #{{ parentId }}
             <button class="cancel-quote-btn" type="button" @click="parentId = null">取消引用</button>
           </p>
+
+          <!-- 公式快捷助手工具栏 -->
+          <div class="editor-assist-bar">
+            <span class="assist-label">地学公式：</span>
+            <button
+              v-for="item in GEO_FORMULA_PRESETS"
+              :key="item.name"
+              type="button"
+              class="formula-chip"
+              :title="item.desc"
+              @click="insertFormulaToReply(item.latex)"
+            >
+              {{ item.name }}
+            </button>
+          </div>
+
           <label class="sr-only" for="reply-body">回复内容</label>
           <textarea
             id="reply-body"
@@ -167,7 +196,7 @@
             required
             maxlength="3000"
             rows="5"
-            placeholder="提出你的学术论证、野外观察、公式推导或文献支持……"
+            placeholder="提出你的学术论证、野外观察、公式推导或文献支持（支持 $公式$ 与 $$块级公式$$）……"
           />
           <p v-if="replyError" class="community-error" role="alert">{{ replyError }}</p>
           <div class="reply-submit-row">
@@ -187,6 +216,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { accountOrigin, apiRequest, authClient } from '../account/client.js'
 import { mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
+import { renderGeoScholarlyText, GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
+import { getEvidenceById } from '../inquiry/evidenceCatalog.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -202,6 +233,17 @@ const parentId = ref(null)
 const replyInput = ref(null)
 const isDemoMode = ref(false)
 let stream
+
+const attachedEvidence = computed(() => {
+  if (!post.value) return null
+  return getEvidenceById(post.value.evidenceId)
+})
+
+function insertFormulaToReply(latex) {
+  const snippet = ` $${latex}$ `
+  body.value += snippet
+  replyInput.value?.focus()
+}
 
 const formatDate = value => {
   try {

@@ -285,3 +285,139 @@
     background: #eef2f5 !important;
   }
 }
+
+/* 地学学术公式排印样式 */
+.math-formula-rendered {
+  font-family: 'Cambria Math', 'Latin Modern Math', 'STIX Two Math', 'Times New Roman', Georgia, serif;
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.math-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  margin: 0 2px;
+  background: rgba(197, 160, 89, 0.08);
+  border-radius: 4px;
+  color: var(--geo-ocean-deep);
+  font-size: 1.05em;
+}
+
+.math-block {
+  margin: 16px 0;
+  padding: 14px 20px;
+  text-align: center;
+  background: radial-gradient(circle at 50% 50%, #fcfbf8 0%, #f6f3eb 100%);
+  border: 1px dashed var(--baroque-border-gold);
+  border-radius: var(--radius-sm);
+  color: var(--geo-ocean-deep);
+  font-size: 1.15em;
+  overflow-x: auto;
+}
+
+.math-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  text-align: center;
+  padding: 0 3px;
+  font-size: 0.9em;
+}
+
+.math-fraction .num {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+
+.math-fraction .den {
+  padding-top: 1px;
+}
+
+/* 公式与证据快捷助手工具栏 */
+.editor-assist-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f7f9fa;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  flex-wrap: wrap;
+}
+
+.assist-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.formula-chip {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--geo-ocean);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.formula-chip:hover {
+  background: var(--geo-ocean-surface);
+  border-color: var(--baroque-bronze);
+  color: var(--geo-ocean-deep);
+}
+
+/* 探究实测证据卡挂载组件样式 */
+.evidence-attach-box {
+  margin: 16px 0 20px;
+  padding: 14px 18px;
+  background: #f4f8fa;
+  border: 1px solid #c2dbe8;
+  border-left: 4px solid var(--geo-ocean);
+  border-radius: var(--radius-sm);
+}
+
+.evidence-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.evidence-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1a446c;
+  background: #e1eef7;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.evidence-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--geo-ocean-deep);
+  margin: 0 0 6px;
+}
+
+.evidence-facts {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.55;
+  margin: 0 0 10px;
+}
+
+.evidence-action-link {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--geo-ocean);
+  text-decoration: none;
+}
+
+.evidence-action-link:hover {
+  text-decoration: underline;
+}
