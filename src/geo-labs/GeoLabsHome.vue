@@ -26,6 +26,9 @@
       <router-link to="/geo-labs/terrain" class="card"><span>02 · COPERNICUS DEM</span><h2>真实三维地形</h2><p>旋转珠峰附近的真实高程，沿纬线读一条地形剖面。</p><strong>查看地形 →</strong></router-link>
       <router-link to="/geo-labs/ai" class="card"><span>03 · PRITHVI EO 2.0</span><h2>遥感 AI 实验</h2><p>前往官方演示运行开源遥感模型，辨别观测与模型推断。</p><strong>进入实验 →</strong></router-link>
     </div>
+
+    <!-- 空间大地测量与曲率分析工具 -->
+    <SpatialAnalysisTool />
     </section>
     <section id="model-index" class="section" aria-labelledby="models-title">
       <h2 id="models-title">全部 {{ experiments.length }} 个实验与模型</h2>
@@ -46,6 +49,7 @@
 </template>
 <script setup>
 import { listExperiments, getExperiment } from '../experiments/catalog.js'
+import SpatialAnalysisTool from './SpatialAnalysisTool.vue'
 
 const experiments = listExperiments()
 const groups = [

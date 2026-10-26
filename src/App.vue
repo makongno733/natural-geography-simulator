@@ -54,6 +54,10 @@
           <router-link to="/learning" class="nav-link" :class="{ active: route.path === '/learning' || grade }">
             <span class="nav-label">教学</span>
           </router-link>
+          <button type="button" class="nav-search-trigger" aria-label="全局搜索 (快捷键 ⌘K)" @click="openCmdPalette">
+            <span>🔍 检索</span>
+            <kbd class="nav-kbd">⌘K</kbd>
+          </button>
           <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="accountUser ? `#/community/user/${accountUser.id}` : `${accountOrigin}/#/account`">
             <span>{{ accountUser ? '我的主页' : '登录 / 注册' }}</span>
           </a>
@@ -68,6 +72,9 @@
         </transition>
       </router-view>
     </main>
+
+    <!-- 全局快捷检索与命令面板 -->
+    <GlobalCommandPalette ref="cmdPaletteRef" />
 
     <!-- 底部教学系统与地理要素信息 -->
     <footer class="app-footer" v-if="!isAccountHost">
@@ -108,7 +115,10 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <div class="footer-coord">地理课程 · 实景影像 · 交互实验</div>
+          <div class="footer-coord">
+            <span>地理课程 · 实景影像 · 交互实验 · 学术共同体</span>
+            <button type="button" class="tour-relaunch-btn" @click="relaunchTour">🌟 新用户全站导览</button>
+          </div>
           <span class="footer-cr">首页影像来源与许可见各影像卡片及资源清单</span>
         </div>
       </div>
@@ -122,6 +132,7 @@
 
     <LessonAssistant v-if="!isAccountHost && isLearningRoute" />
     <GlobalToast />
+    <UserGuideTour ref="guideTourRef" />
   </div>
 </template>
 
@@ -131,6 +142,8 @@ import { useRoute, useRouter } from 'vue-router'
 import LessonAssistant from './assistant/LessonAssistant.vue'
 import BrandMark from './brand/BrandMark.vue'
 import GlobalToast from './components/GlobalToast.vue'
+import GlobalCommandPalette from './components/GlobalCommandPalette.vue'
+import UserGuideTour from './components/UserGuideTour.vue'
 import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
 
 const route = useRoute()
@@ -142,6 +155,16 @@ const grade = computed(() => route.params.grade || '')
 const isLearningRoute = computed(() => route.path === '/learning' || grade.value === '初中' || grade.value === '高中')
 const accountUser = ref(null)
 const brandMark = ref(null)
+const cmdPaletteRef = ref(null)
+const guideTourRef = ref(null)
+
+function openCmdPalette() {
+  cmdPaletteRef.value?.open()
+}
+
+function relaunchTour() {
+  guideTourRef.value?.startTour(true)
+}
 
 function onBrandClick(event) {
   if (route.path !== '/' || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
@@ -311,6 +334,44 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.nav-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--baroque-border-gold);
+  border-radius: var(--radius-sm);
+  color: var(--geo-ocean);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 4px;
+  transition: all 0.18s ease;
+}
+
+.nav-search-trigger:hover {
+  background: var(--geo-ocean-surface);
+  border-color: var(--baroque-bronze);
+  box-shadow: 0 2px 8px rgba(197, 160, 89, 0.2);
+}
+
+.nav-kbd {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--text-muted);
+}
+
+.is-dark-nav .nav-search-trigger {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7f9fa;
+  border-color: rgba(197, 160, 89, 0.4);
+}
+
 .nav-link.active {
   color: var(--geo-ocean-deep);
   font-weight: 600;
@@ -476,6 +537,26 @@ onBeforeUnmount(() => {
 
 .footer-coord {
   font-family: ui-monospace, SFMono-Regular, monospace;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tour-relaunch-btn {
+  background: transparent;
+  border: 1px dashed var(--baroque-border-gold);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-size: 11.5px;
+  color: var(--baroque-bronze);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tour-relaunch-btn:hover {
+  background: rgba(197, 160, 89, 0.12);
+  border-color: var(--baroque-bronze);
 }
 
 @media (max-width: 860px) {
