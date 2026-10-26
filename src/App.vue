@@ -121,6 +121,7 @@
     </div>
 
     <LessonAssistant v-if="!isAccountHost && isLearningRoute" />
+    <GlobalToast />
   </div>
 </template>
 
@@ -129,6 +130,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LessonAssistant from './assistant/LessonAssistant.vue'
 import BrandMark from './brand/BrandMark.vue'
+import GlobalToast from './components/GlobalToast.vue'
 import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
 
 const route = useRoute()
@@ -491,6 +493,11 @@ onBeforeUnmount(() => {
     justify-content: flex-start;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app-nav .nav-link {
+    min-height: 40px;
+    padding: 8px 12px;
   }
   .app-nav::-webkit-scrollbar {
     display: none;

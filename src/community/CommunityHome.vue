@@ -6,11 +6,11 @@
         <div>
           <div class="community-hero-badge">
             <span class="baroque-gem">✦</span>
-            <span>ROYAL GEOGRAPHICAL GUILD / 地理学术共同体</span>
+            <span>GEOGRAPHICAL SCHOLARLY GUILD / 地理学术共同体</span>
           </div>
           <h1>格物致知 · 经纬探索<br><em class="baroque-gold-text">在这里，讨论地理。</em></h1>
           <p class="community-lead">
-            面向地理科学、自然地理学、人文经济地理、GIS 遥感测绘与中学地学教育。提出真实问题，交换观测证据，让每一次学术探讨都成为沉淀的科学认知。
+            面向自然地理、人文经济地理、GIS 遥感与中学地学教育。提出真问题，交换实测证据，让每一次学术探讨都成为沉淀的科学认知。
           </p>
 
           <form class="community-search baroque-search" @submit.prevent="runSearch">
@@ -73,6 +73,19 @@
     <div class="community-wrap community-layout">
       <!-- 讨论主栏 -->
       <div class="community-main">
+        <!-- 运行模式状态横幅 -->
+        <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
+          <div class="demo-banner-content">
+            <span class="demo-banner-tag">✦ 学术演示模式</span>
+            <span>当前云端账号服务暂未连接，已自动载入高保真地理学术讨论样例；发帖及交互将在本地浏览器即时生效。</span>
+          </div>
+          <div class="demo-banner-actions">
+            <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="retryOnline">
+              {{ loading ? '连接中…' : '连接云端服务' }}
+            </button>
+          </div>
+        </aside>
+
         <div class="community-section-heading">
           <div>
             <p class="community-eyebrow">THE SCHOLARLY FORUM / 论坛交流</p>
@@ -94,8 +107,20 @@
           </div>
         </div>
 
-        <p v-if="loading" class="community-state" role="status">正在翻阅地学研讨文卷……</p>
-        <p v-else-if="error" class="community-state community-error" role="alert">{{ error }}</p>
+        <!-- 骨架屏加载状态 -->
+        <div v-if="loading && !posts.length" class="skeleton-stack" aria-busy="true">
+          <div v-for="i in 3" :key="i" class="skeleton-card" style="margin-bottom: 16px">
+            <div class="skeleton-box skeleton-line skeleton-line-short"></div>
+            <div class="skeleton-box skeleton-line skeleton-line-title"></div>
+            <div class="skeleton-box skeleton-line"></div>
+          </div>
+        </div>
+
+        <p v-else-if="error && !posts.length" class="community-state community-error" role="alert">
+          {{ error }}
+          <br />
+          <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts">重新尝试</button>
+        </p>
         <p v-else-if="!posts.length" class="community-state">暂无符合条件的学术讨论。欢迎在此留下你的深刻发问。</p>
 
         <div v-else class="community-post-list">
@@ -274,6 +299,8 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { accountEnabled, accountOrigin, apiRequest, authClient } from '../account/client.js'
+import { mockCategories, mockHotTopics, mockPosts } from './mockData.js'
+import { toast } from '../utils/toast.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -295,6 +322,7 @@ const sortMode = ref('newest')
 const page = ref(1)
 const composeRef = ref(null)
 const tagsInput = ref('')
+const isDemoMode = ref(false)
 
 const draft = reactive({
   kind: 'question',
@@ -306,7 +334,13 @@ const draft = reactive({
 
 let stream
 
-const formatDate = value => new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value))
+const formatDate = value => {
+  try {
+    return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value))
+  } catch {
+    return String(value)
+  }
+}
 
 const selectedCategoryName = computed(() => {
   if (!selectedCategory.value) return ''
@@ -314,21 +348,73 @@ const selectedCategoryName = computed(() => {
   return cat ? cat.name : ''
 })
 
+function getLocalDemoPosts() {
+  try {
+    const raw = localStorage.getItem('local_community_posts')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveLocalDemoPost(newPost) {
+  try {
+    const list = getLocalDemoPosts()
+    list.unshift(newPost)
+    localStorage.setItem('local_community_posts', JSON.stringify(list))
+  } catch {
+    // ignore
+  }
+}
+
 async function loadPosts(append = false) {
-  if (!accountEnabled) { error.value = '社区账号服务尚未配置。'; return }
   loading.value = true
   error.value = ''
   try {
-    const params = new URLSearchParams({ page: String(page.value) })
-    if (searchQuery.value) params.set('q', searchQuery.value)
-    if (selectedCategory.value) params.set('category', String(selectedCategory.value))
-    if (kind.value) params.set('kind', kind.value)
-    if (selectedTag.value) params.set('tag', selectedTag.value)
-    if (sortMode.value === 'popular') params.set('sort', 'popular')
-    const result = await apiRequest(`/api/community/posts?${params}`)
-    posts.value = append ? [...posts.value, ...result.posts] : result.posts
-  } catch (cause) { error.value = cause.message }
-  finally { loading.value = false }
+    if (!isDemoMode.value && accountEnabled) {
+      const params = new URLSearchParams({ page: String(page.value) })
+      if (searchQuery.value) params.set('q', searchQuery.value)
+      if (selectedCategory.value) params.set('category', String(selectedCategory.value))
+      if (kind.value) params.set('kind', kind.value)
+      if (selectedTag.value) params.set('tag', selectedTag.value)
+      if (sortMode.value === 'popular') params.set('sort', 'popular')
+      const result = await apiRequest(`/api/community/posts?${params}`)
+      posts.value = append ? [...posts.value, ...result.posts] : result.posts
+      return
+    }
+  } catch {
+    isDemoMode.value = true
+  }
+
+  // 离线/演示降级处理
+  isDemoMode.value = true
+  const localList = getLocalDemoPosts()
+  let pool = [...localList, ...mockPosts]
+
+  if (selectedCategory.value) {
+    pool = pool.filter(p => p.category_id === selectedCategory.value)
+  }
+  if (kind.value) {
+    pool = pool.filter(p => p.kind === kind.value)
+  }
+  if (selectedTag.value) {
+    pool = pool.filter(p => p.tags && p.tags.includes(selectedTag.value))
+  }
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    pool = pool.filter(p => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q))
+  }
+  if (sortMode.value === 'popular') {
+    pool.sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0))
+  }
+
+  // 映射统一卡片字段
+  posts.value = pool.map(p => ({
+    ...p,
+    category: p.category || p.categoryName || '地学学术',
+    excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : '')
+  }))
+  loading.value = false
 }
 
 function resetAndLoad() { page.value = 1; void loadPosts() }
@@ -341,7 +427,16 @@ function filterByTag(tag) { selectedTag.value = tag; resetAndLoad() }
 function nextPage() { page.value += 1; void loadPosts(true) }
 function focusCompose() { composeRef.value?.scrollIntoView({ behavior: 'smooth' }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
 
+async function retryOnline() {
+  isDemoMode.value = false
+  await initCommunity()
+}
+
 async function createPost() {
+  if (!draft.title.trim() || !draft.body.trim()) {
+    submitError.value = '请填写完整的标题和探讨内容。'
+    return
+  }
   submitting.value = true
   submitError.value = ''
   try {
@@ -350,8 +445,45 @@ async function createPost() {
       ...draft,
       tags
     }
-    const result = await apiRequest('/api/community/posts', { method: 'POST', body: JSON.stringify(payload) })
-    await router.push(`/community/post/${result.id}`)
+
+    if (!isDemoMode.value && accountEnabled) {
+      const result = await apiRequest('/api/community/posts', { method: 'POST', body: JSON.stringify(payload) })
+      toast.success('学术探讨已成功发布！')
+      await router.push(`/community/post/${result.id}`)
+      return
+    }
+
+    // 演示/离线模式本地持久化
+    const newId = Date.now()
+    const catObj = categories.value.find(c => c.id === Number(draft.categoryId))
+    const localPost = {
+      id: newId,
+      title: draft.title,
+      body: draft.body,
+      kind: draft.kind,
+      category_id: Number(draft.categoryId) || 1,
+      categoryName: catObj ? catObj.name : '地理学综合交流',
+      tags,
+      linked_experiment: draft.linkedExperiment || null,
+      author: {
+        id: 'me',
+        name: user.value?.name || '我 (本地研究者)',
+        title: '青年地学探索者'
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likesCount: 1,
+      bookmarksCount: 0,
+      repliesCount: 0,
+      replies: []
+    }
+    saveLocalDemoPost(localPost)
+    toast.success('【演示模式】探讨已暂存于本地，可在列表中查看')
+    draft.title = ''
+    draft.body = ''
+    tagsInput.value = ''
+    draft.linkedExperiment = ''
+    await loadPosts()
   } catch (cause) {
     submitError.value = cause.message
   } finally {
@@ -369,24 +501,71 @@ watch(() => route.path, (newPath) => {
   }
 })
 
-onMounted(async () => {
-  if (!accountEnabled) { error.value = '社区账号服务尚未配置。'; return }
-  const [categoryResult, sessionResult, hotTopicResult] = await Promise.allSettled([
-    apiRequest('/api/community/categories'),
-    authClient.getSession(),
-    apiRequest('/api/community/hot-topics')
-  ])
-  if (categoryResult.status === 'fulfilled') categories.value = categoryResult.value.categories
-  if (sessionResult.status === 'fulfilled') user.value = sessionResult.value.data?.user || null
-  if (hotTopicResult.status === 'fulfilled') hotTopics.value = hotTopicResult.value.topics || []
-  if (user.value) {
-    const me = await apiRequest('/api/community/me').catch(() => null)
-    isAdmin.value = Boolean(me?.isAdmin)
+async function initCommunity() {
+  if (!accountEnabled) {
+    isDemoMode.value = true
+    categories.value = mockCategories
+    hotTopics.value = mockHotTopics
+    draft.categoryId = String(mockCategories[0].id)
+    await loadPosts()
+    return
   }
-  await loadPosts()
-  stream = new EventSource(`${accountOrigin}/api/community/stream`)
-  stream.addEventListener('community', () => { if (page.value === 1) void loadPosts() })
-})
+
+  try {
+    const [categoryResult, sessionResult, hotTopicResult] = await Promise.allSettled([
+      apiRequest('/api/community/categories'),
+      authClient.getSession(),
+      apiRequest('/api/community/hot-topics')
+    ])
+    if (categoryResult.status === 'fulfilled' && categoryResult.value?.categories?.length) {
+      categories.value = categoryResult.value.categories
+      isDemoMode.value = false
+    } else {
+      categories.value = mockCategories
+      isDemoMode.value = true
+    }
+
+    if (sessionResult.status === 'fulfilled') {
+      user.value = sessionResult.value.data?.user || null
+    }
+
+    if (hotTopicResult.status === 'fulfilled' && hotTopicResult.value?.topics?.length) {
+      hotTopics.value = hotTopicResult.value.topics
+    } else {
+      hotTopics.value = mockHotTopics
+    }
+
+    if (user.value) {
+      const me = await apiRequest('/api/community/me').catch(() => null)
+      isAdmin.value = Boolean(me?.isAdmin)
+    }
+
+    if (!draft.categoryId && categories.value.length) {
+      draft.categoryId = String(categories.value[0].id)
+    }
+
+    await loadPosts()
+
+    if (!isDemoMode.value && typeof EventSource !== 'undefined') {
+      try {
+        stream = new EventSource(`${accountOrigin}/api/community/stream`)
+        stream.addEventListener('community', () => { if (page.value === 1) void loadPosts() })
+      } catch {
+        // ignore stream errors in demo environments
+      }
+    }
+  } catch {
+    isDemoMode.value = true
+    categories.value = mockCategories
+    hotTopics.value = mockHotTopics
+    if (!draft.categoryId && categories.value.length) {
+      draft.categoryId = String(categories.value[0].id)
+    }
+    await loadPosts()
+  }
+}
+
+onMounted(initCommunity)
 onBeforeUnmount(() => stream?.close())
 </script>
 
