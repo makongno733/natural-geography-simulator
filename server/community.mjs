@@ -83,6 +83,9 @@ export function migrateCommunity() {
   if (!columns.includes('linked_experiment')) {
     database.exec("ALTER TABLE community_post ADD COLUMN linked_experiment TEXT DEFAULT NULL;")
   }
+  if (!columns.includes('evidence_card')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN evidence_card TEXT DEFAULT NULL;")
+  }
 
   // 扩展表：点赞、收藏、用户资料、学术交流社群、热点讨论、资源共享库
   database.exec(`
@@ -260,7 +263,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     }
 
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
-      p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment,
+      p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceCard,
       p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
@@ -275,6 +278,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
       const posts = rawPosts.map(p => ({
         ...p,
         tags: parseTags(p.tags),
+        evidenceCard: p.evidenceCard ? JSON.parse(p.evidenceCard) : null,
         liked: Boolean(p.liked)
       }))
       res.json({ posts, page })
@@ -290,7 +294,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const currentUserId = req.accountUser?.id || null
 
     const post = database.prepare(`SELECT p.id, p.author_id AS authorId, p.category_id AS categoryId, p.kind, p.title, p.body,
-      p.tags, p.linked_experiment AS linkedExperiment, p.accepted_reply_id AS acceptedReplyId,
+      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceCard, p.accepted_reply_id AS acceptedReplyId,
       p.created_at AS createdAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
@@ -308,6 +312,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const formattedPost = {
       ...post,
       tags: parseTags(post.tags),
+      evidenceCard: post.evidenceCard ? JSON.parse(post.evidenceCard) : null,
       liked: Boolean(post.liked),
       bookmarked: Boolean(post.bookmarked)
     }
@@ -330,6 +335,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const linkedExperiment = typeof req.body?.linkedExperiment === 'string' && req.body.linkedExperiment.trim().length <= 60
       ? req.body.linkedExperiment.trim()
       : null
+    const evidenceCard = typeof req.body?.evidenceId === 'string' && req.body.evidenceId.trim().length <= 60
+      ? req.body.evidenceId.trim()
+      : null
 
     if (!title || !body || !categoryId || !kind) return res.status(400).json({ error: '请完整填写标题、内容、分区和类型' })
     if (!database.prepare('SELECT 1 FROM community_category WHERE id = ? AND active = 1').get(categoryId)) return res.status(400).json({ error: '分区不存在' })
@@ -339,8 +347,8 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     if (recent >= 5) return res.status(429).json({ error: '发帖过于频繁，请稍后再试' })
 
     const now = new Date().toISOString()
-    const result = database.prepare('INSERT INTO community_post (author_id, category_id, kind, title, body, tags, linked_experiment, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(req.accountUser.id, categoryId, kind, title, body, tags, linkedExperiment, now, now)
+    const result = database.prepare('INSERT INTO community_post (author_id, category_id, kind, title, body, tags, linked_experiment, evidence_card, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(req.accountUser.id, categoryId, kind, title, body, tags, linkedExperiment, evidenceCard, now, now)
 
     announce('post', result.lastInsertRowid)
     res.status(201).json({ id: result.lastInsertRowid })

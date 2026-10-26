@@ -132,6 +132,7 @@
               </span>
               <span v-if="post.acceptedReplyId" class="accepted-pill">✓ 最佳答案已采纳</span>
               <span v-if="post.linkedExperiment" class="experiment-pill">🔬 附带 3D 实验</span>
+              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">📊 挂载实测证据</span>
             </div>
 
             <h3 class="post-title">
@@ -172,8 +173,7 @@
               <h2 id="compose-title">发起一场学术探讨</h2>
             </div>
           </div>
-          <p v-if="!accountEnabled" class="community-state">社区账号服务尚未配置。</p>
-          <p v-else-if="!user" class="community-state">登录后即可提出问题、分享经验和发表见解。<a :href="`${accountOrigin}/#/account`">登录 / 注册 ↗</a></p>
+          <p v-if="!user && !isDemoMode" class="community-state">登录后即可提出问题、分享经验和发表见解。<a :href="`${accountOrigin}/#/account`">登录 / 注册 ↗</a></p>
           <form v-else class="community-compose-form" @submit.prevent="createPost">
             <div class="community-form-row">
               <label>讨论类型
@@ -194,8 +194,23 @@
               <input v-model.trim="draft.title" required maxlength="120" placeholder="用一句话清晰阐明你的核心地理学术问题或讨论主题" />
             </label>
 
-            <label>正文内容 (支持学术描述、野外观察数据、定理依据)
-              <textarea v-model.trim="draft.body" required maxlength="10000" rows="7" placeholder="提供完整的地质背景、空间尺度、观察数据或已尝试的解决思路。请尊重科学求证精神，并注明引用来源与数据出处。" />
+            <!-- 公式快捷助手工具栏 -->
+            <div class="editor-assist-bar">
+              <span class="assist-label">地学公式助手：</span>
+              <button
+                v-for="item in GEO_FORMULA_PRESETS"
+                :key="item.name"
+                type="button"
+                class="formula-chip"
+                :title="item.desc"
+                @click="insertFormulaToDraft(item.latex)"
+              >
+                {{ item.name }}
+              </button>
+            </div>
+
+            <label>正文内容 (支持学术描述、野外观察数据、定理依据，支持 $公式$ 与 $$块级公式$$)
+              <textarea v-model.trim="draft.body" required maxlength="10000" rows="7" placeholder="提供完整的地貌背景、空间尺度、观测数据或已尝试的计算推导。请尊重科学求证精神，并注明引用来源与数据出处。" />
             </label>
 
             <div class="community-form-row">
@@ -211,6 +226,14 @@
                   <option value="moon-phases">月相与日地月空间几何</option>
                   <option value="earth-system">地球内部圈层与构造</option>
                   <option value="stream-table">水土冲刷微缩实验台</option>
+                </select>
+              </label>
+              <label>挂载探究实测证据卡 (可选)
+                <select v-model="draft.evidenceId">
+                  <option value="">不挂载实测证据卡</option>
+                  <option v-for="ev in STANDARD_EVIDENCES" :key="ev.id" :value="ev.id">
+                    [{{ ev.taskTitle }}] {{ ev.title }}
+                  </option>
                 </select>
               </label>
             </div>
@@ -301,6 +324,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { accountEnabled, accountOrigin, apiRequest, authClient } from '../account/client.js'
 import { mockCategories, mockHotTopics, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
+import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
+import { STANDARD_EVIDENCES } from '../inquiry/evidenceCatalog.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -329,8 +354,14 @@ const draft = reactive({
   categoryId: '',
   title: '',
   body: '',
-  linkedExperiment: ''
+  linkedExperiment: '',
+  evidenceId: ''
 })
+
+function insertFormulaToDraft(latex) {
+  const snippet = ` $${latex}$ `
+  draft.body += snippet
+}
 
 let stream
 
@@ -465,6 +496,7 @@ async function createPost() {
       categoryName: catObj ? catObj.name : '地理学综合交流',
       tags,
       linked_experiment: draft.linkedExperiment || null,
+      evidenceId: draft.evidenceId || null,
       author: {
         id: 'me',
         name: user.value?.name || '我 (本地研究者)',
@@ -483,6 +515,7 @@ async function createPost() {
     draft.body = ''
     tagsInput.value = ''
     draft.linkedExperiment = ''
+    draft.evidenceId = ''
     await loadPosts()
   } catch (cause) {
     submitError.value = cause.message

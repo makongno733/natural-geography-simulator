@@ -52,6 +52,8 @@ export const mockPosts = [
     title: '【学术求助】关于青藏高原高分辨率 30m DEM 填洼与水文连通性分析中的伪河网处理',
     body: `在基于 ASTER GDEM v3 和 NASADEM 对藏东南高山峡谷区进行填洼（Fill Sinks）提取流向（Flow Direction）时，发现深切峡谷谷底由于山体阴影遮挡存在局部高程噪点，导致 D8 算法生成大量与实际主干河道平行的“梳状平行伪河网”。
 
+我们在结合明渠曼宁公式 $v = \\frac{1}{n} R^{2/3} S^{1/2}$ 评估流速阻力时，由于比降 S 异常导致计算结果失真。
+
 请教各位同行：
 1. 在保持高山冰川地貌特征的前提下，采用形态学开闭运算滤波与基于局部等高线引导的 Stream Burning 方法，哪种更保真？
 2. 是否有成熟的针对高陡地形的 Hydro-conditioned DEM 预处理工作流推荐？`,
@@ -61,6 +63,7 @@ export const mockPosts = [
     categorySlug: 'gis',
     tags: ['DEM高程', '水文连通性', 'D8算法', '空间分析'],
     linked_experiment: 'stream-table',
+    evidenceId: 'ev-urban-sponge',
     author: {
       id: 'demo-user-1',
       name: '高原地理观测学者',
@@ -103,13 +106,17 @@ export const mockPosts = [
     title: '【前沿观察】厄尔尼诺衰减年夏季西北太平洋副热带高压的“电容器效应”及其对江淮梅雨的影响',
     body: `当春季赤道东太平洋海温正异常开始快速消退时，印度洋海温往往呈现全区一致性增暖（Indian Ocean Basin-wide Warming, IOBW）。这种“印度洋电容器效应”通过激发大气开尔文波，促使西北太平洋反气旋异常持续维持，进而引导西南水汽强盛输送至长江中下游。
 
-我们通过本站的大气动力学实验模型进行了对流层中低层的环流推演，欢迎大家对照三维实验进行讨论。`,
+在大气动力学中，科里奥利参数随纬度变化满足方程：
+$$f = 2\\Omega \\sin\\phi$$
+
+配合地表水热平衡方程 $R_n = H + LE + G$，我们通过本站的大气动力学实验模型进行了对流层中低层的环流推演，欢迎大家对照三维实验进行讨论。`,
     kind: 'discussion',
     category_id: 2,
     categoryName: '自然地理学',
     categorySlug: 'physical',
     tags: ['副热带高压', '印度洋电容器', '季风环流', '梅雨机理'],
     linked_experiment: 'thermal-circulation',
+    evidenceId: 'ev-thermal-circulation',
     author: {
       id: 'demo-user-climate',
       name: '云海观澜',
