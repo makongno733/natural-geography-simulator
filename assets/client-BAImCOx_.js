@@ -1,0 +1,1 @@
+import{c as t}from"./vendor-auth-D_VkhGnM.js";import{d as e}from"./index-Dg9vnC5V.js";import{b as p,c as m,s as u}from"./index-Dg9vnC5V.js";import"./vendor-core-BGEv7krt.js";import"./vendor-vue-BGlraJB5.js";const r=t({baseURL:e||void 0,fetchOptions:{credentials:"include"}});export{p as accountEnabled,e as accountOrigin,m as apiRequest,r as authClient,u as siteOrigin};
