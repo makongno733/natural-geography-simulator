@@ -6,7 +6,7 @@
       <p class="community-eyebrow">OPEN GEOGRAPHY DATA & ASSETS / 开放数据</p>
       <h1>权威地理科学数据与开放资源馆</h1>
       <p class="resources-lead">
-        精选全球及全国尺度权威开放高程 DEM、ERA5 气象再分析、1:100万 地理信息底图、Sentinel 卫星覆被产品与站内开源 3D 动力学课件资产。
+        逐步整理具有明确来源、使用条件和原始链接的地理数据、课程与工具。
       </p>
       <div class="resources-badges">
         <span>🌐 开放科学计划</span>
@@ -17,6 +17,7 @@
 
     <p v-if="loading" class="community-state" role="status">正在读取开放资源库……</p>
     <p v-else-if="error" class="community-state community-error" role="alert">{{ error }}</p>
+    <p v-else-if="!resources.length" class="community-state" role="status">资源库正在核实来源和使用许可，暂未发布条目。欢迎先到社区分享可公开访问的原始资源链接。</p>
 
     <div v-else class="resources-grid">
       <article v-for="res in resources" :key="res.id" class="resource-card baroque-frame">
