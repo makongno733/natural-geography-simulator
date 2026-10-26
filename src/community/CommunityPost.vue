@@ -2,8 +2,31 @@
   <div class="community-wrap community-detail">
     <router-link class="community-back" to="/community">← 返回学术社区</router-link>
 
-    <p v-if="loading" class="community-state" role="status">正在翻阅地学研讨卷宗……</p>
-    <p v-else-if="error" class="community-state community-error" role="alert">{{ error }}</p>
+    <!-- 演示/离线模式横幅 -->
+    <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
+      <div class="demo-banner-content">
+        <span class="demo-banner-tag">✦ 离线演示探讨</span>
+        <span>当前云服务未连接，正在以离线学术演示样例浏览此篇探讨；回复、赞同与采纳将在本地即时呈现。</span>
+      </div>
+      <div class="demo-banner-actions">
+        <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadPost">
+          {{ loading ? '连接中…' : '刷新云端数据' }}
+        </button>
+      </div>
+    </aside>
+
+    <div v-if="loading && !post" class="skeleton-card" style="margin-bottom: 24px" aria-busy="true">
+      <div class="skeleton-box skeleton-line skeleton-line-short"></div>
+      <div class="skeleton-box skeleton-line skeleton-line-title"></div>
+      <div class="skeleton-box skeleton-line"></div>
+      <div class="skeleton-box skeleton-line"></div>
+      <div class="skeleton-box skeleton-line skeleton-line-short"></div>
+    </div>
+    <p v-else-if="error && !post" class="community-state community-error" role="alert">
+      {{ error }}
+      <br />
+      <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPost">重试加载</button>
+    </p>
 
     <template v-else-if="post">
       <!-- 帖子主卷 -->
@@ -162,6 +185,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { accountOrigin, apiRequest, authClient } from '../account/client.js'
+import { mockPosts } from './mockData.js'
+import { toast } from '../utils/toast.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -175,12 +200,26 @@ const replyError = ref('')
 const body = ref('')
 const parentId = ref(null)
 const replyInput = ref(null)
+const isDemoMode = ref(false)
 let stream
 
-const formatDate = value => new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+const formatDate = value => {
+  try {
+    return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+  } catch {
+    return String(value)
+  }
+}
 
-const isQuestionAuthor = computed(() => user.value && post.value && user.value.id === post.value.authorId)
-const canManage = computed(() => user.value && post.value && (user.value.id === post.value.authorId || user.value.role === 'admin'))
+const isQuestionAuthor = computed(() => {
+  if (isDemoMode.value) return true
+  return Boolean(user.value && post.value && user.value.id === post.value.authorId)
+})
+
+const canManage = computed(() => {
+  if (isDemoMode.value) return true
+  return Boolean(user.value && post.value && (user.value.id === post.value.authorId || user.value.role === 'admin'))
+})
 
 function getExperimentRoute(modelKey) {
   const map = {
@@ -194,6 +233,15 @@ function getExperimentRoute(modelKey) {
   return map[modelKey] || '/experiments'
 }
 
+function getLocalDemoPosts() {
+  try {
+    const raw = localStorage.getItem('local_community_posts')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
 async function loadPost() {
   loading.value = true
   error.value = ''
@@ -201,26 +249,88 @@ async function loadPost() {
     const result = await apiRequest(`/api/community/posts/${route.params.id}`)
     post.value = result.post
     replies.value = result.replies
-  } catch (cause) {
-    error.value = cause.message
+    isDemoMode.value = false
+    return
+  } catch {
+    // 降级到 Mock 或本地数据
+    isDemoMode.value = true
+    const targetId = Number(route.params.id)
+    const localPosts = getLocalDemoPosts()
+    const all = [...localPosts, ...mockPosts]
+    const matched = all.find(p => p.id === targetId)
+
+    if (matched) {
+      post.value = {
+        id: matched.id,
+        title: matched.title,
+        body: matched.body,
+        kind: matched.kind,
+        category: matched.category || matched.categoryName || '地理学术交流',
+        author: matched.author?.name || '匿名学者',
+        authorId: matched.author?.id || 'demo',
+        authorTitle: matched.author?.title || '',
+        createdAt: matched.created_at,
+        updatedAt: matched.updated_at,
+        tags: matched.tags || [],
+        linkedExperiment: matched.linked_experiment || null,
+        acceptedReplyId: matched.accepted_reply_id || null,
+        likeCount: matched.likesCount || 0,
+        bookmarkCount: matched.bookmarksCount || 0,
+        liked: false,
+        bookmarked: false
+      }
+      replies.value = (matched.replies || []).map(r => ({
+        id: r.id,
+        author: r.author?.name || '地学同行',
+        authorId: r.author?.id || 'demo',
+        authorTitle: r.author?.title || '',
+        body: r.body,
+        createdAt: r.created_at,
+        parentId: r.parent_id,
+        isAccepted: r.id === matched.accepted_reply_id
+      }))
+    } else {
+      error.value = '未找到该篇学术探讨，可能已被移除或地址不正确。'
+    }
   } finally {
     loading.value = false
   }
 }
 
 async function sendReply() {
+  if (!body.value.trim()) return
   submitting.value = true
   replyError.value = ''
   try {
-    await apiRequest(`/api/community/posts/${route.params.id}/replies`, {
-      method: 'POST',
-      body: JSON.stringify({ body: body.value, parentId: parentId.value })
-    })
-    body.value = ''
-    parentId.value = null
-    await loadPost()
+    if (!isDemoMode.value) {
+      await apiRequest(`/api/community/posts/${route.params.id}/replies`, {
+        method: 'POST',
+        body: JSON.stringify({ body: body.value, parentId: parentId.value })
+      })
+      toast.success('学术解答已成功发表！')
+      body.value = ''
+      parentId.value = null
+      await loadPost()
+    } else {
+      // 演示模式直接追加
+      const newReplyId = Date.now()
+      replies.value.push({
+        id: newReplyId,
+        author: user.value?.name || '我 (研读者)',
+        authorId: 'me',
+        authorTitle: '地学研究者',
+        body: body.value,
+        createdAt: new Date().toISOString(),
+        parentId: parentId.value,
+        isAccepted: false
+      })
+      body.value = ''
+      parentId.value = null
+      toast.success('【演示模式】学术回复已呈现在讨论下方')
+    }
   } catch (cause) {
     replyError.value = cause.message
+    toast.error(cause.message || '回复失败')
   } finally {
     submitting.value = false
   }
@@ -228,64 +338,100 @@ async function sendReply() {
 
 async function toggleAccept(replyId) {
   try {
-    const res = await apiRequest(`/api/community/posts/${post.value.id}/accept-reply`, {
-      method: 'POST',
-      body: JSON.stringify({ replyId })
-    })
-    post.value.acceptedReplyId = res.acceptedReplyId
-    replies.value = replies.value.map(r => ({
-      ...r,
-      isAccepted: r.id === res.acceptedReplyId
-    }))
+    if (!isDemoMode.value) {
+      const res = await apiRequest(`/api/community/posts/${post.value.id}/accept-reply`, {
+        method: 'POST',
+        body: JSON.stringify({ replyId })
+      })
+      post.value.acceptedReplyId = res.acceptedReplyId
+      replies.value = replies.value.map(r => ({
+        ...r,
+        isAccepted: r.id === res.acceptedReplyId
+      }))
+      toast.success(res.acceptedReplyId ? '已采纳该回答为最佳解答 ★' : '已取消最佳解答采纳')
+    } else {
+      // 演示模式
+      const isCurrentlyAccepted = post.value.acceptedReplyId === replyId
+      post.value.acceptedReplyId = isCurrentlyAccepted ? null : replyId
+      replies.value = replies.value.map(r => ({
+        ...r,
+        isAccepted: r.id === post.value.acceptedReplyId
+      }))
+      toast.success(isCurrentlyAccepted ? '已取消最佳采纳 (演示模式)' : '已采纳为最佳解答 ★ (演示模式)')
+    }
   } catch (cause) {
-    alert(cause.message || '采纳失败')
+    toast.error(cause.message || '采纳操作失败')
   }
 }
 
 async function toggleLike() {
-  if (!user.value) { window.location.href = `${accountOrigin}/#/account`; return }
   try {
-    const res = await apiRequest(`/api/community/posts/${post.value.id}/like`, { method: 'POST' })
-    post.value.liked = res.liked
-    post.value.likeCount = res.likeCount
+    if (!isDemoMode.value) {
+      if (!user.value) {
+        window.location.href = `${accountOrigin}/#/account`
+        return
+      }
+      const res = await apiRequest(`/api/community/posts/${post.value.id}/like`, { method: 'POST' })
+      post.value.liked = res.liked
+      post.value.likeCount = res.likeCount
+      toast.success(res.liked ? '已赞同探讨 ✦' : '已取消赞同')
+    } else {
+      post.value.liked = !post.value.liked
+      post.value.likeCount = (post.value.likeCount || 0) + (post.value.liked ? 1 : -1)
+      toast.success(post.value.liked ? '已赞同探讨 ✦ (演示模式)' : '已取消赞同 (演示模式)')
+    }
   } catch (cause) {
-    alert(cause.message || '点赞失败')
+    toast.error(cause.message || '点赞失败')
   }
 }
 
 async function toggleBookmark() {
-  if (!user.value) { window.location.href = `${accountOrigin}/#/account`; return }
   try {
-    const res = await apiRequest(`/api/community/posts/${post.value.id}/bookmark`, { method: 'POST' })
-    post.value.bookmarked = res.bookmarked
-    post.value.bookmarkCount = res.bookmarkCount
+    if (!isDemoMode.value) {
+      if (!user.value) {
+        window.location.href = `${accountOrigin}/#/account`
+        return
+      }
+      const res = await apiRequest(`/api/community/posts/${post.value.id}/bookmark`, { method: 'POST' })
+      post.value.bookmarked = res.bookmarked
+      post.value.bookmarkCount = res.bookmarkCount
+      toast.success(res.bookmarked ? '已收藏此篇探讨 🔖' : '已取消收藏')
+    } else {
+      post.value.bookmarked = !post.value.bookmarked
+      post.value.bookmarkCount = (post.value.bookmarkCount || 0) + (post.value.bookmarked ? 1 : -1)
+      toast.success(post.value.bookmarked ? '已收藏此篇探讨 🔖 (演示模式)' : '已取消收藏 (演示模式)')
+    }
   } catch (cause) {
-    alert(cause.message || '收藏失败')
+    toast.error(cause.message || '收藏失败')
   }
 }
 
 async function deletePost() {
-  if (!confirm('确定要撤回/删除这条学术讨论吗？')) return
+  if (!confirm('确定要撤回或删除此条探讨记录吗？')) return
   try {
-    await apiRequest(`/api/community/posts/${post.value.id}`, { method: 'DELETE' })
+    if (!isDemoMode.value) {
+      await apiRequest(`/api/community/posts/${post.value.id}`, { method: 'DELETE' })
+    }
+    toast.info('探讨已移除')
     router.push('/community')
   } catch (err) {
-    alert(err.message || '删除失败')
+    toast.error(err.message || '删除失败')
   }
 }
 
 async function reportPost() {
-  if (!user.value) { window.location.href = `${accountOrigin}/#/account`; return }
-  const reason = window.prompt('请简要说明举报原因（最多 500 字）')
+  const reason = window.prompt('请简要说明学术规范违规或虚假信息举报原因：')
   if (!reason?.trim()) return
   try {
-    await apiRequest('/api/community/reports', {
-      method: 'POST',
-      body: JSON.stringify({ postId: post.value.id, reason })
-    })
-    window.alert('举报已提交，管理员会进行处理。')
+    if (!isDemoMode.value) {
+      await apiRequest('/api/community/reports', {
+        method: 'POST',
+        body: JSON.stringify({ postId: post.value.id, reason })
+      })
+    }
+    toast.success('学术监督举报已递交，管委会将核对处理。')
   } catch (cause) {
-    window.alert(cause.message)
+    toast.error(cause.message || '提交举报失败')
   }
 }
 
@@ -295,10 +441,17 @@ onMounted(async () => {
   const session = await authClient.getSession().catch(() => null)
   user.value = session?.data?.user || null
   await loadPost()
-  stream = new EventSource(`${accountOrigin}/api/community/stream`)
-  stream.addEventListener('community', event => {
-    if (JSON.parse(event.data).postId === Number(route.params.id)) void loadPost()
-  })
+
+  if (!isDemoMode.value && typeof EventSource !== 'undefined') {
+    try {
+      stream = new EventSource(`${accountOrigin}/api/community/stream`)
+      stream.addEventListener('community', event => {
+        if (JSON.parse(event.data).postId === Number(route.params.id)) void loadPost()
+      })
+    } catch {
+      // ignore
+    }
+  }
 })
 
 onBeforeUnmount(() => stream?.close())

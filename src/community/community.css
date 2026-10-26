@@ -177,9 +177,111 @@
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4.5px var(--baroque-bronze) !important;
 }
 
+/* 演示与离线模式提示横幅 */
+.demo-mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 18px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(249, 247, 241, 0.98), rgba(244, 239, 228, 0.96));
+  border: 1px solid var(--baroque-border-gold);
+  border-left: 4px solid var(--baroque-bronze);
+  border-radius: var(--radius-sm);
+  color: var(--geo-ocean-deep);
+  font-size: 13.5px;
+  box-shadow: 0 2px 8px rgba(15, 39, 66, 0.05);
+}
+
+.demo-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.demo-banner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(197, 160, 89, 0.2);
+  color: #8b6826;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.demo-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 骨架屏占位动画 */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, #f0f3f6 25%, #e6ebf0 37%, #f0f3f6 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.5s ease infinite;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.skeleton-line {
+  height: 14px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeleton-line-title {
+  height: 22px;
+  width: 65%;
+}
+
+.skeleton-line-short {
+  width: 40%;
+}
+
 /* 响应式调整 */
 @media (max-width: 860px) {
   .community-wrap {
     width: min(100% - 32px, 1180px);
+  }
+  .demo-mode-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .demo-banner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-box {
+    animation: none !important;
+    background: #eef2f5 !important;
   }
 }

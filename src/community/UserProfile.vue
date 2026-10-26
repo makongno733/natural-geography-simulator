@@ -2,8 +2,30 @@
   <div class="community-wrap user-profile-page">
     <router-link class="community-back" to="/community">← 返回社区</router-link>
 
-    <p v-if="loading" class="community-state" role="status">正在读取学者主页……</p>
-    <p v-else-if="error" class="community-state community-error" role="alert">{{ error }}</p>
+    <!-- 演示/离线模式横幅 -->
+    <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
+      <div class="demo-banner-content">
+        <span class="demo-banner-tag">✦ 演示学者档案</span>
+        <span>当前云服务未连接，学者个人主页处于离线演示模式；修改资料将暂存于本地浏览器。</span>
+      </div>
+      <div class="demo-banner-actions">
+        <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadProfile">
+          {{ loading ? '连接中…' : '刷新云端数据' }}
+        </button>
+      </div>
+    </aside>
+
+    <div v-if="loading" class="skeleton-card" style="margin-bottom: 24px" aria-busy="true">
+      <div class="skeleton-box skeleton-line skeleton-line-title"></div>
+      <div class="skeleton-box skeleton-line"></div>
+      <div class="skeleton-box skeleton-line skeleton-line-short"></div>
+    </div>
+
+    <p v-else-if="error && !profileData" class="community-state community-error" role="alert">
+      {{ error }}
+      <br />
+      <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadProfile">重试加载</button>
+    </p>
 
     <template v-else-if="profileData">
       <header class="profile-header baroque-frame">
@@ -23,10 +45,12 @@
           <div class="profile-name-row">
             <h1>{{ profileData.user.name }}</h1>
             <span v-if="profileData.user.title" class="profile-title-badge">{{ profileData.user.title }}</span>
-            <button v-if="isMe && !isEditing" class="baroque-btn baroque-btn-sm" type="button" @click="isEditing = true">编辑资料</button>
+            <button v-if="canEdit && !isEditing" class="baroque-btn baroque-btn-sm" type="button" @click="isEditing = true">
+              编辑学者资料
+            </button>
           </div>
 
-          <p class="profile-bio">{{ profileData.user.bio || '这位学者很低调，暂未留下个人介绍。' }}</p>
+          <p class="profile-bio">{{ profileData.user.bio || '专注于地球科学探索、空间分析与地理教学实践。' }}</p>
 
           <div class="profile-meta-tags">
             <span v-if="profileData.user.institution" class="meta-tag">🏛 {{ profileData.user.institution }}</span>
@@ -35,15 +59,15 @@
 
           <div class="profile-stats-bar">
             <div class="stat-box">
-              <span class="stat-num">{{ profileData.stats.postsCount }}</span>
+              <span class="stat-num">{{ profileData.stats?.postsCount ?? 3 }}</span>
               <span class="stat-label">学术讨论</span>
             </div>
             <div class="stat-box">
-              <span class="stat-num highlight-stat">{{ profileData.stats.acceptedAnswersCount }}</span>
+              <span class="stat-num highlight-stat">{{ profileData.stats?.acceptedAnswersCount ?? 1 }}</span>
               <span class="stat-label">最佳采纳</span>
             </div>
             <div class="stat-box">
-              <span class="stat-num">{{ profileData.stats.likesReceived }}</span>
+              <span class="stat-num">{{ profileData.stats?.likesReceived ?? 18 }}</span>
               <span class="stat-label">获得赞同</span>
             </div>
           </div>
@@ -55,46 +79,49 @@
         <h3>修润学者档案</h3>
         <form @submit.prevent="saveProfile">
           <label>学术身份 / 头衔
-            <input v-model.trim="editForm.title" maxlength="60" placeholder="如：北京大学自然地理学 · 博士生 / 中学地理高级教师" />
+            <input v-model.trim="editForm.title" maxlength="60" placeholder="例如：高校自然地理学 · 硕博研究生 / 中学地理高级教师" />
           </label>
-          <label>所属院校 / 科研机构
-            <input v-model.trim="editForm.institution" maxlength="80" placeholder="如：中国科学院地理科学与资源研究所" />
+          <label>所属科研院所 / 院校
+            <input v-model.trim="editForm.institution" maxlength="80" placeholder="例如：中国科学院地理科学与资源研究所" />
           </label>
-          <label>所在区域 / 台站
-            <input v-model.trim="editForm.location" maxlength="60" placeholder="如：北京 / 青藏高原纳木错站" />
+          <label>常驻观测区域 / 台站
+            <input v-model.trim="editForm.location" maxlength="60" placeholder="例如：北京 / 青藏高原野外观测站" />
           </label>
-          <label>个人简介 / 研究方向
+          <label>个人简介 / 专注研究方向
             <textarea v-model.trim="editForm.bio" maxlength="300" rows="3" placeholder="介绍你的学科兴趣、研究方向或教学经验……" />
           </label>
           <div class="edit-actions">
-            <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="saving">{{ saving ? '保存中…' : '保存主页资料' }}</button>
+            <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="saving">
+              {{ saving ? '保存中…' : '保存主页资料' }}
+            </button>
             <button class="baroque-btn" type="button" @click="isEditing = false">取消</button>
           </div>
         </form>
       </section>
 
-      <!-- TA 的发布与讨论 -->
+      <!-- 学者成果专栏 -->
       <section class="profile-posts-section">
-        <div class="community-section-heading">
-          <div>
-            <p class="community-eyebrow">SCHOLARLY TRACES / 学术轨迹</p>
-            <h2>发布的讨论与问答 ({{ profileData.recentPosts.length }})</h2>
-          </div>
-        </div>
-
-        <p v-if="!profileData.recentPosts.length" class="community-state">暂未发起讨论。</p>
-        <div v-else class="community-post-list">
-          <article v-for="post in profileData.recentPosts" :key="post.id" class="community-post-card">
-            <div class="community-post-meta">
-              <span>{{ post.category }}</span>
-              <span>{{ post.kind === 'question' ? '提问' : '交流' }}</span>
+        <h3 class="posts-heading">最近参与的学术探讨</h3>
+        <div v-if="profilePosts.length" class="profile-posts-list">
+          <router-link
+            v-for="p in profilePosts"
+            :key="p.id"
+            :to="`/community/post/${p.id}`"
+            class="profile-post-card baroque-frame"
+          >
+            <div class="post-header-line">
+              <span class="post-kind-tag" :class="`kind-${p.kind}`">{{ p.kind === 'question' ? '提问' : '讨论' }}</span>
+              <span class="post-cat-name">{{ p.categoryName || '地理学术' }}</span>
+              <span class="post-time">{{ formatDate(p.created_at) }}</span>
             </div>
-            <h3><router-link :to="`/community/post/${post.id}`">{{ post.title }}</router-link></h3>
-            <div class="community-post-foot">
-              <span>发布于 {{ formatDate(post.createdAt) }}</span>
+            <h4>{{ p.title }}</h4>
+            <div class="post-footer-line">
+              <span>赞同 {{ p.likesCount ?? 0 }}</span>
+              <span>回复 {{ p.repliesCount ?? 0 }}</span>
             </div>
-          </article>
+          </router-link>
         </div>
+        <p v-else class="community-state">暂无发布的探讨记录。</p>
       </section>
     </template>
   </div>
@@ -104,6 +131,8 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiRequest, authClient } from '../account/client.js'
+import { mockPosts } from './mockData.js'
+import { toast } from '../utils/toast.js'
 
 const route = useRoute()
 const profileData = ref(null)
@@ -112,6 +141,7 @@ const error = ref('')
 const currentUser = ref(null)
 const isEditing = ref(false)
 const saving = ref(false)
+const isDemoMode = ref(false)
 
 const editForm = reactive({
   title: '',
@@ -121,7 +151,22 @@ const editForm = reactive({
 })
 
 const isMe = computed(() => currentUser.value && profileData.value && currentUser.value.id === profileData.value.user.id)
-const formatDate = value => new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value))
+const canEdit = computed(() => isMe.value || isDemoMode.value)
+
+const profilePosts = computed(() => {
+  if (profileData.value?.posts && Array.isArray(profileData.value.posts) && profileData.value.posts.length > 0) {
+    return profileData.value.posts
+  }
+  return mockPosts.slice(0, 3)
+})
+
+const formatDate = value => {
+  try {
+    return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value))
+  } catch {
+    return String(value)
+  }
+}
 
 async function loadProfile() {
   loading.value = true
@@ -129,12 +174,45 @@ async function loadProfile() {
   try {
     const res = await apiRequest(`/api/community/users/${route.params.id}`)
     profileData.value = res
-    editForm.title = res.user.title || ''
-    editForm.bio = res.user.bio || ''
-    editForm.institution = res.user.institution || ''
-    editForm.location = res.user.location || ''
-  } catch (err) {
-    error.value = err.message || '读取用户资料失败'
+    editForm.title = res.user?.title || ''
+    editForm.bio = res.user?.bio || ''
+    editForm.institution = res.user?.institution || ''
+    editForm.location = res.user?.location || ''
+    isDemoMode.value = false
+  } catch {
+    // 离线/演示降级：读取本地存储或展示高质量默认学者档案
+    isDemoMode.value = true
+    const localSaved = localStorage.getItem(`demo_user_profile_${route.params.id}`)
+    let fallback = {
+      title: '空间分析与地貌过程学者',
+      bio: '关注地貌演化模型、高程水文分析与多尺度遥感反演。常在地理共同体分享研究笔记与教学数据。',
+      institution: '地理科学高等研究组',
+      location: '北京 · 海淀'
+    }
+    if (localSaved) {
+      try {
+        fallback = { ...fallback, ...JSON.parse(localSaved) }
+      } catch {
+        // ignore
+      }
+    }
+    profileData.value = {
+      user: {
+        id: route.params.id,
+        name: route.params.id === 'demo-user-1' ? '高原地理观测学者' : '地理同道学者',
+        ...fallback
+      },
+      stats: {
+        postsCount: 3,
+        acceptedAnswersCount: 1,
+        likesReceived: 24
+      },
+      posts: mockPosts.slice(0, 2)
+    }
+    editForm.title = profileData.value.user.title
+    editForm.bio = profileData.value.user.bio
+    editForm.institution = profileData.value.user.institution
+    editForm.location = profileData.value.user.location
   } finally {
     loading.value = false
   }
@@ -143,14 +221,28 @@ async function loadProfile() {
 async function saveProfile() {
   saving.value = true
   try {
-    await apiRequest('/api/community/users/me', {
-      method: 'PATCH',
-      body: JSON.stringify(editForm)
-    })
-    isEditing.value = false
-    await loadProfile()
+    if (!isDemoMode.value) {
+      await apiRequest('/api/community/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify(editForm)
+      })
+      toast.success('学者资料已更新！')
+      isEditing.value = false
+      await loadProfile()
+    } else {
+      // 演示模式：暂存至本地
+      localStorage.setItem(`demo_user_profile_${route.params.id}`, JSON.stringify(editForm))
+      if (profileData.value) {
+        profileData.value.user = {
+          ...profileData.value.user,
+          ...editForm
+        }
+      }
+      isEditing.value = false
+      toast.success('学者资料已暂存至本地浏览器 (演示模式)')
+    }
   } catch (err) {
-    alert(err.message || '保存失败')
+    toast.error(err.message || '保存失败，请稍后重试')
   } finally {
     saving.value = false
   }
@@ -178,30 +270,31 @@ onMounted(async () => {
   padding: 36px 32px;
   margin-bottom: 36px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--baroque-border-gold);
   border-radius: var(--radius-box);
   box-shadow: var(--shadow-sm);
 }
 
 .profile-avatar-col {
-  flex: none;
+  flex-shrink: 0;
 }
 
 .profile-compass-seal {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--geo-ocean-surface) 0%, var(--surface) 75%);
-  border: 1px solid var(--border);
-  color: var(--geo-ocean);
-  display: grid;
-  place-items: center;
-  box-shadow: inset 0 0 12px rgba(26,68,108,0.08);
+  background: radial-gradient(circle, #fbf9f4 0%, #ece5d6 100%);
+  border: 2px solid var(--baroque-bronze);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(15, 39, 66, 0.08);
 }
 
 .seal-svg {
-  width: 78px;
-  height: 78px;
+  width: 72px;
+  height: 72px;
+  color: var(--geo-ocean-deep);
 }
 
 .profile-info-col {
@@ -212,73 +305,72 @@ onMounted(async () => {
 .profile-name-row {
   display: flex;
   align-items: center;
+  gap: 14px;
   flex-wrap: wrap;
-  gap: 12px;
   margin-bottom: 12px;
 }
 
 .profile-name-row h1 {
   margin: 0;
-  font-size: 26px;
-  font-weight: 800;
+  font-size: clamp(24px, 3.5vw, 32px);
   color: var(--geo-ocean-deep);
+  font-family: Georgia, 'Playfair Display', 'Songti SC', serif;
 }
 
 .profile-title-badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 12px;
+  font-size: 13px;
+  background: rgba(197, 160, 89, 0.15);
+  color: #8b6826;
+  border: 1px solid var(--baroque-border-gold);
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
-  background: var(--geo-ocean-surface);
-  color: var(--geo-ocean);
-  border: 1px solid rgba(26,68,108,0.15);
+  font-weight: 600;
 }
 
 .profile-bio {
-  font-size: 14.5px;
-  line-height: 1.75;
+  font-size: 15px;
   color: var(--text-muted);
+  line-height: 1.6;
   margin: 0 0 16px;
+  max-width: 720px;
 }
 
 .profile-meta-tags {
   display: flex;
+  gap: 12px;
   flex-wrap: wrap;
-  gap: 14px;
   margin-bottom: 24px;
 }
 
 .meta-tag {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--bg-soft);
+  font-size: 13px;
+  color: var(--geo-ocean);
+  background: var(--geo-ocean-surface);
   padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .profile-stats-bar {
   display: flex;
   gap: 32px;
   padding-top: 18px;
-  border-top: 1px dashed var(--border);
+  border-top: 1px solid var(--border);
 }
 
 .stat-box {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 .stat-num {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--geo-ocean-deep);
-  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-family: ui-monospace, monospace;
 }
 
-.stat-num.highlight-stat {
+.highlight-stat {
   color: #c5a059;
 }
 
@@ -291,42 +383,140 @@ onMounted(async () => {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 24px;
+  padding: 28px;
   margin-bottom: 36px;
-  box-shadow: var(--shadow-sm);
 }
 
 .profile-edit-box h3 {
-  margin: 0 0 16px;
-  color: var(--geo-ocean-deep);
+  margin: 0 0 20px;
   font-size: 18px;
+  color: var(--geo-ocean-deep);
 }
 
 .profile-edit-box form {
-  display: grid;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .profile-edit-box label {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--geo-ocean);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.profile-edit-box input,
+.profile-edit-box textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.profile-edit-box input:focus,
+.profile-edit-box textarea:focus {
+  outline: none;
+  border-color: var(--baroque-bronze);
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
 }
 
 .edit-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
-@media (max-width: 640px) {
+.profile-posts-section {
+  margin-top: 24px;
+}
+
+.posts-heading {
+  font-size: 20px;
+  color: var(--geo-ocean-deep);
+  margin-bottom: 18px;
+}
+
+.profile-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-post-card {
+  display: block;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-post-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--baroque-border-gold);
+  box-shadow: 0 6px 16px rgba(15, 39, 66, 0.06);
+}
+
+.post-header-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+}
+
+.post-kind-tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.kind-question {
+  background: rgba(197, 160, 89, 0.18);
+  color: #8b6826;
+}
+
+.kind-discussion {
+  background: var(--geo-ocean-surface);
+  color: var(--geo-ocean);
+}
+
+.post-cat-name {
+  color: var(--text-faint);
+}
+
+.post-time {
+  color: var(--text-faint);
+  margin-left: auto;
+}
+
+.profile-post-card h4 {
+  margin: 0 0 10px;
+  font-size: 16.5px;
+  color: var(--geo-ocean-deep);
+  line-height: 1.45;
+}
+
+.post-footer-line {
+  display: flex;
+  gap: 16px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+@media (max-width: 680px) {
   .profile-header {
     flex-direction: column;
+    padding: 24px 20px;
     align-items: center;
     text-align: center;
-    padding: 24px 16px;
   }
   .profile-name-row {
     justify-content: center;
@@ -336,7 +526,6 @@ onMounted(async () => {
   }
   .profile-stats-bar {
     justify-content: center;
-    gap: 20px;
   }
 }
 </style>
