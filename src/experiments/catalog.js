@@ -8,6 +8,7 @@ const experiments = Object.freeze([
   item('thermal-circulation', '热力环流模拟实验', 'meteorology', '3d', '通过冷热源的空气流动，直观展示热力环流的形成过程——冷热不均导致气压差，驱动大气运动。', ['热力环流', '气压差', '海陆风', '山谷风'], () => import('./modules/meteorology/ThermalCirculation.vue'), ['thermal-cell', 'land-sea-breeze', 'atmospheric-circulation']),
   item('coriolis', '科里奥利力旋转水槽实验', 'meteorology', '3d', '在旋转水槽中观察流体运动如何被地转偏向力偏转，理解信风带、西风带和气旋旋转方向的形成。', ['地转偏向力', '风带', '气旋', '科里奥利力'], () => import('./modules/meteorology/Coriolis.vue')),
   item('cloud-bottle', '瓶中云实验', 'meteorology', 'tutorial', '通过简单的瓶子和火柴，演示云的形成过程——凝结核、绝热膨胀与降温凝结。', ['云形成', '凝结核', '绝热膨胀', '露点'], () => import('./modules/meteorology/CloudBottle.js')),
+  item('climate-chart', '气温与降水图及气候带对比', 'meteorology', 'tutorial', '根据世界气象组织与气候台站数据，判读温带季风、地中海、温带海洋等气候的气温年变化曲线与降水柱状图。', ['气候类型', '气温曲线', '降水柱状图', '柯本分类', '水热组合'], () => import('./modules/meteorology/ClimateChart.vue')),
   item('weather-instruments', '自制气象仪器', 'meteorology', 'tutorial', '了解气压计、风速计、雨量计等气象仪器的制作方法和测量原理。', ['气压计', '风速计', '雨量计', '气象观测'], () => import('./modules/meteorology/WeatherInstruments.js')),
   item('stream-table', '流水地貌模拟台', 'hydrology', '3d', '模拟流水对地表的侵蚀、搬运和堆积作用，观察 V 形谷、曲流、冲积扇、三角洲等地貌的形成过程。', ['侵蚀', '搬运', '沉积', '曲流', '三角洲'], () => import('./modules/hydrology/StreamTable.vue')),
   item('groundwater', '地下水/含水层模型', 'hydrology', '3d', '观察地下水的赋存和运动，理解含水层、隔水层、承压水、抽水漏斗等水文地质概念。', ['含水层', '地下水', '承压水', '抽水漏斗'], () => import('./modules/hydrology/Groundwater.vue')),
