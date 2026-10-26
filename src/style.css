@@ -79,6 +79,21 @@
   --radius-sm: 8px;
   --radius-pill: 999px;
 
+  /* —— 古典地理学会 × 皇家天文观测院 × 巴洛克艺术设计令牌 —— */
+  --baroque-navy-deep: #071322;
+  --baroque-navy: #0f233e;
+  --baroque-navy-medium: #193860;
+  --baroque-green: #183327;
+  --baroque-bronze: #c5a059;
+  --baroque-brass: #d8b773;
+  --baroque-gold-dim: #9b7e46;
+  --baroque-parchment: #f9f7f1;
+  --baroque-parchment-soft: #f4efe4;
+  --baroque-ivory: #ffffff;
+  --baroque-border-gold: rgba(197, 160, 89, 0.38);
+  --baroque-border-double: 3px double rgba(197, 160, 89, 0.45);
+  --baroque-glow: 0 0 16px rgba(197, 160, 89, 0.28);
+
   /* 兼容旧组件的别名变量 */
   --ink: var(--text);
   --muted: var(--text-muted);
@@ -970,6 +985,91 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.06em;
   color: var(--geo-ocean);
   text-transform: uppercase;
+}
+
+/* ==========================================================================
+   巴洛克艺术与皇家天文观测院风格组件系统 (Baroque & Royal Geographic Guild)
+   ========================================================================== */
+.baroque-frame {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--baroque-border-gold);
+  border-radius: var(--radius-card);
+  box-shadow: 0 1px 3px rgba(15, 39, 66, 0.05), 0 4px 16px rgba(15, 39, 66, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.baroque-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--baroque-border-gold);
+  background: var(--surface);
+  color: var(--baroque-navy);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15, 39, 66, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: var(--geo-btn-transition);
+  touch-action: manipulation;
+  user-select: none;
+  position: relative;
+}
+
+.baroque-btn:hover {
+  border-color: var(--baroque-bronze);
+  color: var(--baroque-navy-deep);
+  transform: var(--geo-btn-elevate);
+  box-shadow: 0 4px 14px rgba(197, 160, 89, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.baroque-btn:active {
+  transform: var(--geo-btn-press) !important;
+  box-shadow: 0 1px 2px rgba(15, 39, 66, 0.16), inset 0 1.5px 3px rgba(15, 39, 66, 0.12) !important;
+}
+
+.baroque-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4.5px var(--baroque-bronze) !important;
+}
+
+.baroque-btn-primary {
+  background: linear-gradient(145deg, #183e66 0%, #0c233c 100%);
+  border-color: var(--baroque-bronze);
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(15, 39, 66, 0.35), inset 0 1px 0 rgba(216, 183, 115, 0.35);
+}
+
+.baroque-btn-primary:hover {
+  background: linear-gradient(145deg, #204d7d 0%, #0f2b4a 100%);
+  border-color: var(--baroque-brass);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(197, 160, 89, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.baroque-btn-brass {
+  background: linear-gradient(135deg, #f4e5c3 0%, #d8b776 50%, #b88d3e 100%);
+  border-color: #a67c33;
+  color: #0c2138;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(197, 160, 89, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.baroque-btn-brass:hover {
+  background: linear-gradient(135deg, #fff2d6 0%, #e2c385 50%, #c49948 100%);
+  box-shadow: 0 6px 18px rgba(197, 160, 89, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.baroque-btn-sm {
+  min-height: 34px;
+  padding: 5px 14px;
+  font-size: 12.5px;
 }
 
 /* 减弱动态效果支持 */

@@ -3,7 +3,7 @@
     <!-- 极轻量墨蓝加载指示 -->
     <div class="nav-progress-bar" :class="{ active: navLoading }" aria-hidden="true"></div>
 
-    <header class="app-header" :class="{ 'is-dark-nav': isHome && !isScrolled }">
+    <header class="app-header">
       <div class="header-inner">
         <!-- 账号中心环境与主站的品牌链接 -->
         <a v-if="isAccountHost" :href="`${siteOrigin}/#/`" class="brand" aria-label="返回地理教学系统">
@@ -15,10 +15,10 @@
         </a>
 
         <router-link v-else to="/" class="brand" aria-label="中学地理教学系统首页" @click="onBrandClick">
-          <BrandMark ref="brandMark" :dark="isHome && !isScrolled" />
+          <BrandMark ref="brandMark" />
           <div class="brand-text">
-            <span class="brand-name">中学地理教学系统</span>
-            <span class="brand-sub">三维地球 · 地理过程 · 初高中课程</span>
+            <span class="brand-name">地理共同体</span>
+            <span class="brand-sub">交流 · 提问 · 探索</span>
           </div>
         </router-link>
 
@@ -30,30 +30,32 @@
           <router-link to="/" class="nav-link" :class="{ active: isHome }">
             <span class="nav-label">首页</span>
           </router-link>
+          <router-link to="/community" class="nav-link" :class="{ active: route.path === '/community' || route.path.startsWith('/community/post') }">
+            <span class="nav-label">社区</span>
+          </router-link>
+          <router-link to="/questions" class="nav-link" :class="{ active: route.path === '/questions' }">
+            <span class="nav-label">问答</span>
+          </router-link>
+          <router-link to="/resources" class="nav-link" :class="{ active: route.path === '/resources' }">
+            <span class="nav-label">资源</span>
+          </router-link>
+          <router-link to="/groups" class="nav-link" :class="{ active: route.path === '/groups' }">
+            <span class="nav-label">社群</span>
+          </router-link>
           <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">
-            <span class="nav-badge-dot" aria-hidden="true"></span>
-            <span class="nav-label">3D 探索</span>
+            <span class="nav-label">地理实验室</span>
           </router-link>
           <router-link to="/inquiry" class="nav-link" :class="{ active: route.path === '/inquiry' }">
-            <span class="nav-label">地理探究</span>
-          </router-link>
-          <router-link to="/practice" class="nav-link" :class="{ active: route.path === '/practice' }">
-            <span class="nav-label">地理练习</span>
+            <span class="nav-label">探究</span>
           </router-link>
           <router-link to="/calendar" class="nav-link" :class="{ active: route.path === '/calendar' }">
-            <span class="nav-label">地理日历</span>
+            <span class="nav-label">日历</span>
           </router-link>
-          <router-link to="/初中" class="nav-link" :class="{ active: grade === '初中' }">
-            <span class="nav-label">初中课程</span>
+          <router-link to="/learning" class="nav-link" :class="{ active: route.path === '/learning' || grade }">
+            <span class="nav-label">教学</span>
           </router-link>
-          <router-link to="/高中" class="nav-link" :class="{ active: grade === '高中' }">
-            <span class="nav-label">高中课程</span>
-          </router-link>
-          <router-link to="/knowledge" class="nav-link" :class="{ active: route.path === '/knowledge' }">
-            <span class="nav-label">教材知识库</span>
-          </router-link>
-          <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="`${accountOrigin}/#/account`">
-            <span>{{ accountUser ? '我的账号' : '登录 / 注册' }}</span>
+          <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="accountUser ? `#/community/user/${accountUser.id}` : `${accountOrigin}/#/account`">
+            <span>{{ accountUser ? '我的主页' : '登录 / 注册' }}</span>
           </a>
         </nav>
       </div>
@@ -72,14 +74,15 @@
       <div class="footer-inner">
         <div class="footer-meta">
           <div class="footer-brand">
-            <span class="footer-logo">🌏 中学地理数字化教学与实验系统</span>
+          <span class="footer-logo">🌏 地理共同体</span>
             <p class="footer-desc">
-              从地球尺度认识中国与世界。以初高中地理课程为主线，连接真实地理影像、空间示意与交互实验。
+              交流地理问题，分享可靠资源，与不同背景的地理同好建立联系。
             </p>
           </div>
           <div class="footer-links">
             <div class="footer-col">
-              <h4>课程教材体系</h4>
+              <h4>地理教学</h4>
+              <router-link to="/learning">课程入口</router-link>
               <router-link to="/初中">初中地理（七~八年级）</router-link>
               <router-link to="/高中">高中地理（必修第一/二册）</router-link>
               <router-link to="/高中">选择性必修（1~3册）</router-link>
@@ -117,7 +120,7 @@
       <a href="mailto:makongno733@gmail.com">联系网站</a>
     </div>
 
-    <LessonAssistant v-if="!isAccountHost" />
+    <LessonAssistant v-if="!isAccountHost && isLearningRoute" />
   </div>
 </template>
 
@@ -134,6 +137,7 @@ const isAccountHost = accountEnabled && window.location.origin === new URL(accou
 const isHome = computed(() => route.path === '/')
 const isExperiments = computed(() => route.path.startsWith('/experiments') || route.path === '/earth3d')
 const grade = computed(() => route.params.grade || '')
+const isLearningRoute = computed(() => route.path === '/learning' || grade.value === '初中' || grade.value === '高中')
 const accountUser = ref(null)
 const brandMark = ref(null)
 
@@ -158,13 +162,6 @@ router.afterEach(() => {
   }, 260)
 })
 
-// 滚动检测：首页首屏暗色融合导航
-const isScrolled = ref(false)
-function onScroll() {
-  if (typeof window === 'undefined') return
-  isScrolled.value = window.scrollY > 80
-}
-
 onMounted(() => {
   if (typeof window === 'undefined') return
   if (accountEnabled) {
@@ -173,13 +170,10 @@ onMounted(() => {
       .then(({ data }) => { accountUser.value = data?.user || null })
       .catch(() => {})
   }
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
 })
 
 onBeforeUnmount(() => {
-  if (typeof window === 'undefined') return
-  window.removeEventListener('scroll', onScroll)
+  clearTimeout(navTimer)
 })
 </script>
 

@@ -72,6 +72,9 @@ const CATEGORY_SELECTORS = [
       '.category-tab',
       '.filter-btn',
       '.nav-toggle',
+      '.baroque-tab',
+      '.baroque-filter-btn',
+      '.baroque-sort-btn',
       '[data-anim="horizon"]'
     ].join(',')
   },
@@ -124,6 +127,7 @@ const CATEGORY_SELECTORS = [
       '.assistant-fab',
       '.account-card button.primary',
       'a.nav-link',
+      '.baroque-btn',
       '[data-anim="pop"]'
     ].join(',')
   }

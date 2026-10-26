@@ -7,5 +7,8 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.js', 'scripts/**/*.test.mjs'],
     clearMocks: true,
+    env: {
+      VITE_ACCOUNT_ORIGIN: '',
+    },
   },
 })

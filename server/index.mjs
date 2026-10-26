@@ -10,6 +10,7 @@ import { allowedOrigins, mailReady } from './config.mjs'
 import { answerLessonQuestion } from './lesson-ai.mjs'
 import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 import { setupInquiryRoutes } from './inquiry.mjs'
+import { setupCommunityRoutes } from './community.mjs'
 
 const app = express()
 const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
@@ -101,6 +102,7 @@ app.delete('/api/comments/:id', requireOrigin, requireUser, (req, res) => {
 })
 
 setupInquiryRoutes(app, { requireOrigin, requireUser })
+setupCommunityRoutes(app, { requireOrigin, requireUser })
 
 app.get('/api/*splat', (_req, res) => res.status(404).json({ error: '接口不存在' }))
 app.use(express.static(distPath, { index: false }))
