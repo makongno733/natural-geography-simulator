@@ -12,32 +12,6 @@ const initialCategories = [
   ['life', '地理生活', '野外实习、摄影、旅行与见闻']
 ]
 
-const initialGroups = [
-  ['GIS / 遥感与空间分析学术群', 'GIS / 空间信息', '729184512', '交流 QGIS, ArcGIS, Google Earth Engine, Python 空间数据分析与遥感时序处理。', JSON.stringify(['QGIS', 'GEE', '遥感反演', '空间统计']), 1],
-  ['全国高校地理学研究生研讨会', '学术考研', '839210459', '地理学硕博研究生论文开题、SCI/中文核心写作心得、学科前沿论文精读与组会交流。', JSON.stringify(['考研', '学术论文', '开题研讨', '硕博交流']), 2],
-  ['中学地理新课标与数字化教学研讨', '中学教育', '618492013', '中学地理骨干教师、教研员与师范生交流平台，聚焦 3D 实验进课堂与大概念教学设计。', JSON.stringify(['新课标', '教学设计', '优质课件', '命题研讨']), 3],
-  ['青藏高原与自然地理野外科考社', '野外考察', '529183401', '地貌学、第四纪冰川、喀斯特、黄土高原野外地质露头与地学摄影爱好者共同体。', JSON.stringify(['野外实习', '地貌露头', '科考记录', '地学摄影']), 4],
-  ['开源 WebGIS 与地理空间技术群', '技术开发', '948102375', '基于 MapLibre, Cesium, Three.js 与 PostGIS 的现代数字地球与三维可视化工程开发交流。', JSON.stringify(['MapLibre', 'Cesium', 'Three.js', 'WebGIS']), 5],
-  ['人文地理与区域经济可持续研讨', '人文经济', '481920371', '探讨城市群韧性、人口流动格局、碳达峰碳中和与黄河流域生态保护和高质量发展。', JSON.stringify(['区域经济', '城市群', '空间流', '碳中和']), 6]
-]
-
-const initialHotTopics = [
-  ['青藏高原第二次综合科考：亚洲水塔冰川融水模拟与径流变化新认识', '自然地理', '最新监测表明，高原气候暖湿化背景下，雅鲁藏布江与长江源区冰川退缩伴随湖泊水域显著扩张，径流年内分配格局发生重塑。', '1.8w 浏览 · 126 讨论', '青藏科考', 1],
-  ['我国“八纵八横”高铁网络空间重构与沿线城市人流经济辐射效应', '人文地理', '结合手机信令大数据与空间经济引力模型，深入解析中西部枢纽城市与长三角/大湾区产业跨区域梯次转移的真实网络。', '1.4w 浏览 · 98 讨论', '城市空间', 2],
-  ['高分辨率卫星高光谱反演与地表生态红线智能遥感解译实践', 'GIS与遥感', '探讨如何利用开源遥感深度学习骨干网络进行湿地、森林碳汇及生态功能保护区的高频动态监管。', '2.1w 浏览 · 145 讨论', '生态遥感', 3],
-  ['数字化 3D 动力学实验在高中自然地理“热力环流与地貌形成”中的教学实证', '地理教育', '从空间认知维度出发，通过对比传统平面图示与交互式三维风场流线，评估中学生抽象空间思维建立效果。', '9.6k 浏览 · 82 讨论', '教学创新', 4],
-  ['全球变暖背景下我国西北干旱区降水水汽来源与水资源安全辩证分析', '气候与水文', '厘清大西洋、印度洋水汽输送通道与局地水循环强化机制，辨析“暖湿化”对绿洲农业与生态环境的机遇与风险。', '1.3w 浏览 · 112 讨论', '气候变化', 5]
-]
-
-const initialResources = [
-  ['SRTM 30m / ALOS 12.5m 全球高精度数字高程模型 (DEM)', '地形高程数据', 'GeoTIFF / HGT', '30m / 12.5m 全球覆盖', '适合地形剖面分析、流域提取、山体阴影渲染与三维地形建模的高精度高程数据。', 'https://www.earthdata.nasa.gov/', '开放学术与教育使用', 1],
-  ['ERA5 全球大气逐小时气候再分析数据集 (ECMWF)', '气象与气候数据', 'NetCDF / GRIB', '0.25° 经纬网格', '欧洲中期天气预报中心出品的全球地表气温、气压场、风场、降水与蒸发全要素历史反演数据。', 'https://cds.climate.copernicus.eu/', 'Copernicus 开放使用许可', 2],
-  ['中国 1:100万 基础地理信息与地貌分区空间矢量图层', '矢量基础底图', 'Shapefile / GeoJSON', '1:1,000,000 国家尺度', '包含全国主要山脉走向线、高原/盆地/平原三大阶梯分界线及一至五级流域拓扑水网。', 'https://www.resdc.cn/', '中科院地理资源所数据共享平台', 3],
-  ['ESA WorldCover 全球 10m 土地利用与地表覆被遥感产品', '地表覆盖产品', 'GeoTIFF (COG)', '10m 分辨率 Sentinel 融合', '欧空局基于 Sentinel-1 与 Sentinel-2 卫星融合生成的最新全球 11 大类地表覆盖精细制图。', 'https://esa-worldcover.org/', 'CC BY 4.0 国际许可', 4],
-  ['全球重大地震与断裂带空间目录 (USGS Earthquake Catalog)', '地学科研数据', 'GeoJSON / CSV API', '全球 M4.5+ 历史与实时', '美国地质调查局全球地震地震台网实时测定的震级、震源深度、断层走向与地表烈度图。', 'https://earthquake.usgs.gov/', '公有领域 (Public Domain)', 5],
-  ['人教版中学地理 3D 教学实验模型源码与着色器资产包', '教学仿真课件', 'Three.js / GLTF / WebGL', '初高中核心大概念', '本站完全开源的 29+ 项三维地理动力学模型（含热力环流、开普勒轨道、断层造山、达西水循环等）。', 'https://github.com/makongno733/natural-geography-simulator', 'MIT 开源协议', 6]
-]
-
 export function migrateCommunity() {
   database.exec(`
     CREATE TABLE IF NOT EXISTS community_category (
@@ -174,21 +148,7 @@ export function migrateCommunity() {
   const seedCat = database.prepare('INSERT OR IGNORE INTO community_category (slug, name, description, sort_order) VALUES (?, ?, ?, ?)')
   database.transaction(() => initialCategories.forEach(([slug, name, description], index) => seedCat.run(slug, name, description, index)))()
 
-  // 预置默认社群、热点与地学资源（若尚未存在）
-  if (database.prepare('SELECT count(*) AS n FROM community_group').get().n === 0) {
-    const seedGroup = database.prepare('INSERT INTO community_group (name, category, qq_number, description, tags, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
-    database.transaction(() => initialGroups.forEach(([name, category, qq, desc, tags, sort]) => seedGroup.run(name, category, qq, desc, tags, sort)))()
-  }
-
-  if (database.prepare('SELECT count(*) AS n FROM community_hot_topic').get().n === 0) {
-    const seedTopic = database.prepare('INSERT INTO community_hot_topic (title, category, summary, stats, tag, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
-    database.transaction(() => initialHotTopics.forEach(([title, category, summary, stats, tag, sort]) => seedTopic.run(title, category, summary, stats, tag, sort)))()
-  }
-
-  if (database.prepare('SELECT count(*) AS n FROM community_resource').get().n === 0) {
-    const seedRes = database.prepare('INSERT INTO community_resource (title, category, format, scale, description, source_url, license, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    database.transaction(() => initialResources.forEach(([title, category, format, scale, desc, url, lic, sort]) => seedRes.run(title, category, format, scale, desc, url, lic, sort)))()
-  }
+  // 社群、热点和资源只能在来源、授权和内容核验后收录，迁移时不生成示例数据。
 }
 
 const clean = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null
@@ -305,13 +265,13 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
-      ${currentUserId ? `, (SELECT 1 FROM community_post_like l WHERE l.post_id = p.id AND l.user_id = '${currentUserId}') AS liked` : ''}
+      ${currentUserId ? ', (SELECT 1 FROM community_post_like l WHERE l.post_id = p.id AND l.user_id = ?) AS liked' : ''}
       FROM community_post p ${rankJoin}
       JOIN community_category c ON c.id = p.category_id JOIN user u ON u.id = p.author_id
       WHERE ${clauses.join(' AND ')} ORDER BY ${order} LIMIT 20 OFFSET ?`
 
     try {
-      const rawPosts = database.prepare(sql).all(...params, (page - 1) * 20)
+      const rawPosts = database.prepare(sql).all(...(currentUserId ? [currentUserId] : []), ...params, (page - 1) * 20)
       const posts = rawPosts.map(p => ({
         ...p,
         tags: parseTags(p.tags),
@@ -334,10 +294,10 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
       p.created_at AS createdAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
-      ${currentUserId ? `, (SELECT 1 FROM community_post_like l WHERE l.post_id = p.id AND l.user_id = '${currentUserId}') AS liked,
-        (SELECT 1 FROM community_post_bookmark b WHERE b.post_id = p.id AND b.user_id = '${currentUserId}') AS bookmarked` : ''}
+      ${currentUserId ? `, (SELECT 1 FROM community_post_like l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+        (SELECT 1 FROM community_post_bookmark b WHERE b.post_id = p.id AND b.user_id = ?) AS bookmarked` : ''}
       FROM community_post p JOIN community_category c ON c.id = p.category_id JOIN user u ON u.id = p.author_id
-      WHERE p.id = ? AND p.status = 'published'`).get(id)
+      WHERE p.id = ? AND p.status = 'published'`).get(...(currentUserId ? [currentUserId, currentUserId] : []), id)
 
     if (!post) return res.status(404).json({ error: '讨论不存在' })
 

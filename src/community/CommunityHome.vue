@@ -234,17 +234,7 @@
             <span class="baroque-corner-ornament">📜</span>
             <h2>学术交流群</h2>
           </div>
-          <p class="side-promo-desc">找同行、聊科研、备考研、磨教案。汇聚全国高校与一线名师地学研讨群。</p>
-          <div class="group-mini-list">
-            <div class="group-mini-item">
-              <strong>GIS / 遥感与空间分析</strong>
-              <span>QQ: 729184512</span>
-            </div>
-            <div class="group-mini-item">
-              <strong>全国高校地理学研究生群</strong>
-              <span>QQ: 839210459</span>
-            </div>
-          </div>
+          <p class="side-promo-desc">找同行、聊科研、备考研、磨教案。社群信息在核实公开展示授权后收录；也欢迎先在站内公开讨论。</p>
           <router-link to="/groups" class="baroque-btn baroque-btn-sm baroque-btn-brass promo-btn">
             浏览全部社群导航 →
           </router-link>

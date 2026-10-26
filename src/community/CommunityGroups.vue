@@ -6,10 +6,10 @@
       <p class="community-eyebrow">ACADEMIC GUILDS & SOCIETIES / 专业学社</p>
       <h1>地理学术社群与研讨共同体</h1>
       <p class="groups-lead">
-        汇聚全国地理科学、自然地理学、GIS 空间信息、遥感卫星测绘与地理教学一线研讨组织。找到属于你的学术同行与备考伙伴。
+        收录经管理员核实公开展示授权的地理学交流社群。也欢迎先在站内公开提问与交流。
       </p>
       <div class="groups-hero-notice">
-        <span>📜 入群准则：实名高校/机构或学科方向备注，严禁任何商业广告与盗版营利，坚守学术诚信。</span>
+        <span>社群由成员自行提供，学校、职业与研究身份不代表平台认证；加入前请自行核实。</span>
       </div>
     </header>
 
@@ -28,6 +28,7 @@
 
     <p v-if="loading" class="community-state" role="status">正在读取社群索引……</p>
     <p v-else-if="error" class="community-state community-error" role="alert">{{ error }}</p>
+    <p v-else-if="!filteredGroups.length" class="community-state" role="status">暂无经核实可公开展示的社群。你可以在站内发帖交流，或通过下方入口提交社群资料供审核。</p>
 
     <div v-else class="groups-grid">
       <article v-for="group in filteredGroups" :key="group.id" class="group-card baroque-frame">
@@ -58,7 +59,7 @@
     <!-- 社群入驻或登记通道 -->
     <section class="group-register-cta baroque-frame">
       <h3>🏛 申请社群登记或学术组织入驻</h3>
-      <p>如果你组织了高校地理学研究生读书会、地方野外地质科考队或中学地理骨干教学沙龙，欢迎联系平台管委会收录展示。</p>
+      <p>如果你负责地理学交流社群，可提交群名称、简介、加入方式及公开展示授权说明。管理员核实后再展示；请勿提交他人私密群号。</p>
       <a class="baroque-btn baroque-btn-primary" href="mailto:makongno733@gmail.com?subject=申请地理共同体学术群入驻">提交社群申请 ↗</a>
     </section>
   </div>

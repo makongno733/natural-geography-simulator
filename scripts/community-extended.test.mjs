@@ -160,19 +160,29 @@ describe('Extended Geography Community Platform API', () => {
     expect(profile.payload.stats.acceptedAnswersCount).toBe(1)
   })
 
-  it('5. provides geographical community groups navigation, hot topics and open data resources', () => {
+  it('5. does not publish unverified groups, invented hot-topic statistics, or unreviewed resources', () => {
     const groups = call('GET', '/api/community/groups')
     expect(groups.status).toBe(200)
-    expect(groups.payload.groups.length).toBeGreaterThanOrEqual(4)
-    expect(groups.payload.groups[0].qqNumber).toBeDefined()
+    expect(groups.payload.groups).toEqual([])
 
     const topics = call('GET', '/api/community/hot-topics')
     expect(topics.status).toBe(200)
-    expect(topics.payload.topics.length).toBeGreaterThanOrEqual(3)
+    expect(topics.payload.topics).toEqual([])
 
     const resources = call('GET', '/api/community/resources')
     expect(resources.status).toBe(200)
-    expect(resources.payload.resources.length).toBeGreaterThanOrEqual(4)
+    expect(resources.payload.resources).toEqual([])
+  })
+
+  it('binds the session user ID in list and detail queries', () => {
+    const unusualUserId = "user' OR 1=1 --"
+    const list = call('GET', '/api/community/posts', { userId: unusualUserId })
+    expect(list.status).toBe(200)
+    const detail = call('GET', '/api/community/posts/:id', {
+      params: { id: createdPostId }, userId: unusualUserId
+    })
+    expect(detail.status).toBe(200)
+    expect(detail.payload.post.liked).toBe(false)
   })
 
   it('6. allows post author to edit and delete their post', () => {
