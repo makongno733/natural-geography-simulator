@@ -16,6 +16,9 @@ const TextbookHome = () => import('./textbook/TextbookHome.vue')
 const CommunityHome = () => import('./community/CommunityHome.vue')
 const CommunityPost = () => import('./community/CommunityPost.vue')
 const CommunityAdmin = () => import('./community/CommunityAdmin.vue')
+const UserProfile = () => import('./community/UserProfile.vue')
+const CommunityGroups = () => import('./community/CommunityGroups.vue')
+const CommunityResources = () => import('./community/CommunityResources.vue')
 const InquiryStudio = () => import('./inquiry/InquiryStudio.vue')
 const GeographyPractice = () => import('./learning/GeographyPractice.vue')
 const GeoCalendar = () => import('./calendar/GeoCalendar.vue')
@@ -62,7 +65,10 @@ const routes = [
   { path: '/', name: 'home', component: CommunityHome },
   { path: '/community', name: 'community', component: CommunityHome },
   { path: '/questions', name: 'questions', component: CommunityHome },
+  { path: '/resources', name: 'resources', component: CommunityResources },
+  { path: '/groups', name: 'groups', component: CommunityGroups },
   { path: '/community/post/:id', name: 'community-post', component: CommunityPost },
+  { path: '/community/user/:id', name: 'user-profile', component: UserProfile },
   { path: '/community/manage', name: 'community-manage', component: CommunityAdmin },
   { path: '/learning', name: 'learning', component: TextbookHome },
   { path: '/inquiry', name: 'inquiry', component: InquiryStudio },

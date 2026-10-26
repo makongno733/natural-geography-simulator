@@ -30,29 +30,32 @@
           <router-link to="/" class="nav-link" :class="{ active: isHome }">
             <span class="nav-label">首页</span>
           </router-link>
-          <router-link to="/community" class="nav-link" :class="{ active: route.path.startsWith('/community') }">
+          <router-link to="/community" class="nav-link" :class="{ active: route.path === '/community' || route.path.startsWith('/community/post') }">
             <span class="nav-label">社区</span>
           </router-link>
           <router-link to="/questions" class="nav-link" :class="{ active: route.path === '/questions' }">
             <span class="nav-label">问答</span>
           </router-link>
-          <router-link to="/knowledge" class="nav-link" :class="{ active: route.path === '/knowledge' }">
+          <router-link to="/resources" class="nav-link" :class="{ active: route.path === '/resources' }">
             <span class="nav-label">资源</span>
+          </router-link>
+          <router-link to="/groups" class="nav-link" :class="{ active: route.path === '/groups' }">
+            <span class="nav-label">社群</span>
           </router-link>
           <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">
             <span class="nav-label">地理实验室</span>
           </router-link>
           <router-link to="/inquiry" class="nav-link" :class="{ active: route.path === '/inquiry' }">
-            <span class="nav-label">地理探究</span>
+            <span class="nav-label">探究</span>
           </router-link>
           <router-link to="/calendar" class="nav-link" :class="{ active: route.path === '/calendar' }">
-            <span class="nav-label">地理日历</span>
+            <span class="nav-label">日历</span>
           </router-link>
           <router-link to="/learning" class="nav-link" :class="{ active: route.path === '/learning' || grade }">
             <span class="nav-label">教学</span>
           </router-link>
-          <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="`${accountOrigin}/#/account`">
-            <span>{{ accountUser ? '我的账号' : '登录 / 注册' }}</span>
+          <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="accountUser ? `#/community/user/${accountUser.id}` : `${accountOrigin}/#/account`">
+            <span>{{ accountUser ? '我的主页' : '登录 / 注册' }}</span>
           </a>
         </nav>
       </div>
