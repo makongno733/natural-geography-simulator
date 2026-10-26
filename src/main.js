@@ -2,6 +2,7 @@ import { createApp, h, onMounted } from 'vue'
 import { createRouter, createWebHashHistory, useRoute, useRouter } from 'vue-router'
 import App from './App.vue'
 import './style.css'
+import './community/community.css'
 import { getChapter } from './textbook/data/catalogLoader.js'
 import { accountEnabled, accountOrigin } from './account/config.js'
 import { initButtonMotion } from './utils/buttonMotion.js'
@@ -12,6 +13,9 @@ if (accountEnabled && window.location.origin === new URL(accountOrigin).origin &
 }
 
 const TextbookHome = () => import('./textbook/TextbookHome.vue')
+const CommunityHome = () => import('./community/CommunityHome.vue')
+const CommunityPost = () => import('./community/CommunityPost.vue')
+const CommunityAdmin = () => import('./community/CommunityAdmin.vue')
 const InquiryStudio = () => import('./inquiry/InquiryStudio.vue')
 const GeographyPractice = () => import('./learning/GeographyPractice.vue')
 const GeoCalendar = () => import('./calendar/GeoCalendar.vue')
@@ -55,7 +59,12 @@ const ChapterRedirect = {
 }
 
 const routes = [
-  { path: '/', name: 'home', component: TextbookHome },
+  { path: '/', name: 'home', component: CommunityHome },
+  { path: '/community', name: 'community', component: CommunityHome },
+  { path: '/questions', name: 'questions', component: CommunityHome },
+  { path: '/community/post/:id', name: 'community-post', component: CommunityPost },
+  { path: '/community/manage', name: 'community-manage', component: CommunityAdmin },
+  { path: '/learning', name: 'learning', component: TextbookHome },
   { path: '/inquiry', name: 'inquiry', component: InquiryStudio },
   { path: '/practice', name: 'practice', component: GeographyPractice },
   { path: '/calendar', name: 'calendar', component: GeoCalendar },
@@ -63,7 +72,7 @@ const routes = [
   { path: '/disasters', name: 'disasters', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'disaster-sandbox' } } },
   { path: '/map', name: 'map', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'map-projection' } } },
   { path: '/geo', name: 'geo', redirect: { name: 'experiment-view', params: { category: 'systems', experiment: 'geologic-time' } } },
-  { path: '/textbook', redirect: '/' },
+  { path: '/textbook', redirect: '/learning' },
   { path: '/knowledge', name: 'knowledge', component: KnowledgeLibrary },
   { path: '/experiments', name: 'experiments', component: ExperimentsHome },
   { path: '/geo-labs', name: 'geo-labs', component: GeoLabsHome },
