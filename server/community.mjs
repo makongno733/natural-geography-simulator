@@ -1,4 +1,5 @@
 import { database } from './database.mjs'
+import { getHotTopics } from './hot-topics.mjs'
 
 const initialCategories = [
   ['general', '地理学综合交流', '专业交流、经验分享与日常讨论'],
@@ -145,6 +146,18 @@ export function migrateCommunity() {
       license TEXT NOT NULL,
       sort_order INTEGER NOT NULL DEFAULT 0
     );
+  `)
+
+  const topicColumns = database.prepare('PRAGMA table_info(community_hot_topic)').all().map(column => column.name)
+  for (const [name, definition] of [
+    ['external_id', 'TEXT'], ['source_url', 'TEXT'], ['occurred_at', 'TEXT'],
+    ['fetched_at', 'TEXT'], ['post_id', 'INTEGER REFERENCES community_post(id)']
+  ]) {
+    if (!topicColumns.includes(name)) database.exec(`ALTER TABLE community_hot_topic ADD COLUMN ${name} ${definition}`)
+  }
+  database.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS community_hot_topic_external ON community_hot_topic(external_id);
+    CREATE TABLE IF NOT EXISTS geo_topic_sync (source TEXT PRIMARY KEY, fetched_at TEXT NOT NULL);
   `)
 
   // 预置默认分类
@@ -556,9 +569,40 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
   })
 
   // 14. 地理热点聚合
-  app.get('/api/community/hot-topics', (_req, res) => {
-    const topics = database.prepare('SELECT id, title, category, summary, stats, tag FROM community_hot_topic ORDER BY sort_order, id').all()
-    res.json({ topics })
+  app.get('/api/community/hot-topics', async (_req, res, next) => {
+    try { res.json(await getHotTopics()) } catch (error) { next(error) }
+  })
+
+  app.post('/api/community/hot-topics/:id/discuss', requireOrigin, requireUser, (req, res) => {
+    const id = positiveId(req.params.id)
+    if (!id) return res.status(404).json({ error: '事件不存在' })
+    const topic = database.prepare('SELECT * FROM community_hot_topic WHERE id = ? AND external_id IS NOT NULL').get(id)
+    if (!topic) return res.status(404).json({ error: '事件不存在' })
+    if (topic.post_id) {
+      const post = database.prepare("SELECT id FROM community_post WHERE id = ? AND status = 'published'").get(topic.post_id)
+      if (post) return res.json({ id: post.id, created: false })
+      return res.status(410).json({ error: '该事件的讨论已被社区管理员隐藏' })
+    }
+    const recent = database.prepare('SELECT COUNT(*) AS n FROM community_post WHERE author_id = ? AND created_at > ?')
+      .get(req.accountUser.id, new Date(Date.now() - 3600000).toISOString()).n
+    if (recent >= 5) return res.status(429).json({ error: '发帖过于频繁，请稍后再试' })
+    const category = database.prepare("SELECT id FROM community_category WHERE slug = 'physical' AND active = 1").get()
+      || database.prepare('SELECT id FROM community_category WHERE active = 1 ORDER BY sort_order LIMIT 1').get()
+    if (!category) return res.status(503).json({ error: '目前没有可用的社区分区' })
+    const body = `资料来源：NASA EONET\n原始记录：${topic.source_url}\n最近记录：${topic.occurred_at}\n\n来源摘要：${topic.summary}\n\n这是一条供社区讨论的事件线索。请核对来源中的更新，再分享你的观察、解释或疑问。`
+    const now = new Date().toISOString()
+    const result = database.transaction(() => {
+      const existing = database.prepare('SELECT post_id FROM community_hot_topic WHERE id = ?').get(id)
+      if (existing.post_id) return { id: existing.post_id, created: false }
+      const post = database.prepare(`INSERT INTO community_post
+        (author_id, category_id, kind, title, body, tags, created_at, updated_at)
+        VALUES (?, ?, 'discussion', ?, ?, ?, ?, ?)`).run(
+        req.accountUser.id, category.id, topic.title, body, JSON.stringify([topic.tag, '地理事件']), now, now)
+      database.prepare('UPDATE community_hot_topic SET post_id = ? WHERE id = ?').run(post.lastInsertRowid, id)
+      return { id: post.lastInsertRowid, created: true }
+    })()
+    if (result.created) announce('post', result.id)
+    res.status(result.created ? 201 : 200).json(result)
   })
 
   // 15. 地理数据与学术资源开放共享

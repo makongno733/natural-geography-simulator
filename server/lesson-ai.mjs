@@ -5,7 +5,7 @@ const corpusPath = resolve(process.env.ASSISTANT_CORPUS_PATH || 'server/assistan
 const corpus = JSON.parse(readFileSync(corpusPath, 'utf8'))
 const segmenter = new Intl.Segmenter('zh', { granularity: 'word' })
 const SCOPE_REPLY = '我只回答本站地理课程与网站使用相关的问题。'
-const BLOCKED_REPLY = '操你妈'
+const BLOCKED_REPLY = '这个问题不属于本站课程助手的服务范围。你可以询问地理课程内容或网站使用方法。'
 
 export function localScopeDecision(question) {
   const text = question.replace(/\s+/g, '').toLowerCase()

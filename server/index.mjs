@@ -11,6 +11,7 @@ import { answerLessonQuestion } from './lesson-ai.mjs'
 import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 import { setupInquiryRoutes } from './inquiry.mjs'
 import { setupCommunityRoutes } from './community.mjs'
+import { startHotTopicSync } from './hot-topics.mjs'
 
 const app = express()
 const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
@@ -121,4 +122,5 @@ const bindAddress = process.env.ACCOUNT_BIND || '127.0.0.1'
 app.listen(Number(process.env.ACCOUNT_PORT || 4100), bindAddress, () => {
   console.log(`Account API listening on ${bindAddress}:${process.env.ACCOUNT_PORT || 4100}`)
   startGeoEventSync()
+  startHotTopicSync()
 })
