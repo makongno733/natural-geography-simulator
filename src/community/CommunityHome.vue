@@ -465,8 +465,47 @@ function setSort(mode) { sortMode.value = mode; resetAndLoad() }
 function filterByTag(tag) { selectedTag.value = tag; resetAndLoad() }
 async function openTopic(topic) {
   if (topic.postId) return router.push(`/community/post/${topic.postId}`)
-  if (!user.value || isDemoMode.value) {
-    hotTopicError.value = '请先登录并连接云端社区，再发起事件讨论。'
+  
+  if (isDemoMode.value) {
+    // 演示模式本地创建事件讨论帖
+    const newId = Date.now()
+    const expMap = {
+      '强风暴': 'thermal-circulation',
+      '构造地震': 'fault-model',
+      '野火': 'thermal-circulation',
+      '海湖冰': 'earth-system'
+    }
+    const localPost = {
+      id: newId,
+      title: `【事件研讨】${topic.title}`,
+      body: `【观测事实】\n${topic.summary}\n\n【原始信源】\nNASA EONET / USGS 记录：${topic.sourceUrl}\n\n【研讨议题】\n请结合地球物理动力学机制与三维仿真模型，探讨该事件的诱发机制与区域地貌/生态系统长期影响。`,
+      kind: 'discussion',
+      category_id: 2,
+      categoryName: '自然地理学',
+      tags: [topic.tag || '自然事件', '实时观测', '成因探讨'],
+      linked_experiment: expMap[topic.category] || 'earth-system',
+      evidenceId: null,
+      author: {
+        id: 'me',
+        name: user.value?.name || '我 (现场观测者)',
+        title: '地球科学研读者'
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likesCount: 1,
+      bookmarksCount: 0,
+      repliesCount: 0,
+      replies: []
+    }
+    saveLocalDemoPost(localPost)
+    topic.postId = newId
+    toast.success('【演示模式】已从实时事件建立学术讨论！')
+    await router.push(`/community/post/${newId}`)
+    return
+  }
+
+  if (!user.value) {
+    hotTopicError.value = '请先登录，再发起实时事件的学术讨论。'
     return
   }
   openingTopicId.value = topic.id
@@ -588,12 +627,12 @@ async function initCommunity() {
       user.value = sessionResult.value.data?.user || null
     }
 
-    if (hotTopicResult.status === 'fulfilled') {
+    if (hotTopicResult.status === 'fulfilled' && Array.isArray(hotTopicResult.value?.topics) && hotTopicResult.value.topics.length > 0) {
       hotTopics.value = hotTopicResult.value.topics
       hotTopicError.value = hotTopicResult.value.refreshError ? '来源暂时无法更新，以下为上次抓取的记录。' : ''
     } else {
-      hotTopics.value = []
-      hotTopicError.value = '实时事件暂时无法获取，请稍后重试。'
+      hotTopics.value = mockHotTopics
+      hotTopicError.value = ''
     }
 
     if (user.value) {
@@ -618,8 +657,8 @@ async function initCommunity() {
   } catch {
     isDemoMode.value = true
     categories.value = mockCategories
-    hotTopics.value = []
-    hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
+    hotTopics.value = mockHotTopics
+    hotTopicError.value = ''
     if (!draft.categoryId && categories.value.length) {
       draft.categoryId = String(categories.value[0].id)
     }
