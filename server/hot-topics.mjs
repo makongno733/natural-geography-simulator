@@ -12,14 +12,15 @@ const categoryNames = new Map([
   ['floods', '洪水'], ['landslides', '滑坡'], ['drought', '干旱'],
   ['dustHaze', '沙尘与霾'], ['seaLakeIce', '海湖冰'], ['snow', '降雪'],
   ['temperatureExtremes', '极端气温'], ['waterColor', '水色变化'],
-  ['earthquakes', '构造地震']
+  ['earthquakes', '地震']
 ])
 
 export function normalizeEonetEvent(event, fetchedAt) {
   if (!/^EONET_\d+$/.test(event?.id || '')) return null
   const title = typeof event.title === 'string' ? event.title.trim().slice(0, 120) : ''
   const geometry = Array.isArray(event.geometry) ? event.geometry : []
-  const latest = geometry.filter(item => Number.isFinite(Date.parse(item?.date))).at(-1)
+  const latest = geometry.filter(item => Number.isFinite(Date.parse(item?.date)))
+    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date)).at(-1)
   if (!title || !latest) return null
   const category = categoryNames.get(event.categories?.[0]?.id) || '自然地理事件'
   const occurredAt = new Date(latest.date).toISOString()
@@ -32,22 +33,26 @@ export function normalizeEonetEvent(event, fetchedAt) {
 export function normalizeUsgsEarthquake(feature, fetchedAt) {
   const id = feature?.id
   const props = feature?.properties
-  if (!id || !props) return null
-  const mag = typeof props.mag === 'number' ? props.mag.toFixed(1) : ''
-  const place = typeof props.place === 'string' ? props.place.trim() : '全球海域或未定地区'
-  const title = `M${mag} 级显著构造地震 - ${place}`
-  const occurredAt = Number.isFinite(props.time) ? new Date(props.time).toISOString() : new Date().toISOString()
-  const sourceUrl = props.url || `https://earthquake.usgs.gov/earthquakes/eventpage/${id}`
-  const summary = `美国地质调查局 (USGS) 监测到一次 M${mag} 级深部或浅源构造地震，震中位于 ${place}，发震时刻为 ${occurredAt.slice(0, 16).replace('T', ' ')} UTC。可结合断层构造模型探讨板块边界受力机制。`
+  if (!/^[A-Za-z0-9._-]{1,80}$/.test(id || '') || !props ||
+      !Number.isFinite(props.mag) || !Number.isFinite(props.time) ||
+      (props.type && props.type !== 'earthquake')) return null
+  const occurredAt = new Date(props.time)
+  if (!Number.isFinite(occurredAt.getTime())) return null
+  const mag = props.mag.toFixed(1)
+  const place = typeof props.place === 'string' && props.place.trim()
+    ? props.place.trim().slice(0, 120) : '位置待核实'
+  const title = `M${mag} 地震 · ${place}`.slice(0, 120)
+  const sourceUrl = `https://earthquake.usgs.gov/earthquakes/eventpage/${encodeURIComponent(id)}`
+  const summary = `USGS 显著地震目录记录：震级 M${mag}，位置 ${place}，记录时间 ${occurredAt.toISOString().slice(0, 16).replace('T', ' ')} UTC。震级与位置可能修订，请查看原始记录。`
   return {
     externalId: `USGS_${id}`,
     title,
-    category: '构造地震',
+    category: '地震',
     summary,
     sourceUrl,
-    occurredAt,
+    occurredAt: occurredAt.toISOString(),
     fetchedAt,
-    tag: '构造地震'
+    tag: '地震'
   }
 }
 
@@ -55,6 +60,8 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now() } = {}
   if (pendingSync) return pendingSync
   pendingSync = (async () => {
     const fetchedAt = new Date(now).toISOString()
+    let successfulSources = 0
+    let failedSources = 0
 
     // 1. 同步 NASA EONET 自然事件
     try {
@@ -62,6 +69,7 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now() } = {}
       if (response.ok) {
         const payload = await response.json()
         if (Array.isArray(payload.events)) {
+          successfulSources++
           const upsert = database.prepare(`INSERT INTO community_hot_topic
             (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
             VALUES (@title, @category, @summary, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
@@ -74,9 +82,10 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now() } = {}
               if (topic) upsert.run(topic)
             }
           })()
-        }
-      }
+        } else throw new Error('EONET response has no events array')
+      } else throw new Error(`EONET HTTP ${response.status}`)
     } catch (eonetErr) {
+      failedSources++
       console.warn('NASA EONET sync warning:', eonetErr.message)
     }
 
@@ -86,6 +95,7 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now() } = {}
       if (usgsRes.ok) {
         const usgsData = await usgsRes.json()
         if (Array.isArray(usgsData.features)) {
+          successfulSources++
           const upsert = database.prepare(`INSERT INTO community_hot_topic
             (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
             VALUES (@title, @category, @summary, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
@@ -98,11 +108,15 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now() } = {}
               if (topic) upsert.run(topic)
             }
           })()
-        }
-      }
+        } else throw new Error('USGS response has no features array')
+      } else throw new Error(`USGS HTTP ${usgsRes.status}`)
     } catch (usgsErr) {
+      failedSources++
       console.warn('USGS sync warning:', usgsErr.message)
     }
+
+    if (!successfulSources) throw new Error('All geography event sources failed')
+    lastFailedAttempt = failedSources ? Date.now() : 0
 
     database.transaction(() => {
       database.prepare(`INSERT INTO geo_topic_sync (source, fetched_at) VALUES ('eonet', ?)

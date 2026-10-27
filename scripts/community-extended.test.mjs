@@ -7,7 +7,7 @@ vi.mock('../server/database.mjs', async () => {
 
 import { database } from '../server/database.mjs'
 import { migrateCommunity, setupCommunityRoutes } from '../server/community.mjs'
-import { normalizeEonetEvent, syncHotTopics } from '../server/hot-topics.mjs'
+import { normalizeEonetEvent, normalizeUsgsEarthquake, syncHotTopics } from '../server/hot-topics.mjs'
 
 const routes = new Map()
 const app = {
@@ -233,5 +233,20 @@ describe('Extended Geography Community Platform API', () => {
     expect(second.payload.id).toBe(first.payload.id)
     const detail = call('GET', '/api/community/posts/:id', { params: { id: first.payload.id } })
     expect(detail.payload.post.body).toContain(topics[0].source_url)
+  })
+
+  it('rejects invalid earthquake data and never marks total source failure as a successful refresh', async () => {
+    const fetchedAt = new Date().toISOString()
+    expect(normalizeUsgsEarthquake({ id: 'a', properties: { mag: null, time: Date.now() } }, fetchedAt)).toBeNull()
+    const quake = normalizeUsgsEarthquake({
+      id: 'us123', properties: { mag: 5.4, time: Date.now(), place: 'Test area',
+        type: 'earthquake', url: 'javascript:alert(1)' }
+    }, fetchedAt)
+    expect(quake.sourceUrl).toBe('https://earthquake.usgs.gov/earthquakes/eventpage/us123')
+    expect(quake.summary).not.toMatch(/断层|板块边界|伤亡/)
+    const before = database.prepare("SELECT fetched_at FROM geo_topic_sync WHERE source = 'eonet'").get().fetched_at
+    await expect(syncHotTopics({ fetchImpl: async () => ({ ok: false, status: 503 }) })).rejects.toThrow('All geography event sources failed')
+    const after = database.prepare("SELECT fetched_at FROM geo_topic_sync WHERE source = 'eonet'").get().fetched_at
+    expect(after).toBe(before)
   })
 })

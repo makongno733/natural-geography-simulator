@@ -3,29 +3,29 @@
  */
 
 const SITE_NAME = '地理共同体'
-const BASE_TITLE = '地理共同体 · 自然地理与三维科学探索'
-const DEFAULT_DESC = '面向地理科学、自然地理学、GIS遥感、环境科学与中学地学教育的开放学术交流与三维仿真实验平台。'
+const BASE_TITLE = '地理共同体 · 地理交流、问答与探索'
+const DEFAULT_DESC = '面向地理科学学习者、教师和爱好者的交流社区。提问、分享经验、查找历史讨论，也可探索地理实验与教学资源。'
 const DEFAULT_KEYWORDS = '地理教学系统, 地理共同体, 自然地理学, 地理实验, 3D地球, GIS遥感, 气象气候, 水循环, 地壳断层, 太阳高度角'
 
 const ROUTE_SEO_MAP = {
   home: {
     title: '地理共同体 · 交流、提问与探索',
-    desc: '提出地理科学真问题，交换实测证据与观测数据，联动三维动力学实验，让学术探讨成为沉淀的科学认知。',
+    desc: '交流地理科学问题，分享学习和教学经验，查找历史讨论，并探索地理实验。',
     keywords: '地理学术论坛, 地理问答, 地学前沿, 实时自然事件, 地理共同体'
   },
   community: {
     title: '学术研讨与同行交流 · 地理共同体',
-    desc: '涵盖自然地理学、人文经济地理、GIS测绘、地学教育等多学科分区的专业研讨空间。',
+    desc: '在自然地理、人文地理、GIS、地理教育等分区交流观点、提出问题并检索已有讨论。',
     keywords: '地理论坛, 地理问答, 学术研讨, 考研交流, 教学设计'
   },
   questions: {
     title: '地理学术问答与解答采纳 · 地理共同体',
-    desc: '聚焦地理科学疑难问题求助、考研真题辨析与野外地质疑问，支持最佳答案采纳。',
+    desc: '提出地理学习、考研、教学和研究中的问题，浏览已有讨论与被采纳的回答。',
     keywords: '地理问答, 地理疑难解答, 考研真题, 最佳答案'
   },
   experiments: {
     title: '三维地理科学实验室 · 交互动力学实验',
-    desc: '涵盖热力环流、科里奥利力、流水地貌水槽、断层构造、开普勒定律、气候图表等 30 项地学仿真模型。',
+    desc: '探索热力环流、流水地貌、断层构造等可交互地理实验，并观察模型的适用范围。',
     keywords: '地理实验, 3D地理, 热力环流模拟, 流水冲刷, 断层模型, 气候降水图'
   },
   'geo-labs': {
@@ -34,13 +34,13 @@ const ROUTE_SEO_MAP = {
     keywords: '真实高程DEM, 珠峰剖面, 卫星影像对比, 大圆测距, 空间缓冲区, GIS'
   },
   resources: {
-    title: '权威地理科学数据与开放资源馆',
-    desc: '收录 NASA NASADEM、ECMWF ERA5 气象再分析、全国 1:100万 基础地理信息与 Landsat 遥感反射率。',
+    title: '地理数据与开放学习资源 · 地理共同体',
+    desc: '查找有来源与许可说明的地理数据、课程和工具；资源逐项核验后收录。',
     keywords: '开放地理数据, NASADEM, ERA5再分析, 矢量地图, 遥感产品'
   },
   groups: {
-    title: '全国地理学术社群与研讨共同体导航',
-    desc: '面向高校地理硕博、GIS 空间数据圈、一线名师教研室的专业研讨社群索引。',
+    title: '地理社群导航 · 地理共同体',
+    desc: '查找经过公开展示授权和审核的地理交流群；也欢迎先在站内公开讨论。',
     keywords: '地理交流群, GIS学习群, 地理教研室, 学术研讨社'
   },
   learning: {
@@ -112,7 +112,7 @@ function injectJsonLd(title, description, customData) {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': customData.isQA ? 'QAPage' : 'LearningResource',
+    '@type': routeSchemaType(customData),
     name: title,
     description: description,
     provider: {
@@ -120,9 +120,15 @@ function injectJsonLd(title, description, customData) {
       name: '地理共同体',
       url: window.location.origin
     },
-    educationalLevel: '初中、高中、大学本科与地理科研',
     inLanguage: 'zh-CN'
   }
 
+  if (schema['@type'] === 'LearningResource') schema.educationalLevel = '初中、高中'
+
   scriptEl.textContent = JSON.stringify(schema)
+}
+
+function routeSchemaType(customData) {
+  // 单靠页面标题无法构成 QAPage；真实问答结构要在公开内容可索引后单独生成。
+  return customData.isLesson === true ? 'LearningResource' : 'WebPage'
 }

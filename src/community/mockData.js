@@ -15,53 +15,6 @@ export const mockCategories = [
   { id: 9, slug: 'life', name: '野外考察与见闻', description: '地质地貌野外实习纪实、典型地质剖面与地理摄影', sort_order: 9 }
 ]
 
-export const mockHotTopics = [
-  {
-    id: 901,
-    tag: '强风暴',
-    category: '强风暴',
-    title: '热带气旋强对流云系与垂直风切变演化观测',
-    summary: 'NASA EONET 卫星云图监测到西北太平洋热带风暴对流云系剧烈旋转，近地面气压梯度力急剧增强，风眼区结构趋于完整。',
-    sourceUrl: 'https://eonet.gsfc.nasa.gov/',
-    occurredAt: '2026-10-26T12:00:00.000Z',
-    fetchedAt: '2026-10-26T14:00:00.000Z',
-    postId: 102
-  },
-  {
-    id: 902,
-    tag: '构造地震',
-    category: '构造地震',
-    title: 'M6.1 级显著构造地震 - 环太平洋火山地震带断裂活动',
-    summary: 'USGS 监测台网记录到一次 M6.1 级逆冲断层滑动事件，震源深度 24km。属于大洋板块向大陆板块俯冲挤压产生的应力释放。',
-    sourceUrl: 'https://earthquake.usgs.gov/',
-    occurredAt: '2026-10-26T08:30:00.000Z',
-    fetchedAt: '2026-10-26T14:00:00.000Z',
-    postId: null
-  },
-  {
-    id: 903,
-    tag: '海湖冰',
-    category: '海湖冰',
-    title: '北极格陵兰岛边缘冰架季节性崩解与海平面响应',
-    summary: '高分辨率多光谱对地观测影像显示夏季冰融水沿冰下裂隙加速润滑底界面，冰舌边缘发生显著崩解断裂。',
-    sourceUrl: 'https://eonet.gsfc.nasa.gov/',
-    occurredAt: '2026-10-25T16:20:00.000Z',
-    fetchedAt: '2026-10-26T14:00:00.000Z',
-    postId: null
-  },
-  {
-    id: 904,
-    tag: '野火与碳汇',
-    category: '野火',
-    title: '北美高纬度针叶林野火烟羽跨洋传输与气溶胶光学厚度异常',
-    summary: 'Terra/Aqua 卫星 MODIS 传感器反演显示大规模林火烟气抬升进入对流层上层，伴随盛行西风带向下游远距离沉降。',
-    sourceUrl: 'https://eonet.gsfc.nasa.gov/',
-    occurredAt: '2026-10-25T10:15:00.000Z',
-    fetchedAt: '2026-10-26T14:00:00.000Z',
-    postId: null
-  }
-]
-
 export const mockPosts = [
   {
     id: 101,
