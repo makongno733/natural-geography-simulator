@@ -51,20 +51,26 @@
     </section>
 
     <!-- 地理学前沿热点聚合专栏 -->
-    <section v-if="hotTopics.length" class="community-wrap hot-topics-bar baroque-frame" aria-labelledby="hot-topics-title">
+    <section class="community-wrap hot-topics-bar baroque-frame" aria-labelledby="hot-topics-title">
       <div class="hot-topics-header">
         <span class="baroque-corner-ornament">❖</span>
-        <h3 id="hot-topics-title">地学前沿观察与热点聚焦</h3>
-        <span class="hot-topics-subtitle">TOPICAL GEOGRAPHY DISCUSSIONS</span>
+        <h3 id="hot-topics-title">近期地理事件 · 从事实开始讨论</h3>
+        <span class="hot-topics-subtitle">NASA EONET · 每 30 分钟检查更新</span>
       </div>
+      <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
+      <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
+      <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
       <div class="hot-topics-grid">
-        <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card" @click="filterByTag(topic.tag)">
+        <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
           <span class="topic-tag">{{ topic.tag }}</span>
           <h4>{{ topic.title }}</h4>
           <p>{{ topic.summary }}</p>
           <div class="topic-foot">
-            <small>{{ topic.stats }}</small>
-            <span class="topic-link">参与探讨 →</span>
+            <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
+            <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
+            <button type="button" class="topic-link" :disabled="openingTopicId === topic.id" @click="openTopic(topic)">
+              {{ topic.postId ? '进入讨论 →' : openingTopicId === topic.id ? '正在建立讨论…' : '发起讨论 →' }}
+            </button>
           </div>
         </article>
       </div>
@@ -322,7 +328,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { accountEnabled, accountOrigin, apiRequest, authClient } from '../account/client.js'
-import { mockCategories, mockHotTopics, mockPosts } from './mockData.js'
+import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
 import { STANDARD_EVIDENCES } from '../inquiry/evidenceCatalog.js'
@@ -332,6 +338,8 @@ const route = useRoute()
 const categories = ref([])
 const posts = ref([])
 const hotTopics = ref([])
+const hotTopicError = ref('')
+const openingTopicId = ref(null)
 const user = ref(null)
 const isAdmin = ref(false)
 const loading = ref(false)
@@ -455,6 +463,23 @@ function setCategory(id) { selectedCategory.value = selectedCategory.value === i
 function setKind(value) { kind.value = value; resetAndLoad() }
 function setSort(mode) { sortMode.value = mode; resetAndLoad() }
 function filterByTag(tag) { selectedTag.value = tag; resetAndLoad() }
+async function openTopic(topic) {
+  if (topic.postId) return router.push(`/community/post/${topic.postId}`)
+  if (!user.value || isDemoMode.value) {
+    hotTopicError.value = '请先登录并连接云端社区，再发起事件讨论。'
+    return
+  }
+  openingTopicId.value = topic.id
+  hotTopicError.value = ''
+  try {
+    const result = await apiRequest(`/api/community/hot-topics/${topic.id}/discuss`, { method: 'POST' })
+    await router.push(`/community/post/${result.id}`)
+  } catch (cause) {
+    hotTopicError.value = cause.message || '暂时无法发起讨论，请稍后重试。'
+  } finally {
+    openingTopicId.value = null
+  }
+}
 function nextPage() { page.value += 1; void loadPosts(true) }
 function focusCompose() { composeRef.value?.scrollIntoView({ behavior: 'smooth' }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
 
@@ -538,7 +563,8 @@ async function initCommunity() {
   if (!accountEnabled) {
     isDemoMode.value = true
     categories.value = mockCategories
-    hotTopics.value = mockHotTopics
+    hotTopics.value = []
+    hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
     draft.categoryId = String(mockCategories[0].id)
     await loadPosts()
     return
@@ -548,7 +574,7 @@ async function initCommunity() {
     const [categoryResult, sessionResult, hotTopicResult] = await Promise.allSettled([
       apiRequest('/api/community/categories'),
       authClient.getSession(),
-      apiRequest('/api/community/hot-topics')
+      apiRequest('/api/community/hot-topics', { timeout: 16000 })
     ])
     if (categoryResult.status === 'fulfilled' && categoryResult.value?.categories?.length) {
       categories.value = categoryResult.value.categories
@@ -562,10 +588,12 @@ async function initCommunity() {
       user.value = sessionResult.value.data?.user || null
     }
 
-    if (hotTopicResult.status === 'fulfilled' && hotTopicResult.value?.topics?.length) {
+    if (hotTopicResult.status === 'fulfilled') {
       hotTopics.value = hotTopicResult.value.topics
+      hotTopicError.value = hotTopicResult.value.refreshError ? '来源暂时无法更新，以下为上次抓取的记录。' : ''
     } else {
-      hotTopics.value = mockHotTopics
+      hotTopics.value = []
+      hotTopicError.value = '实时事件暂时无法获取，请稍后重试。'
     }
 
     if (user.value) {
@@ -590,7 +618,8 @@ async function initCommunity() {
   } catch {
     isDemoMode.value = true
     categories.value = mockCategories
-    hotTopics.value = mockHotTopics
+    hotTopics.value = []
+    hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
     if (!draft.categoryId && categories.value.length) {
       draft.categoryId = String(categories.value[0].id)
     }
@@ -791,7 +820,6 @@ onBeforeUnmount(() => stream?.close())
   border-radius: var(--radius-card);
   background: var(--bg-soft);
   border: 1px solid var(--border);
-  cursor: pointer;
   display: flex;
   flex-direction: column;
   transition: transform 0.2s var(--geo-flow-ease), border-color 0.2s, box-shadow 0.2s;
@@ -830,8 +858,9 @@ onBeforeUnmount(() => stream?.close())
 
 .topic-foot {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: baseline;
   font-size: 11.5px;
   color: var(--text-faint);
   border-top: 1px dashed rgba(0,0,0,0.06);
@@ -841,6 +870,10 @@ onBeforeUnmount(() => stream?.close())
 .topic-link {
   color: var(--geo-ocean);
   font-weight: 700;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 
 /* 社区主体布局 */

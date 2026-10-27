@@ -7,6 +7,7 @@ vi.mock('../server/database.mjs', async () => {
 
 import { database } from '../server/database.mjs'
 import { migrateCommunity, setupCommunityRoutes } from '../server/community.mjs'
+import { normalizeEonetEvent, syncHotTopics } from '../server/hot-topics.mjs'
 
 const routes = new Map()
 const app = {
@@ -160,14 +161,16 @@ describe('Extended Geography Community Platform API', () => {
     expect(profile.payload.stats.acceptedAnswersCount).toBe(1)
   })
 
-  it('5. does not publish unverified groups, invented hot-topic statistics, or unreviewed resources', () => {
+  it('5. does not publish unverified groups, invented hot-topic statistics, or unreviewed resources', async () => {
     const groups = call('GET', '/api/community/groups')
     expect(groups.status).toBe(200)
     expect(groups.payload.groups).toEqual([])
 
-    const topics = call('GET', '/api/community/hot-topics')
-    expect(topics.status).toBe(200)
-    expect(topics.payload.topics).toEqual([])
+    database.prepare("INSERT INTO geo_topic_sync (source, fetched_at) VALUES ('eonet', ?)").run(new Date().toISOString())
+    const topics = await new Promise((resolve, reject) => {
+      routes.get('GET /api/community/hot-topics')({}, { json(payload) { resolve(payload) } }, reject)
+    })
+    expect(topics.topics).toEqual([])
 
     const resources = call('GET', '/api/community/resources')
     expect(resources.status).toBe(200)
@@ -205,5 +208,30 @@ describe('Extended Geography Community Platform API', () => {
     // 验证删除后列表不出现
     const list = call('GET', '/api/community/posts')
     expect(list.payload.posts.find(p => p.id === createdPostId)).toBeUndefined()
+  })
+
+  it('ingests a sourced event once and opens one persistent discussion', async () => {
+    const event = {
+      id: 'EONET_12345', title: 'Tropical Cyclone Test', description: null,
+      categories: [{ id: 'severeStorms' }], geometry: [{ date: new Date().toISOString() }]
+    }
+    expect(normalizeEonetEvent({ ...event, id: 'bad-id' }, new Date().toISOString())).toBeNull()
+    const fetchImpl = async () => ({ ok: true, json: async () => ({ events: [event] }) })
+    await syncHotTopics({ fetchImpl })
+    await syncHotTopics({ fetchImpl })
+    const topics = database.prepare("SELECT * FROM community_hot_topic WHERE external_id = 'EONET_12345'").all()
+    expect(topics).toHaveLength(1)
+    expect(topics[0].source_url).toBe('https://eonet.gsfc.nasa.gov/api/v3/events/EONET_12345')
+    const first = call('POST', '/api/community/hot-topics/:id/discuss', {
+      params: { id: topics[0].id }, userId: 'user-2'
+    })
+    expect(first.status).toBe(201)
+    const second = call('POST', '/api/community/hot-topics/:id/discuss', {
+      params: { id: topics[0].id }, userId: 'user-1'
+    })
+    expect(second.status).toBe(200)
+    expect(second.payload.id).toBe(first.payload.id)
+    const detail = call('GET', '/api/community/posts/:id', { params: { id: first.payload.id } })
+    expect(detail.payload.post.body).toContain(topics[0].source_url)
   })
 })
