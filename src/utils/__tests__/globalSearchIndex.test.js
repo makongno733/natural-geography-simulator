@@ -26,9 +26,9 @@ describe('Global Geography Search Index', () => {
     expect(results.some(r => r.category === '教材与知识库')).toBe(true)
   })
 
-  it('searches community posts by keyword', () => {
-    const results = queryGlobalGeography('水文')
-    expect(results.length).toBeGreaterThan(0)
+  it('does not present sample posts or QQ groups as live search results', () => {
+    expect(queryGlobalGeography('741295810')).toEqual([])
+    expect(queryGlobalGeography('全国高校地理学研讨与学者共同体')).toEqual([])
   })
 
   it('limits result count up to 12 items', () => {

@@ -232,6 +232,7 @@ const body = ref('')
 const parentId = ref(null)
 const replyInput = ref(null)
 const isDemoMode = ref(false)
+const allowDemoMode = import.meta.env.DEV
 let stream
 
 const attachedEvidence = computed(() => {
@@ -294,7 +295,13 @@ async function loadPost() {
     isDemoMode.value = false
     return
   } catch {
-    // 降级到 Mock 或本地数据
+    if (!allowDemoMode) {
+      post.value = null
+      replies.value = []
+      error.value = '讨论暂时无法载入，或该讨论已被移除。请稍后重试。'
+      return
+    }
+    // 仅开发环境读取演示数据
     isDemoMode.value = true
     const targetId = Number(route.params.id)
     const localPosts = getLocalDemoPosts()

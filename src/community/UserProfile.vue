@@ -2,19 +2,6 @@
   <div class="community-wrap user-profile-page">
     <router-link class="community-back" to="/community">← 返回社区</router-link>
 
-    <!-- 演示/离线模式横幅 -->
-    <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
-      <div class="demo-banner-content">
-        <span class="demo-banner-tag">✦ 演示学者档案</span>
-        <span>当前云服务未连接，学者个人主页处于离线演示模式；修改资料将暂存于本地浏览器。</span>
-      </div>
-      <div class="demo-banner-actions">
-        <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadProfile">
-          {{ loading ? '连接中…' : '刷新云端数据' }}
-        </button>
-      </div>
-    </aside>
-
     <div v-if="loading" class="skeleton-card" style="margin-bottom: 24px" aria-busy="true">
       <div class="skeleton-box skeleton-line skeleton-line-title"></div>
       <div class="skeleton-box skeleton-line"></div>
@@ -59,15 +46,15 @@
 
           <div class="profile-stats-bar">
             <div class="stat-box">
-              <span class="stat-num">{{ profileData.stats?.postsCount ?? 3 }}</span>
+          <span class="stat-num">{{ profileData.stats?.postsCount ?? 0 }}</span>
               <span class="stat-label">学术讨论</span>
             </div>
             <div class="stat-box">
-              <span class="stat-num highlight-stat">{{ profileData.stats?.acceptedAnswersCount ?? 1 }}</span>
+          <span class="stat-num highlight-stat">{{ profileData.stats?.acceptedAnswersCount ?? 0 }}</span>
               <span class="stat-label">最佳采纳</span>
             </div>
             <div class="stat-box">
-              <span class="stat-num">{{ profileData.stats?.likesReceived ?? 18 }}</span>
+          <span class="stat-num">{{ profileData.stats?.likesReceived ?? 0 }}</span>
               <span class="stat-label">获得赞同</span>
             </div>
           </div>
@@ -131,7 +118,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiRequest, authClient } from '../account/client.js'
-import { mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 
 const route = useRoute()
@@ -141,7 +127,6 @@ const error = ref('')
 const currentUser = ref(null)
 const isEditing = ref(false)
 const saving = ref(false)
-const isDemoMode = ref(false)
 
 const editForm = reactive({
   title: '',
@@ -151,13 +136,10 @@ const editForm = reactive({
 })
 
 const isMe = computed(() => currentUser.value && profileData.value && currentUser.value.id === profileData.value.user.id)
-const canEdit = computed(() => isMe.value || isDemoMode.value)
+const canEdit = computed(() => isMe.value)
 
 const profilePosts = computed(() => {
-  if (profileData.value?.posts && Array.isArray(profileData.value.posts) && profileData.value.posts.length > 0) {
-    return profileData.value.posts
-  }
-  return mockPosts.slice(0, 3)
+  return Array.isArray(profileData.value?.posts) ? profileData.value.posts : []
 })
 
 const formatDate = value => {
@@ -171,6 +153,7 @@ const formatDate = value => {
 async function loadProfile() {
   loading.value = true
   error.value = ''
+  profileData.value = null
   try {
     const res = await apiRequest(`/api/community/users/${route.params.id}`)
     profileData.value = res
@@ -178,41 +161,8 @@ async function loadProfile() {
     editForm.bio = res.user?.bio || ''
     editForm.institution = res.user?.institution || ''
     editForm.location = res.user?.location || ''
-    isDemoMode.value = false
   } catch {
-    // 离线/演示降级：读取本地存储或展示高质量默认学者档案
-    isDemoMode.value = true
-    const localSaved = localStorage.getItem(`demo_user_profile_${route.params.id}`)
-    let fallback = {
-      title: '空间分析与地貌过程学者',
-      bio: '关注地貌演化模型、高程水文分析与多尺度遥感反演。常在地理共同体分享研究笔记与教学数据。',
-      institution: '地理科学高等研究组',
-      location: '北京 · 海淀'
-    }
-    if (localSaved) {
-      try {
-        fallback = { ...fallback, ...JSON.parse(localSaved) }
-      } catch {
-        // ignore
-      }
-    }
-    profileData.value = {
-      user: {
-        id: route.params.id,
-        name: route.params.id === 'demo-user-1' ? '高原地理观测学者' : '地理同道学者',
-        ...fallback
-      },
-      stats: {
-        postsCount: 3,
-        acceptedAnswersCount: 1,
-        likesReceived: 24
-      },
-      posts: mockPosts.slice(0, 2)
-    }
-    editForm.title = profileData.value.user.title
-    editForm.bio = profileData.value.user.bio
-    editForm.institution = profileData.value.user.institution
-    editForm.location = profileData.value.user.location
+    error.value = '个人主页暂时无法载入，请稍后重试。'
   } finally {
     loading.value = false
   }
@@ -221,26 +171,13 @@ async function loadProfile() {
 async function saveProfile() {
   saving.value = true
   try {
-    if (!isDemoMode.value) {
-      await apiRequest('/api/community/users/me', {
-        method: 'PATCH',
-        body: JSON.stringify(editForm)
-      })
-      toast.success('学者资料已更新！')
-      isEditing.value = false
-      await loadProfile()
-    } else {
-      // 演示模式：暂存至本地
-      localStorage.setItem(`demo_user_profile_${route.params.id}`, JSON.stringify(editForm))
-      if (profileData.value) {
-        profileData.value.user = {
-          ...profileData.value.user,
-          ...editForm
-        }
-      }
-      isEditing.value = false
-      toast.success('学者资料已暂存至本地浏览器 (演示模式)')
-    }
+    await apiRequest('/api/community/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify(editForm)
+    })
+    toast.success('学者资料已更新！')
+    isEditing.value = false
+    await loadProfile()
   } catch (err) {
     toast.error(err.message || '保存失败，请稍后重试')
   } finally {

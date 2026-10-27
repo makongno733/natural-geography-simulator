@@ -356,6 +356,7 @@ const page = ref(1)
 const composeRef = ref(null)
 const tagsInput = ref('')
 const isDemoMode = ref(false)
+const allowDemoMode = import.meta.env.DEV
 
 const draft = reactive({
   kind: 'question',
@@ -422,7 +423,20 @@ async function loadPosts(append = false) {
       return
     }
   } catch {
+    if (!allowDemoMode) {
+      posts.value = []
+      error.value = '讨论暂时无法载入，请稍后重试。'
+      loading.value = false
+      return
+    }
     isDemoMode.value = true
+  }
+
+  if (!allowDemoMode) {
+    posts.value = []
+    error.value = '云端社区尚未连接，暂时无法获取讨论。'
+    loading.value = false
+    return
   }
 
   // 离线/演示降级处理
@@ -514,7 +528,12 @@ async function createPost() {
       return
     }
 
-    // 演示/离线模式本地持久化
+    if (!allowDemoMode) {
+      submitError.value = '云端社区尚未连接，暂时无法发布讨论。'
+      return
+    }
+
+    // 仅开发环境使用的演示数据
     const newId = Date.now()
     const catObj = categories.value.find(c => c.id === Number(draft.categoryId))
     const localPost = {
@@ -566,11 +585,11 @@ watch(() => route.path, (newPath) => {
 
 async function initCommunity() {
   if (!accountEnabled) {
-    isDemoMode.value = true
-    categories.value = mockCategories
+    isDemoMode.value = allowDemoMode
+    categories.value = allowDemoMode ? mockCategories : []
     hotTopics.value = []
     hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
-    draft.categoryId = String(mockCategories[0].id)
+    if (allowDemoMode) draft.categoryId = String(mockCategories[0].id)
     await loadPosts()
     return
   }
@@ -585,8 +604,8 @@ async function initCommunity() {
       categories.value = categoryResult.value.categories
       isDemoMode.value = false
     } else {
-      categories.value = mockCategories
-      isDemoMode.value = true
+      categories.value = allowDemoMode ? mockCategories : []
+      isDemoMode.value = allowDemoMode
     }
 
     if (sessionResult.status === 'fulfilled') {
@@ -621,8 +640,8 @@ async function initCommunity() {
       }
     }
   } catch {
-    isDemoMode.value = true
-    categories.value = mockCategories
+    isDemoMode.value = allowDemoMode
+    categories.value = allowDemoMode ? mockCategories : []
     hotTopics.value = []
     hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
     if (!draft.categoryId && categories.value.length) {
