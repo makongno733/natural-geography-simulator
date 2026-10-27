@@ -37,7 +37,7 @@
             </button>
           </div>
 
-          <p class="profile-bio">{{ profileData.user.bio || '专注于地球科学探索、空间分析与地理教学实践。' }}</p>
+          <p class="profile-bio">{{ profileData.user.bio || '这位用户尚未填写个人简介。' }}</p>
 
           <div class="profile-meta-tags">
             <span v-if="profileData.user.institution" class="meta-tag">🏛 {{ profileData.user.institution }}</span>
@@ -46,15 +46,15 @@
 
           <div class="profile-stats-bar">
             <div class="stat-box">
-          <span class="stat-num">{{ profileData.stats?.postsCount ?? 0 }}</span>
+              <span class="stat-num">{{ profileData.stats?.postsCount ?? 0 }}</span>
               <span class="stat-label">学术讨论</span>
             </div>
             <div class="stat-box">
-          <span class="stat-num highlight-stat">{{ profileData.stats?.acceptedAnswersCount ?? 0 }}</span>
+              <span class="stat-num highlight-stat">{{ profileData.stats?.acceptedAnswersCount ?? 0 }}</span>
               <span class="stat-label">最佳采纳</span>
             </div>
             <div class="stat-box">
-          <span class="stat-num">{{ profileData.stats?.likesReceived ?? 0 }}</span>
+              <span class="stat-num">{{ profileData.stats?.likesReceived ?? 0 }}</span>
               <span class="stat-label">获得赞同</span>
             </div>
           </div>
@@ -98,14 +98,10 @@
           >
             <div class="post-header-line">
               <span class="post-kind-tag" :class="`kind-${p.kind}`">{{ p.kind === 'question' ? '提问' : '讨论' }}</span>
-              <span class="post-cat-name">{{ p.categoryName || '地理学术' }}</span>
-              <span class="post-time">{{ formatDate(p.created_at) }}</span>
+              <span class="post-cat-name">{{ p.category || '地理学术' }}</span>
+              <span class="post-time">{{ formatDate(p.createdAt) }}</span>
             </div>
             <h4>{{ p.title }}</h4>
-            <div class="post-footer-line">
-              <span>赞同 {{ p.likesCount ?? 0 }}</span>
-              <span>回复 {{ p.repliesCount ?? 0 }}</span>
-            </div>
           </router-link>
         </div>
         <p v-else class="community-state">暂无发布的探讨记录。</p>
@@ -139,7 +135,7 @@ const isMe = computed(() => currentUser.value && profileData.value && currentUse
 const canEdit = computed(() => isMe.value)
 
 const profilePosts = computed(() => {
-  return Array.isArray(profileData.value?.posts) ? profileData.value.posts : []
+  return Array.isArray(profileData.value?.recentPosts) ? profileData.value.recentPosts : []
 })
 
 const formatDate = value => {
