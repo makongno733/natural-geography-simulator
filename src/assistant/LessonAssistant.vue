@@ -79,13 +79,29 @@ async function ask() {
   aiError.value = ''
   aiSources.value = []
   try {
+    const contextInfo = {
+      routePath: route.path,
+      routeName: route.name,
+      params: route.params
+    }
     const response = await apiRequest('/api/assistant/ask', {
-      method: 'POST', body: JSON.stringify({ question: query.value })
+      method: 'POST',
+      body: JSON.stringify({ question: query.value, contextInfo })
     })
     aiAnswer.value = response.answer
     aiSources.value = response.sources || []
   } catch (error) {
-    aiError.value = error.message || '请稍后再试'
+    // 离线/服务未配置降级：搜索本地章节并给出提示
+    await search()
+    if (results.value.length > 0) {
+      aiAnswer.value = `已为您检索到与“${query.value}”高度相关的 ${results.value.length} 个教材大概念章节。可直接点击下方卡片前往学习深度解析。`
+      aiSources.value = results.value.map(r => ({
+        title: `${r.context} · ${r.title}`,
+        route: `#/${r.to.params.grade}/${r.to.params.book}/${r.to.params.chapter}/${r.to.params.section}`
+      }))
+    } else {
+      aiError.value = error.message || '课程助手暂时无法连接云端，请检查网络或稍后重试。'
+    }
   } finally {
     aiLoading.value = false
   }

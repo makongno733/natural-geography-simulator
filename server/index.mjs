@@ -61,7 +61,7 @@ app.post('/api/assistant/ask', requireOrigin, async (req, res, next) => {
   }
   aiRequests.push(now)
   try {
-    res.json(await answerLessonQuestion(question))
+    res.json(await answerLessonQuestion(question, { contextInfo: req.body?.contextInfo || null }))
   } catch (error) {
     if (error.message === 'DEEPSEEK_429') return res.status(503).json({ error: '课程问答暂时繁忙，请稍后再试' })
     if (error.name === 'TimeoutError') return res.status(504).json({ error: '课程问答超时，请稍后再试' })

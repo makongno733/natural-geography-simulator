@@ -1218,3 +1218,16 @@ input[type="range"]::-moz-range-thumb {
     display: none !important;
   }
 }
+
+/* 移动端安全区与触控增强 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .app-footer {
+    padding-bottom: calc(36px + env(safe-area-inset-bottom));
+  }
+  .assistant-root {
+    bottom: calc(22px + env(safe-area-inset-bottom));
+  }
+  .toast-container {
+    bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}

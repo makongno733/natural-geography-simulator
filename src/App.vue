@@ -145,6 +145,7 @@ import GlobalToast from './components/GlobalToast.vue'
 import GlobalCommandPalette from './components/GlobalCommandPalette.vue'
 import UserGuideTour from './components/UserGuideTour.vue'
 import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
+import { updatePageSeo } from './utils/seo.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -179,12 +180,13 @@ let navTimer = null
 router.beforeEach(() => {
   navLoading.value = true
 })
-router.afterEach(() => {
+router.afterEach((to) => {
   if (typeof window === 'undefined') return
   clearTimeout(navTimer)
   navTimer = window.setTimeout(() => {
     navLoading.value = false
   }, 260)
+  updatePageSeo(to.name)
 })
 
 onMounted(() => {
