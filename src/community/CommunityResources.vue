@@ -15,19 +15,6 @@
       </div>
     </header>
 
-    <!-- 演示/离线模式感知横幅 -->
-    <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
-      <div class="demo-banner-content">
-        <span class="demo-banner-tag">✦ 开放数据馆演示</span>
-        <span>当前云服务暂未连接，已载入标准权威科学数据集推荐清单；所有官方开放下载与源发布页链接均真实有效。</span>
-      </div>
-      <div class="demo-banner-actions">
-        <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadResources">
-          {{ loading ? '连接中…' : '刷新云端数据' }}
-        </button>
-      </div>
-    </aside>
-
     <!-- 资源搜索与分类过滤 -->
     <div class="res-control-bar">
       <div class="res-search-box">
@@ -70,7 +57,7 @@
     </p>
 
     <p v-else-if="!filteredResources.length" class="community-state" role="status">
-      没有找到匹配“{{ filterKeyword }}”的地理数据资源，请尝试其他关键词或清除筛选。
+      {{ filterKeyword ? `没有找到匹配“${filterKeyword}”的资源，请尝试其他关键词。` : '暂无已收录的开放资源，欢迎推荐有明确来源与使用许可的数据。' }}
     </p>
 
     <div v-else class="resources-grid">
@@ -113,12 +100,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { apiRequest } from '../account/client.js'
-import { mockResources } from './mockData.js'
 
 const resources = ref([])
 const loading = ref(false)
 const error = ref('')
-const isDemoMode = ref(false)
 const filterKeyword = ref('')
 const selectedCategory = ref('全部')
 
@@ -150,17 +135,11 @@ async function loadResources() {
   error.value = ''
   try {
     const res = await apiRequest('/api/community/resources')
-    if (res && Array.isArray(res.resources) && res.resources.length > 0) {
-      resources.value = res.resources
-      isDemoMode.value = false
-    } else {
-      resources.value = mockResources
-      isDemoMode.value = true
-    }
+    if (!Array.isArray(res?.resources)) throw new Error('资源数据格式错误')
+    resources.value = res.resources
   } catch {
-    // 离线或服务异常时使用本地高质量学术资源规范数据集
-    resources.value = mockResources
-    isDemoMode.value = true
+    resources.value = []
+    error.value = '资源目录暂时无法载入，请稍后重试。'
   } finally {
     loading.value = false
   }

@@ -6,25 +6,12 @@
       <p class="community-eyebrow">ACADEMIC GUILDS & SOCIETIES / 专业学社</p>
       <h1>地理学术社群与研讨共同体</h1>
       <p class="groups-lead">
-        整理高校地理研讨、空间数据技术与一线名师教研交流社群，促进学科思想碰撞。
+        浏览已登记的地理交流社群，也欢迎推荐拥有公开展示授权的社群。
       </p>
       <div class="groups-hero-notice">
-        <span>温馨提示：社群由学界同行自行发起，加入时请遵守学术交流规范与网络文明准则。</span>
+        <span>加入外部社群前请自行核实群信息与管理员身份；优先在站内公开交流。</span>
       </div>
     </header>
-
-    <!-- 演示/离线模式感知横幅 -->
-    <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
-      <div class="demo-banner-content">
-        <span class="demo-banner-tag">✦ 演示索引</span>
-        <span>当前云服务暂未连接，已呈现精选地理学术社群示例索引；功能可正常交互。</span>
-      </div>
-      <div class="demo-banner-actions">
-        <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadGroups">
-          {{ loading ? '重新连接中…' : '尝试重连云端' }}
-        </button>
-      </div>
-    </aside>
 
     <div class="groups-filter-row">
       <button
@@ -55,7 +42,7 @@
       <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadGroups">重新加载</button>
     </p>
     <p v-else-if="!filteredGroups.length" class="community-state" role="status">
-      该分类下暂无已登记的社群，欢迎浏览其他学术分类。
+      暂无已登记的社群。欢迎提交真实社群及群号公开展示授权。
     </p>
 
     <div v-else class="groups-grid">
@@ -100,7 +87,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { apiRequest } from '../account/client.js'
-import { mockGroups } from './mockData.js'
 import { toast } from '../utils/toast.js'
 
 const groups = ref([])
@@ -108,7 +94,6 @@ const loading = ref(false)
 const error = ref('')
 const selectedCategory = ref('全部')
 const copiedNumber = ref('')
-const isDemoMode = ref(false)
 
 const groupCategories = computed(() => {
   const set = new Set(['全部'])
@@ -128,18 +113,11 @@ async function loadGroups() {
   error.value = ''
   try {
     const res = await apiRequest('/api/community/groups')
-    if (res && Array.isArray(res.groups) && res.groups.length > 0) {
-      groups.value = res.groups
-      isDemoMode.value = false
-    } else {
-      // 若线上暂无数据，使用高质量学术规范演示数据，并标记
-      groups.value = mockGroups
-      isDemoMode.value = true
-    }
+    if (!Array.isArray(res?.groups)) throw new Error('社群数据格式错误')
+    groups.value = res.groups
   } catch {
-    // 离线或服务异常时优雅降级
-    groups.value = mockGroups
-    isDemoMode.value = true
+    groups.value = []
+    error.value = '社群目录暂时无法载入，请稍后重试。'
   } finally {
     loading.value = false
   }

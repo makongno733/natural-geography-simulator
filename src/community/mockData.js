@@ -152,41 +152,6 @@ $$f = 2\\Omega \\sin\\phi$$
   }
 ]
 
-export const mockGroups = [
-  {
-    id: 1,
-    name: '全国高校地理学研讨与学者共同体',
-    category: '学术科研',
-    qq_number: '741295810',
-    description: '面向地理学硕博研究生、高校青年教师与科研人员。探讨自然地理过程、人文空间经济及 GIS 空间算法。',
-    tags: ['自然地理', '人文地理', 'GIS科研', '学术论文']
-  },
-  {
-    id: 2,
-    name: 'GIS / 遥感 / 空间数据技术交流圈',
-    category: '技术应用',
-    qq_number: '829401732',
-    description: '聚焦 ArcGIS Pro、QGIS、Google Earth Engine (GEE)、Python 空间数据分析与开源 WebGIS 制图。',
-    tags: ['QGIS', 'GEE', 'Python', '遥感解译']
-  },
-  {
-    id: 3,
-    name: '中学地理教学名师与教研大概念工坊',
-    category: '教育教学',
-    qq_number: '610398455',
-    description: '服务全国初高中地理一线教师与师范生。分享新课标大概念教学设计、情境化试题命制与三维实验案例。',
-    tags: ['高中地理', '教学设计', '课堂实践', '师范生']
-  },
-  {
-    id: 4,
-    name: '第四纪地质地貌与野外地学考察联盟',
-    category: '野外实习',
-    qq_number: '539182046',
-    description: '岩石圈地质构造、黄土沉积剖面、喀斯特喀斯特峰丛与现代冰川遗迹野外考察记录与学术见闻分享。',
-    tags: ['第四纪地貌', '野外实习', '地质剖面', '地貌摄影']
-  }
-]
-
 export const mockResources = [
   {
     id: 1,

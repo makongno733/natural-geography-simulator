@@ -1,7 +1,6 @@
 /**
  * 全站地理知识、实验、数据与社区统一检索索引
  */
-import { mockPosts, mockResources, mockGroups } from '../community/mockData.js'
 
 // 核心地理实验快速索引
 export const EXPERIMENT_INDEX = [
@@ -140,51 +139,6 @@ export function queryGlobalGeography(rawQuery) {
   for (const curr of CURRICULUM_INDEX) {
     if (curr.title.toLowerCase().includes(q) || curr.desc.toLowerCase().includes(q) || curr.badge.toLowerCase().includes(q)) {
       results.push({ ...curr, category: '教材与知识库' })
-    }
-  }
-
-  // 4. 匹配开放科学数据馆
-  for (const res of mockResources) {
-    if (res.title.toLowerCase().includes(q) || res.description.toLowerCase().includes(q) || res.category.toLowerCase().includes(q)) {
-      results.push({
-        id: `res-${res.id}`,
-        type: '资源',
-        badge: res.format,
-        title: res.title,
-        desc: res.description,
-        route: '/resources',
-        category: '开放数据馆'
-      })
-    }
-  }
-
-  // 5. 匹配学术社区探讨
-  for (const post of mockPosts) {
-    if (post.title.toLowerCase().includes(q) || post.body.toLowerCase().includes(q) || (post.tags && post.tags.some(t => t.toLowerCase().includes(q)))) {
-      results.push({
-        id: `post-${post.id}`,
-        type: post.kind === 'question' ? '问答' : '探讨',
-        badge: post.categoryName || '学术社区',
-        title: post.title,
-        desc: post.body.slice(0, 80) + '…',
-        route: `/community/post/${post.id}`,
-        category: '社区研讨'
-      })
-    }
-  }
-
-  // 6. 匹配专业学术交流社群
-  for (const g of mockGroups) {
-    if (g.name.toLowerCase().includes(q) || g.description.toLowerCase().includes(q) || (g.tags && g.tags.some(t => t.toLowerCase().includes(q)))) {
-      results.push({
-        id: `group-${g.id}`,
-        type: '社群',
-        badge: g.category,
-        title: g.name,
-        desc: `${g.description} (群号: ${g.qq_number})`,
-        route: '/groups',
-        category: '学术社群'
-      })
     }
   }
 
