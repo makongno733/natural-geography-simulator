@@ -31,7 +31,7 @@ describe('SEO and Schema.org Engine', () => {
     expect(parsed.provider.name).toBe('地理共同体')
   })
 
-  it('supports custom title and QA page type', () => {
+  it('supports custom title without claiming unsupported QA structured data', () => {
     updatePageSeo('community-post', {
       title: '关于青藏高原水文连通性探讨',
       desc: '深入分析高程与水系伪河网处理',
@@ -41,6 +41,6 @@ describe('SEO and Schema.org Engine', () => {
 
     const script = document.getElementById('geo-jsonld-schema')
     const parsed = JSON.parse(script.textContent)
-    expect(parsed['@type']).toBe('QAPage')
+    expect(parsed['@type']).toBe('WebPage')
   })
 })

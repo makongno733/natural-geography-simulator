@@ -80,7 +80,6 @@ async function ask() {
   aiSources.value = []
   try {
     const contextInfo = {
-      routePath: route.path,
       routeName: route.name,
       params: route.params
     }
