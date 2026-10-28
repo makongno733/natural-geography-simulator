@@ -108,6 +108,8 @@ describe('Extended Geography Community Platform API', () => {
     expect(detail.payload.post.acceptedReplyId).toBe(replyId)
     const acceptedReply = detail.payload.replies.find(r => r.id === replyId)
     expect(acceptedReply.isAccepted).toBe(true)
+    const solved = call('GET', '/api/community/posts', { query: { hasAccepted: '1' } })
+    expect(solved.payload.posts.find(p => p.id === createdPostId)?.acceptedAnswerExcerpt).toContain('断层是岩层受力')
   })
 
   it('3. toggles like and bookmark on posts', () => {
@@ -290,6 +292,24 @@ describe('Extended Geography Community Platform API', () => {
     const found = updatedList.payload.groups.find(g => g.id === groupId)
     expect(found).not.toBeUndefined()
     expect(found.name).toBe('北京师大自然地理研讨社')
+    expect(database.prepare('SELECT created_at FROM community_group WHERE id = ?').get(groupId).created_at).toMatch(/^20\d\d-/)
+
+    const duplicate = call('POST', '/api/community/groups/submit', {
+      userId: 'user-2', body: { name: '重复社群', category: '高校研学', qqNumber: '888777666',
+        description: '重复登记', authorizationNote: '我确认有公开展示权限' }
+    })
+    expect(duplicate.status).toBe(409)
+
+    for (const qqNumber of ['888777667', '888777668']) {
+      expect(call('POST', '/api/community/groups/submit', {
+        userId: 'user-1', body: { name: `研讨社 ${qqNumber}`, category: '高校研学', qqNumber,
+          description: '地理研讨社', authorizationNote: '我确认有公开展示权限' }
+      }).status).toBe(201)
+    }
+    expect(call('POST', '/api/community/groups/submit', {
+      userId: 'user-1', body: { name: '超限社群', category: '高校研学', qqNumber: '888777669',
+        description: '地理研讨社', authorizationNote: '我确认有公开展示权限' }
+    }).status).toBe(429)
   })
 
   it('retrieves verifiable structured AI summary for hot topics', () => {
@@ -301,7 +321,9 @@ describe('Extended Geography Community Platform API', () => {
     })
     expect(res.status).toBe(200)
     expect(res.payload.isMachineGenerated).toBe(true)
-    expect(res.payload.confidenceLevel).toBe('high')
+    expect(res.payload.isAiGenerated).toBe(false)
+    expect(res.payload.generationMethod).toBe('deterministic-source-extract')
+    expect(res.payload.confidenceLevel).toBe('source-linked')
     expect(res.payload.sourceBasis).toMatch(/NASA|USGS/)
   })
 })
