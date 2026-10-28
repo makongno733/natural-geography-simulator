@@ -33,7 +33,9 @@
 
       <!-- 检索结果列表 -->
       <div class="cmd-results-list" role="listbox">
-        <p v-if="query.trim() && !results.length" class="cmd-empty">
+        <p v-if="query.trim() && searchingCommunity" class="cmd-search-status" role="status">正在检索社区讨论…</p>
+        <p v-if="query.trim() && communitySearchFailed" class="cmd-search-status" role="status">社区检索暂时不可用，以下仅显示教学与实验结果。</p>
+        <p v-if="query.trim() && !searchingCommunity && !communitySearchFailed && !displayList.length" class="cmd-empty">
           未检索到与“{{ query }}”匹配的内容，请尝试更换关键词或按学科浏览。
         </p>
 
@@ -70,12 +72,18 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { queryGlobalGeography, EXPERIMENT_INDEX } from '../utils/globalSearchIndex.js'
+import { accountEnabled, apiRequest } from '../account/client.js'
 
 const router = useRouter()
 const isOpen = ref(false)
 const query = ref('')
 const activeIndex = ref(0)
 const searchInputRef = ref(null)
+const communityResults = ref([])
+const searchingCommunity = ref(false)
+const communitySearchFailed = ref(false)
+let searchTimer
+let searchVersion = 0
 
 const quickTags = ['热力环流', 'DEM高程', '海绵城市', '太阳高度角', '流水侵蚀', '青藏高原']
 
@@ -85,7 +93,7 @@ const results = computed(() => {
 
 const displayList = computed(() => {
   if (query.value.trim()) {
-    return results.value
+    return [...communityResults.value.slice(0, 6), ...results.value].slice(0, 12)
   }
   // 默认推荐经典实验与探究
   return EXPERIMENT_INDEX.slice(0, 5)
@@ -93,6 +101,36 @@ const displayList = computed(() => {
 
 watch(displayList, () => {
   activeIndex.value = 0
+})
+
+watch(query, (value) => {
+  clearTimeout(searchTimer)
+  const version = ++searchVersion
+  communityResults.value = []
+  communitySearchFailed.value = false
+  searchingCommunity.value = false
+  const term = value.trim()
+  if (!term || !accountEnabled || !isOpen.value) return
+  searchingCommunity.value = true
+  searchTimer = setTimeout(async () => {
+    try {
+      const response = await apiRequest(`/api/community/posts?${new URLSearchParams({ q: term })}`, { timeout: 9000 })
+      if (version !== searchVersion || !isOpen.value) return
+      communityResults.value = (response.posts || []).map(post => ({
+        id: `community-${post.id}`,
+        type: post.kind === 'question' ? '问答' : '探讨',
+        badge: post.category || '社区',
+        category: '社区讨论',
+        title: post.title,
+        desc: post.excerpt || '',
+        route: `/community/post/${post.id}`
+      }))
+    } catch {
+      if (version === searchVersion && isOpen.value) communitySearchFailed.value = true
+    } finally {
+      if (version === searchVersion) searchingCommunity.value = false
+    }
+  }, 250)
 })
 
 function open() {
@@ -106,6 +144,9 @@ function open() {
 
 function close() {
   isOpen.value = false
+  clearTimeout(searchTimer)
+  searchVersion += 1
+  searchingCommunity.value = false
 }
 
 function moveHighlight(step) {
@@ -144,6 +185,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onGlobalKeydown)
+  clearTimeout(searchTimer)
+  searchVersion += 1
 })
 
 defineExpose({
@@ -266,6 +309,12 @@ defineExpose({
   padding: 36px 20px;
   text-align: center;
   font-size: 14px;
+  color: var(--text-muted);
+}
+
+.cmd-search-status {
+  margin: 4px 12px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 

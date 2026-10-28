@@ -483,6 +483,7 @@ async function loadPosts(append = false) {
       if (sortMode.value === 'popular') params.set('sort', 'popular')
       const result = await apiRequest(`/api/community/posts?${params}`)
       posts.value = append ? [...posts.value, ...result.posts] : result.posts
+      loading.value = false
       return
     }
   } catch {
