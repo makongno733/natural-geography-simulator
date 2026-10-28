@@ -78,14 +78,48 @@
     <!-- 社群入驻或登记通道 -->
     <section class="group-register-cta baroque-frame">
       <h3>🏛 申请社群登记与学术研讨组织入驻</h3>
-      <p>如果你负责高校地理学学会、科研研讨组或中学地理名师教研室，欢迎提交群名称、研究方向及公开展示授权。</p>
-      <a class="baroque-btn baroque-btn-primary" href="mailto:makongno733@gmail.com?subject=申请地理共同体学术群入驻">提交学术社群入驻申请 ↗</a>
+      <p>如果你负责高校地理学学会、科研研讨组或中学地理名师教研室，欢迎在线提交社群信息及公开展示授权说明。管理员核实后统一收录展示。</p>
+      <button class="baroque-btn baroque-btn-primary" type="button" @click="showSubmitModal = true">在线提交社群审核 ✍</button>
     </section>
+
+    <!-- 在线提交弹窗 -->
+    <div v-if="showSubmitModal" class="group-modal-overlay" role="dialog" aria-modal="true" @click.self="showSubmitModal = false">
+      <div class="group-modal baroque-frame">
+        <div class="modal-head">
+          <h3>登记学术交流社群</h3>
+          <button type="button" class="modal-close-btn" @click="showSubmitModal = false">×</button>
+        </div>
+        <form class="group-form" @submit.prevent="submitGroupApplication">
+          <label>社群名称
+            <input v-model.trim="form.name" required maxlength="50" placeholder="例如：高校自然地理与第四纪地质研学社" />
+          </label>
+          <label>学科分类
+            <input v-model.trim="form.category" required maxlength="30" placeholder="例如：自然地理 / GIS科研 / 教学设计" />
+          </label>
+          <label>QQ 群号 (纯数字)
+            <input v-model.trim="form.qqNumber" required pattern="[0-9]{5,12}" maxlength="12" placeholder="例如：610398455" />
+          </label>
+          <label>社群简介与研讨方向
+            <textarea v-model.trim="form.description" required rows="3" maxlength="200" placeholder="简要说明本群交流定位、成员要求与研讨议题……" />
+          </label>
+          <label>公开展示授权说明 (必填)
+            <textarea v-model.trim="form.authorizationNote" required rows="2" maxlength="200" placeholder="请阐明你在该群中的管理身份，并声明知情同意在地理共同体面向学术同行公开展示。" />
+          </label>
+          <p v-if="submitError" class="community-state community-error">{{ submitError }}</p>
+          <div class="modal-actions">
+            <button class="baroque-btn" type="button" @click="showSubmitModal = false">取消</button>
+            <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="submitting">
+              {{ submitting ? '提交中…' : '递交审核 ✦' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { apiRequest } from '../account/client.js'
 import { toast } from '../utils/toast.js'
 
@@ -94,6 +128,39 @@ const loading = ref(false)
 const error = ref('')
 const selectedCategory = ref('全部')
 const copiedNumber = ref('')
+const showSubmitModal = ref(false)
+const submitting = ref(false)
+const submitError = ref('')
+
+const form = reactive({
+  name: '',
+  category: '',
+  qqNumber: '',
+  description: '',
+  authorizationNote: ''
+})
+
+async function submitGroupApplication() {
+  submitting.value = true
+  submitError.value = ''
+  try {
+    await apiRequest('/api/community/groups/submit', {
+      method: 'POST',
+      body: JSON.stringify(form)
+    })
+    toast.success('社群申请已递交！管委会将在核实授权后公开收录。')
+    showSubmitModal.value = false
+    form.name = ''
+    form.category = ''
+    form.qqNumber = ''
+    form.description = ''
+    form.authorizationNote = ''
+  } catch (err) {
+    submitError.value = err.message || '提交失败，请先登录后重试。'
+  } finally {
+    submitting.value = false
+  }
+}
 
 const groupCategories = computed(() => {
   const set = new Set(['全部'])
@@ -352,5 +419,79 @@ onMounted(loadGroups)
   .groups-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.group-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(7, 19, 34, 0.65);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.group-modal {
+  width: 100%;
+  max-width: 560px;
+  background: #ffffff;
+  border-radius: var(--radius-box);
+  padding: 28px 32px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  border: 1px solid var(--baroque-border-gold);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--geo-ocean-deep);
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.group-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.group-form input,
+.group-form textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
 }
 </style>
