@@ -151,7 +151,7 @@ export function migrateCommunity() {
   // 加法升级 community_group 表支持公开授权审核流
   const groupCols = database.prepare("PRAGMA table_info(community_group)").all().map(c => c.name)
   if (!groupCols.includes('status')) {
-    database.exec("ALTER TABLE community_group ADD COLUMN status TEXT NOT NULL DEFAULT 'approved';")
+    database.exec("ALTER TABLE community_group ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';")
   }
   if (!groupCols.includes('submitted_by')) {
     database.exec("ALTER TABLE community_group ADD COLUMN submitted_by TEXT REFERENCES user(id);")
@@ -275,7 +275,10 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     if (categoryId) { clauses.push('p.category_id = ?'); params.push(categoryId) }
     if (kind) { clauses.push('p.kind = ?'); params.push(kind) }
     if (tag) { clauses.push('p.tags LIKE ?'); params.push(`%"${tag}"%`) }
-    if (req.query.hasAccepted === '1') { clauses.push('p.accepted_reply_id IS NOT NULL') }
+    if (req.query.hasAccepted === '1') {
+      clauses.push("p.kind = 'question'")
+      clauses.push("EXISTS (SELECT 1 FROM community_reply accepted WHERE accepted.id = p.accepted_reply_id AND accepted.post_id = p.id AND accepted.status = 'published')")
+    }
 
     let rankJoin = ''
     let order = 'p.created_at DESC'
@@ -294,7 +297,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
       p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceCard,
       p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author,
-      (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id) AS acceptedAnswerExcerpt,
+      (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published') AS acceptedAnswerExcerpt,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
@@ -600,17 +603,21 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
       return res.status(400).json({ error: 'QQ 群号须为 5–12 位有效数字' })
     }
 
-    const recent = database.prepare("SELECT COUNT(*) AS n FROM community_group WHERE submitted_by = ? AND datetime(created_at) > datetime('now', '-1 hour')")
-      .get(req.accountUser.id)?.n || 0
+    const now = new Date().toISOString()
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const recent = database.prepare('SELECT COUNT(*) AS n FROM community_group WHERE submitted_by = ? AND created_at > ?')
+      .get(req.accountUser.id, hourAgo)?.n || 0
     if (recent >= 3) {
       return res.status(429).json({ error: '社群申请过于频繁，请稍后再试' })
     }
+    const duplicate = database.prepare("SELECT id FROM community_group WHERE qq_number = ? AND status IN ('pending', 'approved')").get(qqNumber)
+    if (duplicate) return res.status(409).json({ error: '该 QQ 群已有待审核或已收录的申请' })
 
     const tags = JSON.stringify(parseTags(req.body?.tags))
     const result = database.prepare(`INSERT INTO community_group 
-      (name, category, qq_number, description, tags, status, submitted_by, authorization_note, sort_order)
-      VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, 100)`)
-      .run(name, category, qqNumber, description, tags, req.accountUser.id, authorizationNote)
+      (name, category, qq_number, description, tags, status, submitted_by, authorization_note, created_at, sort_order)
+      VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, 100)`)
+      .run(name, category, qqNumber, description, tags, req.accountUser.id, authorizationNote, now)
 
     res.status(201).json({ id: result.lastInsertRowid, status: 'pending' })
   })
@@ -634,8 +641,8 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const action = req.body?.action
     if (!id || !['approve', 'reject'].includes(action)) return res.status(400).json({ error: '无效审核操作' })
     const status = action === 'approve' ? 'approved' : 'rejected'
-    const result = database.prepare('UPDATE community_group SET status = ? WHERE id = ?').run(status, id)
-    if (result.changes === 0) return res.status(404).json({ error: '社群不存在' })
+    const result = database.prepare("UPDATE community_group SET status = ? WHERE id = ? AND status = 'pending'").run(status, id)
+    if (result.changes === 0) return res.status(409).json({ error: '社群不存在或申请已处理' })
     res.json({ id, status })
   })
 
@@ -661,8 +668,10 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
       occurredAt: topic.occurred_at,
       verifiedAt: topic.fetched_at,
       isMachineGenerated: true,
-      confidenceLevel: 'high',
-      verificationNote: '本摘要仅提炼自官方科学机构公布的时空与分类参数，不包含未经核实的影响或推论。'
+      isAiGenerated: false,
+      generationMethod: 'deterministic-source-extract',
+      confidenceLevel: 'source-linked',
+      verificationNote: '这是根据来源字段整理的机器摘录，尚未经人工核验；不包含未经来源证实的影响或推论。'
     }
     res.json(summaryData)
   })

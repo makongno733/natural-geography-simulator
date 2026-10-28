@@ -97,7 +97,7 @@
             <p class="community-eyebrow">THE SCHOLARLY FORUM / 论坛交流</p>
             <h2>{{ searchQuery ? `检索：“${searchQuery}”` : selectedCategoryName ? `${selectedCategoryName} 分区` : selectedTag ? `标签 #${selectedTag}` : '全部学术讨论与问答' }}</h2>
           </div>
-          <button v-if="searchQuery || selectedCategory || kind || selectedTag" class="community-clear baroque-btn baroque-btn-sm" type="button" @click="clearFilters">清除全部筛选</button>
+          <button v-if="searchQuery || selectedCategory || kind || selectedTag || onlySolved" class="community-clear baroque-btn baroque-btn-sm" type="button" @click="clearFilters">清除全部筛选</button>
         </div>
 
         <!-- 筛选与排序控制器 -->
@@ -106,6 +106,7 @@
             <button type="button" :class="['baroque-filter-btn', { active: kind === '' }]" @click="setKind('')">全部动态</button>
             <button type="button" :class="['baroque-filter-btn', { active: kind === 'question' }]" @click="setKind('question')">❓ 学术问答</button>
             <button type="button" :class="['baroque-filter-btn', { active: kind === 'discussion' }]" @click="setKind('discussion')">💬 经验探讨</button>
+            <button type="button" :class="['baroque-filter-btn', { active: onlySolved }]" :aria-pressed="onlySolved" @click="toggleSolved">✓ 已采纳问答</button>
           </div>
           <div class="community-sort" aria-label="排序规则">
             <button type="button" :class="['baroque-sort-btn', { active: sortMode === 'newest' }]" @click="setSort('newest')">最新发布</button>
@@ -146,6 +147,7 @@
             </h3>
 
             <p class="post-excerpt">{{ post.excerpt }}</p>
+            <p v-if="post.acceptedAnswerExcerpt" class="post-excerpt">✓ 已采纳回答：{{ post.acceptedAnswerExcerpt }}</p>
 
             <!-- 标签列表 -->
             <div v-if="post.tags && post.tags.length" class="post-tags-row">
@@ -351,6 +353,7 @@ const searchQuery = ref('')
 const selectedCategory = ref(null)
 const selectedTag = ref('')
 const kind = ref(route.path === '/questions' ? 'question' : '')
+const onlySolved = ref(false)
 const sortMode = ref('newest')
 const page = ref(1)
 const composeRef = ref(null)
@@ -416,6 +419,7 @@ async function loadPosts(append = false) {
       if (searchQuery.value) params.set('q', searchQuery.value)
       if (selectedCategory.value) params.set('category', String(selectedCategory.value))
       if (kind.value) params.set('kind', kind.value)
+      if (onlySolved.value) params.set('hasAccepted', '1')
       if (selectedTag.value) params.set('tag', selectedTag.value)
       if (sortMode.value === 'popular') params.set('sort', 'popular')
       const result = await apiRequest(`/api/community/posts?${params}`)
@@ -472,9 +476,10 @@ async function loadPosts(append = false) {
 
 function resetAndLoad() { page.value = 1; void loadPosts() }
 function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad() }
-function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = ''; resetAndLoad() }
+function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = route.path === '/questions' ? 'question' : ''; onlySolved.value = false; resetAndLoad() }
 function setCategory(id) { selectedCategory.value = selectedCategory.value === id ? null : id; resetAndLoad() }
-function setKind(value) { kind.value = value; resetAndLoad() }
+function setKind(value) { kind.value = value; if (value === 'discussion') onlySolved.value = false; resetAndLoad() }
+function toggleSolved() { onlySolved.value = !onlySolved.value; if (onlySolved.value) kind.value = 'question'; resetAndLoad() }
 function setSort(mode) { sortMode.value = mode; resetAndLoad() }
 function filterByTag(tag) { selectedTag.value = tag; resetAndLoad() }
 async function openTopic(topic) {
