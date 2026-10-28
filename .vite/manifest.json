@@ -1,6 +1,6 @@
 {
-  "_BaseScene-CtKkOpgq.js": {
-    "file": "assets/BaseScene-CtKkOpgq.js",
+  "_BaseScene-BZLfuq71.js": {
+    "file": "assets/BaseScene-BZLfuq71.js",
     "name": "BaseScene",
     "imports": [
       "index.html",
@@ -17,8 +17,8 @@
       "_vendor-three-CzQ09LF_.js"
     ]
   },
-  "_GlossaryText-DBgVlXsR.js": {
-    "file": "assets/GlossaryText-DBgVlXsR.js",
+  "_GlossaryText-BZ4qyNU7.js": {
+    "file": "assets/GlossaryText-BZ4qyNU7.js",
     "name": "GlossaryText",
     "imports": [
       "_vendor-core-DmciU1WR.js",
@@ -39,8 +39,12 @@
       "_vendor-three-CzQ09LF_.js"
     ]
   },
-  "_ModelPedagogyPanel-5LV7Fl_K.js": {
-    "file": "assets/ModelPedagogyPanel-5LV7Fl_K.js",
+  "_ModelPedagogyPanel-COvxKvE-.css": {
+    "file": "assets/ModelPedagogyPanel-COvxKvE-.css",
+    "src": "_ModelPedagogyPanel-COvxKvE-.css"
+  },
+  "_ModelPedagogyPanel-CgmNZGRL.js": {
+    "file": "assets/ModelPedagogyPanel-CgmNZGRL.js",
     "name": "ModelPedagogyPanel",
     "imports": [
       "index.html",
@@ -50,12 +54,8 @@
       "assets/ModelPedagogyPanel-COvxKvE-.css"
     ]
   },
-  "_ModelPedagogyPanel-COvxKvE-.css": {
-    "file": "assets/ModelPedagogyPanel-COvxKvE-.css",
-    "src": "_ModelPedagogyPanel-COvxKvE-.css"
-  },
-  "_catalog-PYZI3VRJ.js": {
-    "file": "assets/catalog-PYZI3VRJ.js",
+  "_catalog-NasNRxLv.js": {
+    "file": "assets/catalog-NasNRxLv.js",
     "name": "catalog",
     "imports": [
       "index.html"
@@ -97,11 +97,11 @@
     "file": "assets/evidenceCatalog-Gg1a_1US.js",
     "name": "evidenceCatalog"
   },
-  "_experimentLinks-CdVnsS_i.js": {
-    "file": "assets/experimentLinks-CdVnsS_i.js",
+  "_experimentLinks-BM_X7dv-.js": {
+    "file": "assets/experimentLinks-BM_X7dv-.js",
     "name": "experimentLinks",
     "imports": [
-      "_catalog-PYZI3VRJ.js",
+      "_catalog-NasNRxLv.js",
       "src/textbook/data/index.js"
     ]
   },
@@ -109,8 +109,8 @@
     "file": "assets/geoSpatialAnalysis-DcIXn7zj.js",
     "name": "geoSpatialAnalysis"
   },
-  "_loader-BuBbI_Rl.js": {
-    "file": "assets/loader-BuBbI_Rl.js",
+  "_loader-nhi-HLfx.js": {
+    "file": "assets/loader-nhi-HLfx.js",
     "name": "loader",
     "imports": [
       "index.html"
@@ -162,7 +162,7 @@
     ]
   },
   "index.html": {
-    "file": "assets/index-DF6bMJuA.js",
+    "file": "assets/index-C4mGKcZj.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -197,14 +197,14 @@
       "src/geo-labs/RemoteSensingAI.vue"
     ],
     "css": [
-      "assets/index-PUWpWE5J.css"
+      "assets/index-DA7nvAFR.css"
     ],
     "assets": [
       "assets/earth-apollo17-Dnloec6g.jpg"
     ]
   },
   "src/account/AccountPage.vue": {
-    "file": "assets/AccountPage-Dx1oOjXm.js",
+    "file": "assets/AccountPage-DgKueZMz.js",
     "name": "AccountPage",
     "src": "src/account/AccountPage.vue",
     "isDynamicEntry": true,
@@ -220,7 +220,7 @@
     ]
   },
   "src/account/SectionComments.vue": {
-    "file": "assets/SectionComments-B8D48B7D.js",
+    "file": "assets/SectionComments-CHyNa2Ij.js",
     "name": "SectionComments",
     "src": "src/account/SectionComments.vue",
     "isDynamicEntry": true,
@@ -236,7 +236,7 @@
     ]
   },
   "src/account/client.js": {
-    "file": "assets/client-DRvTWGy6.js",
+    "file": "assets/client-CbnJkdJY.js",
     "name": "client",
     "src": "src/account/client.js",
     "isDynamicEntry": true,
@@ -1816,7 +1816,7 @@
     "src": "src/assets/textbook/选择性必修3/4.3/ch4-lancang-mekong-river.png"
   },
   "src/calendar/GeoCalendar.vue": {
-    "file": "assets/GeoCalendar-CVEyV-1x.js",
+    "file": "assets/GeoCalendar-BIxeDRs8.js",
     "name": "GeoCalendar",
     "src": "src/calendar/GeoCalendar.vue",
     "isDynamicEntry": true,
@@ -1830,7 +1830,7 @@
     ]
   },
   "src/community/CommunityAdmin.vue": {
-    "file": "assets/CommunityAdmin-ByL5vM_1.js",
+    "file": "assets/CommunityAdmin-BDxprkWn.js",
     "name": "CommunityAdmin",
     "src": "src/community/CommunityAdmin.vue",
     "isDynamicEntry": true,
@@ -1843,23 +1843,23 @@
     ]
   },
   "src/community/CommunityGroups.vue": {
-    "file": "assets/CommunityGroups-BgfrQVHL.js",
+    "file": "assets/CommunityGroups-B8CPSCwU.js",
     "name": "CommunityGroups",
     "src": "src/community/CommunityGroups.vue",
     "isDynamicEntry": true,
     "imports": [
+      "_vendor-core-DmciU1WR.js",
       "src/account/client.js",
       "index.html",
-      "_vendor-core-DmciU1WR.js",
       "_vendor-auth-q9PaoEzb.js",
       "_vendor-vue-D_4iZPJf.js"
     ],
     "css": [
-      "assets/CommunityGroups-BppzvOUW.css"
+      "assets/CommunityGroups-7UbCYy5C.css"
     ]
   },
   "src/community/CommunityHome.vue": {
-    "file": "assets/CommunityHome-cqwUn_Ys.js",
+    "file": "assets/CommunityHome--G-4n5bn.js",
     "name": "CommunityHome",
     "src": "src/community/CommunityHome.vue",
     "isDynamicEntry": true,
@@ -1876,7 +1876,7 @@
     ]
   },
   "src/community/CommunityPost.vue": {
-    "file": "assets/CommunityPost-dqGtjCCB.js",
+    "file": "assets/CommunityPost-Cb_N6xRR.js",
     "name": "CommunityPost",
     "src": "src/community/CommunityPost.vue",
     "isDynamicEntry": true,
@@ -1893,7 +1893,7 @@
     ]
   },
   "src/community/CommunityResources.vue": {
-    "file": "assets/CommunityResources-BMbB7bSM.js",
+    "file": "assets/CommunityResources-BgqTgFcu.js",
     "name": "CommunityResources",
     "src": "src/community/CommunityResources.vue",
     "isDynamicEntry": true,
@@ -1909,7 +1909,7 @@
     ]
   },
   "src/community/UserProfile.vue": {
-    "file": "assets/UserProfile-BajjBHpV.js",
+    "file": "assets/UserProfile-D0GRwLOn.js",
     "name": "UserProfile",
     "src": "src/community/UserProfile.vue",
     "isDynamicEntry": true,
@@ -1925,16 +1925,16 @@
     ]
   },
   "src/engine/WaterCycleView.vue": {
-    "file": "assets/WaterCycleView-DttG0H8h.js",
+    "file": "assets/WaterCycleView-BmZghIIB.js",
     "name": "WaterCycleView",
     "src": "src/engine/WaterCycleView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_GeometryFactory-BLJA8r7N.js",
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
     ],
@@ -1954,13 +1954,13 @@
     ]
   },
   "src/experiments/ExperimentCategory.vue": {
-    "file": "assets/ExperimentCategory-Bsn3IAv3.js",
+    "file": "assets/ExperimentCategory-aevUVjMK.js",
     "name": "ExperimentCategory",
     "src": "src/experiments/ExperimentCategory.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-vue-D_4iZPJf.js",
-      "_catalog-PYZI3VRJ.js",
+      "_catalog-NasNRxLv.js",
       "index.html",
       "_vendor-core-DmciU1WR.js"
     ],
@@ -1969,17 +1969,17 @@
     ]
   },
   "src/experiments/ExperimentView.vue": {
-    "file": "assets/ExperimentView-BakWzPc7.js",
+    "file": "assets/ExperimentView-CAeHsPic.js",
     "name": "ExperimentView",
     "src": "src/experiments/ExperimentView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-vue-D_4iZPJf.js",
-      "_catalog-PYZI3VRJ.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_catalog-NasNRxLv.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-core-DmciU1WR.js",
-      "_experimentLinks-CdVnsS_i.js",
+      "_experimentLinks-BM_X7dv-.js",
       "src/textbook/data/index.js"
     ],
     "css": [
@@ -1987,14 +1987,14 @@
     ]
   },
   "src/experiments/ExperimentsHome.vue": {
-    "file": "assets/ExperimentsHome-BYepafKe.js",
+    "file": "assets/ExperimentsHome-CQwyoOmf.js",
     "name": "ExperimentsHome",
     "src": "src/experiments/ExperimentsHome.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
-      "_catalog-PYZI3VRJ.js",
-      "_experimentLinks-CdVnsS_i.js",
+      "_catalog-NasNRxLv.js",
+      "_experimentLinks-BM_X7dv-.js",
       "src/textbook/data/index.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2004,13 +2004,13 @@
     ]
   },
   "src/experiments/modules/astronomy/Eclipse.vue": {
-    "file": "assets/Eclipse-Cf4ey5XC.js",
+    "file": "assets/Eclipse-J8MbQBxb.js",
     "name": "Eclipse",
     "src": "src/experiments/modules/astronomy/Eclipse.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2020,13 +2020,13 @@
     ]
   },
   "src/experiments/modules/astronomy/KeplerLaws.vue": {
-    "file": "assets/KeplerLaws-CJmanx0p.js",
+    "file": "assets/KeplerLaws-QfZSit2j.js",
     "name": "KeplerLaws",
     "src": "src/experiments/modules/astronomy/KeplerLaws.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2036,13 +2036,13 @@
     ]
   },
   "src/experiments/modules/astronomy/MoonPhases.vue": {
-    "file": "assets/MoonPhases-DTAU9-gL.js",
+    "file": "assets/MoonPhases-hI92k_Di.js",
     "name": "MoonPhases",
     "src": "src/experiments/modules/astronomy/MoonPhases.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2052,13 +2052,13 @@
     ]
   },
   "src/experiments/modules/astronomy/Seasons.vue": {
-    "file": "assets/Seasons-BR8QhJ9U.js",
+    "file": "assets/Seasons-B6egAyyA.js",
     "name": "Seasons",
     "src": "src/experiments/modules/astronomy/Seasons.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2068,13 +2068,13 @@
     ]
   },
   "src/experiments/modules/astronomy/SolarMotion.vue": {
-    "file": "assets/SolarMotion-C2LW2trV.js",
+    "file": "assets/SolarMotion-CqjgvbMh.js",
     "name": "SolarMotion",
     "src": "src/experiments/modules/astronomy/SolarMotion.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2084,13 +2084,13 @@
     ]
   },
   "src/experiments/modules/geology/FaultModel.vue": {
-    "file": "assets/FaultModel-uHWK_tc0.js",
+    "file": "assets/FaultModel-Cxp0hHu5.js",
     "name": "FaultModel",
     "src": "src/experiments/modules/geology/FaultModel.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2112,13 +2112,13 @@
     "isDynamicEntry": true
   },
   "src/experiments/modules/geology/SoilErosion.vue": {
-    "file": "assets/SoilErosion-jZC12OBE.js",
+    "file": "assets/SoilErosion-DEaFLe97.js",
     "name": "SoilErosion",
     "src": "src/experiments/modules/geology/SoilErosion.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2128,13 +2128,13 @@
     ]
   },
   "src/experiments/modules/geology/Stratigraphy.vue": {
-    "file": "assets/Stratigraphy-B0-HrdFk.js",
+    "file": "assets/Stratigraphy-BKIo59En.js",
     "name": "Stratigraphy",
     "src": "src/experiments/modules/geology/Stratigraphy.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2144,13 +2144,13 @@
     ]
   },
   "src/experiments/modules/hydrology/Groundwater.vue": {
-    "file": "assets/Groundwater-v_8LMVhy.js",
+    "file": "assets/Groundwater-DhHH7aG3.js",
     "name": "Groundwater",
     "src": "src/experiments/modules/hydrology/Groundwater.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2166,13 +2166,13 @@
     "isDynamicEntry": true
   },
   "src/experiments/modules/hydrology/SedimentTransport.vue": {
-    "file": "assets/SedimentTransport-B0hcHiQO.js",
+    "file": "assets/SedimentTransport-YM6RBEbp.js",
     "name": "SedimentTransport",
     "src": "src/experiments/modules/hydrology/SedimentTransport.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2182,13 +2182,13 @@
     ]
   },
   "src/experiments/modules/hydrology/StreamTable.vue": {
-    "file": "assets/StreamTable-DBiCQg07.js",
+    "file": "assets/StreamTable-ze0jixHY.js",
     "name": "StreamTable",
     "src": "src/experiments/modules/hydrology/StreamTable.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2204,7 +2204,7 @@
     "isDynamicEntry": true
   },
   "src/experiments/modules/meteorology/ClimateChart.vue": {
-    "file": "assets/ClimateChart-CB-5bNji.js",
+    "file": "assets/ClimateChart-Cf5Uwjwf.js",
     "name": "ClimateChart",
     "src": "src/experiments/modules/meteorology/ClimateChart.vue",
     "isDynamicEntry": true,
@@ -2224,13 +2224,13 @@
     "isDynamicEntry": true
   },
   "src/experiments/modules/meteorology/Coriolis.vue": {
-    "file": "assets/Coriolis-BMQAzpqc.js",
+    "file": "assets/Coriolis-D6D7ZnU9.js",
     "name": "Coriolis",
     "src": "src/experiments/modules/meteorology/Coriolis.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2240,13 +2240,13 @@
     ]
   },
   "src/experiments/modules/meteorology/ThermalCirculation.vue": {
-    "file": "assets/ThermalCirculation-B_-s22n1.js",
+    "file": "assets/ThermalCirculation-CYXZszoN.js",
     "name": "ThermalCirculation",
     "src": "src/experiments/modules/meteorology/ThermalCirculation.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2262,16 +2262,16 @@
     "isDynamicEntry": true
   },
   "src/experiments/modules/systems/HumanEnvironment.vue": {
-    "file": "assets/HumanEnvironment-Cb3JNfcS.js",
+    "file": "assets/HumanEnvironment-6ekRMP5U.js",
     "name": "HumanEnvironment",
     "src": "src/experiments/modules/systems/HumanEnvironment.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_vendor-three-CzQ09LF_.js",
       "_GeometryFactory-BLJA8r7N.js",
       "_sceneConfigs-BuVg1_-5.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
@@ -2281,16 +2281,16 @@
     ]
   },
   "src/experiments/modules/systems/SpatialNetwork.vue": {
-    "file": "assets/SpatialNetwork-CDJI6UPv.js",
+    "file": "assets/SpatialNetwork-B0U3rjeS.js",
     "name": "SpatialNetwork",
     "src": "src/experiments/modules/systems/SpatialNetwork.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_vendor-three-CzQ09LF_.js",
       "_GeometryFactory-BLJA8r7N.js",
       "_sceneConfigs-BuVg1_-5.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
@@ -2300,12 +2300,12 @@
     ]
   },
   "src/geo-labs/GeoLabsHome.vue": {
-    "file": "assets/GeoLabsHome-Da4bABKA.js",
+    "file": "assets/GeoLabsHome-D-7Wh9cA.js",
     "name": "GeoLabsHome",
     "src": "src/geo-labs/GeoLabsHome.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_catalog-PYZI3VRJ.js",
+      "_catalog-NasNRxLv.js",
       "_vendor-core-DmciU1WR.js",
       "_geoSpatialAnalysis-DcIXn7zj.js",
       "index.html",
@@ -2316,12 +2316,12 @@
     ]
   },
   "src/geo-labs/RemoteSensingAI.vue": {
-    "file": "assets/RemoteSensingAI-PpF9QigT.js",
+    "file": "assets/RemoteSensingAI-BHhIgPvP.js",
     "name": "RemoteSensingAI",
     "src": "src/geo-labs/RemoteSensingAI.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
@@ -2331,14 +2331,14 @@
     ]
   },
   "src/geo-labs/SatelliteCompare.vue": {
-    "file": "assets/SatelliteCompare-DkaVhzs3.js",
+    "file": "assets/SatelliteCompare-BAyzCBPW.js",
     "name": "SatelliteCompare",
     "src": "src/geo-labs/SatelliteCompare.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
       "_vendor-map-LBpqBUBv.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
     ],
@@ -2347,14 +2347,14 @@
     ]
   },
   "src/geo-labs/TerrainExplorer.vue": {
-    "file": "assets/TerrainExplorer-CcrsUJXm.js",
+    "file": "assets/TerrainExplorer-DJjUo5Yk.js",
     "name": "TerrainExplorer",
     "src": "src/geo-labs/TerrainExplorer.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_geoSpatialAnalysis-DcIXn7zj.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
@@ -2364,7 +2364,7 @@
     ]
   },
   "src/inquiry/InquiryStudio.vue": {
-    "file": "assets/InquiryStudio-Ck6Qh5wc.js",
+    "file": "assets/InquiryStudio-ba8IiLd5.js",
     "name": "InquiryStudio",
     "src": "src/inquiry/InquiryStudio.vue",
     "isDynamicEntry": true,
@@ -2378,7 +2378,7 @@
     ]
   },
   "src/learning/GeographyPractice.vue": {
-    "file": "assets/GeographyPractice-wRFCLLl7.js",
+    "file": "assets/GeographyPractice-Bq1MSmDm.js",
     "name": "GeographyPractice",
     "src": "src/learning/GeographyPractice.vue",
     "isDynamicEntry": true,
@@ -2392,18 +2392,18 @@
     ]
   },
   "src/sandbox/DisasterSandbox.vue": {
-    "file": "assets/DisasterSandbox-Fw-d6btc.js",
+    "file": "assets/DisasterSandbox-D8ePfvbL.js",
     "name": "DisasterSandbox",
     "src": "src/sandbox/DisasterSandbox.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_GeometryFactory-BLJA8r7N.js",
       "_MaterialLibrary-CR-dWIi5.js",
       "_vendor-three-CzQ09LF_.js",
-      "_GlossaryText-DBgVlXsR.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_GlossaryText-BZ4qyNU7.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
     ],
@@ -2412,18 +2412,18 @@
     ]
   },
   "src/sandbox/Earth3D.vue": {
-    "file": "assets/Earth3D-W8heYlC0.js",
+    "file": "assets/Earth3D-DsMHEmpC.js",
     "name": "Earth3D",
     "src": "src/sandbox/Earth3D.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "src/engine/modules/EarthInteriorModule.js",
       "_MaterialLibrary-CR-dWIi5.js",
       "_GeometryFactory-BLJA8r7N.js",
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
     ],
@@ -2432,14 +2432,14 @@
     ]
   },
   "src/sandbox/GeologicTimeView.vue": {
-    "file": "assets/GeologicTimeView-B84gEQ0I.js",
+    "file": "assets/GeologicTimeView-CeVG7azA.js",
     "name": "GeologicTimeView",
     "src": "src/sandbox/GeologicTimeView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
@@ -2449,14 +2449,14 @@
     ]
   },
   "src/sandbox/MapProjectionView.vue": {
-    "file": "assets/MapProjectionView-BltniVDG.js",
+    "file": "assets/MapProjectionView-BV5cN_ff.js",
     "name": "MapProjectionView",
     "src": "src/sandbox/MapProjectionView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
@@ -2466,17 +2466,17 @@
     ]
   },
   "src/sandbox/SandboxApp.vue": {
-    "file": "assets/SandboxApp-ncx8LfNE.js",
+    "file": "assets/SandboxApp-BtWhIzus.js",
     "name": "SandboxApp",
     "src": "src/sandbox/SandboxApp.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_vendor-three-CzQ09LF_.js",
       "_GeometryFactory-BLJA8r7N.js",
-      "_GlossaryText-DBgVlXsR.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_GlossaryText-BZ4qyNU7.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "index.html",
       "_vendor-vue-D_4iZPJf.js"
     ],
@@ -2485,18 +2485,18 @@
     ]
   },
   "src/soil-profile/SoilProfilePage.vue": {
-    "file": "assets/SoilProfilePage-DO2jHzbu.js",
+    "file": "assets/SoilProfilePage-RQKQb0-3.js",
     "name": "SoilProfilePage",
     "src": "src/soil-profile/SoilProfilePage.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_MaterialLibrary-CR-dWIi5.js",
       "_GeometryFactory-BLJA8r7N.js",
       "_vendor-three-CzQ09LF_.js",
       "index.html",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-vue-D_4iZPJf.js"
     ],
     "css": [
@@ -2504,7 +2504,7 @@
     ]
   },
   "src/textbook/BookSelect.vue": {
-    "file": "assets/BookSelect-CoPDVS8a.js",
+    "file": "assets/BookSelect-BpMy_xpI.js",
     "name": "BookSelect",
     "src": "src/textbook/BookSelect.vue",
     "isDynamicEntry": true,
@@ -2518,7 +2518,7 @@
     ]
   },
   "src/textbook/ChapterList.vue": {
-    "file": "assets/ChapterList-B354z0Bx.js",
+    "file": "assets/ChapterList-hf8gCR4F.js",
     "name": "ChapterList",
     "src": "src/textbook/ChapterList.vue",
     "isDynamicEntry": true,
@@ -2532,7 +2532,7 @@
     ]
   },
   "src/textbook/SectionContent.vue": {
-    "file": "assets/SectionContent-DoIQ0xn6.js",
+    "file": "assets/SectionContent-CpNLWFiF.js",
     "name": "SectionContent",
     "src": "src/textbook/SectionContent.vue",
     "isDynamicEntry": true,
@@ -2540,9 +2540,9 @@
       "index.html",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js",
-      "_catalog-PYZI3VRJ.js",
-      "_experimentLinks-CdVnsS_i.js",
-      "_loader-BuBbI_Rl.js",
+      "_catalog-NasNRxLv.js",
+      "_experimentLinks-BM_X7dv-.js",
+      "_loader-nhi-HLfx.js",
       "src/textbook/data/index.js"
     ],
     "dynamicImports": [
@@ -2572,13 +2572,13 @@
     ]
   },
   "src/textbook/TextbookHome.vue": {
-    "file": "assets/TextbookHome-BmHBPmAS.js",
+    "file": "assets/TextbookHome-DteaySI7.js",
     "name": "TextbookHome",
     "src": "src/textbook/TextbookHome.vue",
     "isDynamicEntry": true,
     "imports": [
       "index.html",
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "_vendor-three-CzQ09LF_.js",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
@@ -2619,16 +2619,16 @@
     ]
   },
   "src/textbook/components/AtmosphereViewer.vue": {
-    "file": "assets/AtmosphereViewer-CyizrNEu.js",
+    "file": "assets/AtmosphereViewer-Dd3Xvkt_.js",
     "name": "AtmosphereViewer",
     "src": "src/textbook/components/AtmosphereViewer.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_BaseScene-CtKkOpgq.js",
+      "_BaseScene-BZLfuq71.js",
       "index.html",
       "_GeometryFactory-BLJA8r7N.js",
       "_vendor-three-CzQ09LF_.js",
-      "_ModelPedagogyPanel-5LV7Fl_K.js",
+      "_ModelPedagogyPanel-CgmNZGRL.js",
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js"
     ],
@@ -2640,7 +2640,7 @@
     ]
   },
   "src/textbook/components/DataVizViewer.vue": {
-    "file": "assets/DataVizViewer-ClMBqNBY.js",
+    "file": "assets/DataVizViewer-CRsVyJqr.js",
     "name": "DataVizViewer",
     "src": "src/textbook/components/DataVizViewer.vue",
     "isDynamicEntry": true,
@@ -2654,7 +2654,7 @@
     ]
   },
   "src/textbook/components/MindMapViewer.vue": {
-    "file": "assets/MindMapViewer-B3cMWAMf.js",
+    "file": "assets/MindMapViewer-CdPOF5HU.js",
     "name": "MindMapViewer",
     "src": "src/textbook/components/MindMapViewer.vue",
     "isDynamicEntry": true,
@@ -3144,16 +3144,16 @@
     "isDynamicEntry": true
   },
   "src/textbook/knowledge/KnowledgeLibrary.vue": {
-    "file": "assets/KnowledgeLibrary-BpsZOle4.js",
+    "file": "assets/KnowledgeLibrary-DL8OhHS_.js",
     "name": "KnowledgeLibrary",
     "src": "src/textbook/knowledge/KnowledgeLibrary.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-core-DmciU1WR.js",
       "_vendor-vue-D_4iZPJf.js",
-      "_loader-BuBbI_Rl.js",
+      "_loader-nhi-HLfx.js",
       "index.html",
-      "_catalog-PYZI3VRJ.js"
+      "_catalog-NasNRxLv.js"
     ],
     "css": [
       "assets/KnowledgeLibrary-CEZEI9n0.css"
