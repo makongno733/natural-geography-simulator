@@ -97,7 +97,7 @@
             <input v-model.trim="form.category" required maxlength="30" placeholder="例如：自然地理 / GIS科研 / 教学设计" />
           </label>
           <label>QQ 群号 (纯数字)
-            <input v-model.trim="form.qqNumber" required pattern="[0-9]{5,12}" maxlength="12" placeholder="例如：610398455" />
+            <input v-model.trim="form.qqNumber" required pattern="[0-9]{5,12}" maxlength="12" placeholder="填写你有权公开展示的 QQ 群号" />
           </label>
           <label>社群简介与研讨方向
             <textarea v-model.trim="form.description" required rows="3" maxlength="200" placeholder="简要说明本群交流定位、成员要求与研讨议题……" />

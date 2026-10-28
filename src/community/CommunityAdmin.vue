@@ -72,7 +72,7 @@ async function refresh() {
   const [reportData, categoryData, groupData] = await Promise.all([
     apiRequest('/api/community/moderation/reports'),
     apiRequest('/api/community/moderation/categories'),
-    apiRequest('/api/community/moderation/groups').catch(() => ({ groups: [] }))
+    apiRequest('/api/community/moderation/groups')
   ])
   reports.value = reportData.reports
   categories.value = categoryData.categories
