@@ -249,4 +249,59 @@ describe('Extended Geography Community Platform API', () => {
     const after = database.prepare("SELECT fetched_at FROM geo_topic_sync WHERE source = 'eonet'").get().fetched_at
     expect(after).toBe(before)
   })
+
+  it('supports community group submission and admin moderation workflow', () => {
+    // 1. 普通用户提交待审核社群
+    const submitRes = call('POST', '/api/community/groups/submit', {
+      userId: 'user-1',
+      body: {
+        name: '北京师大自然地理研讨社',
+        category: '高校研学',
+        qqNumber: '888777666',
+        description: '探讨第四纪冰川与黄土沉积过程。',
+        authorizationNote: '本人为社长，知情同意在地理共同体展示。'
+      }
+    })
+    expect(submitRes.status).toBe(201)
+    expect(submitRes.payload.status).toBe('pending')
+    const groupId = submitRes.payload.id
+
+    // 2. 此时公开列表不应包含该未审核社群
+    const publicList = call('GET', '/api/community/groups')
+    expect(publicList.payload.groups.find(g => g.id === groupId)).toBeUndefined()
+
+    // 3. 管理员获取审核列表
+    const adminList = call('GET', '/api/community/moderation/groups', {
+      userId: 'admin-1'
+    })
+    expect(adminList.status).toBe(200)
+    expect(adminList.payload.groups.some(g => g.id === groupId && g.status === 'pending')).toBe(true)
+
+    // 4. 管理员批准
+    const approveRes = call('POST', '/api/community/moderation/groups/:id', {
+      userId: 'admin-1',
+      params: { id: groupId },
+      body: { action: 'approve' }
+    })
+    expect(approveRes.status).toBe(200)
+
+    // 5. 批准后公开列表立即可见
+    const updatedList = call('GET', '/api/community/groups')
+    const found = updatedList.payload.groups.find(g => g.id === groupId)
+    expect(found).not.toBeUndefined()
+    expect(found.name).toBe('北京师大自然地理研讨社')
+  })
+
+  it('retrieves verifiable structured AI summary for hot topics', () => {
+    const topic = database.prepare("SELECT id FROM community_hot_topic WHERE external_id IS NOT NULL LIMIT 1").get()
+    if (!topic) return
+
+    const res = call('GET', '/api/community/hot-topics/:id/summary', {
+      params: { id: topic.id }
+    })
+    expect(res.status).toBe(200)
+    expect(res.payload.isMachineGenerated).toBe(true)
+    expect(res.payload.confidenceLevel).toBe('high')
+    expect(res.payload.sourceBasis).toMatch(/NASA|USGS/)
+  })
 })
