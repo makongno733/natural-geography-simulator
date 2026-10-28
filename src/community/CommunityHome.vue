@@ -65,6 +65,32 @@
           <span class="topic-tag">{{ topic.tag }}</span>
           <h4>{{ topic.title }}</h4>
           <p>{{ topic.summary }}</p>
+          <button
+            type="button"
+            class="topic-summary-toggle"
+            :aria-expanded="expandedTopicId === topic.id"
+            :aria-controls="`topic-summary-${topic.id}`"
+            @click="toggleTopicSummary(topic.id)"
+          >
+            {{ expandedTopicId === topic.id ? '收起核验信息 ↑' : '查看摘要依据 ↓' }}
+          </button>
+          <div v-if="expandedTopicId === topic.id" :id="`topic-summary-${topic.id}`" class="topic-summary-detail">
+            <p v-if="summaryLoadingIds[topic.id]" role="status">正在读取来源依据…</p>
+            <p v-else-if="summaryErrors[topic.id]" class="community-error" role="alert">
+              {{ summaryErrors[topic.id] }}
+              <button type="button" class="topic-summary-toggle" @click="loadTopicSummary(topic.id)">重试</button>
+            </p>
+            <template v-else-if="topicSummaries[topic.id]">
+              <strong>来源字段机器摘录 · 非 AI 生成</strong>
+              <dl>
+                <div><dt>资料来源</dt><dd>{{ topicSummaries[topic.id].sourceBasis }}</dd></div>
+                <div><dt>事件记录</dt><dd>{{ formatDateTime(topicSummaries[topic.id].occurredAt) }}</dd></div>
+                <div><dt>抓取核对</dt><dd>{{ formatDateTime(topicSummaries[topic.id].verifiedAt) }}</dd></div>
+              </dl>
+              <p class="topic-verification-note">{{ topicSummaries[topic.id].verificationNote }}</p>
+              <a :href="topicSummaries[topic.id].sourceUrl" target="_blank" rel="noopener noreferrer">核对原始记录 ↗</a>
+            </template>
+          </div>
           <div class="topic-foot">
             <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
             <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
@@ -342,6 +368,10 @@ const posts = ref([])
 const hotTopics = ref([])
 const hotTopicError = ref('')
 const openingTopicId = ref(null)
+const expandedTopicId = ref(null)
+const summaryLoadingIds = reactive({})
+const topicSummaries = reactive({})
+const summaryErrors = reactive({})
 const user = ref(null)
 const isAdmin = ref(false)
 const loading = ref(false)
@@ -383,6 +413,35 @@ const formatDate = value => {
   } catch {
     return String(value)
   }
+}
+
+const formatDateTime = value => {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '时间未提供' : new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+  }).format(date)
+}
+
+async function loadTopicSummary(id) {
+  if (summaryLoadingIds[id]) return
+  summaryLoadingIds[id] = true
+  delete summaryErrors[id]
+  try {
+    const result = await apiRequest(`/api/community/hot-topics/${id}/summary`)
+    if (!result?.sourceUrl || !result?.sourceBasis || result.isAiGenerated !== false) {
+      throw new Error('摘要依据不完整，请查看原始记录。')
+    }
+    topicSummaries[id] = result
+  } catch (cause) {
+    summaryErrors[id] = cause.message || '摘要依据暂时无法读取，请稍后重试。'
+  } finally {
+    delete summaryLoadingIds[id]
+  }
+}
+
+function toggleTopicSummary(id) {
+  expandedTopicId.value = expandedTopicId.value === id ? null : id
+  if (expandedTopicId.value === id && !topicSummaries[id]) void loadTopicSummary(id)
 }
 
 const selectedCategoryName = computed(() => {
@@ -884,6 +943,37 @@ onBeforeUnmount(() => stream?.close())
   margin: 0 0 12px;
   flex: 1;
 }
+
+.topic-summary-toggle {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--geo-ocean);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.topic-summary-detail {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.topic-summary-detail strong { color: var(--geo-ocean-deep); }
+.topic-summary-detail p { margin: 6px 0 10px; }
+.topic-summary-detail dl { margin: 0; }
+.topic-summary-detail dl div { display: grid; grid-template-columns: 62px 1fr; gap: 8px; margin: 4px 0; }
+.topic-summary-detail dt { color: var(--text-faint); }
+.topic-summary-detail dd { margin: 0; overflow-wrap: anywhere; }
+.topic-summary-detail a { color: var(--geo-ocean); font-weight: 700; }
+.topic-summary-detail .topic-verification-note { color: var(--text-faint); }
 
 .topic-foot {
   display: flex;
