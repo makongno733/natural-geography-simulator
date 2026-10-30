@@ -1,61 +1,49 @@
 <template>
   <div class="community-page">
-    <!-- 古典地理学会 × 皇家天文观测院风格 Hero -->
-    <section class="community-hero baroque-frame">
+    <section class="community-hero" aria-labelledby="community-title">
       <div class="community-wrap community-hero-inner">
-        <div>
-          <div class="community-hero-badge">
-            <span class="baroque-gem">✦</span>
-            <span>GEOGRAPHICAL SCHOLARLY GUILD / 地理学术共同体</span>
-          </div>
-          <h1>格物致知 · 经纬探索<br><em class="baroque-gold-text">在这里，讨论地理。</em></h1>
-          <p class="community-lead">
-            面向自然地理、人文经济地理、GIS 遥感与中学地学教育。提出真问题，交换实测证据，让每一次学术探讨都成为沉淀的科学认知。
-          </p>
-
-          <form class="community-search baroque-search" @submit.prevent="runSearch">
-            <label class="sr-only" for="community-query">搜索学术讨论与问答</label>
-            <input
-              id="community-query"
-              v-model="queryInput"
-              placeholder="搜索季风环流、DEM高程、喀斯特成因、考研真题、野外断层……"
-              maxlength="100"
-            />
-            <button class="baroque-btn baroque-btn-brass" type="submit">检 索</button>
+        <div class="community-intro">
+          <p class="community-hero-badge">地理社区 · 一起提问、分享与讨论</p>
+          <h1 id="community-title">从一个问题，开始一场讨论</h1>
+          <p class="community-lead">搜索已有经验，看看大家在聊什么；也欢迎分享你的观察和观点。</p>
+          <form class="community-search baroque-search" role="search" @submit.prevent="runSearch">
+            <label class="sr-only" for="community-query">搜索社区讨论</label>
+            <input id="community-query" v-model="queryInput" type="search" placeholder="搜索话题、问题或关键词" maxlength="100" />
+            <button class="baroque-btn baroque-btn-primary" type="submit">搜索讨论</button>
           </form>
-
           <div class="community-hero-actions">
-            <a class="baroque-btn baroque-btn-primary" href="#compose" @click.prevent="focusCompose">发起学术讨论 ✍</a>
-            <router-link class="baroque-btn baroque-btn-brass" to="/experiments">三维地理实验 ↗</router-link>
-            <router-link class="baroque-btn" to="/groups">社群交流群导航 📜</router-link>
-            <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">管委会后台</router-link>
+            <a class="baroque-btn baroque-btn-primary" href="#compose" @click.prevent="focusCompose">发起讨论</a>
+            <a class="baroque-btn" href="#community-feed">浏览全部讨论 ↓</a>
+            <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
           </div>
         </div>
-
-        <aside class="community-hero-aside baroque-frame" aria-label="地理学精神">
-          <div class="armillary-seal" aria-hidden="true">
-            <svg viewBox="0 0 120 120" class="armillary-svg">
-              <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 2" />
-              <ellipse cx="60" cy="60" rx="54" ry="20" fill="none" stroke="currentColor" stroke-width="1.2" transform="rotate(-30 60 60)" />
-              <ellipse cx="60" cy="60" rx="54" ry="20" fill="none" stroke="currentColor" stroke-width="1.2" transform="rotate(30 60 60)" />
-              <circle cx="60" cy="60" r="28" fill="none" stroke="#c5a059" stroke-width="1.5" />
-              <line x1="6" y1="60" x2="114" y2="60" stroke="#c5a059" stroke-width="1.5" />
-              <line x1="60" y1="6" x2="60" y2="114" stroke="#c5a059" stroke-width="1.5" />
-            </svg>
-          </div>
-          <span class="community-coordinate">35°00′ N · 103°00′ E</span>
-          <strong>立足大地<br />仰望星河<br />经纬同道</strong>
-          <p>从一条有深度的问题开始。</p>
-        </aside>
       </div>
+    </section>
+
+    <section v-if="!searchQuery && !selectedCategory && !selectedTag && !kind" class="community-wrap community-trending" aria-labelledby="trending-title">
+      <div class="community-section-heading">
+        <div>
+          <p class="community-eyebrow">COMMUNITY CONVERSATIONS</p>
+          <h2 id="trending-title">大家正在讨论</h2>
+        </div>
+        <button class="community-clear baroque-btn baroque-btn-sm" type="button" @click="setSort('popular'); scrollToFeed()">查看热门讨论 →</button>
+      </div>
+      <div v-if="featuredPosts.length" class="community-trending-grid">
+        <router-link v-for="(post, index) in featuredPosts" :key="post.id" class="community-trending-card" :to="`/community/post/${post.id}`">
+          <span class="trending-rank">{{ String(index + 1).padStart(2, '0') }}</span>
+          <span class="trending-content"><small>{{ post.category }} · {{ post.kind === 'question' ? '问答' : '讨论' }}</small><strong>{{ post.title }}</strong><span>{{ post.replyCount || 0 }} 条回复 · {{ post.likeCount || 0 }} 人赞同</span></span>
+          <span aria-hidden="true">↗</span>
+        </router-link>
+      </div>
+      <p v-else-if="!loading" class="community-state">社区讨论正在积累中，欢迎发起第一场讨论。</p>
     </section>
 
     <!-- 地理学前沿热点聚合专栏 -->
     <section class="community-wrap hot-topics-bar baroque-frame" aria-labelledby="hot-topics-title">
       <div class="hot-topics-header">
         <span class="baroque-corner-ornament">❖</span>
-        <h3 id="hot-topics-title">近期地理事件 · 从事实开始讨论</h3>
-        <span class="hot-topics-subtitle">NASA EONET / USGS · 每 30 分钟检查更新</span>
+        <h3 id="hot-topics-title">近期地理事件</h3>
+        <span class="hot-topics-subtitle">NASA EONET / USGS 来源记录</span>
       </div>
       <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
       <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
@@ -102,7 +90,7 @@
       </div>
     </section>
 
-    <div class="community-wrap community-layout">
+    <div id="community-feed" class="community-wrap community-layout">
       <!-- 讨论主栏 -->
       <div class="community-main">
         <!-- 运行模式状态横幅 -->
@@ -121,7 +109,7 @@
         <div class="community-section-heading">
           <div>
             <p class="community-eyebrow">THE SCHOLARLY FORUM / 论坛交流</p>
-            <h2>{{ searchQuery ? `检索：“${searchQuery}”` : selectedCategoryName ? `${selectedCategoryName} 分区` : selectedTag ? `标签 #${selectedTag}` : '全部学术讨论与问答' }}</h2>
+            <h2>{{ searchQuery ? `检索：“${searchQuery}”` : selectedCategoryName ? `${selectedCategoryName} 分区` : selectedTag ? `标签 #${selectedTag}` : '全部讨论' }}</h2>
           </div>
           <button v-if="searchQuery || selectedCategory || kind || selectedTag || onlySolved" class="community-clear baroque-btn baroque-btn-sm" type="button" @click="clearFilters">清除全部筛选</button>
         </div>
@@ -154,7 +142,7 @@
           <br />
           <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts">重新尝试</button>
         </p>
-        <p v-else-if="!posts.length" class="community-state">暂无符合条件的学术讨论。欢迎在此留下你的深刻发问。</p>
+        <p v-else-if="!posts.length" class="community-state">暂时没有符合条件的讨论。换个关键词，或发起新讨论吧。</p>
 
         <div v-else class="community-post-list">
           <article v-for="post in posts" :key="post.id" class="community-post-card baroque-frame">
@@ -204,7 +192,7 @@
           <div class="community-section-heading">
             <div>
               <p class="community-eyebrow">INSCRIBE TO THE GUILD</p>
-              <h2 id="compose-title">发起一场学术探讨</h2>
+              <h2 id="compose-title">发起讨论</h2>
             </div>
           </div>
           <p v-if="!user && !isDemoMode" class="community-state">登录后即可提出问题、分享经验和发表见解。<a :href="`${accountOrigin}/#/account`">登录 / 注册 ↗</a></p>
@@ -365,6 +353,7 @@ const router = useRouter()
 const route = useRoute()
 const categories = ref([])
 const posts = ref([])
+const featuredPosts = ref([])
 const hotTopics = ref([])
 const hotTopicError = ref('')
 const openingTopicId = ref(null)
@@ -531,11 +520,18 @@ async function loadPosts(append = false) {
     category: p.category || p.categoryName || '地学学术',
     excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : '')
   }))
+  if (!searchQuery.value && !selectedCategory.value && !selectedTag.value && !kind.value) {
+    featuredPosts.value = [...posts.value].sort((a, b) =>
+      ((b.likeCount || b.likesCount || 0) * 3 + (b.replyCount || b.repliesCount || 0) * 2) -
+      ((a.likeCount || a.likesCount || 0) * 3 + (a.replyCount || a.repliesCount || 0) * 2)
+    ).slice(0, 3)
+  }
   loading.value = false
 }
 
+function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: 'smooth' }) }
 function resetAndLoad() { page.value = 1; void loadPosts() }
-function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad() }
+function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad(); scrollToFeed() }
 function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = route.path === '/questions' ? 'question' : ''; onlySolved.value = false; resetAndLoad() }
 function setCategory(id) { selectedCategory.value = selectedCategory.value === id ? null : id; resetAndLoad() }
 function setKind(value) { kind.value = value; if (value === 'discussion') onlySolved.value = false; resetAndLoad() }
@@ -695,6 +691,12 @@ async function initCommunity() {
     }
 
     await loadPosts()
+    if (!isDemoMode.value) {
+      try {
+        const featured = await apiRequest('/api/community/posts?sort=popular')
+        featuredPosts.value = featured.posts.slice(0, 3)
+      } catch { featuredPosts.value = [] }
+    }
 
     if (!isDemoMode.value && typeof EventSource !== 'undefined') {
       try {
@@ -721,25 +723,51 @@ onBeforeUnmount(() => stream?.close())
 </script>
 
 <style scoped>
+/* 社区首页：让搜索和讨论在首屏内可见。 */
+.community-hero {
+  padding: 38px 0 34px;
+  margin-bottom: 30px;
+  background: #10263d;
+}
+.community-hero-inner { display: block; }
+.community-intro { max-width: 860px; }
+.community-hero h1 { font-family: inherit; font-size: clamp(28px, 4vw, 44px); margin-bottom: 10px; }
+.community-hero-badge { margin-bottom: 10px; letter-spacing: .04em; }
+.community-lead { margin-bottom: 18px; font-size: 15px; line-height: 1.55; }
+.community-search { max-width: 760px; margin-bottom: 16px; }
+.community-search input { background: transparent; color: #10263d; border: 0; min-height: 46px; }
+.community-search input::placeholder { color: #66788a; }
+.community-hero-actions { gap: 8px; }
+.community-trending { margin-bottom: 28px; }
+.community-trending .community-section-heading { margin-bottom: 14px; }
+.community-trending-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.community-trending-card { display: flex; gap: 12px; min-width: 0; padding: 17px; color: var(--geo-ocean-deep); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); text-decoration: none; box-shadow: var(--shadow-sm); }
+.community-trending-card:hover, .community-trending-card:focus-visible { border-color: var(--geo-ocean); box-shadow: var(--shadow-md); }
+.trending-rank { color: var(--baroque-bronze); font-weight: 800; font-size: 19px; }
+.trending-content { display: grid; gap: 7px; min-width: 0; flex: 1; }
+.trending-content small, .trending-content span { color: var(--text-muted); font-size: 12px; }
+.trending-content strong { font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.hot-topics-bar { padding: 20px 24px; margin-bottom: 30px; }
+.hot-topic-card { background: var(--surface); }
+.community-layout { scroll-margin-top: 24px; }
+@media (max-width: 860px) { .community-trending-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .community-hero { padding: 28px 0; } .community-search { flex-direction: column; border-radius: 16px; } .community-search button { width: 100%; } }
 /* 继承并深化全局巴洛克与古典地理学会视觉系统 */
 .community-page {
   padding-bottom: 90px;
 }
 
 .community-hero {
-  background: radial-gradient(circle at 75% 30%, #172d4a 0%, #0c1c30 50%, #050d18 100%);
+  background: #10263d;
   color: #f7f5ed;
-  padding: 64px 0 54px;
-  margin-bottom: 36px;
+  padding: 38px 0 34px;
+  margin-bottom: 30px;
   border-bottom: 2px solid rgba(197, 160, 89, 0.4);
   box-shadow: var(--shadow-md);
 }
 
 .community-hero-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
-  gap: 40px;
-  align-items: center;
+  display: block;
 }
 
 .community-hero-badge {
@@ -759,10 +787,10 @@ onBeforeUnmount(() => stream?.close())
 }
 
 .community-hero h1 {
-  font-size: clamp(34px, 4.5vw, 56px);
+  font-size: clamp(28px, 4vw, 44px);
   line-height: 1.15;
-  margin: 0 0 18px;
-  font-family: Georgia, 'Playfair Display', 'Songti SC', serif;
+  margin: 0 0 10px;
+  font-family: inherit;
   font-weight: 700;
   letter-spacing: -0.025em;
   color: #ffffff;
@@ -776,18 +804,18 @@ onBeforeUnmount(() => stream?.close())
 }
 
 .community-lead {
-  font-size: 16px;
-  line-height: 1.8;
+  font-size: 15px;
+  line-height: 1.55;
   color: #c9d6df;
   max-width: 640px;
-  margin: 0 0 28px;
+  margin: 0 0 18px;
 }
 
 .community-search {
   display: flex;
   gap: 8px;
-  max-width: 640px;
-  margin-bottom: 26px;
+  max-width: 760px;
+  margin-bottom: 16px;
 }
 
 .community-search input {
@@ -796,14 +824,14 @@ onBeforeUnmount(() => stream?.close())
   padding: 0 16px;
   border-radius: var(--radius-pill);
   border: 1px solid rgba(197, 160, 89, 0.4);
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   backdrop-filter: blur(8px);
-  color: #ffffff;
+  color: #10263d;
   font-size: 14px;
 }
 
 .community-search input::placeholder {
-  color: #8fa5b8;
+  color: #66788a;
 }
 
 .community-hero-actions {
