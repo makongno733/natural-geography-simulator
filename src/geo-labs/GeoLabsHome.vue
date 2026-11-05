@@ -21,6 +21,7 @@
     </section>
     <section id="data-labs" class="section" aria-labelledby="data-title">
     <h2 id="data-title">真实数据实验</h2>
+    <p class="index-intro">想从地球运动继续走向宇宙尺度？<router-link to="/cosmology">进入宇宙学交互课 →</router-link></p>
     <div class="cards">
       <router-link to="/geo-labs/satellite" class="card"><span>01 · NASA GIBS</span><h2>卫星影像对比</h2><p>同一地点、两个日期，滑动比较云、地表与积雪的可见变化。</p><strong>开始观察 →</strong></router-link>
       <router-link to="/geo-labs/terrain" class="card"><span>02 · COPERNICUS DEM</span><h2>真实三维地形</h2><p>旋转珠峰附近的真实高程，沿纬线读一条地形剖面。</p><strong>查看地形 →</strong></router-link>
