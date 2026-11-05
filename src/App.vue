@@ -48,6 +48,9 @@
           <router-link to="/inquiry" class="nav-link" :class="{ active: route.path === '/inquiry' }">
             <span class="nav-label">探究</span>
           </router-link>
+          <router-link to="/cosmology" class="nav-link" :class="{ active: route.path === '/cosmology' }">
+            <span class="nav-label">宇宙学</span>
+          </router-link>
           <router-link to="/calendar" class="nav-link" :class="{ active: route.path === '/calendar' }">
             <span class="nav-label">日历</span>
           </router-link>
@@ -104,6 +107,7 @@
               <router-link to="/experiments/hydrology">流水地貌与水循环</router-link>
               <router-link to="/experiments/geology">地质构造与岩石圈</router-link>
               <router-link to="/experiments/astronomy">地球运动与日地月</router-link>
+              <router-link to="/cosmology">宇宙学交互课</router-link>
             </div>
             <div class="footer-col">
               <h4>地理专业工具</h4>
