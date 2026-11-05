@@ -62,7 +62,13 @@ const ChapterRedirect = {
   }
 }
 
+const CosmosCenter = () => import('./cosmos/CosmosCenter.vue')
+
 const routes = [
+  { path: '/cosmos', name: 'cosmos', component: CosmosCenter },
+  { path: '/cosmos/labs', name: 'cosmos-labs', component: CosmosCenter },
+  { path: '/cosmos/chapter/:chapter', name: 'cosmos-chapter', component: CosmosCenter },
+  { path: '/cosmos/:pathMatch(.*)*', component: CosmosCenter },
   { path: '/', name: 'home', component: CommunityHome },
   { path: '/community', name: 'community', component: CommunityHome },
   { path: '/questions', name: 'questions', component: CommunityHome },

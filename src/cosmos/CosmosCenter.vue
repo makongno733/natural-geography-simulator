@@ -1,0 +1,28 @@
+<script setup>
+import { computed, ref, defineAsyncComponent } from 'vue'
+import { useRoute } from 'vue-router'
+import { chapters } from './content.js'
+import './cosmos.css'
+import { teacher, light } from './preferences.js'
+const Labs=defineAsyncComponent(()=>import('./CosmosLabs.vue'))
+const route=useRoute(), query=ref(''), level=ref('全部')
+const chapter=computed(()=>chapters.find(c=>c.id===route.params.chapter))
+const isHome=computed(()=>route.path==='/cosmos')
+const isLabs=computed(()=>route.path==='/cosmos/labs')
+const filtered=computed(()=>chapters.filter(c=>(level.value==='全部'||c.level===level.value)&&`${c.title} ${c.group} ${c.body.join(' ')}`.toLowerCase().includes(query.value.toLowerCase())))
+const groups=computed(()=>[...new Set(filtered.value.map(c=>c.group))])
+</script>
+<template>
+<div class="cosmos" :class="{ 'cx-light': light }">
+<header class="cx-top"><router-link to="/cosmos" class="cx-wordmark">GEO <b>COSMOS</b><small>宇宙、时空与基本物理</small></router-link><div class="cx-tools"><router-link to="/cosmos/labs">交互实验室 ↗</router-link><button @click="teacher=!teacher" :aria-pressed="teacher">教师模式 {{ teacher?'开':'关' }}</button><button @click="light=!light">{{ light?'深色':'浅色' }}</button></div></header>
+<section v-if="isHome" class="cx-hero"><div><span class="cx-eyebrow">A FIELD GUIDE TO THE UNIVERSE · 第一版</span><h1>从地球出发，<br>追问时空的边界。</h1><p>在观测与理论之间建立联系。理解宇宙如何演化，探索引力与量子的交汇，也辨认科学尚未回答的问题。</p><div class="cx-actions"><router-link class="cx-primary" to="/cosmos/chapter/strings-basics">进入弦理论专题 ↗</router-link><router-link to="/cosmos/labs">动手做一次实验 →</router-link></div></div><div class="cx-orbit" aria-hidden="true"><div></div><div></div><div></div><span>SPACE<br>TIME<br>MATTER</span></div><footer><span>01 / 观测与证据</span><span>02 / 数学与理论</span><span>03 / 假设与边界</span></footer></section>
+<div class="cx-layout"><aside class="cx-sidebar"><label for="cx-search">检索知识章节</label><input id="cx-search" v-model="query" type="search" placeholder="搜索：弦、红移、时空…"><label for="cx-level">学习层级</label><select id="cx-level" v-model="level"><option>全部</option><option>基础</option><option>进阶</option></select><nav aria-label="Cosmos 章节导航"><router-link to="/cosmos">知识总览</router-link><router-link to="/cosmos/labs">三个交互实验</router-link><template v-for="group in groups" :key="group"><h3>{{ group }}</h3><router-link v-for="item in filtered.filter(c=>c.group===group)" :key="item.id" :to="`/cosmos/chapter/${item.id}`">{{ item.title }}</router-link></template><p v-if="!filtered.length">没有匹配章节，请更换关键词。</p></nav><router-link to="/cosmology">原宇宙学交互课 ↗</router-link></aside>
+<main class="cx-content">
+<template v-if="isHome"><div class="cx-section-heading"><div><span class="cx-eyebrow">KNOWLEDGE ATLAS</span><h2>选择你的探索方向</h2></div><span>{{ chapters.length }} 篇导读 · 3 个实验</span></div><p class="cx-note">首版提供知识体系与核心导读；完整推导、三维高维探索器和粒子属性数据库将在后续阶段扩充。</p><div class="cx-grid"><router-link v-for="(item,i) in filtered" :key="item.id" class="cx-card" :to="`/cosmos/chapter/${item.id}`"><span class="cx-eyebrow">{{ String(i+1).padStart(2,'0') }} / {{ item.group }}</span><h3>{{ item.title }} <span>↗</span></h3><p>{{ item.goals }}</p><footer><span>{{ item.level }}</span><span>{{ item.status }}</span></footer></router-link></div><section class="cx-panel"><h2>一条循序渐进的学习路径</h2><p>天文测量 → 狭义相对论 → 引力与时空 → 现代宇宙学 → 场与粒子 → 弦理论 → 对偶与理论边界。</p><p>先理解可测量的量，再阅读数学结构；每一步都问：这项结论来自观测、理论推导，还是尚待检验的假设？</p><a href="https://science.nasa.gov/universe/" target="_blank" rel="noopener noreferrer">NASA 宇宙观测资料 ↗</a> · <a href="https://home.cern/science/physics" target="_blank" rel="noopener noreferrer">CERN 物理研究资料 ↗</a></section></template>
+<template v-else-if="isLabs"><span class="cx-eyebrow">INTERACTIVE LABORATORY</span><h1>让公式成为可以操作的实验</h1><p>改变参数，观察变化，再回到假设与适用范围。</p><Labs /></template>
+<article v-else-if="chapter" :key="chapter.id"><span class="cx-eyebrow">{{ chapter.group }} / {{ chapter.level }}导读</span><h1>{{ chapter.title }}</h1><div class="cx-status">科学地位：{{ chapter.status }}</div><section class="cx-panel"><h2>学习目标</h2><p>{{ chapter.goals }}</p><p><b>前置知识：</b>{{ chapter.prerequisites }}</p></section><h2>核心概念与理论解释</h2><p v-for="paragraph in chapter.body" :key="paragraph">{{ paragraph }}</p><details class="cx-panel" open><summary>关键公式与符号</summary><div class="cx-formula">{{ chapter.formula }}</div><p>{{ chapter.symbols }}</p><p><b>适用条件：</b>{{ chapter.conditions }}</p></details><section class="cx-panel"><h2>常见误区</h2><p>{{ chapter.misconception }}</p></section><router-link class="cx-primary" to="/cosmos/labs">进入实验室，检验你的理解 ↗</router-link><section class="cx-panel"><h2>知识检查</h2><p>{{ chapter.question }}</p><details><summary>查看解析</summary><p>{{ chapter.answer }}</p></details></section><section><h2>参考资料与延伸阅读</h2><ul><li v-for="source in chapter.refs" :key="source.url"><a :href="source.url" target="_blank" rel="noopener noreferrer">{{ source.title }} ↗</a></li></ul></section></article>
+<section v-else class="cx-panel"><h1>没有找到这个章节</h1><p>该章节可能尚未发布，请从已完成的导读继续探索。</p><router-link to="/cosmos">返回知识总览</router-link></section>
+<section v-if="teacher" class="cx-panel cx-teacher"><span class="cx-eyebrow">TEACHING NOTES</span><h2>将探索带进课堂</h2><p><b>5 分钟：</b>提出一个预测 → 调节实验参数 → 比较结果。</p><p><b>10 分钟：</b>阅读本章目标与误区 → 两人讨论参考系或模型假设 → 回答知识检查题。</p><p><b>45 分钟：</b>背景导入 5 分钟、概念讲解 10 分钟、实验记录 15 分钟、证据讨论 10 分钟、退出测验 5 分钟。</p><p>讲解提示：让学生分别写出「测到了什么」「假定了什么」「仍不知道什么」。</p></section>
+</main><aside class="cx-context"><span class="cx-eyebrow">READING COMPASS</span><h3>理解，也保持追问。</h3><p>观测支持 ≠ 无所不知<br>理论一致 ≠ 实验确认<br>几何投影 ≠ 高维实景</p><hr><h3>{{ chapter?'本章提示':'学习提示' }}</h3><p>{{ chapter?.conditions || '弦理论、额外维度与多宇宙必须放在各自的理论背景中理解。' }}</p><router-link to="/cosmos/labs">打开实验室 →</router-link></aside></div>
+</div>
+</template>
