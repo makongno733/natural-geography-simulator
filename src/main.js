@@ -34,6 +34,7 @@ const GeoLabsHome = () => import('./geo-labs/GeoLabsHome.vue')
 const SatelliteCompare = () => import('./geo-labs/SatelliteCompare.vue')
 const TerrainExplorer = () => import('./geo-labs/TerrainExplorer.vue')
 const RemoteSensingAI = () => import('./geo-labs/RemoteSensingAI.vue')
+const CosmologyLab = () => import('./cosmology/CosmologyLab.vue')
 
 const ChapterRedirect = {
   name: 'ChapterRedirect',
@@ -85,6 +86,7 @@ const routes = [
   { path: '/geo-labs/satellite', name: 'geo-labs-satellite', component: SatelliteCompare },
   { path: '/geo-labs/terrain', name: 'geo-labs-terrain', component: TerrainExplorer },
   { path: '/geo-labs/ai', name: 'geo-labs-ai', component: RemoteSensingAI },
+  { path: '/cosmology', name: 'cosmology', component: CosmologyLab },
   { path: '/experiments/:category', name: 'experiment-category', component: ExperimentCategory },
   { path: '/experiments/:category/:experiment', name: 'experiment-view', component: ExperimentView },
   { path: '/account', name: 'account', component: AccountPage },
