@@ -1,62 +1,47 @@
-# GEO COSMOS 下一位 AI 开发提示词
+# GEO COSMOS 下一位 AI 开发提示词（第三阶段）
 
-请直接在真实仓库开展开发，而不是再次输出泛泛规划。你接手的是已建立独立一级入口的第一版知识中心，不是完整教材。先阅读本文件、同目录 ORIGINAL_BRIEF.md 和 SOURCES.md，再检查当前源代码与实际线上版本。
+请直接在真实仓库开展开发，严禁再次输出泛泛空洞规划。你接手的是已完成第二阶段深度开发的专业知识中心（包含 22 个权威章节、弦理论 D1—D11 完整体系、五种超弦比较器、对偶网络图、PDG 粒子图谱、时空光锥与 FLRW 宇宙学积分计算器）。先阅读本文件、同目录 `ORIGINAL_BRIEF.md`、`SOURCES.md` 和 `RELEASE_VERIFICATION.md`，核对源代码与线上正式版本。
 
 ## 一、项目定位与工作边界
 
 - 正式网站：https://geo.kongnoma279.com/#/cosmos
 - 仓库：makongno733/natural-geography-simulator
 - 主工作目录：/Users/makongno/Resources/Projects/地理教学系统
-- 本轮隔离目录：该目录下 .worktrees/cosmos-framework-20261105。不要假定这仍是最新分支。
-- 技术栈：Vue 3、Vue Router hash 路由、Vite、Vitest。保留既有地理课程、实验、社区、账号与宇宙学交互课。
-- 首先 git status、fetch、检查工作树及 AGENTS.md。禁止覆盖未提交修改，禁止 reset/clean/force-push。用最新 origin/main 创建隔离分支。不要带入其他工作树的未发布任务。
-- 本次用户授权了首版推送上线；后续阶段按该轮用户明确授权范围决定发布，不凭本文件推断无限期生产权限。
+- 最新合并基线：PR #43 已合入 `origin/main`（Commit: `6d3d6123984d723793e2300b958c21aee1d0630b`）
+- 技术栈：Vue 3、Vue Router hash 路由、Vite、Vitest。保留既有地理教材、3D实验、社区、账号与宇宙学交互课。
+- 无论何时接手，首先 `git status`、`fetch`、检查工作树及 `AGENTS.md`。禁止覆盖未提交修改，禁止 reset/clean/force-push。基于最新 `origin/main` 创建新隔离分支。
+- 发布规范：发布前必须通过 PR 审查合并并记录 SHA；确认正式域名 `https://geo.kongnoma279.com/` 上 HTML 与新分包返回 200，不能空称已上线。
 
 ## 二、实际实现与文件地图
 
-- src/main.js：/cosmos、/cosmos/labs、/cosmos/chapter/:chapter，按需加载。未知 Cosmos 地址显示明确的找不到章节页面，不能掉入教材通配路由。
-- src/App.vue：主导航和页脚入口。
-- src/cosmos/CosmosCenter.vue：总览、搜索与基础/进阶筛选、左右导航、正文、引用、知识检查、教师模式、模块内深浅色。
-- src/cosmos/content.js：数据驱动章节。字段 id/group/title/level/status/goals/prerequisites/body/formula/symbols/conditions/misconception/question/answer/refs。
-- src/cosmos/CosmosLabs.vue：狭义相对论、尺度因子与红移、经典弦模态类比，三种可操作 SVG 实验。
-- src/cosmos/physics.js 与 physics.test.js：纯函数及数值、边界、开闭弦端点检查。
-- src/cosmos/cosmos.css：限定在 .cosmos 内的样式，响应式布局，不要污染全站。
-- src/cosmology：保留的早期宇宙学交互课，不要删除或重命名旧路由。
+- `src/main.js`：`/cosmos`、`/cosmos/labs`、`/cosmos/chapter/:chapter`。未知章节显示专属友好 404 页面，不进入教材通配。
+- `src/cosmos/content.js`：22 个数据驱动章节，包含原始任务书 D1—D11 弦理论全套独立章节，每章具有 16 项必填字段与专属 `pedagogy` 教学指南。
+- `src/cosmos/schema.test.js`：章节 Schema 自动化健全性测试（唯一 ID、kebab-case、字段齐备、科学地位合规、真实文献引用）。
+- `src/cosmos/particlesData.js` 与 `ParticleAtlas.vue`：严格遵循 PDG 2024 国际粒子物理标准的标准模型粒子图谱与引力子候选（包含 $\overline{\text{MS}}$ 流夸克质量、中微子振荡平方差与宇宙学上限、自旋、电荷与发现史）。
+- `src/cosmos/stringTheoriesData.js` 与 `SuperstringComparator.vue`：五种 10 维超弦理论并排深度对比器，严格区分微扰闭弦与 D 膜规范群起源。
+- `src/cosmos/DualityNetwork.vue`：交互式 T 对偶、S 对偶与 11 维 M 理论极限拓扑图与详细抽屉。
+- `src/cosmos/CosmosLabs.vue`：三个操作实验：狭义相对论时空光锥与同时性、FLRW 宇宙学多距离与年龄数值积分、经典弦振动模态与世界面扫掠。
+- `src/cosmos/physics.js`、`physics.test.js`、`labsExpanded.test.js`：包含洛伦兹变换、同时性线、Simpson 数值积分、爱因斯坦-德西特解析解（$t_0=2/(3H_0)$）与 Planck 2018 现代宇宙学基准验证。
+- `src/cosmos/cosmos.css`：完全限定在 `.cosmos` 内的高性能响应式样式，适配深浅色与 375px 窄屏移动端。
 
-首版有实质导读，但不能声称完成大学教材深度、完整标准模型粒子数据库、五种超弦理论逐章教学、三维 D 膜、高维投影、引力透镜、完整 FLRW 积分计算或公式排版系统。首版公式是可读 Unicode 文本。
+## 三、下一阶段交付重点（P3 与深度科学可视化）
 
-## 三、优先级与明确的下一阶段交付
+1. **高维几何与 Calabi-Yau 三维截面探索器**：
+   - 为 D9（紧致化）章节增加卡拉比—丘截面探索器；
+   - 必须按需动态导入 Three.js（禁止在全站主包中静态引入）；
+   - 必须在低性能设备或 `prefers-reduced-motion` 下平滑降级为高质量 SVG 截面投影；
+   - 界面上醒目标注：“这是六维复流形的低维数学截面或投影，绝非六维时空实景”。
+2. **宇宙学观测微波背景辐射（CMB）角功率谱拟合**：
+   - 结合 Planck 2018 数据，展示多极矩 $l$ 在 $l \approx 220$ 处的第一声学峰、第二与第三声学峰；
+   - 允许用户调节重子密度 $\Omega_b$ 与冷暗物质密度 $\Omega_c$，观察声波峰峰高与位置的响应机制。
+3. **黑洞因果结构与彭罗斯图（Penrose Diagram）**：
+   - 为黑洞章节增加交互式彭罗斯图，直观标注类光无穷远 $\mathscr{I}^\pm$、类时无穷远 $i^\pm$、事件视界与空间奇点；
+   - 严格区分史瓦西不自转黑洞与克尔自转黑洞能层。
+4. **科学史对数宇宙时间轴**：
+   - 以对数标度展示从普朗克时期（$10^{-43}\text{ s}$）、大统一、暴胀、重子数产生、电弱破缺、核合成（BBN, 3分钟）、微波背景光子退耦（38万年）、第一代恒星、星系形成到今天（138亿年）以及未来热寂的完整时间演化树。
 
-P0：先核对本轮交付与线上资源。建立章节 schema 校验：唯一 id、所有必填字段、科学地位枚举、可追溯 refs、正确内部链接。对新数值函数写独立、非镜像测试。检查路由刷新、未知章节、窄屏、键盘、无结果搜索、深浅色以及进入退出实验无资源泄漏。
+## 四、科学质量与测试交付底线
 
-P1：集中深化弦理论，而非平均堆积卡片。
-1. 把原始任务书 D1—D11 各自建章，逐章拥有目标、先修、定义、解释、公式及符号、推导边界、互动、误区、检查题、原始参考资料。
-2. 先完成世界线/世界面、弦张力与 α′、Nambu–Goto 与 Polyakov 作用量、开闭弦边界、模式展开概念、闭弦无质量自旋 2 态和低能有效理论。
-3. 加五种超弦理论比较：开/闭、定向性、手征性、10 维超对称、规范群；允许选择两种并排比较。不要把 Type II 的 D 膜规范场混为普遍的微扰闭弦规范群。
-4. 建立对偶关系图：IIA/IIB 的圆紧致化 T 对偶、Type I 与 SO(32) heterotic 的 S 对偶、IIA 强耦合与 11 维 M 理论关系；每条边注明假设和理论地位。
-5. 弦实验保留「经典类比」标签。可增加世界面扫掠、自由端/固定端/周期边界、暂停与相位步进，不声称从机械弦动画计算真实粒子谱。
-6. 单设局限章节：直接实验验证、能标、超对称、额外维度、景观、模稳定化、真空选择。AdS/CFT 不等于现实宇宙已获验证的模型。
-
-P2：粒子图谱与基础课程。
-- 建立 PDG 来源数据；逐粒子包含自旋、电荷、质量定义与单位、族、相互作用、发现史、版本和来源。中微子不能填虚构精确质量，夸克质量必须说明定义/标度。
-- 粒子点击面板、分类筛选、键盘与屏幕阅读器可用。希格斯不是规范玻色子；引力子不放进已发现标准模型粒子列表。
-- 相对论增加同时性与光锥（明确 c=1 单位），用洛伦兹变换实现可验证图示。
-- 宇宙学从 a 与 z 关系扩展到指定 Ωm/ΩΛ/Ωr/Ωk、H0 单位的 FLRW 计算；积分年龄/距离时明确模型、误差、奇点处理，并对解析特例/权威基准测试。
-
-P3：高维、历史与教学。
-- 超立方体投影（标注数学投影）；D 膜交互按需加载 Three.js。避免为视觉重复引入依赖；低性能与 reduced-motion 降级到 SVG。
-- 黑洞场景标注史瓦西/克尔假设，橡皮膜仅作为有限类比。霍金辐射与天文黑洞观测证据分开。
-- 对数宇宙时间轴；区分永恒暴胀、多世界诠释、弦景观与膜宇宙模型。
-- 教师模式升级为按章节的 5/10/45 分钟教学组织、课堂问题、学生误区，而不是全站 PPT。
-
-## 四、资料与科学质量
-
-优先 NASA、ESA、CERN、PDG、Planck、LIGO、EHT、原始论文、大学公开课程。逐条打开确认，不编造 DOI、作者、发现日期、实验结论或「最新」研究。记录核验时间与入口，失效链接先修复。自己的中文表达，不复制教材长段。科学地位区分观测支持、成熟理论、理论候选、研究模型和推测假说；数学一致性不能作为现实存在证据。新增公式优先评估按需 KaTeX，提供可访问文本和符号解释。
-
-## 五、测试、发布与验收证据
-
-运行 pnpm test、pnpm build，并对修改的交互执行真实浏览器操作。若既有测试失败，记录测试名与原因，区分本次回归与环境/原有问题；不要宣称全绿。检查新增分包，确保主入口不静态加载 Three.js 或整套教材数据。
-
-发布前审查 diff 和分支基线，用 PR 合并且记录 SHA。geo.kongnoma279.com 的 Cloudflare Pages 是正式站；GitHub Pages 当前是保留 hash 的跳转镜像，其构建成功不等于正式域名已经更新。必须确认正式域名 HTML 引用的新资源以及 Cosmos 分包可加载，浏览器检查 /#/cosmos、至少两篇正文与实验。如果 Cloudflare 未更新，检查真实部署记录，不能空称已上线。不要因前端任务触碰账号服务器、数据库或密钥。
-
-最后交付：新增内容、文件、公式与来源、测试结果、PR/SHA、正式地址、实测与未测事项、下一阶段清单。更新此交接文件，让后续 AI 能从真实状态继续。
+- 资料来源保持真实可溯：优先 NASA、CERN、PDG、Planck、LIGO 与同行评审论文，更新 `SOURCES.md`。
+- 测试底线：每次提交前必须运行并通过 `pnpm test`（当前 61 个测试文件、304 个测试通过）、`pnpm build` 以及 `node scripts/check-bundle-budget.mjs dist`（确保首屏与教材入口严格在预算内，主入口不包含 Three.js）。
+- 部署交付：使用 PR 合并，记录提交 SHA；用 curl 或浏览器实际验证线上正式站 `https://geo.kongnoma279.com/#/cosmos`，确认资源返回 200。更新 `RELEASE_VERIFICATION.md` 与本交接文件。
