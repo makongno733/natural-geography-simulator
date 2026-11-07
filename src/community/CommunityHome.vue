@@ -1,6 +1,7 @@
 <template>
   <div class="community-page">
     <section class="community-hero" aria-labelledby="community-title">
+      <div class="community-tides" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="community-wrap community-hero-inner">
         <div class="community-intro">
           <p class="community-hero-badge">地理社区 · 一起提问、分享与讨论</p>
@@ -17,6 +18,12 @@
             <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
           </div>
         </div>
+        <aside class="community-discovery" aria-label="地理探索路径">
+          <p class="discovery-eyebrow">从观察，流向理解</p>
+          <router-link to="/calendar"><span>01</span><div><strong>看见地球的变化</strong><small>天象观察与真实地震记录</small></div><span aria-hidden="true">↗</span></router-link>
+          <router-link to="/inquiry"><span>02</span><div><strong>用证据回应好奇</strong><small>提出假设，参与地理探究</small></div><span aria-hidden="true">↗</span></router-link>
+          <router-link to="/learning"><span>03</span><div><strong>让知识彼此连接</strong><small>回到教材，理解过程与机理</small></div><span aria-hidden="true">↗</span></router-link>
+        </aside>
       </div>
     </section>
 
@@ -605,7 +612,8 @@ async function loadPosts(append = false) {
   loading.value = false
 }
 
-function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: 'smooth' }) }
+function preferredScroll() { return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }
+function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: preferredScroll() }) }
 function resetAndLoad() { page.value = 1; void loadPosts() }
 function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad(); scrollToFeed() }
 function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = route.path === '/questions' ? 'question' : ''; onlySolved.value = false; resetAndLoad() }
@@ -637,7 +645,7 @@ async function openTopic(topic) {
   }
 }
 function nextPage() { if (!loading.value) void loadPosts(true) }
-function focusCompose() { composeRef.value?.scrollIntoView({ behavior: 'smooth' }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
+function focusCompose() { composeRef.value?.scrollIntoView({ behavior: preferredScroll() }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
 
 async function retryOnline() {
   isDemoMode.value = false
@@ -804,7 +812,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-secondary); }
+.topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-muted); }
 /* 社区首页：让搜索和讨论在首屏内可见。 */
 .community-hero {
   padding: 38px 0 34px;
@@ -840,16 +848,73 @@ onBeforeUnmount(() => {
 }
 
 .community-hero {
-  background: #10263d;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(118deg, #102d3a 8%, #124957 62%, #17646a);
   color: #f7f5ed;
-  padding: 38px 0 34px;
+  padding: 56px 0 50px;
   margin-bottom: 30px;
-  border-bottom: 2px solid rgba(197, 160, 89, 0.4);
+  border-bottom: 0;
+  border-radius: 0 0 44px 44px;
   box-shadow: var(--shadow-md);
 }
 
 .community-hero-inner {
-  display: block;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+}
+
+.community-tides { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.community-tides span {
+  position: absolute;
+  width: 660px;
+  height: 440px;
+  border: 1px solid rgba(163, 233, 221, 0.15);
+  border-radius: 50%;
+  right: -120px;
+  top: -110px;
+  rotate: -25deg;
+}
+.community-tides span:nth-child(2) { right: -55px; top: -45px; }
+.community-tides span:nth-child(3) { right: 10px; top: 20px; }
+.community-discovery {
+  padding: 20px;
+  border: 1px solid rgba(178, 230, 223, 0.26);
+  border-radius: 24px;
+  background: rgba(7, 39, 48, 0.36);
+}
+.discovery-eyebrow { margin: 0 0 12px; color: #c7e6df; font-size: 13px; letter-spacing: .08em; }
+.community-discovery a { display: flex; align-items: center; gap: 12px; padding: 14px 0; color: #fff; text-decoration: none; }
+.community-discovery a + a { border-top: 1px solid rgba(178, 230, 223, 0.18); }
+.community-discovery a > span:first-child { font: 12px ui-monospace, monospace; color: #a8dcd2; }
+.community-discovery a > span:last-child { margin-left: auto; }
+.community-discovery a div { display: grid; gap: 4px; }
+.community-discovery strong { font-size: 15px; }
+.community-discovery small { color: #c7e6df; font-size: 12px; }
+.community-discovery a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.community-discovery a:focus-visible { outline: 2px solid #c7e6df; outline-offset: 4px; border-radius: 8px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .community-intro { animation: community-arrive .65s var(--geo-flow-ease) both; }
+  .community-discovery { animation: community-arrive .85s var(--geo-flow-ease) both; }
+  .community-trending-card { transition: translate .25s var(--geo-flow-ease), border-color .25s ease, box-shadow .25s ease; }
+  .community-trending-card:hover { translate: 0 -3px; }
+}
+@keyframes community-arrive {
+  from { opacity: 0; translate: 0 14px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (max-width: 1000px) {
+  .community-hero-inner { grid-template-columns: 1fr; }
+  .community-discovery { display: none; }
+}
+@media (max-width: 520px) {
+  .community-hero { padding: 32px 0; border-radius: 0 0 28px 28px; }
+  .community-hero h1 { line-height: 1.35; }
 }
 
 .community-hero-badge {
@@ -860,7 +925,7 @@ onBeforeUnmount(() => {
   font-family: ui-monospace, SFMono-Regular, monospace;
   letter-spacing: 0.16em;
   font-weight: 700;
-  color: #d8c28e;
+  color: #c1e7df;
   margin-bottom: 14px;
 }
 
@@ -905,9 +970,8 @@ onBeforeUnmount(() => {
   min-height: 44px;
   padding: 0 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(197, 160, 89, 0.4);
+  border: 1px solid var(--border);
   background: transparent;
-  backdrop-filter: blur(8px);
   color: #10263d;
   font-size: 14px;
 }

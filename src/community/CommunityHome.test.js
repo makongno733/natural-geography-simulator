@@ -47,6 +47,16 @@ afterEach(() => {
 })
 
 describe('community request lifecycle', () => {
+  it('uses immediate scrolling when reduced motion is requested', async () => {
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })))
+    wrapper = mountCommunity()
+    await flushPromises()
+    const compose = wrapper.find('#compose').element
+    compose.scrollIntoView = vi.fn()
+    await wrapper.find('.community-hero-actions a').trigger('click')
+    expect(compose.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto' })
+  })
+
   it('does not wait for hot-topic refresh before rendering discussions', async () => {
     const topics = deferred()
     apiRequest.mockImplementation(async path => {
