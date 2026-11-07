@@ -46,6 +46,15 @@
         <span class="hot-topics-subtitle">NASA EONET / USGS 来源记录</span>
       </div>
       <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
+      <div class="topic-source-status" aria-label="来源同步状态">
+        <span v-for="source in topicSources" :key="source.source">
+          {{ source.name }} · {{ source.status === 'error' ? '更新失败，保留缓存' : source.stale ? '等待更新' : '已同步' }}
+          <small v-if="source.fetchedAt">（{{ formatDateTime(source.fetchedAt) }}）</small>
+        </span>
+        <button type="button" class="topic-summary-toggle" :disabled="hotTopicLoading" @click="loadHotTopics">
+          {{ hotTopicLoading ? '读取中…' : '刷新记录' }}
+        </button>
+      </div>
       <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
       <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
       <div class="hot-topics-grid">
@@ -356,6 +365,8 @@ const posts = ref([])
 const featuredPosts = ref([])
 const hotTopics = ref([])
 const hotTopicError = ref('')
+const topicSources = ref([])
+const hotTopicLoading = ref(false)
 const openingTopicId = ref(null)
 const expandedTopicId = ref(null)
 const summaryLoadingIds = reactive({})
@@ -395,6 +406,39 @@ function insertFormulaToDraft(latex) {
 }
 
 let stream
+let topicRefreshTimer
+let disposed = false
+
+async function loadHotTopics() {
+  clearTimeout(topicRefreshTimer)
+  if (disposed || !accountEnabled || hotTopicLoading.value) return
+  hotTopicLoading.value = true
+  let delay = 60000
+  try {
+    const result = await apiRequest('/api/community/hot-topics')
+    if (!Array.isArray(result?.topics)) throw new Error('事件服务返回的数据不完整')
+    if (disposed) return
+    hotTopics.value = result.topics
+    topicSources.value = result.sources || []
+    hotTopicError.value = result.refreshError
+      ? '部分来源更新失败，保留上次有效记录。'
+      : result.updating ? '服务器正在更新来源，以下记录可能尚未同步。' : ''
+    if (result.updating) delay = 2000
+  } catch (cause) {
+    if (!disposed) hotTopicError.value = cause.message || '实时事件暂时无法获取，请稍后重试。'
+  } finally {
+    hotTopicLoading.value = false
+    if (!disposed) topicRefreshTimer = setTimeout(() => {
+      void refreshVisibleTopics()
+    }, delay)
+  }
+}
+
+function refreshVisibleTopics() {
+  if (disposed) return
+  if (document.visibilityState === 'visible') void loadHotTopics()
+  else topicRefreshTimer = setTimeout(refreshVisibleTopics, 60000)
+}
 
 const formatDate = value => {
   try {
@@ -656,10 +700,10 @@ async function initCommunity() {
   }
 
   try {
-    const [categoryResult, sessionResult, hotTopicResult] = await Promise.allSettled([
+    void loadHotTopics()
+    const [categoryResult, sessionResult] = await Promise.allSettled([
       apiRequest('/api/community/categories'),
-      authClient.getSession(),
-      apiRequest('/api/community/hot-topics', { timeout: 16000 })
+      authClient.getSession()
     ])
     if (categoryResult.status === 'fulfilled' && categoryResult.value?.categories?.length) {
       categories.value = categoryResult.value.categories
@@ -671,14 +715,6 @@ async function initCommunity() {
 
     if (sessionResult.status === 'fulfilled') {
       user.value = sessionResult.value.data?.user || null
-    }
-
-    if (hotTopicResult.status === 'fulfilled' && Array.isArray(hotTopicResult.value?.topics)) {
-      hotTopics.value = hotTopicResult.value.topics
-      hotTopicError.value = hotTopicResult.value.refreshError ? '来源暂时无法更新，以下为上次抓取的记录。' : ''
-    } else {
-      hotTopics.value = []
-      hotTopicError.value = '实时事件暂时无法获取，请稍后重试。'
     }
 
     if (user.value) {
@@ -719,10 +755,15 @@ async function initCommunity() {
 }
 
 onMounted(initCommunity)
-onBeforeUnmount(() => stream?.close())
+onBeforeUnmount(() => {
+  disposed = true
+  stream?.close()
+  clearTimeout(topicRefreshTimer)
+})
 </script>
 
 <style scoped>
+.topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-secondary); }
 /* 社区首页：让搜索和讨论在首屏内可见。 */
 .community-hero {
   padding: 38px 0 34px;

@@ -4,8 +4,8 @@ export const EONET_EVENTS_URL = 'https://eonet.gsfc.nasa.gov/api/v3/events?statu
 export const USGS_SIGNIFICANT_QUAKES_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson'
 
 const REFRESH_MS = 30 * 60 * 1000
+const RETRY_MS = 5 * 60 * 1000
 let pendingSync
-let lastFailedAttempt = 0
 
 const categoryNames = new Map([
   ['severeStorms', '强风暴'], ['wildfires', '野火'], ['volcanoes', '火山活动'],
@@ -56,105 +56,96 @@ export function normalizeUsgsEarthquake(feature, fetchedAt) {
   }
 }
 
-export async function syncHotTopics({ fetchImpl = fetch, now = Date.now() } = {}) {
+const sources = [
+  { id: 'eonet', name: 'NASA EONET', url: EONET_EVENTS_URL, field: 'events', limit: 40, normalize: normalizeEonetEvent },
+  { id: 'usgs', name: 'USGS', url: USGS_SIGNIFICANT_QUAKES_URL, field: 'features', limit: 15, normalize: normalizeUsgsEarthquake }
+]
+
+export async function syncHotTopics({ fetchImpl = fetch, now = Date.now(), sourceIds = sources.map(source => source.id) } = {}) {
   if (pendingSync) return pendingSync
   pendingSync = (async () => {
     const fetchedAt = new Date(now).toISOString()
-    let successfulSources = 0
-    let failedSources = 0
-
-    // 1. 同步 NASA EONET 自然事件
-    try {
-      const response = await fetchImpl(EONET_EVENTS_URL, { signal: AbortSignal.timeout(8000) })
-      if (response.ok) {
+    const upsert = database.prepare(`INSERT INTO community_hot_topic
+      (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
+      VALUES (@title, @category, @summary, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
+      ON CONFLICT(external_id) DO UPDATE SET title=excluded.title, category=excluded.category,
+      summary=excluded.summary, tag=excluded.tag, source_url=excluded.source_url,
+      occurred_at=excluded.occurred_at, fetched_at=excluded.fetched_at`)
+    const outcomes = await Promise.all(sources.filter(source => sourceIds.includes(source.id)).map(async source => {
+      try {
+        const response = await fetchImpl(source.url, { signal: AbortSignal.timeout(8000) })
+        if (!response.ok) throw new Error(`${source.name} HTTP ${response.status}`)
         const payload = await response.json()
-        if (Array.isArray(payload.events)) {
-          successfulSources++
-          const upsert = database.prepare(`INSERT INTO community_hot_topic
-            (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
-            VALUES (@title, @category, @summary, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
-            ON CONFLICT(external_id) DO UPDATE SET title=excluded.title, category=excluded.category,
-            summary=excluded.summary, tag=excluded.tag, source_url=excluded.source_url,
-            occurred_at=excluded.occurred_at, fetched_at=excluded.fetched_at`)
-          database.transaction(() => {
-            for (const event of payload.events.slice(0, 40)) {
-              const topic = normalizeEonetEvent(event, fetchedAt)
-              if (topic) upsert.run(topic)
-            }
-          })()
-        } else throw new Error('EONET response has no events array')
-      } else throw new Error(`EONET HTTP ${response.status}`)
-    } catch (eonetErr) {
-      failedSources++
-      console.warn('NASA EONET sync warning:', eonetErr.message)
-    }
-
-    // 2. 同步 USGS 显著地震源
-    try {
-      const usgsRes = await fetchImpl(USGS_SIGNIFICANT_QUAKES_URL, { signal: AbortSignal.timeout(6000) })
-      if (usgsRes.ok) {
-        const usgsData = await usgsRes.json()
-        if (Array.isArray(usgsData.features)) {
-          successfulSources++
-          const upsert = database.prepare(`INSERT INTO community_hot_topic
-            (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
-            VALUES (@title, @category, @summary, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
-            ON CONFLICT(external_id) DO UPDATE SET title=excluded.title, category=excluded.category,
-            summary=excluded.summary, tag=excluded.tag, source_url=excluded.source_url,
-            occurred_at=excluded.occurred_at, fetched_at=excluded.fetched_at`)
-          database.transaction(() => {
-            for (const feat of usgsData.features.slice(0, 15)) {
-              const topic = normalizeUsgsEarthquake(feat, fetchedAt)
-              if (topic) upsert.run(topic)
-            }
-          })()
-        } else throw new Error('USGS response has no features array')
-      } else throw new Error(`USGS HTTP ${usgsRes.status}`)
-    } catch (usgsErr) {
-      failedSources++
-      console.warn('USGS sync warning:', usgsErr.message)
-    }
-
-    if (!successfulSources) throw new Error('All geography event sources failed')
-    lastFailedAttempt = failedSources ? Date.now() : 0
+        const records = payload?.[source.field]
+        if (!Array.isArray(records)) throw new Error(`${source.name} response has no ${source.field} array`)
+        const topics = records.slice(0, source.limit).map(record => source.normalize(record, fetchedAt)).filter(Boolean)
+        if (records.length && !topics.length) throw new Error(`${source.name} response has no valid records`)
+        if (topics.length < Math.min(records.length, source.limit)) {
+          console.warn(`${source.name} skipped invalid event records`)
+        }
+        database.transaction(() => {
+          for (const topic of topics) upsert.run(topic)
+          database.prepare(`INSERT INTO geo_topic_sync (source, fetched_at, attempted_at, status, record_count)
+            VALUES (?, ?, ?, 'ok', ?)
+            ON CONFLICT(source) DO UPDATE SET fetched_at=excluded.fetched_at,
+            attempted_at=excluded.attempted_at, status='ok', record_count=excluded.record_count`)
+            .run(source.id, fetchedAt, fetchedAt, topics.length)
+        })()
+        return true
+      } catch (error) {
+        console.warn(`${source.name} sync failed:`, error.message)
+        database.prepare(`INSERT INTO geo_topic_sync (source, fetched_at, attempted_at, status)
+          VALUES (?, '', ?, 'error')
+          ON CONFLICT(source) DO UPDATE SET attempted_at=excluded.attempted_at, status='error'`)
+          .run(source.id, fetchedAt)
+        return false
+      }
+    }))
+    if (!outcomes.some(Boolean)) throw new Error('All geography event sources failed')
 
     database.transaction(() => {
-      database.prepare(`INSERT INTO geo_topic_sync (source, fetched_at) VALUES ('eonet', ?)
-        ON CONFLICT(source) DO UPDATE SET fetched_at=excluded.fetched_at`).run(fetchedAt)
       database.prepare('DELETE FROM community_hot_topic WHERE external_id IS NOT NULL AND occurred_at < ? AND post_id IS NULL')
         .run(new Date(now - 60 * 86400000).toISOString())
     })()
 
     return fetchedAt
-  })().catch(error => {
-    lastFailedAttempt = Date.now()
-    throw error
-  }).finally(() => { pendingSync = null })
+  })().finally(() => { pendingSync = null })
   return pendingSync
 }
 
-export async function getHotTopics() {
-  const sync = database.prepare("SELECT fetched_at AS fetchedAt FROM geo_topic_sync WHERE source = 'eonet'").get()
-  let refreshError = false
-  if ((!sync || Date.now() - Date.parse(sync.fetchedAt) > REFRESH_MS) && Date.now() - lastFailedAttempt > 5 * 60 * 1000) {
-    try { await syncHotTopics() } catch (error) {
-      console.error('Topic sync failed:', error)
-      refreshError = true
-    }
+export async function getHotTopics({ now = Date.now(), fetchImpl = fetch } = {}) {
+  const rows = database.prepare(`SELECT source, fetched_at AS fetchedAt, attempted_at AS attemptedAt,
+    status, record_count AS recordCount FROM geo_topic_sync`).all()
+  const sourceStates = sources.map(source => {
+    const row = rows.find(row => row.source === source.id)
+    const fetchedAt = row?.fetchedAt || null
+    const stale = !fetchedAt || !Number.isFinite(Date.parse(fetchedAt)) || now - Date.parse(fetchedAt) >= REFRESH_MS
+    return { source: source.id, name: source.name, fetchedAt, attemptedAt: row?.attemptedAt || null,
+      status: row?.status || 'unknown', recordCount: row?.recordCount || 0, stale }
+  })
+  const due = sourceStates.filter(state => {
+    const attemptedAt = Date.parse(state.attemptedAt)
+    return (state.stale || state.status !== 'ok') &&
+      (!Number.isFinite(attemptedAt) || now - attemptedAt >= RETRY_MS)
+  }).map(state => state.source)
+  if (due.length && !pendingSync) {
+    void syncHotTopics({ fetchImpl, now, sourceIds: due })
+      .catch(error => console.error('Topic sync failed:', error.message))
   }
-  const latest = database.prepare("SELECT fetched_at AS fetchedAt FROM geo_topic_sync WHERE source = 'eonet'").get()
-  if (lastFailedAttempt > Date.parse(latest?.fetchedAt || 0)) refreshError = true
   const topics = database.prepare(`SELECT id, title, category, summary, tag, source_url AS sourceUrl,
     occurred_at AS occurredAt, fetched_at AS fetchedAt, post_id AS postId
     FROM community_hot_topic WHERE external_id IS NOT NULL
     ORDER BY occurred_at DESC, id DESC LIMIT 12`).all()
-  return { topics, fetchedAt: latest?.fetchedAt || null, refreshError, source: 'NASA EONET & USGS' }
+  const fetchedAt = sourceStates.map(state => state.fetchedAt).filter(Boolean).sort().at(-1) || null
+  return { topics, fetchedAt, refreshError: sourceStates.some(state => state.status === 'error'),
+    stale: sourceStates.some(state => state.stale), updating: Boolean(pendingSync),
+    sources: sourceStates, source: 'NASA EONET & USGS' }
 }
 
 export function startHotTopicSync() {
   getHotTopics().catch(error => console.error('Initial topic sync failed:', error))
   const timer = setInterval(() => {
     getHotTopics().catch(error => console.error('Periodic topic sync failed:', error))
-  }, REFRESH_MS)
+  }, 60 * 1000)
   timer.unref()
 }

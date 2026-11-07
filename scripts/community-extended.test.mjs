@@ -183,7 +183,10 @@ describe('Extended Geography Community Platform API', () => {
     expect(groups.status).toBe(200)
     expect(groups.payload.groups).toEqual([])
 
-    database.prepare("INSERT INTO geo_topic_sync (source, fetched_at) VALUES ('eonet', ?)").run(new Date().toISOString())
+    for (const source of ['eonet', 'usgs']) {
+      database.prepare("INSERT INTO geo_topic_sync (source, fetched_at, attempted_at, status) VALUES (?, ?, ?, 'ok')")
+        .run(source, new Date().toISOString(), new Date().toISOString())
+    }
     const topics = await new Promise((resolve, reject) => {
       routes.get('GET /api/community/hot-topics')({}, { json(payload) { resolve(payload) } }, reject)
     })

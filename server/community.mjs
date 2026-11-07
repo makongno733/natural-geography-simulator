@@ -174,6 +174,13 @@ export function migrateCommunity() {
     CREATE UNIQUE INDEX IF NOT EXISTS community_hot_topic_external ON community_hot_topic(external_id);
     CREATE TABLE IF NOT EXISTS geo_topic_sync (source TEXT PRIMARY KEY, fetched_at TEXT NOT NULL);
   `)
+  const syncColumns = database.prepare('PRAGMA table_info(geo_topic_sync)').all().map(column => column.name)
+  for (const [name, definition] of [
+    ['attempted_at', 'TEXT'], ['status', "TEXT NOT NULL DEFAULT 'unknown'"],
+    ['record_count', 'INTEGER NOT NULL DEFAULT 0']
+  ]) {
+    if (!syncColumns.includes(name)) database.exec(`ALTER TABLE geo_topic_sync ADD COLUMN ${name} ${definition}`)
+  }
 
   // 预置默认分类
   const seedCat = database.prepare('INSERT OR IGNORE INTO community_category (slug, name, description, sort_order) VALUES (?, ?, ?, ?)')
