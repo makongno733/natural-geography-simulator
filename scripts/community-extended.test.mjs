@@ -58,7 +58,8 @@ describe('Extended Geography Community Platform API', () => {
         title: '断层与褶皱在地貌演化中的本质区别是什么？',
         body: '在野外考察时如何区分正断层、逆断层与向斜成山、背斜成谷？',
         tags: ['构造地质', '断层模型', '野外科考'],
-        linkedExperiment: 'fault-model'
+        linkedExperiment: 'fault-model',
+        evidenceId: 'rainfall-observation'
       }
     })
     expect(res.status).toBe(201)
@@ -71,6 +72,12 @@ describe('Extended Geography Community Platform API', () => {
     expect(postDetail.status).toBe(200)
     expect(postDetail.payload.post.tags).toEqual(['构造地质', '断层模型', '野外科考'])
     expect(postDetail.payload.post.linkedExperiment).toBe('fault-model')
+    expect(postDetail.payload.post.evidenceId).toBe('rainfall-observation')
+    const list = call('GET', '/api/community/posts')
+    expect(list.status).toBe(200)
+    expect(list.payload.posts.find(post => post.id === createdPostId)).toMatchObject({
+      evidenceId: 'rainfall-observation', authorId: 'user-1'
+    })
   })
 
   it('2. adds a scholarly reply and allows author to accept it as best answer', () => {
@@ -139,6 +146,14 @@ describe('Extended Geography Community Platform API', () => {
     expect(bookmark1.status).toBe(200)
     expect(bookmark1.payload.bookmarked).toBe(true)
     expect(bookmark1.payload.bookmarkCount).toBe(1)
+    const detail = call('GET', '/api/community/posts/:id', {
+      params: { id: createdPostId }, userId: 'user-2'
+    })
+    expect(detail.payload.post.bookmarked).toBe(true)
+    const anonymous = call('GET', '/api/community/posts/:id', {
+      params: { id: createdPostId }, userId: null
+    })
+    expect(anonymous.payload.post.bookmarked).toBe(false)
   })
 
   it('4. manages user academic profile and shows public profile statistics', () => {

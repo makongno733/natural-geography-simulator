@@ -203,7 +203,7 @@ function parseTags(raw) {
   }
 }
 
-export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
+export function setupCommunityRoutes(app, { requireOrigin, requireUser, optionalUser = (_req, _res, next) => next() }) {
   // 1. 实时 SSE 流
   app.get('/api/community/stream', requireOrigin, (req, res) => {
     if (streams.size >= 200) return res.status(503).json({ error: '实时连接暂时已满' })
@@ -260,7 +260,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
   })
 
   // 3. 帖子列表（支持搜索、标签筛选、分类筛选、类型筛选、排序）
-  app.get('/api/community/posts', (req, res) => {
+  app.get('/api/community/posts', optionalUser, (req, res) => {
     const query = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
     const categoryId = req.query.category ? positiveId(req.query.category) : null
     if (req.query.category && !categoryId) return res.status(400).json({ error: '无效分区' })
@@ -295,8 +295,8 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     }
 
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
-      p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceCard,
-      p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author,
+      p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
+      p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
       (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published') AS acceptedAnswerExcerpt,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
@@ -311,7 +311,6 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
       const posts = rawPosts.map(p => ({
         ...p,
         tags: parseTags(p.tags),
-        evidenceCard: p.evidenceCard ? JSON.parse(p.evidenceCard) : null,
         liked: Boolean(p.liked)
       }))
       res.json({ posts, page })
@@ -321,13 +320,13 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
   })
 
   // 4. 帖子详情（含最佳答案、楼中楼回复与点赞收藏统计）
-  app.get('/api/community/posts/:id', (req, res) => {
+  app.get('/api/community/posts/:id', optionalUser, (req, res) => {
     const id = positiveId(req.params.id)
     if (!id) return res.status(404).json({ error: '讨论不存在' })
     const currentUserId = req.accountUser?.id || null
 
     const post = database.prepare(`SELECT p.id, p.author_id AS authorId, p.category_id AS categoryId, p.kind, p.title, p.body,
-      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceCard, p.accepted_reply_id AS acceptedReplyId,
+      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId, p.accepted_reply_id AS acceptedReplyId,
       p.created_at AS createdAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
@@ -345,7 +344,6 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const formattedPost = {
       ...post,
       tags: parseTags(post.tags),
-      evidenceCard: post.evidenceCard ? JSON.parse(post.evidenceCard) : null,
       liked: Boolean(post.liked),
       bookmarked: Boolean(post.bookmarked)
     }
@@ -692,7 +690,8 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser }) {
     const category = database.prepare("SELECT id FROM community_category WHERE slug = 'physical' AND active = 1").get()
       || database.prepare('SELECT id FROM community_category WHERE active = 1 ORDER BY sort_order LIMIT 1').get()
     if (!category) return res.status(503).json({ error: '目前没有可用的社区分区' })
-    const body = `资料来源：NASA EONET\n原始记录：${topic.source_url}\n最近记录：${topic.occurred_at}\n\n来源摘要：${topic.summary}\n\n这是一条供社区讨论的事件线索。请核对来源中的更新，再分享你的观察、解释或疑问。`
+    const sourceName = topic.external_id.startsWith('USGS_') ? 'USGS' : 'NASA EONET'
+    const body = `资料来源：${sourceName}\n原始记录：${topic.source_url}\n最近记录：${topic.occurred_at}\n\n来源摘要：${topic.summary}\n\n这是一条供社区讨论的事件线索。请核对来源中的更新，再分享你的观察、解释或疑问。`
     const now = new Date().toISOString()
     const result = database.transaction(() => {
       const existing = database.prepare('SELECT post_id FROM community_hot_topic WHERE id = ?').get(id)
