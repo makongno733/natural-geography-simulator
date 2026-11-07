@@ -194,7 +194,10 @@
           </article>
         </div>
 
-        <button v-if="posts.length === 20" class="community-more baroque-btn baroque-btn-brass" type="button" @click="nextPage">翻阅更多讨论</button>
+        <p v-if="error && posts.length" class="community-state community-error" role="alert">{{ error }}</p>
+        <button v-if="lastPageCount === 20" class="community-more baroque-btn baroque-btn-brass" type="button" :disabled="loading" @click="nextPage">
+          {{ loading ? '读取中…' : '翻阅更多讨论' }}
+        </button>
 
         <!-- 撰写与发起讨论板块 -->
         <section id="compose" ref="composeRef" class="community-compose baroque-frame" aria-labelledby="compose-title">
@@ -386,6 +389,7 @@ const kind = ref(route.path === '/questions' ? 'question' : '')
 const onlySolved = ref(false)
 const sortMode = ref('newest')
 const page = ref(1)
+const lastPageCount = ref(0)
 const composeRef = ref(null)
 const tagsInput = ref('')
 const isDemoMode = ref(false)
@@ -407,6 +411,9 @@ function insertFormulaToDraft(latex) {
 
 let stream
 let topicRefreshTimer
+let streamRefreshTimer
+let postsController
+let postsVersion = 0
 let disposed = false
 
 async function loadHotTopics() {
@@ -503,26 +510,36 @@ function saveLocalDemoPost(newPost) {
 }
 
 async function loadPosts(append = false) {
+  if (disposed) return
+  postsController?.abort()
+  const controller = new AbortController()
+  postsController = controller
+  const version = ++postsVersion
+  const requestedPage = append ? page.value + 1 : 1
   loading.value = true
   error.value = ''
   try {
     if (!isDemoMode.value && accountEnabled) {
-      const params = new URLSearchParams({ page: String(page.value) })
+      const params = new URLSearchParams({ page: String(requestedPage) })
       if (searchQuery.value) params.set('q', searchQuery.value)
       if (selectedCategory.value) params.set('category', String(selectedCategory.value))
       if (kind.value) params.set('kind', kind.value)
       if (onlySolved.value) params.set('hasAccepted', '1')
       if (selectedTag.value) params.set('tag', selectedTag.value)
       if (sortMode.value === 'popular') params.set('sort', 'popular')
-      const result = await apiRequest(`/api/community/posts?${params}`)
+      const result = await apiRequest(`/api/community/posts?${params}`, { signal: controller.signal })
+      if (disposed || version !== postsVersion) return
+      if (!Array.isArray(result?.posts)) throw new Error('讨论服务返回的数据不完整')
       posts.value = append ? [...posts.value, ...result.posts] : result.posts
+      page.value = requestedPage
+      lastPageCount.value = result.posts.length
       loading.value = false
       return
     }
-  } catch {
+  } catch (cause) {
+    if (disposed || controller.signal.aborted || version !== postsVersion) return
     if (!allowDemoMode) {
-      posts.value = []
-      error.value = '讨论暂时无法载入，请稍后重试。'
+      error.value = cause.message || '讨论暂时无法载入，请稍后重试。'
       loading.value = false
       return
     }
@@ -531,6 +548,7 @@ async function loadPosts(append = false) {
 
   if (!allowDemoMode) {
     posts.value = []
+    lastPageCount.value = 0
     error.value = '云端社区尚未连接，暂时无法获取讨论。'
     loading.value = false
     return
@@ -547,6 +565,9 @@ async function loadPosts(append = false) {
   if (kind.value) {
     pool = pool.filter(p => p.kind === kind.value)
   }
+  if (onlySolved.value) {
+    pool = pool.filter(p => p.kind === 'question' && p.accepted_reply_id)
+  }
   if (selectedTag.value) {
     pool = pool.filter(p => p.tags && p.tags.includes(selectedTag.value))
   }
@@ -559,11 +580,22 @@ async function loadPosts(append = false) {
   }
 
   // 映射统一卡片字段
-  posts.value = pool.map(p => ({
+  const formattedPosts = pool.map(p => ({
     ...p,
     category: p.category || p.categoryName || '地学学术',
-    excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : '')
+    excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : ''),
+    author: p.author?.name || '地理同好',
+    authorId: p.author?.id || null,
+    createdAt: p.created_at,
+    likeCount: p.likesCount || 0,
+    replyCount: p.repliesCount || 0,
+    acceptedReplyId: p.accepted_reply_id || null,
+    linkedExperiment: p.linked_experiment || null
   }))
+  const pagePosts = formattedPosts.slice((requestedPage - 1) * 20, requestedPage * 20)
+  posts.value = append ? [...posts.value, ...pagePosts] : pagePosts
+  page.value = requestedPage
+  lastPageCount.value = pagePosts.length
   if (!searchQuery.value && !selectedCategory.value && !selectedTag.value && !kind.value) {
     featuredPosts.value = [...posts.value].sort((a, b) =>
       ((b.likeCount || b.likesCount || 0) * 3 + (b.replyCount || b.repliesCount || 0) * 2) -
@@ -604,7 +636,7 @@ async function openTopic(topic) {
     openingTopicId.value = null
   }
 }
-function nextPage() { page.value += 1; void loadPosts(true) }
+function nextPage() { if (!loading.value) void loadPosts(true) }
 function focusCompose() { composeRef.value?.scrollIntoView({ behavior: 'smooth' }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
 
 async function retryOnline() {
@@ -705,6 +737,7 @@ async function initCommunity() {
       apiRequest('/api/community/categories'),
       authClient.getSession()
     ])
+    if (disposed) return
     if (categoryResult.status === 'fulfilled' && categoryResult.value?.categories?.length) {
       categories.value = categoryResult.value.categories
       isDemoMode.value = false
@@ -726,20 +759,26 @@ async function initCommunity() {
       draft.categoryId = String(categories.value[0].id)
     }
 
-    await loadPosts()
-    if (!isDemoMode.value) {
-      try {
-        const featured = await apiRequest('/api/community/posts?sort=popular')
-        featuredPosts.value = featured.posts.slice(0, 3)
-      } catch { featuredPosts.value = [] }
-    }
+    const featuredRequest = !isDemoMode.value ? apiRequest('/api/community/posts?sort=popular')
+      .then(featured => {
+        if (!disposed) featuredPosts.value = featured.posts.slice(0, 3)
+      }).catch(cause => {
+        if (!disposed) console.warn('热门讨论读取失败：', cause.message)
+      }) : Promise.resolve()
+    await Promise.all([loadPosts(), featuredRequest])
 
-    if (!isDemoMode.value && typeof EventSource !== 'undefined') {
+    if (!disposed && !isDemoMode.value && typeof EventSource !== 'undefined') {
       try {
+        stream?.close()
         stream = new EventSource(`${accountOrigin}/api/community/stream`)
-        stream.addEventListener('community', () => { if (page.value === 1) void loadPosts() })
-      } catch {
-        // ignore stream errors in demo environments
+        stream.addEventListener('community', () => {
+          clearTimeout(streamRefreshTimer)
+          streamRefreshTimer = setTimeout(() => {
+            if (!disposed && page.value === 1 && document.visibilityState === 'visible') void loadPosts()
+          }, 250)
+        })
+      } catch (cause) {
+        console.warn('实时讨论连接失败，列表仍可手动刷新：', cause.message)
       }
     }
   } catch {
@@ -759,6 +798,8 @@ onBeforeUnmount(() => {
   disposed = true
   stream?.close()
   clearTimeout(topicRefreshTimer)
+  clearTimeout(streamRefreshTimer)
+  postsController?.abort()
 })
 </script>
 

@@ -142,15 +142,16 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import LessonAssistant from './assistant/LessonAssistant.vue'
 import BrandMark from './brand/BrandMark.vue'
 import GlobalToast from './components/GlobalToast.vue'
 import GlobalCommandPalette from './components/GlobalCommandPalette.vue'
 import UserGuideTour from './components/UserGuideTour.vue'
 import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
 import { updatePageSeo } from './utils/seo.js'
+
+const LessonAssistant = defineAsyncComponent(() => import('./assistant/LessonAssistant.vue'))
 
 const route = useRoute()
 const router = useRouter()
