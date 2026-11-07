@@ -156,7 +156,7 @@
         <p v-else-if="error && !posts.length" class="community-state community-error" role="alert">
           {{ error }}
           <br />
-          <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts">重新尝试</button>
+          <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts()">重新尝试</button>
         </p>
         <p v-else-if="!posts.length" class="community-state">暂时没有符合条件的讨论。换个关键词，或发起新讨论吧。</p>
 
@@ -614,7 +614,12 @@ async function loadPosts(append = false) {
 
 function preferredScroll() { return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }
 function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: preferredScroll() }) }
-function resetAndLoad() { page.value = 1; void loadPosts() }
+function resetAndLoad() {
+  page.value = 1
+  posts.value = []
+  lastPageCount.value = 0
+  void loadPosts()
+}
 function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad(); scrollToFeed() }
 function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = route.path === '/questions' ? 'question' : ''; onlySolved.value = false; resetAndLoad() }
 function setCategory(id) { selectedCategory.value = selectedCategory.value === id ? null : id; resetAndLoad() }

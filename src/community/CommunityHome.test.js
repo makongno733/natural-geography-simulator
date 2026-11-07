@@ -125,4 +125,26 @@ describe('community request lifecycle', () => {
     expect(wrapper.findAll('.community-post-card')).toHaveLength(40)
     expect(wrapper.find('.community-more').exists()).toBe(true)
   })
+
+  it('does not mix a failed new filter with old posts and retries its first page', async () => {
+    apiRequest.mockImplementation(async path => {
+      if (path.includes('/categories')) return { categories: [{ id: 1, name: '自然地理' }] }
+      if (path.includes('/hot-topics')) return { topics: [], sources: [] }
+      return { posts: Array.from({ length: 20 }, (_, i) => post(i + 1)) }
+    })
+    wrapper = mountCommunity()
+    await flushPromises()
+    apiRequest.mockRejectedValueOnce(new Error('筛选读取失败'))
+    await wrapper.findAll('.baroque-filter-btn')[1].trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('.community-post-card')).toHaveLength(0)
+    expect(wrapper.find('.community-more').exists()).toBe(false)
+    apiRequest.mockResolvedValueOnce({ posts: [post(77)] })
+    await wrapper.find('.community-error button').trigger('click')
+    await flushPromises()
+    expect(apiRequest.mock.calls.at(-1)[0]).toContain('page=1')
+    expect(apiRequest.mock.calls.at(-1)[0]).toContain('kind=question')
+    expect(wrapper.findAll('.community-post-card')).toHaveLength(1)
+    expect(wrapper.text()).toContain('讨论 77')
+  })
 })

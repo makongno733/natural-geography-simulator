@@ -29,6 +29,9 @@ export async function apiRequest(path, options = {}) {
 
   const { timeout = 6000, signal, ...fetchOptions } = options
   const controller = new AbortController()
+  const relayAbort = () => controller.abort(signal.reason)
+  if (signal?.aborted) relayAbort()
+  else signal?.addEventListener('abort', relayAbort, { once: true })
   const timer = setTimeout(() => {
     controller.abort()
   }, timeout)
@@ -36,7 +39,7 @@ export async function apiRequest(path, options = {}) {
   try {
     const response = await fetch(`${accountOrigin}${path}`, {
       credentials: 'include',
-      signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
+      signal: controller.signal,
       ...fetchOptions,
       headers: {
         ...(fetchOptions.body ? { 'Content-Type': 'application/json' } : {}),
@@ -80,5 +83,6 @@ export async function apiRequest(path, options = {}) {
     throw new ApiError('无法连接至云端服务，请确认网络或服务状态', 0, true)
   } finally {
     clearTimeout(timer)
+    signal?.removeEventListener('abort', relayAbort)
   }
 }

@@ -82,6 +82,12 @@ describe('source-linked geography publishing workflow', () => {
     expect(database.prepare('SELECT count(*) AS n FROM community_hot_topic').get().n).toBe(1)
     expect(database.prepare("SELECT fetched_at FROM geo_topic_sync WHERE source='eonet'").get().fetched_at)
       .toBe(new Date(now).toISOString())
+    await syncHotTopics({ now: now + 5 * 60000, fetchImpl: success })
+    const recovered = await getHotTopics({ now: now + 5 * 60000, fetchImpl: success })
+    expect(recovered.refreshError).toBe(false)
+    expect(recovered.updating).toBe(false)
+    expect(recovered.sources.every(source => source.status === 'ok')).toBe(true)
+    expect(recovered.topics).toHaveLength(1)
   })
 
   it('updates source revisions once and only expires unlinked automatic records', async () => {

@@ -45,6 +45,8 @@ describe('apiRequest resilience and timeout', () => {
 
   it('preserves caller cancellation without marking the service offline', async () => {
     const controller = new AbortController()
+    vi.spyOn(AbortSignal, 'any').mockImplementation(() => { throw new Error('Unavailable on older browsers') })
+    const removeListener = vi.spyOn(controller.signal, 'removeEventListener')
     vi.stubGlobal('fetch', vi.fn().mockImplementation((_url, { signal }) =>
       new Promise((_resolve, reject) => {
         signal.addEventListener('abort', () => reject(signal.reason), { once: true })
@@ -54,6 +56,21 @@ describe('apiRequest resilience and timeout', () => {
     controller.abort()
     await expect(request).rejects.toMatchObject({ name: 'AbortError' })
     expect(serviceStatus.value.online).toBe(true)
+    expect(removeListener).toHaveBeenCalledWith('abort', expect.any(Function))
+  })
+
+  it('propagates an already cancelled signal and cleans its listener after success', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    vi.stubGlobal('fetch', vi.fn(async (_url, { signal }) => {
+      if (signal.aborted) throw signal.reason
+      return { ok: true, status: 200, json: async () => ({ status: 'ok' }) }
+    }))
+    await expect(apiRequest('/api/test', { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' })
+    const active = new AbortController()
+    const removeListener = vi.spyOn(active.signal, 'removeEventListener')
+    await expect(apiRequest('/api/test', { signal: active.signal })).resolves.toEqual({ status: 'ok' })
+    expect(removeListener).toHaveBeenCalledWith('abort', expect.any(Function))
   })
 
   it('throws ApiError with network error flag on fetch failure', async () => {
