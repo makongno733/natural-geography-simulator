@@ -26,7 +26,11 @@
           <a class="nav-link" :href="`${siteOrigin}/#/`">返回课程</a>
         </nav>
 
-        <nav v-else class="app-nav" aria-label="主导航">
+        <button v-if="!isAccountHost" class="mobile-nav-toggle" type="button" aria-controls="main-navigation"
+          :aria-expanded="navExpanded" @click="navExpanded = !navExpanded">
+          {{ navExpanded ? '收起导航 −' : '探索导航 ＋' }}
+        </button>
+        <nav v-if="!isAccountHost" id="main-navigation" class="app-nav" :class="{ 'is-expanded': navExpanded }" aria-label="主导航">
           <router-link to="/" class="nav-link" :class="{ active: isHome }">
             <span class="nav-label">首页</span>
           </router-link>
@@ -142,15 +146,16 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import LessonAssistant from './assistant/LessonAssistant.vue'
 import BrandMark from './brand/BrandMark.vue'
 import GlobalToast from './components/GlobalToast.vue'
 import GlobalCommandPalette from './components/GlobalCommandPalette.vue'
 import UserGuideTour from './components/UserGuideTour.vue'
 import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
 import { updatePageSeo } from './utils/seo.js'
+
+const LessonAssistant = defineAsyncComponent(() => import('./assistant/LessonAssistant.vue'))
 
 const route = useRoute()
 const router = useRouter()
@@ -160,6 +165,7 @@ const isExperiments = computed(() => route.path.startsWith('/experiments') || ro
 const grade = computed(() => route.params.grade || '')
 const isLearningRoute = computed(() => route.path === '/learning' || grade.value === '初中' || grade.value === '高中')
 const accountUser = ref(null)
+const navExpanded = ref(false)
 const brandMark = ref(null)
 const cmdPaletteRef = ref(null)
 const guideTourRef = ref(null)
@@ -177,7 +183,10 @@ function onBrandClick(event) {
   event.preventDefault()
   brandMark.value?.play()
 }
-watch(() => route.path, path => { if (path !== '/') brandMark.value?.stop() })
+watch(() => route.path, path => {
+  navExpanded.value = false
+  if (path !== '/') brandMark.value?.stop()
+})
 
 // 页面切换加载微指示
 const navLoading = ref(false)
@@ -264,6 +273,19 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+}
+
+.mobile-nav-toggle {
+  display: none;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 .brand {
@@ -566,25 +588,28 @@ onBeforeUnmount(() => {
   border-color: var(--baroque-bronze);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1100px) {
   .header-inner {
     height: auto;
     padding: 10px 16px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
   }
-  .brand { justify-content: center; min-height: 44px; }
+  .brand { min-height: 44px; flex: 1; }
+  .mobile-nav-toggle { display: inline-flex; align-items: center; }
   .app-nav {
-    overflow-x: auto;
-    padding-bottom: 4px;
-    justify-content: flex-start;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    -webkit-overflow-scrolling: touch;
+    display: none;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
   }
+  .app-nav.is-expanded { display: flex; }
+  .app-nav[aria-label="账号导航"] { display: flex; }
   .app-nav .nav-link {
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 12px;
   }
   .app-nav::-webkit-scrollbar {

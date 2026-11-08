@@ -27,8 +27,11 @@ export async function apiRequest(path, options = {}) {
     throw new ApiError('账号服务未配置或未启用', 0, true)
   }
 
-  const { timeout = 6000, ...fetchOptions } = options
+  const { timeout = 6000, signal, ...fetchOptions } = options
   const controller = new AbortController()
+  const relayAbort = () => controller.abort(signal.reason)
+  if (signal?.aborted) relayAbort()
+  else signal?.addEventListener('abort', relayAbort, { once: true })
   const timer = setTimeout(() => {
     controller.abort()
   }, timeout)
@@ -43,14 +46,21 @@ export async function apiRequest(path, options = {}) {
         ...fetchOptions.headers
       }
     })
-    clearTimeout(timer)
-
     if (response.status === 204) {
       serviceStatus.value.online = true
       return null
     }
 
-    const data = await response.json().catch(() => ({}))
+    let data
+    try {
+      data = await response.json()
+    } catch (error) {
+      if (error.name !== 'SyntaxError') throw error
+      throw new ApiError('服务器返回了无效的数据，请稍后重试', response.status)
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new ApiError('服务器返回了无效的数据，请稍后重试', response.status)
+    }
 
     if (!response.ok) {
       const msg = data.error || (response.status === 404 ? '请求资源未找到 (404)' : `服务器响应异常 (${response.status})`)
@@ -60,7 +70,7 @@ export async function apiRequest(path, options = {}) {
     serviceStatus.value.online = true
     return data
   } catch (err) {
-    clearTimeout(timer)
+    if (signal?.aborted) throw signal.reason
     if (err.name === 'AbortError') {
       serviceStatus.value.online = false
       throw new ApiError('网络请求超时，云端服务暂未响应', 408, true)
@@ -71,5 +81,8 @@ export async function apiRequest(path, options = {}) {
     // 捕获网络失联 / 拒绝连接
     serviceStatus.value.online = false
     throw new ApiError('无法连接至云端服务，请确认网络或服务状态', 0, true)
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', relayAbort)
   }
 }

@@ -1,6 +1,7 @@
 <template>
   <div class="community-page">
     <section class="community-hero" aria-labelledby="community-title">
+      <div class="community-tides" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="community-wrap community-hero-inner">
         <div class="community-intro">
           <p class="community-hero-badge">地理社区 · 一起提问、分享与讨论</p>
@@ -17,6 +18,12 @@
             <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
           </div>
         </div>
+        <aside class="community-discovery" aria-label="地理探索路径">
+          <p class="discovery-eyebrow">从观察，流向理解</p>
+          <router-link to="/calendar"><span>01</span><div><strong>看见地球的变化</strong><small>天象观察与真实地震记录</small></div><span aria-hidden="true">↗</span></router-link>
+          <router-link to="/inquiry"><span>02</span><div><strong>用证据回应好奇</strong><small>提出假设，参与地理探究</small></div><span aria-hidden="true">↗</span></router-link>
+          <router-link to="/learning"><span>03</span><div><strong>让知识彼此连接</strong><small>回到教材，理解过程与机理</small></div><span aria-hidden="true">↗</span></router-link>
+        </aside>
       </div>
     </section>
 
@@ -46,6 +53,15 @@
         <span class="hot-topics-subtitle">NASA EONET / USGS 来源记录</span>
       </div>
       <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
+      <div class="topic-source-status" aria-label="来源同步状态">
+        <span v-for="source in topicSources" :key="source.source">
+          {{ source.name }} · {{ source.status === 'error' ? '更新失败，保留缓存' : source.stale ? '等待更新' : '已同步' }}
+          <small v-if="source.fetchedAt">（{{ formatDateTime(source.fetchedAt) }}）</small>
+        </span>
+        <button type="button" class="topic-summary-toggle" :disabled="hotTopicLoading" @click="loadHotTopics">
+          {{ hotTopicLoading ? '读取中…' : '刷新记录' }}
+        </button>
+      </div>
       <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
       <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
       <div class="hot-topics-grid">
@@ -140,7 +156,7 @@
         <p v-else-if="error && !posts.length" class="community-state community-error" role="alert">
           {{ error }}
           <br />
-          <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts">重新尝试</button>
+          <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts()">重新尝试</button>
         </p>
         <p v-else-if="!posts.length" class="community-state">暂时没有符合条件的讨论。换个关键词，或发起新讨论吧。</p>
 
@@ -185,7 +201,10 @@
           </article>
         </div>
 
-        <button v-if="posts.length === 20" class="community-more baroque-btn baroque-btn-brass" type="button" @click="nextPage">翻阅更多讨论</button>
+        <p v-if="error && posts.length" class="community-state community-error" role="alert">{{ error }}</p>
+        <button v-if="lastPageCount === 20" class="community-more baroque-btn baroque-btn-brass" type="button" :disabled="loading" @click="nextPage">
+          {{ loading ? '读取中…' : '翻阅更多讨论' }}
+        </button>
 
         <!-- 撰写与发起讨论板块 -->
         <section id="compose" ref="composeRef" class="community-compose baroque-frame" aria-labelledby="compose-title">
@@ -356,6 +375,8 @@ const posts = ref([])
 const featuredPosts = ref([])
 const hotTopics = ref([])
 const hotTopicError = ref('')
+const topicSources = ref([])
+const hotTopicLoading = ref(false)
 const openingTopicId = ref(null)
 const expandedTopicId = ref(null)
 const summaryLoadingIds = reactive({})
@@ -375,6 +396,7 @@ const kind = ref(route.path === '/questions' ? 'question' : '')
 const onlySolved = ref(false)
 const sortMode = ref('newest')
 const page = ref(1)
+const lastPageCount = ref(0)
 const composeRef = ref(null)
 const tagsInput = ref('')
 const isDemoMode = ref(false)
@@ -395,6 +417,42 @@ function insertFormulaToDraft(latex) {
 }
 
 let stream
+let topicRefreshTimer
+let streamRefreshTimer
+let postsController
+let postsVersion = 0
+let disposed = false
+
+async function loadHotTopics() {
+  clearTimeout(topicRefreshTimer)
+  if (disposed || !accountEnabled || hotTopicLoading.value) return
+  hotTopicLoading.value = true
+  let delay = 60000
+  try {
+    const result = await apiRequest('/api/community/hot-topics')
+    if (!Array.isArray(result?.topics)) throw new Error('事件服务返回的数据不完整')
+    if (disposed) return
+    hotTopics.value = result.topics
+    topicSources.value = result.sources || []
+    hotTopicError.value = result.refreshError
+      ? '部分来源更新失败，保留上次有效记录。'
+      : result.updating ? '服务器正在更新来源，以下记录可能尚未同步。' : ''
+    if (result.updating) delay = 2000
+  } catch (cause) {
+    if (!disposed) hotTopicError.value = cause.message || '实时事件暂时无法获取，请稍后重试。'
+  } finally {
+    hotTopicLoading.value = false
+    if (!disposed) topicRefreshTimer = setTimeout(() => {
+      void refreshVisibleTopics()
+    }, delay)
+  }
+}
+
+function refreshVisibleTopics() {
+  if (disposed) return
+  if (document.visibilityState === 'visible') void loadHotTopics()
+  else topicRefreshTimer = setTimeout(refreshVisibleTopics, 60000)
+}
 
 const formatDate = value => {
   try {
@@ -459,26 +517,36 @@ function saveLocalDemoPost(newPost) {
 }
 
 async function loadPosts(append = false) {
+  if (disposed) return
+  postsController?.abort()
+  const controller = new AbortController()
+  postsController = controller
+  const version = ++postsVersion
+  const requestedPage = append ? page.value + 1 : 1
   loading.value = true
   error.value = ''
   try {
     if (!isDemoMode.value && accountEnabled) {
-      const params = new URLSearchParams({ page: String(page.value) })
+      const params = new URLSearchParams({ page: String(requestedPage) })
       if (searchQuery.value) params.set('q', searchQuery.value)
       if (selectedCategory.value) params.set('category', String(selectedCategory.value))
       if (kind.value) params.set('kind', kind.value)
       if (onlySolved.value) params.set('hasAccepted', '1')
       if (selectedTag.value) params.set('tag', selectedTag.value)
       if (sortMode.value === 'popular') params.set('sort', 'popular')
-      const result = await apiRequest(`/api/community/posts?${params}`)
+      const result = await apiRequest(`/api/community/posts?${params}`, { signal: controller.signal })
+      if (disposed || version !== postsVersion) return
+      if (!Array.isArray(result?.posts)) throw new Error('讨论服务返回的数据不完整')
       posts.value = append ? [...posts.value, ...result.posts] : result.posts
+      page.value = requestedPage
+      lastPageCount.value = result.posts.length
       loading.value = false
       return
     }
-  } catch {
+  } catch (cause) {
+    if (disposed || controller.signal.aborted || version !== postsVersion) return
     if (!allowDemoMode) {
-      posts.value = []
-      error.value = '讨论暂时无法载入，请稍后重试。'
+      error.value = cause.message || '讨论暂时无法载入，请稍后重试。'
       loading.value = false
       return
     }
@@ -487,6 +555,7 @@ async function loadPosts(append = false) {
 
   if (!allowDemoMode) {
     posts.value = []
+    lastPageCount.value = 0
     error.value = '云端社区尚未连接，暂时无法获取讨论。'
     loading.value = false
     return
@@ -503,6 +572,9 @@ async function loadPosts(append = false) {
   if (kind.value) {
     pool = pool.filter(p => p.kind === kind.value)
   }
+  if (onlySolved.value) {
+    pool = pool.filter(p => p.kind === 'question' && p.accepted_reply_id)
+  }
   if (selectedTag.value) {
     pool = pool.filter(p => p.tags && p.tags.includes(selectedTag.value))
   }
@@ -515,11 +587,22 @@ async function loadPosts(append = false) {
   }
 
   // 映射统一卡片字段
-  posts.value = pool.map(p => ({
+  const formattedPosts = pool.map(p => ({
     ...p,
     category: p.category || p.categoryName || '地学学术',
-    excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : '')
+    excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : ''),
+    author: p.author?.name || '地理同好',
+    authorId: p.author?.id || null,
+    createdAt: p.created_at,
+    likeCount: p.likesCount || 0,
+    replyCount: p.repliesCount || 0,
+    acceptedReplyId: p.accepted_reply_id || null,
+    linkedExperiment: p.linked_experiment || null
   }))
+  const pagePosts = formattedPosts.slice((requestedPage - 1) * 20, requestedPage * 20)
+  posts.value = append ? [...posts.value, ...pagePosts] : pagePosts
+  page.value = requestedPage
+  lastPageCount.value = pagePosts.length
   if (!searchQuery.value && !selectedCategory.value && !selectedTag.value && !kind.value) {
     featuredPosts.value = [...posts.value].sort((a, b) =>
       ((b.likeCount || b.likesCount || 0) * 3 + (b.replyCount || b.repliesCount || 0) * 2) -
@@ -529,8 +612,14 @@ async function loadPosts(append = false) {
   loading.value = false
 }
 
-function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: 'smooth' }) }
-function resetAndLoad() { page.value = 1; void loadPosts() }
+function preferredScroll() { return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }
+function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: preferredScroll() }) }
+function resetAndLoad() {
+  page.value = 1
+  posts.value = []
+  lastPageCount.value = 0
+  void loadPosts()
+}
 function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad(); scrollToFeed() }
 function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = route.path === '/questions' ? 'question' : ''; onlySolved.value = false; resetAndLoad() }
 function setCategory(id) { selectedCategory.value = selectedCategory.value === id ? null : id; resetAndLoad() }
@@ -560,8 +649,8 @@ async function openTopic(topic) {
     openingTopicId.value = null
   }
 }
-function nextPage() { page.value += 1; void loadPosts(true) }
-function focusCompose() { composeRef.value?.scrollIntoView({ behavior: 'smooth' }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
+function nextPage() { if (!loading.value) void loadPosts(true) }
+function focusCompose() { composeRef.value?.scrollIntoView({ behavior: preferredScroll() }); composeRef.value?.querySelector('input')?.focus({ preventScroll: true }) }
 
 async function retryOnline() {
   isDemoMode.value = false
@@ -656,11 +745,12 @@ async function initCommunity() {
   }
 
   try {
-    const [categoryResult, sessionResult, hotTopicResult] = await Promise.allSettled([
+    void loadHotTopics()
+    const [categoryResult, sessionResult] = await Promise.allSettled([
       apiRequest('/api/community/categories'),
-      authClient.getSession(),
-      apiRequest('/api/community/hot-topics', { timeout: 16000 })
+      authClient.getSession()
     ])
+    if (disposed) return
     if (categoryResult.status === 'fulfilled' && categoryResult.value?.categories?.length) {
       categories.value = categoryResult.value.categories
       isDemoMode.value = false
@@ -673,14 +763,6 @@ async function initCommunity() {
       user.value = sessionResult.value.data?.user || null
     }
 
-    if (hotTopicResult.status === 'fulfilled' && Array.isArray(hotTopicResult.value?.topics)) {
-      hotTopics.value = hotTopicResult.value.topics
-      hotTopicError.value = hotTopicResult.value.refreshError ? '来源暂时无法更新，以下为上次抓取的记录。' : ''
-    } else {
-      hotTopics.value = []
-      hotTopicError.value = '实时事件暂时无法获取，请稍后重试。'
-    }
-
     if (user.value) {
       const me = await apiRequest('/api/community/me').catch(() => null)
       isAdmin.value = Boolean(me?.isAdmin)
@@ -690,20 +772,26 @@ async function initCommunity() {
       draft.categoryId = String(categories.value[0].id)
     }
 
-    await loadPosts()
-    if (!isDemoMode.value) {
-      try {
-        const featured = await apiRequest('/api/community/posts?sort=popular')
-        featuredPosts.value = featured.posts.slice(0, 3)
-      } catch { featuredPosts.value = [] }
-    }
+    const featuredRequest = !isDemoMode.value ? apiRequest('/api/community/posts?sort=popular')
+      .then(featured => {
+        if (!disposed) featuredPosts.value = featured.posts.slice(0, 3)
+      }).catch(cause => {
+        if (!disposed) console.warn('热门讨论读取失败：', cause.message)
+      }) : Promise.resolve()
+    await Promise.all([loadPosts(), featuredRequest])
 
-    if (!isDemoMode.value && typeof EventSource !== 'undefined') {
+    if (!disposed && !isDemoMode.value && typeof EventSource !== 'undefined') {
       try {
+        stream?.close()
         stream = new EventSource(`${accountOrigin}/api/community/stream`)
-        stream.addEventListener('community', () => { if (page.value === 1) void loadPosts() })
-      } catch {
-        // ignore stream errors in demo environments
+        stream.addEventListener('community', () => {
+          clearTimeout(streamRefreshTimer)
+          streamRefreshTimer = setTimeout(() => {
+            if (!disposed && page.value === 1 && document.visibilityState === 'visible') void loadPosts()
+          }, 250)
+        })
+      } catch (cause) {
+        console.warn('实时讨论连接失败，列表仍可手动刷新：', cause.message)
       }
     }
   } catch {
@@ -719,10 +807,17 @@ async function initCommunity() {
 }
 
 onMounted(initCommunity)
-onBeforeUnmount(() => stream?.close())
+onBeforeUnmount(() => {
+  disposed = true
+  stream?.close()
+  clearTimeout(topicRefreshTimer)
+  clearTimeout(streamRefreshTimer)
+  postsController?.abort()
+})
 </script>
 
 <style scoped>
+.topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-muted); }
 /* 社区首页：让搜索和讨论在首屏内可见。 */
 .community-hero {
   padding: 38px 0 34px;
@@ -758,16 +853,73 @@ onBeforeUnmount(() => stream?.close())
 }
 
 .community-hero {
-  background: #10263d;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(118deg, #102d3a 8%, #124957 62%, #17646a);
   color: #f7f5ed;
-  padding: 38px 0 34px;
+  padding: 56px 0 50px;
   margin-bottom: 30px;
-  border-bottom: 2px solid rgba(197, 160, 89, 0.4);
+  border-bottom: 0;
+  border-radius: 0 0 44px 44px;
   box-shadow: var(--shadow-md);
 }
 
 .community-hero-inner {
-  display: block;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+}
+
+.community-tides { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.community-tides span {
+  position: absolute;
+  width: 660px;
+  height: 440px;
+  border: 1px solid rgba(163, 233, 221, 0.15);
+  border-radius: 50%;
+  right: -120px;
+  top: -110px;
+  rotate: -25deg;
+}
+.community-tides span:nth-child(2) { right: -55px; top: -45px; }
+.community-tides span:nth-child(3) { right: 10px; top: 20px; }
+.community-discovery {
+  padding: 20px;
+  border: 1px solid rgba(178, 230, 223, 0.26);
+  border-radius: 24px;
+  background: rgba(7, 39, 48, 0.36);
+}
+.discovery-eyebrow { margin: 0 0 12px; color: #c7e6df; font-size: 13px; letter-spacing: .08em; }
+.community-discovery a { display: flex; align-items: center; gap: 12px; padding: 14px 0; color: #fff; text-decoration: none; }
+.community-discovery a + a { border-top: 1px solid rgba(178, 230, 223, 0.18); }
+.community-discovery a > span:first-child { font: 12px ui-monospace, monospace; color: #a8dcd2; }
+.community-discovery a > span:last-child { margin-left: auto; }
+.community-discovery a div { display: grid; gap: 4px; }
+.community-discovery strong { font-size: 15px; }
+.community-discovery small { color: #c7e6df; font-size: 12px; }
+.community-discovery a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.community-discovery a:focus-visible { outline: 2px solid #c7e6df; outline-offset: 4px; border-radius: 8px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .community-intro { animation: community-arrive .65s var(--geo-flow-ease) both; }
+  .community-discovery { animation: community-arrive .85s var(--geo-flow-ease) both; }
+  .community-trending-card { transition: translate .25s var(--geo-flow-ease), border-color .25s ease, box-shadow .25s ease; }
+  .community-trending-card:hover { translate: 0 -3px; }
+}
+@keyframes community-arrive {
+  from { opacity: 0; translate: 0 14px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (max-width: 1000px) {
+  .community-hero-inner { grid-template-columns: 1fr; }
+  .community-discovery { display: none; }
+}
+@media (max-width: 520px) {
+  .community-hero { padding: 32px 0; border-radius: 0 0 28px 28px; }
+  .community-hero h1 { line-height: 1.35; }
 }
 
 .community-hero-badge {
@@ -778,7 +930,7 @@ onBeforeUnmount(() => stream?.close())
   font-family: ui-monospace, SFMono-Regular, monospace;
   letter-spacing: 0.16em;
   font-weight: 700;
-  color: #d8c28e;
+  color: #c1e7df;
   margin-bottom: 14px;
 }
 
@@ -823,9 +975,8 @@ onBeforeUnmount(() => stream?.close())
   min-height: 44px;
   padding: 0 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(197, 160, 89, 0.4);
+  border: 1px solid var(--border);
   background: transparent;
-  backdrop-filter: blur(8px);
   color: #10263d;
   font-size: 14px;
 }

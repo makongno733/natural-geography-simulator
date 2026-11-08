@@ -30,10 +30,10 @@
   --geo-sand: #faedcd;
 
   /* 语义主色映射 */
-  --accent: #1a446c;
-  --accent-strong: #0f2742;
-  --accent-soft: #eef5fa;
-  --accent-softer: #f4f8fb;
+  --accent: #14596a;
+  --accent-strong: #123b4c;
+  --accent-soft: #eaf5f4;
+  --accent-softer: #f2f9f8;
   --accent-ink: #ffffff;
 
   /* 墨水与层级文本 */
@@ -42,8 +42,8 @@
   --text-faint: #7e91a5;
 
   /* 地图图纸底色与卡片表面 */
-  --bg: #f8fafc;
-  --bg-soft: #f1f5f9;
+  --bg: #f5f9fa;
+  --bg-soft: #edf4f5;
   --surface: #ffffff;
   --surface-soft: #f8fafc;
   --border: #d4e0eb;
@@ -74,8 +74,8 @@
   --shadow-lg: 0 12px 32px rgba(15, 39, 66, 0.1), 0 2px 6px rgba(15, 39, 66, 0.04);
   --shadow-hover: 0 16px 36px rgba(15, 39, 66, 0.12), 0 4px 10px rgba(15, 39, 66, 0.06);
 
-  --radius-card: 14px;
-  --radius-box: 18px;
+  --radius-card: 20px;
+  --radius-box: 24px;
   --radius-sm: 8px;
   --radius-pill: 999px;
 
@@ -1040,17 +1040,17 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .baroque-btn-primary {
-  background: linear-gradient(145deg, #183e66 0%, #0c233c 100%);
-  border-color: var(--baroque-bronze);
+  background: linear-gradient(145deg, #176574 0%, #123e50 100%);
+  border-color: #257586;
   color: #ffffff;
-  box-shadow: 0 3px 12px rgba(15, 39, 66, 0.35), inset 0 1px 0 rgba(216, 183, 115, 0.35);
+  box-shadow: 0 3px 12px rgba(15, 62, 76, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .baroque-btn-primary:hover {
-  background: linear-gradient(145deg, #204d7d 0%, #0f2b4a 100%);
-  border-color: var(--baroque-brass);
+  background: linear-gradient(145deg, #1e7482 0%, #164b5e 100%);
+  border-color: #368b99;
   color: #ffffff;
-  box-shadow: 0 6px 20px rgba(197, 160, 89, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 20px rgba(15, 62, 76, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .baroque-btn-brass {

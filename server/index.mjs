@@ -36,6 +36,16 @@ async function requireUser(req, res, next) {
   }
 }
 
+async function optionalUser(req, _res, next) {
+  try {
+    const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) })
+    req.accountUser = session?.user || null
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
+
 function sectionKey(value) {
   if (typeof value !== 'string' || value.length > 240) return null
   const parts = value.split('|')
@@ -103,7 +113,7 @@ app.delete('/api/comments/:id', requireOrigin, requireUser, (req, res) => {
 })
 
 setupInquiryRoutes(app, { requireOrigin, requireUser })
-setupCommunityRoutes(app, { requireOrigin, requireUser })
+setupCommunityRoutes(app, { requireOrigin, requireUser, optionalUser })
 
 app.get('/api/*splat', (_req, res) => res.status(404).json({ error: '接口不存在' }))
 app.use(express.static(distPath, { index: false }))
