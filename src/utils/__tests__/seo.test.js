@@ -43,4 +43,10 @@ describe('SEO and Schema.org Engine', () => {
     const parsed = JSON.parse(script.textContent)
     expect(parsed['@type']).toBe('WebPage')
   })
+
+  it('uses the canonical public URL for hash-based routes', () => {
+    updatePageSeo('questions')
+    expect(document.querySelector('link[rel="canonical"]').getAttribute('href')).toBe('https://geo.kongnoma279.com/')
+    expect(document.querySelector('meta[property="og:url"]').getAttribute('content')).toBe('https://geo.kongnoma279.com/')
+  })
 })

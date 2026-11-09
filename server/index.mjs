@@ -12,10 +12,13 @@ import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 import { setupInquiryRoutes } from './inquiry.mjs'
 import { setupCommunityRoutes } from './community.mjs'
 import { startHotTopicSync } from './hot-topics.mjs'
+import { setupHealthRoute } from './health.mjs'
+import { securityHeaders } from './security-headers.mjs'
 
 const app = express()
 const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
 app.disable('x-powered-by')
+app.use(securityHeaders)
 app.use(cors({ origin: (origin, callback) => callback(null, !origin || allowedOrigins.has(origin)), credentials: true }))
 app.all('/api/auth/*splat', toNodeHandler(auth))
 app.use(express.json({ limit: '16kb' }))
@@ -52,7 +55,7 @@ function sectionKey(value) {
   return parts.length === 4 && parts.every((part) => part.length > 0 && part.length <= 60) ? value : null
 }
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
+setupHealthRoute(app, database)
 app.get('/api/config', (_req, res) => res.json({ email: mailReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
 app.get('/api/geo-events', async (_req, res) => {
   res.set('Cache-Control', 'public, max-age=300')

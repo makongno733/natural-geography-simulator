@@ -1,5 +1,6 @@
 <template>
   <div class="app-root">
+    <a class="skip-link" href="#main-content" @click.prevent="skipToMain">跳转到主要内容</a>
     <!-- 极轻量墨蓝加载指示 -->
     <div class="nav-progress-bar" :class="{ active: navLoading }" aria-hidden="true"></div>
 
@@ -72,7 +73,7 @@
       </div>
     </header>
 
-    <main class="app-main">
+    <main id="main-content" class="app-main" tabindex="-1">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.path" />
@@ -172,6 +173,10 @@ const guideTourRef = ref(null)
 
 function openCmdPalette() {
   cmdPaletteRef.value?.open()
+}
+
+function skipToMain() {
+  document.getElementById('main-content')?.focus()
 }
 
 function relaunchTour() {
