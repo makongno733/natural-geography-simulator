@@ -7,6 +7,9 @@ describe('LandscapeVariationSim Component', () => {
     const wrapper = mount(LandscapeVariationSim)
     expect(wrapper.text()).toContain('鄱阳湖水陆变迁')
     expect(wrapper.text()).toContain('星子站')
+    expect(wrapper.text()).toContain('教学情境设定指标（非星子站实测）')
+    expect(wrapper.text()).toContain('非卫星影像')
+    expect(wrapper.text()).not.toContain('星子水文台站实测参考指标')
     expect(wrapper.find('svg.rs-svg').exists()).toBe(true)
     expect(wrapper.find('svg.profile-svg').exists()).toBe(true)
   })
@@ -27,7 +30,7 @@ describe('LandscapeVariationSim Component', () => {
     expect(wrapper.text()).toContain('20.8 m')
   })
 
-  it('captures an evidence card with satellite and hydrological station facts', async () => {
+  it('captures a teaching scenario rather than measured satellite or station data', async () => {
     const wrapper = mount(LandscapeVariationSim)
     const captureBtn = wrapper.find('.btn-capture')
     expect(captureBtn.exists()).toBe(true)

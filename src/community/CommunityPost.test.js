@@ -88,6 +88,34 @@ afterEach(() => {
 })
 
 describe('community opinion correction controls', () => {
+  it.each(['ev-poyang-winter', 'ev-urban-sponge', 'ev-thermal-circulation', 'unknown-old-card'])('preserves an old post and labels attachment provenance for %s', async evidenceId => {
+    post.evidenceId = evidenceId
+    post.body = '原帖用户观点应保留，不得静默删除。'
+    mountPost()
+    await flushPromises()
+    expect(wrapper.text()).toContain('原帖用户观点应保留')
+    const attachment = wrapper.find('[aria-label="探究资料附件及来源说明"]')
+    expect(attachment.exists()).toBe(true)
+    expect(attachment.text()).toContain('待核实')
+    expect(attachment.text()).not.toMatch(/1140|68\.2|0\.28|2\.4|严格线性关联/)
+    if (evidenceId === 'unknown-old-card') expect(attachment.text()).toContain(evidenceId)
+    else expect(attachment.text()).toContain('不是原始观测来源')
+  })
+
+  it('labels demo authors, counts and old attachments without presenting fictional expertise', async () => {
+    vi.stubEnv('DEV', true)
+    state.route.params.id = '102'
+    authClient.getSession.mockResolvedValue({ data: null })
+    apiRequest.mockRejectedValue(Object.assign(new Error('测试网络断开'), { isNetworkError: true }))
+    mountPost()
+    await flushPromises()
+    expect(wrapper.text()).toContain('演示人物（非认证身份）')
+    expect(wrapper.text()).toContain('非真实热度')
+    expect(wrapper.text()).toContain('不是实际观测、真实教师经历')
+    expect(wrapper.text()).toContain('仿真示例 · 结果待核实')
+    expect(wrapper.text()).not.toMatch(/南京信息工程大学气象学副教授|物理海洋博士生|\(28\)/)
+  })
+
   it.each([
     [null, false, false, []],
     ['post-author', false, true, [12]],

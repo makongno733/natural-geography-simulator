@@ -31,14 +31,20 @@
       <div class="community-section-heading">
         <div>
           <p class="community-eyebrow">COMMUNITY CONVERSATIONS</p>
-          <h2 id="trending-title">大家正在讨论</h2>
+          <h2 id="trending-title">{{ isDemoMode ? '演示讨论样例（非真实热度）' : '大家正在讨论' }}</h2>
         </div>
-        <button class="community-clear baroque-btn baroque-btn-sm" type="button" @click="setSort('popular'); scrollToFeed()">查看热门讨论 →</button>
+        <button class="community-clear baroque-btn baroque-btn-sm" type="button" @click="setSort('popular'); scrollToFeed()">{{ isDemoMode ? '浏览演示样例 →' : '查看热门讨论 →' }}</button>
       </div>
+      <p v-if="isDemoMode" class="community-side-note">以下为开发演示样例，人物、身份、互动和教学经历均非真实记录，不代表真实热度、专家资质或教学效果。</p>
       <div v-if="featuredPosts.length" class="community-trending-grid">
         <router-link v-for="(post, index) in featuredPosts" :key="post.id" class="community-trending-card" :to="`/community/post/${post.id}`">
           <span class="trending-rank">{{ String(index + 1).padStart(2, '0') }}</span>
-          <span class="trending-content"><small>{{ post.category }} · {{ post.kind === 'question' ? '问答' : '讨论' }}</small><strong>{{ post.title }}</strong><span>{{ post.replyCount || 0 }} 条回复 · {{ post.likeCount || 0 }} 人赞同</span></span>
+          <span class="trending-content">
+            <small>{{ post.isDemo ? '演示样例 · ' : '' }}{{ post.category }} · {{ post.kind === 'question' ? '问答' : '讨论' }}</small>
+            <strong>{{ post.title }}</strong>
+            <span v-if="post.isDemo">模拟人物与互动 · 非真实热度</span>
+            <span v-else>{{ post.replyCount || 0 }} 条回复 · {{ post.likeCount || 0 }} 人赞同</span>
+          </span>
           <span aria-hidden="true">↗</span>
         </router-link>
       </div>
@@ -164,7 +170,7 @@
         <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
           <div class="demo-banner-content">
             <span class="demo-banner-tag">✦ 学术演示模式</span>
-            <span>当前云端账号服务暂未连接，已自动载入高保真地理学术讨论样例；发帖及交互将在本地浏览器即时生效。</span>
+            <span>当前为开发演示：讨论、人物、身份与互动均为样例，不代表真实热度、专家资质或教学效果；发帖仅暂存本地。</span>
           </div>
           <div class="demo-banner-actions">
             <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="retryOnline">
@@ -220,7 +226,8 @@
               </span>
               <span v-if="post.acceptedReplyId" class="accepted-pill">✓ 最佳答案已采纳</span>
               <span v-if="post.linkedExperiment" class="experiment-pill">🔬 附带 3D 实验</span>
-              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">📊 挂载实测证据</span>
+              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">{{ describeEvidence(getEvidenceById(post.evidenceId)).label }}</span>
+              <span v-if="post.isDemo" class="evidence-badge">演示样例 · 非真实记录</span>
             </div>
 
             <h3 class="post-title">
@@ -228,6 +235,7 @@
             </h3>
 
             <p class="post-excerpt">{{ post.excerpt }}</p>
+            <p v-if="post.isDemo" class="community-side-note">示例人物与叙述，不构成专家身份或教学效果证据。</p>
             <p v-if="post.acceptedAnswerExcerpt" class="post-excerpt">✓ 已采纳回答：{{ post.acceptedAnswerExcerpt }}</p>
 
             <!-- 标签列表 -->
@@ -237,16 +245,19 @@
 
             <div class="community-post-foot">
               <span class="author-info">
-                <router-link v-if="post.authorId" :to="`/community/user/${post.authorId}`" class="author-link" @click.stop>
+                <router-link v-if="post.authorId && !post.isDemo" :to="`/community/user/${post.authorId}`" class="author-link" @click.stop>
                   👤 {{ post.author }}
                 </router-link>
-                <span v-else>👤 {{ post.author }}</span>
+                <span v-else>👤 {{ post.isDemo ? '演示人物（非认证身份）' : post.author }}</span>
                 <span class="post-date">· {{ formatDate(post.createdAt) }}</span>
               </span>
 
               <div class="post-stats-right">
-                <span class="stat-badge">赞同 {{ post.likeCount || 0 }}</span>
-                <span class="stat-badge">回复 {{ post.replyCount || 0 }}</span>
+                <span v-if="post.isDemo" class="stat-badge">模拟互动 · 非真实热度</span>
+                <template v-else>
+                  <span class="stat-badge">赞同 {{ post.likeCount || 0 }}</span>
+                  <span class="stat-badge">回复 {{ post.replyCount || 0 }}</span>
+                </template>
               </div>
             </div>
           </article>
@@ -320,15 +331,16 @@
                   <option value="stream-table">水土冲刷微缩实验台</option>
                 </select>
               </label>
-              <label>挂载探究实测证据卡 (可选)
+              <label>挂载探究资料卡 (可选)
                 <select v-model="draft.evidenceId">
-                  <option value="">不挂载实测证据卡</option>
+                  <option value="">不挂载资料卡</option>
                   <option v-for="ev in STANDARD_EVIDENCES" :key="ev.id" :value="ev.id">
-                    [{{ ev.taskTitle }}] {{ ev.title }}
+                    [{{ describeEvidence(ev).label }}] {{ ev.title }}
                   </option>
                 </select>
               </label>
             </div>
+            <EvidenceAttachment v-if="draft.evidenceId" :evidence-id="draft.evidenceId" :evidence="getEvidenceById(draft.evidenceId)" />
 
             <p v-if="submitError" class="community-error" role="alert">{{ submitError }}</p>
             <div class="form-submit-row">
@@ -417,7 +429,8 @@ import { accountEnabled, accountOrigin, apiRequest, authClient } from '../accoun
 import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
-import { STANDARD_EVIDENCES } from '../inquiry/evidenceCatalog.js'
+import { STANDARD_EVIDENCES, describeEvidence, getEvidenceById } from '../inquiry/evidenceCatalog.js'
+import EvidenceAttachment from '../inquiry/components/EvidenceAttachment.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -686,21 +699,19 @@ async function loadPosts(append = false) {
     const q = searchQuery.value.toLowerCase()
     pool = pool.filter(p => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q))
   }
-  if (sortMode.value === 'popular') {
-    pool.sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0))
-  }
-
   // 映射统一卡片字段
   const formattedPosts = pool.map(p => ({
     ...p,
+    isDemo: true,
     category: p.category || p.categoryName || '地学学术',
     excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : ''),
-    author: p.author?.name || '地理同好',
+    author: '演示人物（非认证身份）',
     authorId: p.author?.id || null,
     createdAt: p.created_at,
     likeCount: p.likesCount || 0,
     replyCount: p.repliesCount || 0,
     acceptedReplyId: p.accepted_reply_id || null,
+    evidenceId: p.evidenceId || p.evidence_card || null,
     linkedExperiment: p.linked_experiment || null
   }))
   const pagePosts = formattedPosts.slice((requestedPage - 1) * 20, requestedPage * 20)
@@ -708,10 +719,7 @@ async function loadPosts(append = false) {
   page.value = requestedPage
   lastPageCount.value = pagePosts.length
   if (!searchQuery.value && !selectedCategory.value && !selectedTag.value && !kind.value) {
-    featuredPosts.value = [...posts.value].sort((a, b) =>
-      ((b.likeCount || b.likesCount || 0) * 3 + (b.replyCount || b.repliesCount || 0) * 2) -
-      ((a.likeCount || a.likesCount || 0) * 3 + (a.replyCount || a.repliesCount || 0) * 2)
-    ).slice(0, 3)
+    featuredPosts.value = posts.value.slice(0, 3)
   }
   loading.value = false
 }
@@ -807,7 +815,7 @@ async function createPost() {
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      likesCount: 1,
+      likesCount: 0,
       bookmarksCount: 0,
       repliesCount: 0,
       replies: []
@@ -878,7 +886,7 @@ async function initCommunity() {
 
     const featuredRequest = !isDemoMode.value ? apiRequest('/api/community/posts?sort=popular')
       .then(featured => {
-        if (!disposed) featuredPosts.value = featured.posts.slice(0, 3)
+        if (!disposed && !isDemoMode.value) featuredPosts.value = featured.posts.slice(0, 3)
       }).catch(cause => {
         if (!disposed) console.warn('热门讨论读取失败：', cause.message)
       }) : Promise.resolve()

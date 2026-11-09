@@ -89,6 +89,20 @@ afterAll(async () => {
 })
 
 describe('community correction permissions through HTTP middleware', () => {
+  it('persists known and unknown legacy attachment IDs without deleting or rewriting user posts', async () => {
+    for (const evidenceId of ['ev-poyang-winter', 'ev-urban-sponge', 'ev-thermal-circulation', 'legacy-card']) {
+      const created = await request('/api/community/posts', {
+        method: 'POST',
+        body: { categoryId: 1, kind: 'discussion', title: '测试附件兼容', body: '保留的用户观点', evidenceId }
+      })
+      expect(created.status).toBe(201)
+      const id = created.payload.id
+      expect((await request(`/api/community/posts/${id}`)).payload.post).toMatchObject({ evidenceId, body: '保留的用户观点' })
+      await request(`/api/community/posts/${id}`, { method: 'PATCH', body: { title: '作者修改标题' } })
+      expect((await request(`/api/community/posts/${id}`)).payload.post).toMatchObject({ evidenceId, body: '保留的用户观点', title: '作者修改标题' })
+    }
+  })
+
   it.each([
     ['author', 200, 403],
     ['reply-author', 403, 200],

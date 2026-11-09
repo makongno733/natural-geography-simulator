@@ -6,7 +6,7 @@
     <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
       <div class="demo-banner-content">
         <span class="demo-banner-tag">✦ 离线演示探讨</span>
-        <span>当前云服务未连接，正在以离线学术演示样例浏览此篇探讨；回复、赞同与采纳将在本地即时呈现。</span>
+        <span>开发演示样例：人物、身份、互动和教学经历均非真实记录，不代表真实热度、专家资质或教学效果；操作不会提交云端。</span>
       </div>
       <div class="demo-banner-actions">
         <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadPost">
@@ -47,10 +47,10 @@
 
         <div class="detail-author-row">
           <span class="author-info">
-            <router-link v-if="post.authorId" :to="`/community/user/${post.authorId}`" class="author-name-link">
+            <router-link v-if="post.authorId && !isDemoMode" :to="`/community/user/${post.authorId}`" class="author-name-link">
               👤 {{ post.author }}
             </router-link>
-            <span v-else>👤 {{ post.author }}</span>
+            <span v-else>👤 {{ isDemoMode ? '演示人物（非认证身份）' : post.author }}</span>
             <span class="post-time">· 发布于 {{ formatDate(post.createdAt) }}</span>
             <span v-if="post.updatedAt && post.updatedAt !== post.createdAt" class="post-time">· 修改于 {{ formatDate(post.updatedAt) }}</span>
           </span>
@@ -67,6 +67,7 @@
         </div>
 
         <p class="community-content-notice">用户观点与讨论内容：未经平台事实审核，不代表平台立场或教师审阅结论。</p>
+        <p v-if="isDemoMode" class="community-content-notice">演示样例，不是实际观测、真实教师经历或已证明的教学效果。</p>
         <div class="community-prose detail-body" v-html="renderGeoScholarlyText(post.body)"></div>
         <form v-if="editTarget?.type === 'post'" id="post-edit-form" class="community-correction-form" @submit.prevent="saveEdit">
           <h2>修改讨论</h2>
@@ -87,18 +88,7 @@
           <span v-for="t in post.tags" :key="t" class="detail-tag-item">#{{ t }}</span>
         </div>
 
-        <!-- 挂载的探究实测证据卡 -->
-        <div v-if="attachedEvidence" class="evidence-attach-box baroque-frame">
-          <div class="evidence-header">
-            <span class="evidence-badge">📊 地学探究实测证据卡</span>
-            <small class="evidence-task-title">{{ attachedEvidence.taskTitle }}</small>
-          </div>
-          <h4 class="evidence-title">{{ attachedEvidence.title }}</h4>
-          <p class="evidence-facts">{{ attachedEvidence.facts }}</p>
-          <router-link :to="attachedEvidence.route" class="evidence-action-link">
-            前往探究仿真模型进行多变量验证 ↗
-          </router-link>
-        </div>
+        <EvidenceAttachment v-if="post.evidenceId" :evidence-id="post.evidenceId" :evidence="attachedEvidence" />
 
         <!-- 挂载的 3D 实验验证联动卡片 -->
         <div v-if="post.linkedExperiment" class="linked-experiment-box baroque-frame">
@@ -122,14 +112,14 @@
             :class="['baroque-btn', 'baroque-btn-sm', { 'baroque-btn-brass': post.liked }]"
             @click="toggleLike"
           >
-            {{ post.liked ? '★ 已赞同' : '☆ 赞同' }} ({{ post.likeCount || 0 }})
+            {{ post.liked ? '★ 已赞同' : '☆ 赞同' }} {{ isDemoMode ? '（演示互动，非真实热度）' : `(${post.likeCount || 0})` }}
           </button>
           <button
             type="button"
             :class="['baroque-btn', 'baroque-btn-sm', { 'baroque-btn-brass': post.bookmarked }]"
             @click="toggleBookmark"
           >
-            {{ post.bookmarked ? '🔖 已收藏' : '📑 收藏' }} ({{ post.bookmarkCount || 0 }})
+            {{ post.bookmarked ? '🔖 已收藏' : '📑 收藏' }} {{ isDemoMode ? '（演示互动）' : `(${post.bookmarkCount || 0})` }}
           </button>
         </div>
       </article>
@@ -151,7 +141,7 @@
       <section class="community-replies" aria-labelledby="replies-title">
         <div class="replies-header">
           <span class="baroque-corner-ornament">⚜</span>
-          <h2 id="replies-title">{{ replies.length }} 条同行学术研讨与回答</h2>
+          <h2 id="replies-title">{{ replies.length }} 条{{ isDemoMode ? '演示回复（非真实用户记录）' : '同行学术研讨与回答' }}</h2>
         </div>
 
         <p v-if="!replies.length" class="community-state">暂无回复，欢迎提出你的科学洞见与实证依据。</p>
@@ -172,10 +162,10 @@
 
           <div class="reply-head">
             <div class="reply-author">
-              <router-link v-if="reply.authorId" :to="`/community/user/${reply.authorId}`" class="reply-author-link">
+              <router-link v-if="reply.authorId && !isDemoMode" :to="`/community/user/${reply.authorId}`" class="reply-author-link">
                 <strong>👤 {{ reply.author }}</strong>
               </router-link>
-              <strong v-else>👤 {{ reply.author }}</strong>
+              <strong v-else>👤 {{ isDemoMode ? '演示人物（非认证身份）' : reply.author }}</strong>
               <span class="reply-time">{{ formatDate(reply.createdAt) }}</span>
               <span v-if="reply.updatedAt && reply.updatedAt !== reply.createdAt" class="reply-time">修改于 {{ formatDate(reply.updatedAt) }}</span>
             </div>
@@ -302,6 +292,7 @@ import { mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { renderGeoScholarlyText, GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
 import { getEvidenceById } from '../inquiry/evidenceCatalog.js'
+import EvidenceAttachment from '../inquiry/components/EvidenceAttachment.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -567,6 +558,7 @@ async function loadPost() {
         createdAt: matched.created_at,
         updatedAt: matched.updated_at,
         tags: matched.tags || [],
+        evidenceId: matched.evidenceId || matched.evidence_card || null,
         linkedExperiment: matched.linked_experiment || null,
         acceptedReplyId: matched.accepted_reply_id || null,
         likeCount: matched.likesCount || 0,
