@@ -31,17 +31,18 @@
         <div class="profile-info-col">
           <div class="profile-name-row">
             <h1>{{ profileData.user.name }}</h1>
-            <span v-if="profileData.user.title" class="profile-title-badge">{{ profileData.user.title }}</span>
+            <span v-if="profileData.user.title" class="profile-title-badge">用户自述（未核验）：{{ profileData.user.title }}</span>
             <button v-if="canEdit && !isEditing" class="baroque-btn baroque-btn-sm" type="button" @click="isEditing = true">
-              编辑学者资料
+              编辑个人资料
             </button>
           </div>
 
+          <p class="profile-meta-note">以下身份、机构与简介由用户自行填写，平台未作资质认证。</p>
           <p class="profile-bio">{{ profileData.user.bio || '这位用户尚未填写个人简介。' }}</p>
 
           <div class="profile-meta-tags">
-            <span v-if="profileData.user.institution" class="meta-tag">🏛 {{ profileData.user.institution }}</span>
-            <span v-if="profileData.user.location" class="meta-tag">📍 {{ profileData.user.location }}</span>
+            <span v-if="profileData.user.institution" class="meta-tag">用户自述机构：{{ profileData.user.institution }}</span>
+            <span v-if="profileData.user.location" class="meta-tag">用户自述地点：{{ profileData.user.location }}</span>
           </div>
 
           <div class="profile-stats-bar">
@@ -65,10 +66,10 @@
       <section v-if="isEditing" class="profile-edit-box baroque-frame">
         <h3>修润学者档案</h3>
         <form @submit.prevent="saveProfile">
-          <label>学术身份 / 头衔
+          <label>身份 / 头衔（用户自述，平台不作认证）
             <input v-model.trim="editForm.title" maxlength="60" placeholder="例如：高校自然地理学 · 硕博研究生 / 中学地理高级教师" />
           </label>
-          <label>所属科研院所 / 院校
+          <label>机构（用户自述，平台不作认证）
             <input v-model.trim="editForm.institution" maxlength="80" placeholder="例如：中国科学院地理科学与资源研究所" />
           </label>
           <label>常驻观测区域 / 台站
@@ -258,6 +259,12 @@ onMounted(async () => {
   padding: 3px 10px;
   border-radius: var(--radius-pill);
   font-weight: 600;
+}
+
+.profile-meta-note {
+  margin: 0 0 8px;
+  color: var(--text-faint);
+  font-size: 12px;
 }
 
 .profile-bio {

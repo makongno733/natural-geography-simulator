@@ -166,6 +166,7 @@ export function migrateCommunity() {
   const topicColumns = database.prepare('PRAGMA table_info(community_hot_topic)').all().map(column => column.name)
   for (const [name, definition] of [
     ['external_id', 'TEXT'], ['source_url', 'TEXT'], ['occurred_at', 'TEXT'],
+    ['summary_method', "TEXT NOT NULL DEFAULT 'deterministic-source-extract'"],
     ['fetched_at', 'TEXT'], ['post_id', 'INTEGER REFERENCES community_post(id)']
   ]) {
     if (!topicColumns.includes(name)) database.exec(`ALTER TABLE community_hot_topic ADD COLUMN ${name} ${definition}`)
@@ -181,6 +182,50 @@ export function migrateCommunity() {
   ]) {
     if (!syncColumns.includes(name)) database.exec(`ALTER TABLE geo_topic_sync ADD COLUMN ${name} ${definition}`)
   }
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS community_post_revision (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL REFERENCES community_post(id),
+      revision_no INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      tags TEXT NOT NULL DEFAULT '[]',
+      linked_experiment TEXT,
+      editor_id TEXT NOT NULL REFERENCES user(id),
+      created_at TEXT NOT NULL,
+      UNIQUE(post_id, revision_no)
+    );
+    CREATE INDEX IF NOT EXISTS community_post_revision_post ON community_post_revision(post_id, revision_no DESC);
+    CREATE TABLE IF NOT EXISTS community_hot_topic_revision (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      topic_id INTEGER NOT NULL,
+      revision_no INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      summary_method TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      occurred_at TEXT NOT NULL,
+      fetched_at TEXT NOT NULL,
+      recorded_at TEXT NOT NULL,
+      UNIQUE(topic_id, revision_no)
+    );
+    CREATE INDEX IF NOT EXISTS community_hot_topic_revision_topic ON community_hot_topic_revision(topic_id, revision_no DESC);
+    CREATE TABLE IF NOT EXISTS community_event_feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      topic_id INTEGER NOT NULL,
+      topic_title TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      reporter_id TEXT NOT NULL REFERENCES user(id),
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'resolved', 'dismissed')),
+      created_at TEXT NOT NULL,
+      resolved_at TEXT,
+      resolved_by TEXT REFERENCES user(id),
+      resolution_note TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS community_event_feedback_status ON community_event_feedback(status, created_at DESC);
+  `)
 
   // 预置默认分类
   const seedCat = database.prepare('INSERT OR IGNORE INTO community_category (slug, name, description, sort_order) VALUES (?, ?, ?, ?)')
@@ -363,6 +408,18 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     res.json({ post: formattedPost, replies: formattedReplies })
   })
 
+  app.get('/api/community/posts/:id/revisions', (req, res) => {
+    const id = positiveId(req.params.id)
+    if (!id || !database.prepare("SELECT 1 FROM community_post WHERE id = ? AND status = 'published'").get(id)) {
+      return res.status(404).json({ error: '讨论不存在' })
+    }
+    const revisions = database.prepare(`SELECT r.revision_no AS revisionNo, r.title, r.body, r.tags,
+      r.linked_experiment AS linkedExperiment, r.created_at AS editedAt, u.name AS editor
+      FROM community_post_revision r JOIN user u ON u.id = r.editor_id
+      WHERE r.post_id = ? ORDER BY r.revision_no DESC LIMIT 50`).all(id)
+    res.json({ revisions: revisions.map(revision => ({ ...revision, tags: parseTags(revision.tags) })) })
+  })
+
   // 5. 发布帖子 / 提问
   app.post('/api/community/posts', requireOrigin, requireUser, (req, res) => {
     const title = clean(req.body?.title, 120)
@@ -409,11 +466,23 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     if (!title || !body) return res.status(400).json({ error: '标题与正文不能为空' })
 
-    database.prepare('UPDATE community_post SET title = ?, body = ?, tags = ?, linked_experiment = ?, updated_at = ? WHERE id = ?')
-      .run(title, body, tags, linkedExperiment, new Date().toISOString(), id)
+    const changed = title !== post.title || body !== post.body || tags !== post.tags || linkedExperiment !== post.linked_experiment
+    if (changed) {
+      const revisionNo = database.prepare('SELECT COALESCE(MAX(revision_no), 0) + 1 AS next FROM community_post_revision WHERE post_id = ?')
+        .get(id).next
+      const now = new Date().toISOString()
+      database.transaction(() => {
+        database.prepare(`INSERT INTO community_post_revision
+          (post_id, revision_no, title, body, tags, linked_experiment, editor_id, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+          .run(id, revisionNo, post.title, post.body, post.tags, post.linked_experiment, req.accountUser.id, now)
+        database.prepare('UPDATE community_post SET title = ?, body = ?, tags = ?, linked_experiment = ?, updated_at = ? WHERE id = ?')
+          .run(title, body, tags, linkedExperiment, now, id)
+      })()
+    }
 
     announce('post_edit', id)
-    res.json({ status: 'updated' })
+    res.json({ status: 'updated', revisionRecorded: changed })
   })
 
   // 7. 删除帖子（软删除隐藏）
@@ -668,17 +737,53 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
       title: topic.title,
       category: topic.category,
       summary: topic.summary,
-      sourceBasis: `${sourceName} 原文测报`,
+      sourceBasis: topic.summary_method === 'source-description'
+        ? `${sourceName} 原始描述字段`
+        : `${sourceName} 来源字段的规则化摘录`,
       sourceUrl: topic.source_url,
       occurredAt: topic.occurred_at,
       verifiedAt: topic.fetched_at,
-      isMachineGenerated: true,
+      summaryMethod: topic.summary_method,
+      isMachineGenerated: topic.summary_method !== 'source-description',
       isAiGenerated: false,
-      generationMethod: 'deterministic-source-extract',
+      generationMethod: topic.summary_method,
       confidenceLevel: 'source-linked',
-      verificationNote: '这是根据来源字段整理的机器摘录，尚未经人工核验；不包含未经来源证实的影响或推论。'
+      verificationNote: topic.summary_method === 'source-description'
+        ? '此内容来自 NASA EONET 的原始描述字段，尚未经本平台人工核验；请以原始记录及其更新为准。'
+        : '这是按来源字段生成的规则化机器摘录，尚未经本平台人工核验；不包含未经来源证实的影响或推论。'
     }
     res.json(summaryData)
+  })
+
+  app.get('/api/community/hot-topics/:id/revisions', (req, res) => {
+    const id = positiveId(req.params.id)
+    if (!id || !database.prepare('SELECT 1 FROM community_hot_topic WHERE id = ? AND external_id IS NOT NULL').get(id)) {
+      return res.status(404).json({ error: '事件不存在' })
+    }
+    const revisions = database.prepare(`SELECT revision_no AS revisionNo, title, category, summary,
+      summary_method AS summaryMethod, source_url AS sourceUrl, occurred_at AS occurredAt,
+      fetched_at AS fetchedAt, recorded_at AS recordedAt
+      FROM community_hot_topic_revision WHERE topic_id = ? ORDER BY revision_no DESC LIMIT 50`).all(id)
+    res.json({ revisions })
+  })
+
+  app.post('/api/community/hot-topics/:id/feedback', requireOrigin, requireUser, (req, res) => {
+    const id = positiveId(req.params.id)
+    const reason = clean(req.body?.reason, 1000)
+    if (!id || !reason) return res.status(400).json({ error: '请选择事件并填写纠错说明（最多 1000 字）' })
+    const topic = database.prepare('SELECT id, title, source_url FROM community_hot_topic WHERE id = ? AND external_id IS NOT NULL').get(id)
+    if (!topic) return res.status(404).json({ error: '事件记录不存在' })
+    const since = new Date(Date.now() - 86400000).toISOString()
+    const recent = database.prepare('SELECT COUNT(*) AS n FROM community_event_feedback WHERE reporter_id = ? AND created_at > ?')
+      .get(req.accountUser.id, since).n
+    if (recent >= 10) return res.status(429).json({ error: '今天提交的事件纠错已达上限' })
+    const duplicate = database.prepare("SELECT 1 FROM community_event_feedback WHERE reporter_id = ? AND topic_id = ? AND status = 'open'")
+      .get(req.accountUser.id, id)
+    if (duplicate) return res.status(409).json({ error: '你已提交该事件的纠错，正在等待核对' })
+    const result = database.prepare(`INSERT INTO community_event_feedback
+      (topic_id, topic_title, source_url, reporter_id, reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
+      .run(topic.id, topic.title, topic.source_url, req.accountUser.id, reason, new Date().toISOString())
+    res.status(201).json({ id: result.lastInsertRowid, status: 'open' })
   })
 
   app.post('/api/community/hot-topics/:id/discuss', requireOrigin, requireUser, (req, res) => {
@@ -744,6 +849,30 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
   app.get('/api/community/moderation/reports', requireUser, (req, res) => {
     if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
     res.json({ reports: database.prepare("SELECT * FROM community_report WHERE status = 'open' ORDER BY created_at LIMIT 100").all() })
+  })
+
+  app.get('/api/community/moderation/event-feedback', requireUser, (req, res) => {
+    if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
+    const feedback = database.prepare(`SELECT f.id, f.topic_id AS topicId, f.topic_title AS topicTitle,
+      f.source_url AS sourceUrl, f.reason, f.status, f.created_at AS createdAt,
+      u.name AS reporter
+      FROM community_event_feedback f JOIN user u ON u.id = f.reporter_id
+      WHERE f.status = 'open' ORDER BY f.created_at LIMIT 100`).all()
+    res.json({ feedback })
+  })
+
+  app.post('/api/community/moderation/event-feedback/:id', requireOrigin, requireUser, (req, res) => {
+    if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
+    const id = positiveId(req.params.id)
+    const action = req.body?.action
+    const note = typeof req.body?.resolutionNote === 'string' ? req.body.resolutionNote.trim().slice(0, 1000) : ''
+    if (!id || !['resolve', 'dismiss'].includes(action)) return res.status(400).json({ error: '无效的处理操作' })
+    const result = database.prepare(`UPDATE community_event_feedback
+      SET status = ?, resolved_at = ?, resolved_by = ?, resolution_note = ?
+      WHERE id = ? AND status = 'open'`)
+      .run(action === 'resolve' ? 'resolved' : 'dismissed', new Date().toISOString(), req.accountUser.id, note, id)
+    if (!result.changes) return res.status(404).json({ error: '纠错不存在或已处理' })
+    res.json({ status: action === 'resolve' ? 'resolved' : 'dismissed' })
   })
 
   app.post('/api/community/moderation/reports/:id', requireOrigin, requireUser, (req, res) => {

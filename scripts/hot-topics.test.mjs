@@ -6,7 +6,13 @@ vi.mock('../server/database.mjs', async () => {
 })
 import { database } from '../server/database.mjs'
 import { migrateCommunity } from '../server/community.mjs'
-import { EONET_EVENTS_URL, getHotTopics, syncHotTopics } from '../server/hot-topics.mjs'
+import {
+  EONET_EVENTS_URL,
+  getHotTopics,
+  normalizeEonetEvent,
+  normalizeUsgsEarthquake,
+  syncHotTopics
+} from '../server/hot-topics.mjs'
 
 const now = Date.parse('2026-11-07T12:00:00Z')
 const event = { id: 'EONET_123', title: 'Source event', categories: [{ id: 'wildfires' }],
@@ -38,6 +44,7 @@ describe('source-linked geography publishing workflow', () => {
     await shared
     const updated = await getHotTopics({ now, fetchImpl })
     expect(updated.topics).toHaveLength(1)
+    expect(updated.topics[0].summaryMethod).toBe('deterministic-fallback')
     expect(updated.sources.every(source => source.status === 'ok' && !source.stale)).toBe(true)
     expect(updated.updating).toBe(false)
     expect(fetchImpl).toHaveBeenCalledTimes(2)
@@ -95,8 +102,22 @@ describe('source-linked geography publishing workflow', () => {
     await syncHotTopics({ now: now + 60000, fetchImpl: async url =>
       response(url === EONET_EVENTS_URL ? { events: [{ ...event, title: 'Revised' }] } : { features: [] }) })
     expect(database.prepare('SELECT title FROM community_hot_topic').all()).toEqual([{ title: 'Revised' }])
+    expect(database.prepare('SELECT title, summary_method FROM community_hot_topic_revision').all()).toEqual([
+      { title: 'Source event', summary_method: 'deterministic-fallback' }
+    ])
     database.prepare('UPDATE community_hot_topic SET occurred_at=?').run(new Date(now - 61 * 86400000).toISOString())
     await syncHotTopics({ now, fetchImpl: async () => response({ events: [], features: [] }) })
     expect(database.prepare('SELECT count(*) AS n FROM community_hot_topic').get().n).toBe(0)
+  })
+
+  it('distinguishes copied source descriptions from deterministic summaries', () => {
+    expect(normalizeEonetEvent({ ...event, description: '原始描述' }, new Date(now).toISOString()))
+      .toMatchObject({ summary: '原始描述', summaryMethod: 'source-description' })
+    expect(normalizeUsgsEarthquake({
+      id: 'us7000test',
+      properties: { mag: 5.2, time: now, place: 'Test location', type: 'earthquake' }
+    }, new Date(now).toISOString())).toMatchObject({
+      summaryMethod: 'deterministic-source-extract'
+    })
   })
 })

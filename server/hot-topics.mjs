@@ -27,7 +27,8 @@ export function normalizeEonetEvent(event, fetchedAt) {
   const sourceUrl = `https://eonet.gsfc.nasa.gov/api/v3/events/${event.id}`
   const description = typeof event.description === 'string' ? event.description.trim().slice(0, 300) : ''
   const summary = description || `NASA EONET 收录的${category}事件，最近一次位置或状态记录为 ${occurredAt.slice(0, 16).replace('T', ' ')} UTC。事件范围与时间可能是近似值，请查看原始记录核实。`
-  return { externalId: event.id, title, category, summary, sourceUrl, occurredAt, fetchedAt, tag: category }
+  const summaryMethod = description ? 'source-description' : 'deterministic-fallback'
+  return { externalId: event.id, title, category, summary, summaryMethod, sourceUrl, occurredAt, fetchedAt, tag: category }
 }
 
 export function normalizeUsgsEarthquake(feature, fetchedAt) {
@@ -49,6 +50,7 @@ export function normalizeUsgsEarthquake(feature, fetchedAt) {
     title,
     category: '地震',
     summary,
+    summaryMethod: 'deterministic-source-extract',
     sourceUrl,
     occurredAt: occurredAt.toISOString(),
     fetchedAt,
@@ -66,10 +68,10 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now(), sourc
   pendingSync = (async () => {
     const fetchedAt = new Date(now).toISOString()
     const upsert = database.prepare(`INSERT INTO community_hot_topic
-      (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
-      VALUES (@title, @category, @summary, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
+      (title, category, summary, summary_method, stats, tag, external_id, source_url, occurred_at, fetched_at)
+      VALUES (@title, @category, @summary, @summaryMethod, '', @tag, @externalId, @sourceUrl, @occurredAt, @fetchedAt)
       ON CONFLICT(external_id) DO UPDATE SET title=excluded.title, category=excluded.category,
-      summary=excluded.summary, tag=excluded.tag, source_url=excluded.source_url,
+      summary=excluded.summary, summary_method=excluded.summary_method, tag=excluded.tag, source_url=excluded.source_url,
       occurred_at=excluded.occurred_at, fetched_at=excluded.fetched_at`)
     const outcomes = await Promise.all(sources.filter(source => sourceIds.includes(source.id)).map(async source => {
       try {
@@ -84,7 +86,30 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now(), sourc
           console.warn(`${source.name} skipped invalid event records`)
         }
         database.transaction(() => {
-          for (const topic of topics) upsert.run(topic)
+          for (const topic of topics) {
+            const previous = database.prepare(`SELECT id, title, category, summary, summary_method AS summaryMethod,
+              source_url AS sourceUrl, occurred_at AS occurredAt, fetched_at AS fetchedAt
+              FROM community_hot_topic WHERE external_id = ?`).get(topic.externalId)
+            const changed = previous && (
+              previous.title !== topic.title ||
+              previous.category !== topic.category ||
+              previous.summary !== topic.summary ||
+              previous.summaryMethod !== topic.summaryMethod ||
+              previous.sourceUrl !== topic.sourceUrl ||
+              previous.occurredAt !== topic.occurredAt
+            )
+            if (changed) {
+              const revisionNo = database.prepare(`SELECT COALESCE(MAX(revision_no), 0) + 1 AS next
+                FROM community_hot_topic_revision WHERE topic_id = ?`).get(previous.id).next
+              database.prepare(`INSERT INTO community_hot_topic_revision
+                (topic_id, revision_no, title, category, summary, summary_method, source_url,
+                 occurred_at, fetched_at, recorded_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+                .run(previous.id, revisionNo, previous.title, previous.category, previous.summary,
+                  previous.summaryMethod, previous.sourceUrl, previous.occurredAt, previous.fetchedAt, fetchedAt)
+            }
+            upsert.run(topic)
+          }
           database.prepare(`INSERT INTO geo_topic_sync (source, fetched_at, attempted_at, status, record_count)
             VALUES (?, ?, ?, 'ok', ?)
             ON CONFLICT(source) DO UPDATE SET fetched_at=excluded.fetched_at,
@@ -106,6 +131,8 @@ export async function syncHotTopics({ fetchImpl = fetch, now = Date.now(), sourc
     database.transaction(() => {
       database.prepare('DELETE FROM community_hot_topic WHERE external_id IS NOT NULL AND occurred_at < ? AND post_id IS NULL')
         .run(new Date(now - 60 * 86400000).toISOString())
+      database.prepare('DELETE FROM community_hot_topic_revision WHERE recorded_at < ?')
+        .run(new Date(now - 366 * 86400000).toISOString())
     })()
 
     return fetchedAt
@@ -133,7 +160,7 @@ export async function getHotTopics({ now = Date.now(), fetchImpl = fetch } = {})
       .catch(error => console.error('Topic sync failed:', error.message))
   }
   const topics = database.prepare(`SELECT id, title, category, summary, tag, source_url AS sourceUrl,
-    occurred_at AS occurredAt, fetched_at AS fetchedAt, post_id AS postId
+    summary_method AS summaryMethod, occurred_at AS occurredAt, fetched_at AS fetchedAt, post_id AS postId
     FROM community_hot_topic WHERE external_id IS NOT NULL
     ORDER BY occurred_at DESC, id DESC LIMIT 12`).all()
   const fetchedAt = sourceStates.map(state => state.fetchedAt).filter(Boolean).sort().at(-1) || null

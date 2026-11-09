@@ -58,6 +58,7 @@
           </div>
         </div>
 
+        <p class="community-content-notice">用户观点与讨论内容：未经平台事实审核，不代表平台立场或教师审阅结论。</p>
         <div class="community-prose detail-body" v-html="renderGeoScholarlyText(post.body)"></div>
 
         <!-- 标签列表 -->
@@ -92,6 +93,9 @@
 
         <!-- 帖子操作工具栏：点赞、收藏 -->
         <div class="detail-interaction-bar">
+          <button type="button" class="baroque-btn baroque-btn-sm" @click="toggleRevisionHistory">
+            {{ revisionsOpen ? '收起修订记录' : '查看修订记录' }}
+          </button>
           <button
             type="button"
             :class="['baroque-btn', 'baroque-btn-sm', { 'baroque-btn-brass': post.liked }]"
@@ -109,6 +113,18 @@
         </div>
       </article>
 
+      <section v-if="revisionsOpen" class="community-revision-history baroque-frame" aria-labelledby="revision-history-title">
+        <h2 id="revision-history-title">讨论修订记录</h2>
+        <p v-if="revisionError" class="community-error" role="alert">{{ revisionError }}</p>
+        <p v-else-if="revisionLoading" role="status">正在读取修订记录…</p>
+        <p v-else-if="!revisions.length">暂无修订记录。</p>
+        <article v-for="revision in revisions" :key="revision.revisionNo" class="community-revision-item">
+          <p>第 {{ revision.revisionNo }} 次修改前 · {{ formatDate(revision.editedAt) }} · 编辑者 {{ revision.editor }}</p>
+          <h3>{{ revision.title }}</h3>
+          <div class="community-prose" v-html="renderGeoScholarlyText(revision.body)"></div>
+        </article>
+      </section>
+
       <!-- 回复列表 -->
       <section class="community-replies" aria-labelledby="replies-title">
         <div class="replies-header">
@@ -117,6 +133,7 @@
         </div>
 
         <p v-if="!replies.length" class="community-state">暂无回复，欢迎提出你的科学洞见与实证依据。</p>
+        <p class="community-content-notice">回复属于各用户的个人观点，未必经过事实核验。</p>
 
         <article
           v-for="reply in replies"
@@ -228,6 +245,11 @@ const loading = ref(false)
 const submitting = ref(false)
 const error = ref('')
 const replyError = ref('')
+const revisions = ref([])
+const revisionsOpen = ref(false)
+const revisionLoading = ref(false)
+const revisionError = ref('')
+let revisionsLoadedFor = null
 const body = ref('')
 const parentId = ref(null)
 const replyInput = ref(null)
@@ -343,6 +365,23 @@ async function loadPost() {
     }
   } finally {
     loading.value = false
+  }
+}
+
+async function toggleRevisionHistory() {
+  revisionsOpen.value = !revisionsOpen.value
+  if (!revisionsOpen.value || isDemoMode.value || revisionsLoadedFor === post.value?.id) return
+  revisionLoading.value = true
+  revisionError.value = ''
+  try {
+    const result = await apiRequest(`/api/community/posts/${post.value.id}/revisions`)
+    if (!Array.isArray(result?.revisions)) throw new Error('修订记录数据格式无效')
+    revisions.value = result.revisions
+    revisionsLoadedFor = post.value.id
+  } catch (cause) {
+    revisionError.value = cause.message || '修订记录暂时无法读取。'
+  } finally {
+    revisionLoading.value = false
   }
 }
 
@@ -539,6 +578,37 @@ onBeforeUnmount(() => stream?.close())
   padding-bottom: 18px;
   margin-bottom: 22px;
   border-bottom: 1px dashed var(--border);
+}
+
+.community-content-notice {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--geo-ocean);
+  background: var(--geo-ocean-surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.community-revision-history {
+  margin: -18px 0 36px;
+  padding: 22px;
+  background: var(--surface);
+}
+
+.community-revision-history h2 {
+  margin: 0 0 14px;
+  color: var(--geo-ocean-deep);
+}
+
+.community-revision-item {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.community-revision-item > p:first-child {
+  color: var(--text-faint);
+  font-size: 12px;
 }
 
 .author-name-link {

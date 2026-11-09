@@ -18,6 +18,23 @@
         </article>
       </section>
 
+      <section class="community-side-block" aria-labelledby="event-feedback-heading">
+        <h2 id="event-feedback-heading">事件来源纠错</h2>
+        <p>处理状态仅记录平台核对结果，不会自动修改 NASA EONET 或 USGS 的原始记录。</p>
+        <p v-if="!eventFeedback.length">暂无待处理的事件纠错反馈。</p>
+        <article v-for="feedback in eventFeedback" :key="feedback.id" class="community-admin-row">
+          <p>事件 #{{ feedback.topicId }} · {{ feedback.topicTitle }} · {{ feedback.reporter }}</p>
+          <p>{{ feedback.reason }}</p>
+          <a :href="feedback.sourceUrl" target="_blank" rel="noopener noreferrer">打开原始来源 ↗</a>
+          <label :for="`feedback-note-${feedback.id}`">核对记录（可选）</label>
+          <textarea :id="`feedback-note-${feedback.id}`" v-model.trim="feedbackNotes[feedback.id]" maxlength="1000" rows="2" />
+          <div>
+            <button type="button" @click="resolveEventFeedback(feedback.id, 'resolve')">记录已核对</button>
+            <button type="button" @click="resolveEventFeedback(feedback.id, 'dismiss')">驳回反馈</button>
+          </div>
+        </article>
+      </section>
+
       <!-- 待审核社群入驻申请 -->
       <section class="community-side-block" aria-labelledby="groups-mod-heading">
         <h2 id="groups-mod-heading">社群登记审核</h2>
@@ -62,19 +79,23 @@ import { apiRequest } from '../account/client.js'
 const ready = ref(false)
 const error = ref('')
 const reports = ref([])
+const eventFeedback = ref([])
 const categories = ref([])
 const groups = ref([])
+const feedbackNotes = reactive({})
 const newCategory = reactive({ slug: '', name: '', description: '' })
 
 const pendingGroups = computed(() => groups.value.filter(g => g.status === 'pending'))
 
 async function refresh() {
-  const [reportData, categoryData, groupData] = await Promise.all([
+  const [reportData, eventFeedbackData, categoryData, groupData] = await Promise.all([
     apiRequest('/api/community/moderation/reports'),
+    apiRequest('/api/community/moderation/event-feedback'),
     apiRequest('/api/community/moderation/categories'),
     apiRequest('/api/community/moderation/groups')
   ])
   reports.value = reportData.reports
+  eventFeedback.value = eventFeedbackData.feedback
   categories.value = categoryData.categories
   groups.value = groupData.groups || []
   ready.value = true
@@ -95,6 +116,17 @@ async function resolveReport(id, action) {
   error.value = ''
   try {
     await apiRequest(`/api/community/moderation/reports/${id}`, { method: 'POST', body: JSON.stringify({ action }) })
+    await refresh()
+  } catch (cause) { error.value = cause.message }
+}
+async function resolveEventFeedback(id, action) {
+  error.value = ''
+  try {
+    await apiRequest(`/api/community/moderation/event-feedback/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ action, resolutionNote: feedbackNotes[id] || '' })
+    })
+    delete feedbackNotes[id]
     await refresh()
   } catch (cause) { error.value = cause.message }
 }

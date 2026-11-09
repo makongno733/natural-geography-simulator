@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-const { apiRequest, route } = vi.hoisted(() => ({
-  apiRequest: vi.fn(), route: { path: '/community' }
+const { apiRequest, authClient, route } = vi.hoisted(() => ({
+  apiRequest: vi.fn(),
+  authClient: { getSession: vi.fn(async () => ({ data: null })) },
+  route: { path: '/community' }
 }))
 vi.mock('../account/client.js', () => ({
   accountEnabled: true, accountOrigin: 'https://account.example',
-  apiRequest, authClient: { getSession: async () => ({ data: null }) }
+  apiRequest, authClient
 }))
 vi.mock('vue-router', () => ({
   useRoute: () => route,
@@ -28,6 +30,7 @@ const deferred = () => {
 
 beforeEach(() => {
   vi.stubEnv('DEV', false)
+  authClient.getSession.mockResolvedValue({ data: null })
   vi.stubGlobal('EventSource', class {
     constructor() { stream = this; this.listeners = {}; this.close = vi.fn() }
     addEventListener(name, handler) { this.listeners[name] = handler }
@@ -69,6 +72,38 @@ describe('community request lifecycle', () => {
     expect(wrapper.text()).toContain('讨论 1')
     topics.resolve({ topics: [], sources: [] })
     await flushPromises()
+  })
+
+  it('labels source-backed event summaries and lets signed-in users submit corrections', async () => {
+    const topic = {
+      id: 8, title: 'Source event', summary: 'Source description', tag: '野火',
+      summaryMethod: 'source-description', occurredAt: '2026-11-07', fetchedAt: '2026-11-07',
+      sourceUrl: 'https://eonet.gsfc.nasa.gov/api/v3/events/EONET_8'
+    }
+    authClient.getSession.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    apiRequest.mockImplementation(async path => {
+      if (path === '/api/community/hot-topics') return { topics: [topic], sources: [] }
+      if (path.endsWith('/revisions')) return { revisions: [] }
+      if (path === '/api/community/categories') return { categories: [{ id: 1, name: '自然地理' }] }
+      if (path === '/api/community/me') return { isAdmin: false }
+      return { posts: [post(1)] }
+    })
+    wrapper = mountCommunity()
+    await flushPromises()
+    expect(wrapper.text()).toContain('来源原始描述，未经平台人工核验。')
+    await wrapper.find('button[aria-controls="topic-revisions-8"]').trigger('click')
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledWith('/api/community/hot-topics/8/revisions')
+    expect(wrapper.text()).toContain('当前已观察记录中没有来源字段修订。')
+    await wrapper.find('button[aria-controls="topic-feedback-8"]').trigger('click')
+    await wrapper.find('#topic-feedback-text-8').setValue('位置需要重新核对')
+    await wrapper.find('#topic-feedback-8').trigger('submit')
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledWith('/api/community/hot-topics/8/feedback', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ reason: '位置需要重新核对' })
+    }))
+    expect(wrapper.text()).toContain('已提交，等待人工核对')
   })
 
   it('aborts superseded filters and ignores late responses', async () => {

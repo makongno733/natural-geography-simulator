@@ -66,9 +66,12 @@
       <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
       <div class="hot-topics-grid">
         <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
-          <span class="topic-tag">{{ topic.tag }}</span>
+          <span class="topic-tag">来源记录 · {{ topic.tag }}</span>
           <h4>{{ topic.title }}</h4>
           <p>{{ topic.summary }}</p>
+          <p class="topic-provenance-note">
+            {{ topic.summaryMethod === 'source-description' ? '来源原始描述，未经平台人工核验。' : '依据来源字段规则整理，非 AI 生成，未经平台人工核验。' }}
+          </p>
           <button
             type="button"
             class="topic-summary-toggle"
@@ -95,6 +98,54 @@
               <a :href="topicSummaries[topic.id].sourceUrl" target="_blank" rel="noopener noreferrer">核对原始记录 ↗</a>
             </template>
           </div>
+          <button
+            type="button"
+            class="topic-summary-toggle"
+            :aria-expanded="Boolean(topicRevisionOpen[topic.id])"
+            :aria-controls="`topic-revisions-${topic.id}`"
+            @click="toggleTopicRevisions(topic.id)"
+          >
+            {{ topicRevisionOpen[topic.id] ? '收起来源修订' : '查看来源修订记录' }}
+          </button>
+          <div v-if="topicRevisionOpen[topic.id]" :id="`topic-revisions-${topic.id}`" class="topic-summary-detail">
+            <p v-if="topicRevisionLoading[topic.id]" role="status">正在读取来源修订记录…</p>
+            <p v-else-if="topicRevisionErrors[topic.id]" class="community-error" role="alert">{{ topicRevisionErrors[topic.id] }}</p>
+            <p v-else-if="!topicRevisions[topic.id]?.length">当前已观察记录中没有来源字段修订。</p>
+            <article v-for="revision in topicRevisions[topic.id]" :key="revision.revisionNo" class="topic-revision-item">
+              <strong>来源更新前版本 · {{ formatDateTime(revision.recordedAt) }}</strong>
+              <p>{{ revision.title }} · {{ revision.summary }}</p>
+              <a :href="revision.sourceUrl" target="_blank" rel="noopener noreferrer">查看该版本来源 ↗</a>
+            </article>
+          </div>
+          <button
+            type="button"
+            class="topic-summary-toggle"
+            :aria-expanded="Boolean(topicFeedbackOpen[topic.id])"
+            :aria-controls="`topic-feedback-${topic.id}`"
+            @click="toggleTopicFeedback(topic.id)"
+          >
+            {{ topicFeedbackOpen[topic.id] ? '取消纠错' : '反馈记录错误' }}
+          </button>
+          <form
+            v-if="topicFeedbackOpen[topic.id]"
+            :id="`topic-feedback-${topic.id}`"
+            class="topic-feedback-form"
+            @submit.prevent="submitTopicFeedback(topic)"
+          >
+            <label :for="`topic-feedback-text-${topic.id}`">请描述需要核对之处（最多 1000 字）</label>
+            <textarea
+              :id="`topic-feedback-text-${topic.id}`"
+              v-model.trim="topicFeedbackDrafts[topic.id]"
+              maxlength="1000"
+              required
+              rows="3"
+            />
+            <p v-if="topicFeedbackErrors[topic.id]" class="community-error" role="alert">{{ topicFeedbackErrors[topic.id] }}</p>
+            <p v-if="topicFeedbackStatus[topic.id]" class="community-state" role="status">{{ topicFeedbackStatus[topic.id] }}</p>
+            <button type="submit" class="topic-summary-toggle" :disabled="topicFeedbackSubmitting[topic.id]">
+              {{ topicFeedbackSubmitting[topic.id] ? '正在提交…' : '提交给审核人员' }}
+            </button>
+          </form>
           <div class="topic-foot">
             <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
             <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
@@ -382,6 +433,15 @@ const expandedTopicId = ref(null)
 const summaryLoadingIds = reactive({})
 const topicSummaries = reactive({})
 const summaryErrors = reactive({})
+const topicRevisionOpen = reactive({})
+const topicRevisions = reactive({})
+const topicRevisionLoading = reactive({})
+const topicRevisionErrors = reactive({})
+const topicFeedbackOpen = reactive({})
+const topicFeedbackDrafts = reactive({})
+const topicFeedbackErrors = reactive({})
+const topicFeedbackStatus = reactive({})
+const topicFeedbackSubmitting = reactive({})
 const user = ref(null)
 const isAdmin = ref(false)
 const loading = ref(false)
@@ -489,6 +549,50 @@ async function loadTopicSummary(id) {
 function toggleTopicSummary(id) {
   expandedTopicId.value = expandedTopicId.value === id ? null : id
   if (expandedTopicId.value === id && !topicSummaries[id]) void loadTopicSummary(id)
+}
+
+async function toggleTopicRevisions(id) {
+  topicRevisionOpen[id] = !topicRevisionOpen[id]
+  if (!topicRevisionOpen[id] || topicRevisions[id]) return
+  topicRevisionLoading[id] = true
+  delete topicRevisionErrors[id]
+  try {
+    const result = await apiRequest(`/api/community/hot-topics/${id}/revisions`)
+    if (!Array.isArray(result?.revisions)) throw new Error('来源修订记录格式无效')
+    topicRevisions[id] = result.revisions
+  } catch (cause) {
+    topicRevisionErrors[id] = cause.message || '来源修订记录暂时无法读取。'
+  } finally {
+    topicRevisionLoading[id] = false
+  }
+}
+
+function toggleTopicFeedback(id) {
+  if (!user.value) {
+    hotTopicError.value = '登录后可提交事件纠错反馈。'
+    return
+  }
+  topicFeedbackOpen[id] = !topicFeedbackOpen[id]
+  delete topicFeedbackErrors[id]
+}
+
+async function submitTopicFeedback(topic) {
+  const reason = topicFeedbackDrafts[topic.id]?.trim()
+  if (!reason) return
+  topicFeedbackSubmitting[topic.id] = true
+  delete topicFeedbackErrors[topic.id]
+  try {
+    await apiRequest(`/api/community/hot-topics/${topic.id}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    })
+    topicFeedbackStatus[topic.id] = '已提交，等待人工核对；提交不代表来源记录已更正。'
+    topicFeedbackDrafts[topic.id] = ''
+  } catch (cause) {
+    topicFeedbackErrors[topic.id] = cause.message || '纠错反馈未能提交，请稍后重试。'
+  } finally {
+    topicFeedbackSubmitting[topic.id] = false
+  }
 }
 
 const selectedCategoryName = computed(() => {
@@ -1122,6 +1226,34 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
   margin: 0 0 12px;
   flex: 1;
+}
+
+.hot-topic-card .topic-provenance-note {
+  color: var(--text-faint);
+  font-size: 11px;
+  margin-top: -6px;
+}
+
+.topic-feedback-form {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.topic-feedback-form textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
 }
 
 .topic-summary-toggle {
