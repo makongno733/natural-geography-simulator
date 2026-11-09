@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import Database from 'better-sqlite3'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, rmSync, statSync } from 'node:fs'
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, realpathSync, readdirSync, rmSync, statSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -58,5 +58,73 @@ describe('account SQLite backup maintenance', () => {
     })
     expect(result.status).not.toBe(0)
     expect(result.stderr).toContain('outside the account database directory')
+  })
+
+  it.each(['directory', 'ancestor', 'database-file'])('rejects a %s symlink back into live storage before creating files or changing permissions', type => {
+    const { directory, sourcePath } = makeDatabaseFixture()
+    const dataDirectory = join(directory, 'data')
+    chmodSync(dataDirectory, 0o750)
+    let source = sourcePath
+    let target
+    if (type === 'database-file') {
+      source = join(directory, 'account-link.sqlite')
+      symlinkSync(sourcePath, source)
+      target = dataDirectory
+    } else {
+      const alias = join(directory, 'backup-link')
+      symlinkSync(dataDirectory, alias, 'dir')
+      target = type === 'ancestor' ? join(alias, 'new', 'backups') : alias
+    }
+    const before = readdirSync(dataDirectory).sort()
+    const result = spawnSync(process.execPath, [scriptPath, 'backup'], {
+      encoding: 'utf8',
+      env: { ...process.env, ACCOUNT_DB_PATH: source, ACCOUNT_BACKUP_DIR: target }
+    })
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('outside the account database directory')
+    expect(statSync(dataDirectory).mode & 0o777).toBe(0o750)
+    expect(readdirSync(dataDirectory).sort()).toEqual(before)
+    expect(existsSync(join(dataDirectory, 'new'))).toBe(false)
+  })
+
+  it('resolves a symlinked source parent and backup ancestor before applying the boundary', () => {
+    const { directory, sourcePath } = makeDatabaseFixture()
+    const dataDirectory = join(directory, 'data')
+    const sourceAlias = join(directory, 'source-parent')
+    const backupAlias = join(directory, 'backup-parent')
+    symlinkSync(dataDirectory, sourceAlias, 'dir')
+    symlinkSync(dataDirectory, backupAlias, 'dir')
+    chmodSync(dataDirectory, 0o750)
+    const result = spawnSync(process.execPath, [scriptPath, 'backup'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        ACCOUNT_DB_PATH: join(sourceAlias, 'account.sqlite'),
+        ACCOUNT_BACKUP_DIR: join(backupAlias, 'child')
+      }
+    })
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('outside the account database directory')
+    expect(statSync(dataDirectory).mode & 0o777).toBe(0o750)
+    expect(existsSync(join(dataDirectory, 'child'))).toBe(false)
+  })
+
+  it('allows an external symlinked backup ancestor and writes to its canonical private directory', () => {
+    const { directory, sourcePath } = makeDatabaseFixture()
+    const external = join(directory, 'external')
+    const alias = join(directory, 'safe-link')
+    mkdirSync(external)
+    symlinkSync(external, alias, 'dir')
+    const result = spawnSync(process.execPath, [scriptPath, 'backup'], {
+      encoding: 'utf8',
+      env: { ...process.env, ACCOUNT_DB_PATH: sourcePath, ACCOUNT_BACKUP_DIR: join(alias, 'new', 'backups') }
+    })
+    expect(result.status, result.stderr).toBe(0)
+    const backup = JSON.parse(result.stdout)
+    expect(backup.file.startsWith(`${realpathSync(external)}/new/backups/`)).toBe(true)
+    expect(statSync(join(external, 'new', 'backups')).mode & 0o777).toBe(0o700)
+    const database = new Database(backup.file, { readonly: true, fileMustExist: true })
+    expect(database.prepare('SELECT id FROM user').get().id).toBe('teacher-1')
+    database.close()
   })
 })

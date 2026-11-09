@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
-import { chmod, mkdir, mkdtemp, rm, stat } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, realpath, rm, stat } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { tmpdir } from 'node:os'
 import { pathToFileURL } from 'node:url'
 
@@ -25,23 +25,49 @@ function verifyIntegrity(database) {
   }
 }
 
-export async function createAccountBackup() {
-  const sourcePath = resolve(requiredEnv('ACCOUNT_DB_PATH'))
-  const backupDirectory = resolve(requiredEnv('ACCOUNT_BACKUP_DIR'))
-  if (backupDirectory === dirname(sourcePath) || backupDirectory.startsWith(`${dirname(sourcePath)}/`)) {
+async function resolveBackupDirectory(path) {
+  const missing = []
+  let ancestor = path
+  while (true) {
+    try {
+      return join(await realpath(ancestor), ...missing)
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error
+      const parent = dirname(ancestor)
+      if (parent === ancestor) throw error
+      missing.unshift(basename(ancestor))
+      ancestor = parent
+    }
+  }
+}
+
+function checkBackupDirectory(directory, sourcePath) {
+  const offset = relative(dirname(sourcePath), directory)
+  if (!offset || (!isAbsolute(offset) && offset !== '..' && !offset.startsWith(`..${sep}`))) {
     throw new Error('ACCOUNT_BACKUP_DIR must be outside the account database directory')
   }
+}
+
+export async function createAccountBackup() {
+  const configuredSource = resolve(requiredEnv('ACCOUNT_DB_PATH'))
+  const configuredBackupDirectory = resolve(requiredEnv('ACCOUNT_BACKUP_DIR'))
 
   let sourceInfo
   try {
-    sourceInfo = await stat(sourcePath)
+    sourceInfo = await stat(configuredSource)
   } catch (error) {
     if (error.code === 'ENOENT') throw new Error('ACCOUNT_DB_PATH must point to an existing SQLite file')
     throw error
   }
   if (!sourceInfo.isFile()) throw new Error('ACCOUNT_DB_PATH must point to an existing SQLite file')
 
+  const sourcePath = await realpath(configuredSource)
+  const backupDirectory = await resolveBackupDirectory(configuredBackupDirectory)
+  checkBackupDirectory(backupDirectory, sourcePath)
   await mkdir(backupDirectory, { recursive: true, mode: 0o700 })
+  const createdDirectory = await realpath(backupDirectory)
+  checkBackupDirectory(createdDirectory, sourcePath)
+  if (createdDirectory !== backupDirectory) throw new Error('ACCOUNT_BACKUP_DIR changed during backup preparation')
   await chmod(backupDirectory, 0o700)
   const backupPath = join(backupDirectory, `account-${timestamp()}-${randomUUID()}.sqlite`)
   const source = new Database(sourcePath, { readonly: true, fileMustExist: true })
