@@ -33,6 +33,25 @@ describe('textbook experiment links', () => {
     }))
   })
 
+  it('omits unsupported cross-topic experiments and uses the infiltration activity for urban runoff', () => {
+    for (const context of [
+      { grade: '初中', book: '七年级上册', chapter: '第一章', section: '第二节' },
+      { grade: '初中', book: '八年级上册', chapter: '第一章', section: '第一节' },
+      { grade: '初中', book: '八年级上册', chapter: '第一章', section: '第三节' },
+      { grade: '初中', book: '八年级下册', chapter: '第六章', section: '第一节' },
+      { grade: '初中', book: '八年级下册', chapter: '第六章', section: '第二节' },
+      { grade: '高中', book: '必修第一册', chapter: '第五章', section: '第一节' },
+    ]) {
+      expect(getSectionExperimentLink(context)).toBeNull()
+    }
+
+    expect(getSectionExperimentLink({
+      grade: '高中', book: '必修第一册', chapter: '第五章', section: '问题研究',
+    })).toMatchObject({
+      primary: { experimentId: 'infiltration', presetId: 'default' },
+    })
+  })
+
   it('reports duplicate raw configuration keys before building the registry', () => {
     const key = '高中|必修第一册|第三章'
     const audit = auditExperimentCoverage(grades, {

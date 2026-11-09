@@ -23,6 +23,16 @@ describe('课程助手回答范围', () => {
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.deepseek.com/chat/completions')
   })
 
+  it('不会从待教师复核的教材草稿中检索回答来源', () => {
+    const matches = findCourseSections('海冰淡化能缓解环渤海地区的淡水短缺吗？')
+    expect(matches.some(section =>
+      section.grade === '高中' &&
+      section.book === '必修第一册' &&
+      section.chapter === '第三章' &&
+      section.section === '问题研究'
+    )).toBe(false)
+  })
+
   it('把模型的拒答类别映射为固定回复', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,

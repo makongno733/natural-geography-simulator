@@ -32,6 +32,16 @@
 
       <main class="content">
         <h2 class="section-title">{{ sectionId }} {{ sectionData.title }}</h2>
+        <aside
+          v-if="loadedContent?.editorialReview?.status === 'pending-teacher-review'"
+          class="editorial-review-notice"
+          role="note"
+        >
+          <strong>待教师复核</strong>
+          <span>本节为教学草稿，尚未完成地理事实、版次与章节归属的人工核验。</span>
+          <span>{{ loadedContent.editorialReview.sourceSection }} · {{ loadedContent.editorialReview.source }}</span>
+          <span>{{ loadedContent.editorialReview.note }}</span>
+        </aside>
         <router-link v-if="knowledgeChapter" :to="knowledgeRoute({ book: knowledgeCode, chapter: knowledgeChapter.id })" class="knowledge-entry">
           查看本节知识库草案 · 待教研复核 →
         </router-link>
@@ -40,7 +50,9 @@
           :link="experimentLink"
           :textbook="textbookContext"
         />
-        <p v-if="!studentLearning" class="read-time">课堂速览：约 1 分钟讲完小结，3D 模型负责展开过程。</p>
+        <p v-if="!studentLearning" class="read-time">
+          本页提供课程要点<span v-if="experimentLink">与配套模型入口</span>，教师可结合课堂目标选用。
+        </p>
 
         <StudentLearningView
           v-if="studentLearning"
@@ -51,7 +63,13 @@
           @open-tool="openLearningTool"
         />
         <template v-else>
-        <section class="lesson-brief">
+        <section v-if="hasPendingEditorialReview" class="review-key-points">
+          <h3>教学要点（工作稿）</h3>
+          <ul>
+            <li v-for="point in teachingKeyPoints" :key="point">{{ point }}</li>
+          </ul>
+        </section>
+        <section v-if="!hasPendingEditorialReview" class="lesson-brief">
           <div class="brief-copy">
             <span class="brief-label">课后小结</span>
             <p>{{ classroomSummary }}</p>
@@ -62,7 +80,7 @@
           </div>
         </section>
 
-        <section v-if="!isGrouped" class="mindmap-card">
+        <section v-if="!isGrouped && !hasPendingEditorialReview" class="mindmap-card">
           <div class="mindmap-center">
             <strong>{{ sectionData.title }}</strong>
             <span>{{ chapterData.title }}</span>
@@ -242,6 +260,8 @@ const teachingKeyPoints = computed(() =>
 const classroomSummary = computed(() => {
   const overview = studentLearning.value?.overview
   if (overview) return overview
+  const keyPointSummary = teachingKeyPoints.value.slice(0, 2).join('；')
+  if (keyPointSummary) return keyPointSummary
   const chapterTitle = chapterData.value?.title || '本章'
   const sectionTitle = sectionData.value?.title || '本节'
   const conceptNames = conceptEntries.value.slice(0, 3).map(([n]) => n).join('、') || '核心概念、过程机制、区域应用'
@@ -324,6 +344,10 @@ const studentLearning = computed(() =>
   normalizeStudentLearning(loadedContent.value?.studentLearning)
 )
 
+const hasPendingEditorialReview = computed(() =>
+  loadedContent.value?.editorialReview?.status === 'pending-teacher-review'
+)
+
 const extraContent = computed(() => {
   if (!loadedContent.value) return null
   if (gradeId.value === '大学') {
@@ -394,6 +418,12 @@ const nextSection = computed(() => {
 </script>
 
 <style scoped>
+.editorial-review-notice { display: grid; gap: 5px; margin: 0 0 16px; padding: 12px 14px; border-left: 4px solid #9a5d13; background: #fff5e6; color: #56380f; font-size: 13px; line-height: 1.6; }
+.editorial-review-notice strong { font-size: 14px; }
+.review-key-points { margin: 16px 0; padding: 18px 22px; border: 1px solid var(--brown-light); border-radius: var(--radius-box); background: rgba(255,255,255,.92); }
+.review-key-points h3 { margin: 0 0 12px; font-size: 17px; }
+.review-key-points ul { margin: 0; padding-left: 22px; }
+.review-key-points li { margin: 8px 0; line-height: 1.7; }
 .knowledge-entry { display: inline-flex; margin: 0 0 20px; padding: 9px 13px; border-left: 3px solid #326450; background: #edf4ef; color: #225542; font-size: 13px; font-weight: 700; text-decoration: none; }
 .knowledge-entry:hover { background: #dcece2; }
 .page-shell {
