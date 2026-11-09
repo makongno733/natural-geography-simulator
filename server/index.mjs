@@ -66,7 +66,7 @@ const aiRequests = []
 app.post('/api/assistant/ask', requireOrigin, async (req, res, next) => {
   const question = typeof req.body?.question === 'string' ? req.body.question.trim() : ''
   if (!question || question.length > 300) return res.status(400).json({ error: '问题须为 1–300 字' })
-  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: '课程问答尚未启用' })
+  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI 回答尚未启用，可使用本地章节搜索' })
   const now = Date.now()
   while (aiRequests.length && aiRequests[0] < now - 86_400_000) aiRequests.shift()
   if (aiRequests.length >= 200 || aiRequests.filter((time) => time > now - 60_000).length >= 12) {
@@ -76,8 +76,9 @@ app.post('/api/assistant/ask', requireOrigin, async (req, res, next) => {
   try {
     res.json(await answerLessonQuestion(question, { contextInfo: req.body?.contextInfo || null }))
   } catch (error) {
-    if (error.message === 'DEEPSEEK_429') return res.status(503).json({ error: '课程问答暂时繁忙，请稍后再试' })
-    if (error.name === 'TimeoutError') return res.status(504).json({ error: '课程问答超时，请稍后再试' })
+    if (error.message === 'DEEPSEEK_429') return res.status(503).json({ error: 'AI 服务暂时繁忙，请稍后再试' })
+    if (error.message === 'DEEPSEEK_INVALID_RESPONSE') return res.status(502).json({ error: 'AI 返回格式无效，本次没有可展示的回答' })
+    if (error.name === 'TimeoutError') return res.status(504).json({ error: 'AI 回答超时，请稍后再试' })
     next(error)
   }
 })
