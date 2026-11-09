@@ -87,6 +87,11 @@ export function migrateCommunity() {
   if (!columns.includes('evidence_card')) {
     database.exec("ALTER TABLE community_post ADD COLUMN evidence_card TEXT DEFAULT NULL;")
   }
+  const replyColumns = database.prepare('PRAGMA table_info(community_reply)').all().map(column => column.name)
+  if (!replyColumns.includes('updated_at')) {
+    database.exec('ALTER TABLE community_reply ADD COLUMN updated_at TEXT;')
+  }
+  database.exec('UPDATE community_reply SET updated_at = created_at WHERE updated_at IS NULL;')
 
   // 扩展表：点赞、收藏、用户资料、学术交流社群、热点讨论、资源共享库
   database.exec(`
@@ -196,6 +201,16 @@ export function migrateCommunity() {
       UNIQUE(post_id, revision_no)
     );
     CREATE INDEX IF NOT EXISTS community_post_revision_post ON community_post_revision(post_id, revision_no DESC);
+    CREATE TABLE IF NOT EXISTS community_reply_revision (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reply_id INTEGER NOT NULL REFERENCES community_reply(id),
+      revision_no INTEGER NOT NULL,
+      body TEXT NOT NULL,
+      editor_id TEXT NOT NULL REFERENCES user(id),
+      created_at TEXT NOT NULL,
+      UNIQUE(reply_id, revision_no)
+    );
+    CREATE INDEX IF NOT EXISTS community_reply_revision_reply ON community_reply_revision(reply_id, revision_no DESC);
     CREATE TABLE IF NOT EXISTS community_hot_topic_revision (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       topic_id INTEGER NOT NULL,
@@ -237,6 +252,11 @@ export function migrateCommunity() {
 const clean = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null
 const positiveId = value => /^\d+$/.test(String(value)) && Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null
 const isAdmin = userId => database.prepare("SELECT 1 FROM user_role WHERE user_id = ? AND role = 'admin'").get(userId) !== undefined
+const nextEditTime = previous => new Date(Math.max(Date.now(), Date.parse(previous) + 1)).toISOString()
+const findPublishedReply = id => id && database.prepare(`SELECT r.* FROM community_reply r
+  JOIN community_post p ON p.id = r.post_id
+  WHERE r.id = ? AND r.status = 'published' AND p.status = 'published'`).get(id)
+const clearAcceptedReply = id => database.prepare('UPDATE community_post SET accepted_reply_id = NULL WHERE accepted_reply_id = ?').run(id)
 const streams = new Set()
 let streamEventId = 0
 function announce(type, postId) {
@@ -348,7 +368,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
       p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
-      p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
+      CASE WHEN EXISTS (SELECT 1 FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published')
+        THEN p.accepted_reply_id END AS acceptedReplyId,
+      c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
       (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published') AS acceptedAnswerExcerpt,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
@@ -378,8 +400,10 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const currentUserId = req.accountUser?.id || null
 
     const post = database.prepare(`SELECT p.id, p.author_id AS authorId, p.category_id AS categoryId, p.kind, p.title, p.body,
-      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId, p.accepted_reply_id AS acceptedReplyId,
-      p.created_at AS createdAt, c.name AS category, u.name AS author,
+      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
+      CASE WHEN EXISTS (SELECT 1 FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published')
+        THEN p.accepted_reply_id END AS acceptedReplyId,
+      p.created_at AS createdAt, p.updated_at AS updatedAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
       ${currentUserId ? `, (SELECT 1 FROM community_post_like l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
@@ -389,7 +413,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     if (!post) return res.status(404).json({ error: '讨论不存在' })
 
-    const replies = database.prepare(`SELECT r.id, r.parent_id AS parentId, r.body, r.created_at AS createdAt,
+    const replies = database.prepare(`SELECT r.id, r.parent_id AS parentId, r.body, r.created_at AS createdAt, r.updated_at AS updatedAt,
       r.author_id AS authorId, u.name AS author FROM community_reply r JOIN user u ON u.id = r.author_id
       WHERE r.post_id = ? AND r.status = 'published' ORDER BY r.created_at, r.id LIMIT 500`).all(id)
 
@@ -458,6 +482,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const canEdit = post.author_id === req.accountUser.id || isAdmin(req.accountUser.id)
     if (!canEdit) return res.status(403).json({ error: '没有权限编辑此讨论' })
+    if (req.body?.expectedUpdatedAt !== undefined && req.body.expectedUpdatedAt !== post.updated_at) {
+      return res.status(409).json({ error: '讨论已被修改，请重新载入后核对再保存' })
+    }
 
     const title = req.body?.title === undefined ? post.title : clean(req.body.title, 120)
     const body = req.body?.body === undefined ? post.body : clean(req.body.body, 10000)
@@ -470,7 +497,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     if (changed) {
       const revisionNo = database.prepare('SELECT COALESCE(MAX(revision_no), 0) + 1 AS next FROM community_post_revision WHERE post_id = ?')
         .get(id).next
-      const now = new Date().toISOString()
+      const now = nextEditTime(post.updated_at)
       database.transaction(() => {
         database.prepare(`INSERT INTO community_post_revision
           (post_id, revision_no, title, body, tags, linked_experiment, editor_id, created_at)
@@ -588,11 +615,66 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
       .get(req.accountUser.id, new Date(Date.now() - 60000).toISOString()).n
     if (recent >= 3) return res.status(429).json({ error: '回复过于频繁，请稍后再试' })
 
-    const result = database.prepare('INSERT INTO community_reply (post_id, parent_id, author_id, body, created_at) VALUES (?, ?, ?, ?, ?)')
-      .run(postId, parentId, req.accountUser.id, body, new Date().toISOString())
+    const now = new Date().toISOString()
+    const result = database.prepare('INSERT INTO community_reply (post_id, parent_id, author_id, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(postId, parentId, req.accountUser.id, body, now, now)
     announce('reply', postId)
     res.status(201).json({ id: result.lastInsertRowid })
   })
+
+  app.get('/api/community/replies/:id/revisions', (req, res) => {
+    const reply = findPublishedReply(positiveId(req.params.id))
+    if (!reply) return res.status(404).json({ error: '回复不存在' })
+    const revisions = database.prepare(`SELECT r.revision_no AS revisionNo, r.body,
+      r.created_at AS editedAt, u.name AS editor
+      FROM community_reply_revision r JOIN user u ON u.id = r.editor_id
+      WHERE r.reply_id = ? ORDER BY r.revision_no DESC LIMIT 50`).all(reply.id)
+    res.json({ revisions })
+  })
+
+  app.patch('/api/community/replies/:id', requireOrigin, requireUser, (req, res) => {
+    const reply = findPublishedReply(positiveId(req.params.id))
+    if (!reply) return res.status(404).json({ error: '回复不存在' })
+    if (reply.author_id !== req.accountUser.id && !isAdmin(req.accountUser.id)) {
+      return res.status(403).json({ error: '没有权限编辑此回复' })
+    }
+    const body = clean(req.body?.body, 3000)
+    if (!body) return res.status(400).json({ error: '回复内容须为 1 至 3000 字' })
+    if (req.body?.expectedUpdatedAt !== undefined && req.body.expectedUpdatedAt !== reply.updated_at) {
+      return res.status(409).json({ error: '回复已被修改，请重新载入后核对再保存' })
+    }
+    const changed = body !== reply.body
+    if (changed) {
+      const now = nextEditTime(reply.updated_at)
+      database.transaction(() => {
+        const revisionNo = database.prepare('SELECT COALESCE(MAX(revision_no), 0) + 1 AS next FROM community_reply_revision WHERE reply_id = ?')
+          .get(reply.id).next
+        database.prepare(`INSERT INTO community_reply_revision (reply_id, revision_no, body, editor_id, created_at)
+          VALUES (?, ?, ?, ?, ?)`).run(reply.id, revisionNo, reply.body, req.accountUser.id, now)
+        database.prepare('UPDATE community_reply SET body = ?, updated_at = ? WHERE id = ?').run(body, now, reply.id)
+        clearAcceptedReply(reply.id)
+      })()
+      announce('reply_edit', reply.post_id)
+    }
+    res.json({ status: 'updated', revisionRecorded: changed })
+  })
+
+  if (typeof app.delete === 'function') {
+    app.delete('/api/community/replies/:id', requireOrigin, requireUser, (req, res) => {
+      const reply = findPublishedReply(positiveId(req.params.id))
+      if (!reply) return res.status(404).json({ error: '回复不存在' })
+      if (reply.author_id !== req.accountUser.id && !isAdmin(req.accountUser.id)) {
+        return res.status(403).json({ error: '没有权限删除此回复' })
+      }
+      database.transaction(() => {
+        database.prepare("UPDATE community_reply SET status = 'hidden', updated_at = ? WHERE id = ?")
+          .run(nextEditTime(reply.updated_at), reply.id)
+        clearAcceptedReply(reply.id)
+      })()
+      announce('reply_delete', reply.post_id)
+      res.json({ status: 'deleted' })
+    })
+  }
 
   // 12. 个人学术主页与资料
   app.get('/api/community/users/:id', (req, res) => {
@@ -607,8 +689,8 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const postsCount = database.prepare("SELECT COUNT(*) AS n FROM community_post WHERE author_id = ? AND status = 'published'").get(userId).n
     const acceptedAnswersCount = database.prepare(`SELECT COUNT(*) AS n FROM community_reply r
-      JOIN community_post p ON p.accepted_reply_id = r.id
-      WHERE r.author_id = ? AND r.status = 'published'`).get(userId).n
+      JOIN community_post p ON p.accepted_reply_id = r.id AND p.id = r.post_id
+      WHERE r.author_id = ? AND r.status = 'published' AND p.status = 'published'`).get(userId).n
     const likesReceived = database.prepare(`SELECT COUNT(*) AS n FROM community_post_like l
       JOIN community_post p ON p.id = l.post_id
       WHERE p.author_id = ?`).get(userId).n
@@ -827,13 +909,16 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
   // 16. 举报与审核处理
   app.post('/api/community/reports', requireOrigin, requireUser, (req, res) => {
-    const postId = req.body?.postId ? positiveId(req.body.postId) : null
-    const replyId = req.body?.replyId ? positiveId(req.body.replyId) : null
+    const postId = req.body?.postId != null ? positiveId(req.body.postId) : null
+    const replyId = req.body?.replyId != null ? positiveId(req.body.replyId) : null
     const reason = clean(req.body?.reason, 500)
-    if (!reason || Boolean(postId) === Boolean(replyId)) return res.status(400).json({ error: '请选择一项内容并填写举报原因' })
+    if (!reason || Boolean(postId) === Boolean(replyId) ||
+      (req.body?.postId != null && !postId) || (req.body?.replyId != null && !replyId)) {
+      return res.status(400).json({ error: '请选择一项内容并填写举报原因' })
+    }
     const exists = postId
-      ? database.prepare('SELECT 1 FROM community_post WHERE id = ?').get(postId)
-      : database.prepare('SELECT 1 FROM community_reply WHERE id = ?').get(replyId)
+      ? database.prepare("SELECT 1 FROM community_post WHERE id = ? AND status = 'published'").get(postId)
+      : findPublishedReply(replyId)
     if (!exists) return res.status(404).json({ error: '内容不存在' })
     const recent = database.prepare('SELECT COUNT(*) AS n FROM community_report WHERE reporter_id = ? AND created_at > ?')
       .get(req.accountUser.id, new Date(Date.now() - 86400000).toISOString()).n
@@ -848,7 +933,13 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
   app.get('/api/community/moderation/reports', requireUser, (req, res) => {
     if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
-    res.json({ reports: database.prepare("SELECT * FROM community_report WHERE status = 'open' ORDER BY created_at LIMIT 100").all() })
+    const reports = database.prepare(`SELECT report.*, COALESCE(report.post_id, r.post_id) AS discussionId,
+      CASE WHEN p.status = 'published' OR (r.status = 'published' AND parent.status = 'published')
+        THEN 1 ELSE 0 END AS contentAvailable
+      FROM community_report report LEFT JOIN community_post p ON p.id = report.post_id
+      LEFT JOIN community_reply r ON r.id = report.reply_id LEFT JOIN community_post parent ON parent.id = r.post_id
+      WHERE report.status = 'open' ORDER BY report.created_at LIMIT 100`).all()
+    res.json({ reports: reports.map(report => ({ ...report, contentAvailable: Boolean(report.contentAvailable) })) })
   })
 
   app.get('/api/community/moderation/event-feedback', requireUser, (req, res) => {
@@ -881,14 +972,20 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     if (!id || !['hide', 'dismiss'].includes(req.body?.action)) return res.status(400).json({ error: '处理操作无效' })
     const report = database.prepare("SELECT * FROM community_report WHERE id = ? AND status = 'open'").get(id)
     if (!report) return res.status(404).json({ error: '举报不存在或已处理' })
+    const now = new Date().toISOString()
+    const reply = report.reply_id && database.prepare('SELECT post_id FROM community_reply WHERE id = ?').get(report.reply_id)
     database.transaction(() => {
       if (req.body.action === 'hide') {
-        if (report.post_id) database.prepare("UPDATE community_post SET status = 'hidden' WHERE id = ?").run(report.post_id)
-        else database.prepare("UPDATE community_reply SET status = 'hidden' WHERE id = ?").run(report.reply_id)
+        if (report.post_id) database.prepare("UPDATE community_post SET status = 'hidden', updated_at = ? WHERE id = ?").run(now, report.post_id)
+        else {
+          database.prepare("UPDATE community_reply SET status = 'hidden', updated_at = ? WHERE id = ?").run(now, report.reply_id)
+          clearAcceptedReply(report.reply_id)
+        }
       }
       database.prepare("UPDATE community_report SET status = 'resolved', resolved_at = ?, resolved_by = ? WHERE id = ?")
-        .run(new Date().toISOString(), req.accountUser.id, id)
+        .run(now, req.accountUser.id, id)
     })()
+    if (req.body.action === 'hide') announce('content_hidden', report.post_id || reply?.post_id)
     res.json({ status: 'resolved' })
   })
 }

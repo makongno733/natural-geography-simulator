@@ -11,7 +11,8 @@
           <p>举报 #{{ report.id }} · {{ report.post_id ? `帖子 #${report.post_id}` : `回复 #${report.reply_id}` }}</p>
           <p>{{ report.reason }}</p>
           <div>
-            <router-link v-if="report.post_id" :to="`/community/post/${report.post_id}`">查看讨论</router-link>
+            <router-link v-if="report.contentAvailable" :to="{ path: `/community/post/${report.discussionId}`, hash: report.reply_id ? `#reply-${report.reply_id}` : '' }">{{ report.reply_id ? '查看被举报回复' : '查看讨论' }}</router-link>
+            <span v-else>内容已隐藏或删除，不再提供公开正文与历史记录。</span>
             <button type="button" @click="resolveReport(report.id, 'hide')">隐藏内容</button>
             <button type="button" @click="resolveReport(report.id, 'dismiss')">驳回举报</button>
           </div>

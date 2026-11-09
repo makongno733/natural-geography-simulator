@@ -27,8 +27,12 @@
       <br />
       <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPost">重试加载</button>
     </p>
+    <p v-if="permissionError" class="community-error" role="alert">
+      {{ permissionError }}
+      <button type="button" class="baroque-btn baroque-btn-sm" @click="loadPermissions">重试权限检查</button>
+    </p>
 
-    <template v-else-if="post">
+    <template v-if="post">
       <!-- 帖子主卷 -->
       <article class="community-detail-post baroque-frame">
         <div class="community-post-meta">
@@ -48,18 +52,35 @@
             </router-link>
             <span v-else>👤 {{ post.author }}</span>
             <span class="post-time">· 发布于 {{ formatDate(post.createdAt) }}</span>
+            <span v-if="post.updatedAt && post.updatedAt !== post.createdAt" class="post-time">· 修改于 {{ formatDate(post.updatedAt) }}</span>
           </span>
 
           <div class="author-actions-right">
+            <button v-if="canManage" class="baroque-btn baroque-btn-sm" type="button" aria-controls="post-edit-form" :aria-expanded="editTarget?.type === 'post'" @click="startEdit('post', post)">
+              修改讨论
+            </button>
             <button v-if="canManage" class="baroque-btn baroque-btn-sm" type="button" @click="deletePost">
               🗑 删除讨论
             </button>
-            <button class="community-report" type="button" @click="reportPost">⚠ 举报违规</button>
+            <button v-if="!isDemoMode" class="community-report" type="button" aria-controls="content-report-form" @click="startReport('post', post.id)">纠错 / 举报</button>
           </div>
         </div>
 
         <p class="community-content-notice">用户观点与讨论内容：未经平台事实审核，不代表平台立场或教师审阅结论。</p>
         <div class="community-prose detail-body" v-html="renderGeoScholarlyText(post.body)"></div>
+        <form v-if="editTarget?.type === 'post'" id="post-edit-form" class="community-correction-form" @submit.prevent="saveEdit">
+          <h2>修改讨论</h2>
+          <p>修改前的公开内容、编辑者和时间会保留在修订记录中。修改不代表平台已核验观点。</p>
+          <label for="post-edit-title">讨论标题</label>
+          <input id="post-edit-title" v-model.trim="editTitle" required maxlength="120" />
+          <label for="post-edit-body">讨论内容</label>
+          <textarea id="post-edit-body" ref="editInput" v-model.trim="editBody" required maxlength="10000" rows="6" />
+          <p v-if="editError" class="community-error" role="alert">{{ editError }}</p>
+          <div class="correction-actions">
+            <button type="submit" class="baroque-btn baroque-btn-sm" :disabled="editSaving">{{ editSaving ? '正在保存…' : '保存修改' }}</button>
+            <button type="button" class="baroque-btn baroque-btn-sm" :disabled="editSaving" @click="cancelEdit">取消修改</button>
+          </div>
+        </form>
 
         <!-- 标签列表 -->
         <div v-if="post.tags && post.tags.length" class="detail-tags-list">
@@ -93,7 +114,7 @@
 
         <!-- 帖子操作工具栏：点赞、收藏 -->
         <div class="detail-interaction-bar">
-          <button type="button" class="baroque-btn baroque-btn-sm" @click="toggleRevisionHistory">
+          <button v-if="!isDemoMode" type="button" class="baroque-btn baroque-btn-sm" aria-controls="post-revision-history" :aria-expanded="revisionsOpen" @click="toggleRevisionHistory">
             {{ revisionsOpen ? '收起修订记录' : '查看修订记录' }}
           </button>
           <button
@@ -113,12 +134,13 @@
         </div>
       </article>
 
-      <section v-if="revisionsOpen" class="community-revision-history baroque-frame" aria-labelledby="revision-history-title">
+      <section v-if="revisionsOpen" id="post-revision-history" class="community-revision-history baroque-frame" aria-labelledby="revision-history-title">
         <h2 id="revision-history-title">讨论修订记录</h2>
+        <p class="community-content-notice">以下为修改前的用户观点，不是已核验结论。内容隐藏或删除后，不再公开其修订记录。</p>
         <p v-if="revisionError" class="community-error" role="alert">{{ revisionError }}</p>
         <p v-else-if="revisionLoading" role="status">正在读取修订记录…</p>
         <p v-else-if="!revisions.length">暂无修订记录。</p>
-        <article v-for="revision in revisions" :key="revision.revisionNo" class="community-revision-item">
+        <article v-for="revision in revisionError ? [] : revisions" :key="revision.revisionNo" class="community-revision-item">
           <p>第 {{ revision.revisionNo }} 次修改前 · {{ formatDate(revision.editedAt) }} · 编辑者 {{ revision.editor }}</p>
           <h3>{{ revision.title }}</h3>
           <div class="community-prose" v-html="renderGeoScholarlyText(revision.body)"></div>
@@ -138,6 +160,7 @@
         <article
           v-for="reply in replies"
           :key="reply.id"
+          :id="`reply-${reply.id}`"
           class="community-reply baroque-frame"
           :class="{ 'is-nested': reply.parentId, 'is-accepted-card': reply.isAccepted }"
         >
@@ -154,6 +177,7 @@
               </router-link>
               <strong v-else>👤 {{ reply.author }}</strong>
               <span class="reply-time">{{ formatDate(reply.createdAt) }}</span>
+              <span v-if="reply.updatedAt && reply.updatedAt !== reply.createdAt" class="reply-time">修改于 {{ formatDate(reply.updatedAt) }}</span>
             </div>
 
             <!-- 提问作者采纳操作按钮 -->
@@ -171,14 +195,57 @@
           <p v-if="reply.parentId" class="community-reply-context">引用回复 #{{ reply.parentId }}</p>
 
           <div class="community-prose reply-prose" v-html="renderGeoScholarlyText(reply.body)"></div>
+          <form v-if="editTarget?.type === 'reply' && editTarget.id === reply.id" :id="`reply-edit-form-${reply.id}`" class="community-correction-form" @submit.prevent="saveEdit">
+            <h3>修改回复 #{{ reply.id }}</h3>
+            <p>修改前的公开观点会保留在修订记录中；已采纳的回复修改后，提问者需重新确认采纳。</p>
+            <label :for="`reply-edit-body-${reply.id}`">回复内容</label>
+            <textarea :id="`reply-edit-body-${reply.id}`" v-model.trim="editBody" required maxlength="3000" rows="5" />
+            <p v-if="editError" class="community-error" role="alert">{{ editError }}</p>
+            <div class="correction-actions">
+              <button type="submit" class="baroque-btn baroque-btn-sm" :disabled="editSaving">{{ editSaving ? '正在保存…' : '保存修改' }}</button>
+              <button type="button" class="baroque-btn baroque-btn-sm" :disabled="editSaving" @click="cancelEdit">取消修改</button>
+            </div>
+          </form>
 
           <div class="reply-actions-row">
             <button class="baroque-reply-trigger" type="button" @click="parentId = reply.id; replyInput?.focus()">
               💬 回复此条
             </button>
+            <button v-if="canManageReply(reply)" class="baroque-reply-trigger" type="button" :aria-controls="`reply-edit-form-${reply.id}`" :aria-expanded="editTarget?.type === 'reply' && editTarget.id === reply.id" @click="startEdit('reply', reply)">修改回复</button>
+            <button v-if="canManageReply(reply)" class="baroque-reply-trigger" type="button" @click="deleteReply(reply.id)">撤回回复</button>
+            <button v-if="!isDemoMode" class="baroque-reply-trigger" type="button" aria-controls="content-report-form" @click="startReport('reply', reply.id)">纠错 / 举报此回复</button>
+            <button v-if="!isDemoMode" class="baroque-reply-trigger" type="button" :aria-controls="`reply-revisions-${reply.id}`" :aria-expanded="Boolean(replyHistories[reply.id]?.open)" @click="toggleReplyHistory(reply.id)">
+              {{ replyHistories[reply.id]?.open ? '收起回复修订记录' : '查看回复修订记录' }}
+            </button>
           </div>
+          <section v-if="replyHistories[reply.id]?.open" :id="`reply-revisions-${reply.id}`" class="reply-revision-history" :aria-labelledby="`reply-revision-title-${reply.id}`">
+            <h3 :id="`reply-revision-title-${reply.id}`">回复修订记录</h3>
+            <p class="community-content-notice">以下是修改前的个人观点，未经平台事实核验。</p>
+            <p v-if="replyHistories[reply.id].error" class="community-error" role="alert">{{ replyHistories[reply.id].error }}</p>
+            <p v-else-if="replyHistories[reply.id].loading" role="status">正在读取修订记录…</p>
+            <p v-else-if="!replyHistories[reply.id].revisions.length">暂无修订记录。</p>
+            <article v-for="revision in replyHistories[reply.id].error ? [] : replyHistories[reply.id].revisions" :key="revision.revisionNo" class="community-revision-item">
+              <p>第 {{ revision.revisionNo }} 次修改前 · {{ formatDate(revision.editedAt) }} · 编辑者 {{ revision.editor }}</p>
+              <div class="community-prose" v-html="renderGeoScholarlyText(revision.body)"></div>
+            </article>
+          </section>
         </article>
       </section>
+
+      <section v-if="reportTarget" id="content-report-form" class="community-correction-form baroque-frame" aria-labelledby="content-report-title">
+        <h2 id="content-report-title">{{ reportTarget.type === 'post' ? '讨论' : '回复' }} #{{ reportTarget.id }} 的纠错 / 举报</h2>
+        <p>请说明需要核对的内容及可追溯来源，或描述违规问题。反馈进入管理员审核队列，不会自动更改观点。</p>
+        <form @submit.prevent="submitReport">
+          <label for="content-report-reason">纠错 / 举报说明（最多 500 字）</label>
+          <textarea id="content-report-reason" ref="reportInput" v-model.trim="reportReason" required maxlength="500" rows="4" />
+          <p v-if="reportError" class="community-error" role="alert">{{ reportError }}</p>
+          <div class="correction-actions">
+            <button type="submit" class="baroque-btn baroque-btn-sm" :disabled="reportSubmitting">{{ reportSubmitting ? '正在提交…' : '提交纠错 / 举报' }}</button>
+            <button type="button" class="baroque-btn baroque-btn-sm" :disabled="reportSubmitting" @click="reportTarget = null">取消</button>
+          </div>
+        </form>
+      </section>
+      <p v-if="reportMessage" role="status">{{ reportMessage }}</p>
 
       <!-- 撰写回复表单 -->
       <section class="community-compose community-reply-form baroque-frame" aria-labelledby="reply-title">
@@ -228,7 +295,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { accountOrigin, apiRequest, authClient } from '../account/client.js'
 import { mockPosts } from './mockData.js'
@@ -249,13 +316,32 @@ const revisions = ref([])
 const revisionsOpen = ref(false)
 const revisionLoading = ref(false)
 const revisionError = ref('')
-let revisionsLoadedFor = null
+const replyHistories = ref({})
+const isAdmin = ref(false)
+const permissionError = ref('')
+const editTarget = ref(null)
+const editTitle = ref('')
+const editBody = ref('')
+const editError = ref('')
+const editSaving = ref(false)
+const editInput = ref(null)
+const reportTarget = ref(null)
+const reportReason = ref('')
+const reportError = ref('')
+const reportSubmitting = ref(false)
+const reportMessage = ref('')
+const reportInput = ref(null)
 const body = ref('')
 const parentId = ref(null)
 const replyInput = ref(null)
 const isDemoMode = ref(false)
 const allowDemoMode = import.meta.env.DEV
 let stream
+let postRequestId = 0
+let revisionRequestId = 0
+let postController
+let disposed = false
+let hasLoadedLivePost = false
 
 const attachedEvidence = computed(() => {
   if (!post.value) return null
@@ -282,9 +368,132 @@ const isQuestionAuthor = computed(() => {
 })
 
 const canManage = computed(() => {
-  if (isDemoMode.value) return true
-  return Boolean(user.value && post.value && (user.value.id === post.value.authorId || user.value.role === 'admin'))
+  return Boolean(!isDemoMode.value && user.value && post.value && (user.value.id === post.value.authorId || isAdmin.value))
 })
+
+const canManageReply = reply => Boolean(!isDemoMode.value && user.value && (user.value.id === reply.authorId || isAdmin.value))
+
+async function loadPermissions() {
+  isAdmin.value = false
+  permissionError.value = ''
+  if (!user.value) return
+  try {
+    const permissions = await apiRequest('/api/community/me')
+    if (!disposed) isAdmin.value = permissions.isAdmin === true
+  } catch (cause) {
+    if (!disposed) permissionError.value = cause.message || '管理权限暂时无法核对。'
+  }
+}
+
+function resetHistories() {
+  revisionRequestId++
+  revisions.value = []
+  revisionsOpen.value = false
+  revisionLoading.value = false
+  revisionError.value = ''
+  replyHistories.value = {}
+}
+
+function cancelEdit() {
+  editTarget.value = null
+  editTitle.value = ''
+  editBody.value = ''
+  editError.value = ''
+}
+
+async function startEdit(type, content) {
+  if (editSaving.value || (type === 'post' ? !canManage.value : !canManageReply(content))) return
+  editTarget.value = { type, id: content.id, updatedAt: content.updatedAt }
+  editTitle.value = content.title || ''
+  editBody.value = content.body
+  editError.value = ''
+  await nextTick()
+  if (type === 'post') editInput.value?.focus()
+  else document.getElementById(`reply-edit-body-${content.id}`)?.focus()
+}
+
+async function saveEdit() {
+  const target = editTarget.value
+  if (!target || editSaving.value) return
+  if (!editBody.value || (target.type === 'post' && !editTitle.value)) {
+    editError.value = '请填写完整的修改内容。'
+    return
+  }
+  editSaving.value = true
+  editError.value = ''
+  try {
+    const result = await apiRequest(`/api/community/${target.type === 'post' ? 'posts' : 'replies'}/${target.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        ...(target.type === 'post' ? { title: editTitle.value } : {}),
+        body: editBody.value,
+        expectedUpdatedAt: target.updatedAt
+      })
+    })
+    if (editTarget.value !== target || disposed) return
+    cancelEdit()
+    toast.success(result.revisionRecorded ? '修改已保存，修改前的观点已记录。' : '内容未变化，未新增修订记录。')
+    await loadPost()
+  } catch (cause) {
+    if (editTarget.value !== target || disposed) return
+    editError.value = cause.message || '修改未能保存。'
+    if (cause.status === 404) await loadPost()
+  } finally {
+    editSaving.value = false
+  }
+}
+
+async function deleteReply(id) {
+  if (!window.confirm('确定撤回此回复吗？撤回后正文与修订记录将不再公开。')) return
+  try {
+    await apiRequest(`/api/community/replies/${id}`, { method: 'DELETE' })
+    toast.info('回复已撤回。')
+    await loadPost()
+  } catch (cause) {
+    toast.error(cause.message || '撤回回复失败。')
+    if (cause.status === 404) await loadPost()
+  }
+}
+
+async function startReport(type, id) {
+  if (!user.value) {
+    toast.info('请先登录后提交纠错 / 举报。')
+    return
+  }
+  if (isDemoMode.value || reportSubmitting.value) return
+  reportTarget.value = { type, id }
+  reportReason.value = ''
+  reportError.value = ''
+  reportMessage.value = ''
+  await nextTick()
+  reportInput.value?.focus()
+}
+
+async function submitReport() {
+  const target = reportTarget.value
+  if (!target || reportSubmitting.value) return
+  if (!reportReason.value) {
+    reportError.value = '请填写需要核对的内容或违规原因。'
+    return
+  }
+  reportSubmitting.value = true
+  reportError.value = ''
+  try {
+    await apiRequest('/api/community/reports', {
+      method: 'POST',
+      body: JSON.stringify({ [target.type === 'post' ? 'postId' : 'replyId']: target.id, reason: reportReason.value })
+    })
+    if (reportTarget.value !== target || disposed) return
+    reportTarget.value = null
+    reportMessage.value = `${target.type === 'post' ? '讨论' : '回复'} #${target.id} 的纠错 / 举报已提交，等待管理员核对。`
+  } catch (cause) {
+    if (reportTarget.value !== target || disposed) return
+    reportError.value = cause.message || '纠错 / 举报提交失败。'
+    if (cause.status === 404) await loadPost()
+  } finally {
+    reportSubmitting.value = false
+  }
+}
 
 function getExperimentRoute(modelKey) {
   const map = {
@@ -308,24 +517,39 @@ function getLocalDemoPosts() {
 }
 
 async function loadPost() {
+  const requestId = ++postRequestId
+  const id = route.params.id
+  postController?.abort()
+  postController = new AbortController()
+  resetHistories()
   loading.value = true
   error.value = ''
   try {
-    const result = await apiRequest(`/api/community/posts/${route.params.id}`)
+    const result = await apiRequest(`/api/community/posts/${id}`, { signal: postController.signal })
+    if (requestId !== postRequestId || disposed) return
+    if (!result?.post || result.post.id !== Number(id) || !Array.isArray(result.replies)) throw new Error('讨论数据格式无效。')
     post.value = result.post
     replies.value = result.replies
     isDemoMode.value = false
+    hasLoadedLivePost = true
+    if (editTarget.value?.type === 'reply' && !replies.value.some(reply => reply.id === editTarget.value.id)) cancelEdit()
+    if (reportTarget.value?.type === 'reply' && !replies.value.some(reply => reply.id === reportTarget.value.id)) reportTarget.value = null
+    if (parentId.value && !replies.value.some(reply => reply.id === parentId.value)) parentId.value = null
     return
-  } catch {
-    if (!allowDemoMode) {
+  } catch (cause) {
+    if (requestId !== postRequestId || disposed) return
+    if (!allowDemoMode || !cause.isNetworkError || hasLoadedLivePost) {
       post.value = null
       replies.value = []
-      error.value = '讨论暂时无法载入，或该讨论已被移除。请稍后重试。'
+      cancelEdit()
+      reportTarget.value = null
+      parentId.value = null
+      error.value = cause.message || '讨论暂时无法载入，或该讨论已被移除。请稍后重试。'
       return
     }
     // 仅开发环境读取演示数据
     isDemoMode.value = true
-    const targetId = Number(route.params.id)
+    const targetId = Number(id)
     const localPosts = getLocalDemoPosts()
     const all = [...localPosts, ...mockPosts]
     const matched = all.find(p => p.id === targetId)
@@ -361,27 +585,56 @@ async function loadPost() {
         isAccepted: r.id === matched.accepted_reply_id
       }))
     } else {
+      post.value = null
+      replies.value = []
       error.value = '未找到该篇学术探讨，可能已被移除或地址不正确。'
     }
   } finally {
-    loading.value = false
+    if (requestId === postRequestId && !disposed) loading.value = false
   }
 }
 
 async function toggleRevisionHistory() {
   revisionsOpen.value = !revisionsOpen.value
-  if (!revisionsOpen.value || isDemoMode.value || revisionsLoadedFor === post.value?.id) return
+  const requestId = ++revisionRequestId
+  if (!revisionsOpen.value || isDemoMode.value) return
+  const id = post.value.id
+  revisions.value = []
   revisionLoading.value = true
   revisionError.value = ''
   try {
-    const result = await apiRequest(`/api/community/posts/${post.value.id}/revisions`)
+    const result = await apiRequest(`/api/community/posts/${id}/revisions`)
+    if (requestId !== revisionRequestId || disposed) return
     if (!Array.isArray(result?.revisions)) throw new Error('修订记录数据格式无效')
     revisions.value = result.revisions
-    revisionsLoadedFor = post.value.id
   } catch (cause) {
+    if (requestId !== revisionRequestId || disposed) return
     revisionError.value = cause.message || '修订记录暂时无法读取。'
+    if (cause.status === 404) await loadPost()
   } finally {
-    revisionLoading.value = false
+    if (requestId === revisionRequestId && !disposed) revisionLoading.value = false
+  }
+}
+
+async function toggleReplyHistory(id) {
+  if (replyHistories.value[id]?.open) {
+    replyHistories.value[id].open = false
+    return
+  }
+  const state = { open: true, loading: true, error: '', revisions: [] }
+  replyHistories.value[id] = state
+  const history = replyHistories.value[id]
+  try {
+    const result = await apiRequest(`/api/community/replies/${id}/revisions`)
+    if (replyHistories.value[id] !== history || !history.open || disposed) return
+    if (!Array.isArray(result?.revisions)) throw new Error('修订记录数据格式无效')
+    history.revisions = result.revisions
+  } catch (cause) {
+    if (replyHistories.value[id] !== history || !history.open || disposed) return
+    history.error = cause.message || '修订记录暂时无法读取。'
+    if (cause.status === 404) await loadPost()
+  } finally {
+    history.loading = false
   }
 }
 
@@ -507,28 +760,24 @@ async function deletePost() {
   }
 }
 
-async function reportPost() {
-  const reason = window.prompt('请简要说明学术规范违规或虚假信息举报原因：')
-  if (!reason?.trim()) return
-  try {
-    if (!isDemoMode.value) {
-      await apiRequest('/api/community/reports', {
-        method: 'POST',
-        body: JSON.stringify({ postId: post.value.id, reason })
-      })
-    }
-    toast.success('学术监督举报已递交，管委会将核对处理。')
-  } catch (cause) {
-    toast.error(cause.message || '提交举报失败')
-  }
-}
-
-watch(() => route.params.id, loadPost)
+watch(() => route.params.id, () => {
+  post.value = null
+  replies.value = []
+  cancelEdit()
+  reportTarget.value = null
+  reportMessage.value = ''
+  parentId.value = null
+  body.value = ''
+  hasLoadedLivePost = false
+  void loadPost()
+})
 
 onMounted(async () => {
   const session = await authClient.getSession().catch(() => null)
+  if (disposed) return
   user.value = session?.data?.user || null
-  await loadPost()
+  await Promise.all([loadPost(), loadPermissions()])
+  if (disposed) return
 
   if (!isDemoMode.value && typeof EventSource !== 'undefined') {
     try {
@@ -542,7 +791,13 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(() => stream?.close())
+onBeforeUnmount(() => {
+  disposed = true
+  postRequestId++
+  revisionRequestId++
+  postController?.abort()
+  stream?.close()
+})
 </script>
 
 <style scoped>
@@ -631,6 +886,7 @@ onBeforeUnmount(() => stream?.close())
 .author-actions-right {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -803,6 +1059,49 @@ onBeforeUnmount(() => stream?.close())
 .reply-actions-row {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.community-correction-form {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-box);
+  background: var(--surface);
+}
+
+.community-correction-form p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.community-correction-form label {
+  display: block;
+  margin: 12px 0 6px;
+}
+
+.community-correction-form input,
+.community-correction-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-box);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.correction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.reply-revision-history {
+  margin-top: 16px;
 }
 
 .baroque-reply-trigger {
