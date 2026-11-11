@@ -149,7 +149,8 @@ describe('SectionContent student learning integration', () => {
     expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(false)
     expect(wrapper.find('.lesson-brief').exists()).toBe(true)
     expect(wrapper.find('.brief-actions').exists()).toBe(false)
-    expect(wrapper.get('.read-time').text()).toContain('约 1 分钟')
+    expect(wrapper.get('.read-time').text()).toContain('教师可结合课堂目标选用')
+    expect(wrapper.get('.read-time').text()).not.toContain('约 1 分钟')
   })
 
   it('uses the legacy lesson brief when the student learning overlay is invalid', async () => {
@@ -165,6 +166,29 @@ describe('SectionContent student learning integration', () => {
 
     expect(wrapper.findComponent({ name: 'StudentLearningView' }).exists()).toBe(false)
     expect(wrapper.find('.lesson-brief').exists()).toBe(true)
+  })
+
+  it('labels remediation drafts and uses their specific key points without claiming review', async () => {
+    mocks.loadedContent = {
+      keyPoints: ['地球自转产生昼夜交替。', '地球公转与地轴倾斜共同造成季节变化。'],
+      conceptDefinitions: {},
+      editorialReview: {
+        status: 'pending-teacher-review',
+        source: 'src/textbook/data/初中/七年级上册/text.txt',
+        sourceSection: '第一章·第三节「地球的运动」',
+        note: '本稿不是人工审校结论。需教师复核。',
+      },
+    }
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.get('.editorial-review-notice').text()).toContain('待教师复核')
+    expect(wrapper.get('.editorial-review-notice').text()).toContain('尚未完成')
+    expect(wrapper.get('.read-time').text()).toContain('教师可结合课堂目标选用')
+    expect(wrapper.get('.review-key-points').text()).toContain('地球自转产生昼夜交替')
+    expect(wrapper.find('.lesson-brief').exists()).toBe(false)
+    expect(wrapper.find('.mindmap-card').exists()).toBe(false)
+    expect(wrapper.text()).toContain('本稿不是人工审校结论')
   })
 
   it('clears loading and preserves base section content when optional content loading rejects', async () => {

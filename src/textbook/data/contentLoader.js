@@ -33,6 +33,7 @@ export async function loadSectionContent(gradeId, bookId, chapterId, sectionId) 
   const section = sectionId && chapter.sections && chapter.sections[sectionId]
     ? chapter.sections[sectionId]
     : chapter
+  if (section.editorialReview?.status === 'pending-teacher-review') return section
   const studentLearning = await loadStudentLearning(gradeId, bookId, chapterId, sectionId)
   return studentLearning ? { ...section, studentLearning } : section
 }

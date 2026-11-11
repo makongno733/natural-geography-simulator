@@ -16,35 +16,42 @@ function textFrom(value, output = []) {
   return output
 }
 
-const corpus = []
-for (const grade of grades) {
-  for (const book of grade.books) {
-    let content = {}
-    try {
-      const path = `src/textbook/data/${grade.id}/${book.id}/${grade.id === '大学' ? 'index' : 'content'}.json`
-      content = JSON.parse(await readFile(path, 'utf8'))
-    } catch {
-      // A catalog section is still useful for navigation when content is absent.
-    }
-    for (const chapter of book.chapters) {
-      for (const section of chapter.sections) {
-        const sectionContent = grade.id === '大学'
-          ? content[chapter.id]?.[section.id]
-          : content[chapter.id]?.sections?.[section.id]
-        const snippets = [...new Set(textFrom(sectionContent || section.content))]
-        corpus.push({
-          grade: grade.id,
-          book: book.id,
-          chapter: chapter.id,
-          chapterTitle: chapter.title,
-          section: section.id,
-          title: section.title,
-          text: snippets.join('\n').slice(0, 4500)
-        })
+export async function buildAssistantCorpus() {
+  const corpus = []
+  for (const grade of grades) {
+    for (const book of grade.books) {
+      let content = {}
+      try {
+        const path = `src/textbook/data/${grade.id}/${book.id}/${grade.id === '大学' ? 'index' : 'content'}.json`
+        content = JSON.parse(await readFile(path, 'utf8'))
+      } catch {
+        // A catalog section is still useful for navigation when content is absent.
+      }
+      for (const chapter of book.chapters) {
+        for (const section of chapter.sections) {
+          const sectionContent = grade.id === '大学'
+            ? content[chapter.id]?.[section.id]
+            : content[chapter.id]?.sections?.[section.id]
+          if (sectionContent?.editorialReview?.status === 'pending-teacher-review') continue
+          const snippets = [...new Set(textFrom(sectionContent || section.content))]
+          corpus.push({
+            grade: grade.id,
+            book: book.id,
+            chapter: chapter.id,
+            chapterTitle: chapter.title,
+            section: section.id,
+            title: section.title,
+            text: snippets.join('\n').slice(0, 4500)
+          })
+        }
       }
     }
   }
+  return corpus
 }
 
-await writeFile('server/assistant-corpus.json', `${JSON.stringify(corpus)}\n`)
-console.log(`课程助手索引：${corpus.length} 节`)
+if (process.argv[1]?.endsWith('build-assistant-corpus.mjs')) {
+  const corpus = await buildAssistantCorpus()
+  await writeFile('server/assistant-corpus.json', `${JSON.stringify(corpus)}\n`)
+  console.log(`课程助手索引：${corpus.length} 节`)
+}

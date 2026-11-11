@@ -41,14 +41,20 @@
       <div class="community-section-heading">
         <div>
           <p class="community-eyebrow">COMMUNITY CONVERSATIONS</p>
-          <h2 id="trending-title">大家正在讨论</h2>
+          <h2 id="trending-title">{{ isDemoMode ? '演示讨论样例（非真实热度）' : '大家正在讨论' }}</h2>
         </div>
-        <button class="community-clear baroque-btn baroque-btn-sm" type="button" @click="setSort('popular'); scrollToFeed()">查看热门讨论 →</button>
+        <button class="community-clear baroque-btn baroque-btn-sm" type="button" @click="setSort('popular'); scrollToFeed()">{{ isDemoMode ? '浏览演示样例 →' : '查看热门讨论 →' }}</button>
       </div>
+      <p v-if="isDemoMode" class="community-side-note">以下为开发演示样例，人物、身份、互动和教学经历均非真实记录，不代表真实热度、专家资质或教学效果。</p>
       <div v-if="featuredPosts.length" class="community-trending-grid">
         <router-link v-for="(post, index) in featuredPosts" :key="post.id" class="community-trending-card" :to="`/community/post/${post.id}`">
           <span class="trending-rank">{{ String(index + 1).padStart(2, '0') }}</span>
-          <span class="trending-content"><small>{{ post.category }} · {{ post.kind === 'question' ? '问答' : '讨论' }}</small><strong>{{ post.title }}</strong><span>{{ post.replyCount || 0 }} 条回复 · {{ post.likeCount || 0 }} 人赞同</span></span>
+          <span class="trending-content">
+            <small>{{ post.isDemo ? '演示样例 · ' : '' }}{{ post.category }} · {{ post.kind === 'question' ? '问答' : '讨论' }}</small>
+            <strong>{{ post.title }}</strong>
+            <span v-if="post.isDemo">模拟人物与互动 · 非真实热度</span>
+            <span v-else>{{ post.replyCount || 0 }} 条回复 · {{ post.likeCount || 0 }} 人赞同</span>
+          </span>
           <span aria-hidden="true">↗</span>
         </router-link>
       </div>
@@ -76,9 +82,12 @@
       <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
       <div class="hot-topics-grid">
         <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
-          <span class="topic-tag">{{ topic.tag }}</span>
+          <span class="topic-tag">来源记录 · {{ topic.tag }}</span>
           <h4>{{ topic.title }}</h4>
           <p>{{ topic.summary }}</p>
+          <p class="topic-provenance-note">
+            {{ topic.summaryMethod === 'source-description' ? '来源原始描述，未经平台人工核验。' : '依据来源字段规则整理，非 AI 生成，未经平台人工核验。' }}
+          </p>
           <button
             type="button"
             class="topic-summary-toggle"
@@ -105,6 +114,54 @@
               <a :href="topicSummaries[topic.id].sourceUrl" target="_blank" rel="noopener noreferrer">核对原始记录 ↗</a>
             </template>
           </div>
+          <button
+            type="button"
+            class="topic-summary-toggle"
+            :aria-expanded="Boolean(topicRevisionOpen[topic.id])"
+            :aria-controls="`topic-revisions-${topic.id}`"
+            @click="toggleTopicRevisions(topic.id)"
+          >
+            {{ topicRevisionOpen[topic.id] ? '收起来源修订' : '查看来源修订记录' }}
+          </button>
+          <div v-if="topicRevisionOpen[topic.id]" :id="`topic-revisions-${topic.id}`" class="topic-summary-detail">
+            <p v-if="topicRevisionLoading[topic.id]" role="status">正在读取来源修订记录…</p>
+            <p v-else-if="topicRevisionErrors[topic.id]" class="community-error" role="alert">{{ topicRevisionErrors[topic.id] }}</p>
+            <p v-else-if="!topicRevisions[topic.id]?.length">当前已观察记录中没有来源字段修订。</p>
+            <article v-for="revision in topicRevisions[topic.id]" :key="revision.revisionNo" class="topic-revision-item">
+              <strong>来源更新前版本 · {{ formatDateTime(revision.recordedAt) }}</strong>
+              <p>{{ revision.title }} · {{ revision.summary }}</p>
+              <a :href="revision.sourceUrl" target="_blank" rel="noopener noreferrer">查看该版本来源 ↗</a>
+            </article>
+          </div>
+          <button
+            type="button"
+            class="topic-summary-toggle"
+            :aria-expanded="Boolean(topicFeedbackOpen[topic.id])"
+            :aria-controls="`topic-feedback-${topic.id}`"
+            @click="toggleTopicFeedback(topic.id)"
+          >
+            {{ topicFeedbackOpen[topic.id] ? '取消纠错' : '反馈记录错误' }}
+          </button>
+          <form
+            v-if="topicFeedbackOpen[topic.id]"
+            :id="`topic-feedback-${topic.id}`"
+            class="topic-feedback-form"
+            @submit.prevent="submitTopicFeedback(topic)"
+          >
+            <label :for="`topic-feedback-text-${topic.id}`">请描述需要核对之处（最多 1000 字）</label>
+            <textarea
+              :id="`topic-feedback-text-${topic.id}`"
+              v-model.trim="topicFeedbackDrafts[topic.id]"
+              maxlength="1000"
+              required
+              rows="3"
+            />
+            <p v-if="topicFeedbackErrors[topic.id]" class="community-error" role="alert">{{ topicFeedbackErrors[topic.id] }}</p>
+            <p v-if="topicFeedbackStatus[topic.id]" class="community-state" role="status">{{ topicFeedbackStatus[topic.id] }}</p>
+            <button type="submit" class="topic-summary-toggle" :disabled="topicFeedbackSubmitting[topic.id]">
+              {{ topicFeedbackSubmitting[topic.id] ? '正在提交…' : '提交给审核人员' }}
+            </button>
+          </form>
           <div class="topic-foot">
             <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
             <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
@@ -123,7 +180,7 @@
         <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
           <div class="demo-banner-content">
             <span class="demo-banner-tag">✦ 学术演示模式</span>
-            <span>当前云端账号服务暂未连接，已自动载入高保真地理学术讨论样例；发帖及交互将在本地浏览器即时生效。</span>
+            <span>当前为开发演示：讨论、人物、身份与互动均为样例，不代表真实热度、专家资质或教学效果；发帖仅暂存本地。</span>
           </div>
           <div class="demo-banner-actions">
             <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="retryOnline">
@@ -179,7 +236,8 @@
               </span>
               <span v-if="post.acceptedReplyId" class="accepted-pill">✓ 最佳答案已采纳</span>
               <span v-if="post.linkedExperiment" class="experiment-pill">🔬 附带 3D 实验</span>
-              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">📊 挂载实测证据</span>
+              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">{{ describeEvidence(getEvidenceById(post.evidenceId)).label }}</span>
+              <span v-if="post.isDemo" class="evidence-badge">演示样例 · 非真实记录</span>
             </div>
 
             <h3 class="post-title">
@@ -187,6 +245,7 @@
             </h3>
 
             <p class="post-excerpt">{{ post.excerpt }}</p>
+            <p v-if="post.isDemo" class="community-side-note">示例人物与叙述，不构成专家身份或教学效果证据。</p>
             <p v-if="post.acceptedAnswerExcerpt" class="post-excerpt">✓ 已采纳回答：{{ post.acceptedAnswerExcerpt }}</p>
 
             <!-- 标签列表 -->
@@ -196,16 +255,19 @@
 
             <div class="community-post-foot">
               <span class="author-info">
-                <router-link v-if="post.authorId" :to="`/community/user/${post.authorId}`" class="author-link" @click.stop>
+                <router-link v-if="post.authorId && !post.isDemo" :to="`/community/user/${post.authorId}`" class="author-link" @click.stop>
                   👤 {{ post.author }}
                 </router-link>
-                <span v-else>👤 {{ post.author }}</span>
+                <span v-else>👤 {{ post.isDemo ? '演示人物（非认证身份）' : post.author }}</span>
                 <span class="post-date">· {{ formatDate(post.createdAt) }}</span>
               </span>
 
               <div class="post-stats-right">
-                <span class="stat-badge">赞同 {{ post.likeCount || 0 }}</span>
-                <span class="stat-badge">回复 {{ post.replyCount || 0 }}</span>
+                <span v-if="post.isDemo" class="stat-badge">模拟互动 · 非真实热度</span>
+                <template v-else>
+                  <span class="stat-badge">赞同 {{ post.likeCount || 0 }}</span>
+                  <span class="stat-badge">回复 {{ post.replyCount || 0 }}</span>
+                </template>
               </div>
             </div>
           </article>
@@ -279,15 +341,16 @@
                   <option value="stream-table">水土冲刷微缩实验台</option>
                 </select>
               </label>
-              <label>挂载探究实测证据卡 (可选)
+              <label>挂载探究资料卡 (可选)
                 <select v-model="draft.evidenceId">
-                  <option value="">不挂载实测证据卡</option>
+                  <option value="">不挂载资料卡</option>
                   <option v-for="ev in STANDARD_EVIDENCES" :key="ev.id" :value="ev.id">
-                    [{{ ev.taskTitle }}] {{ ev.title }}
+                    [{{ describeEvidence(ev).label }}] {{ ev.title }}
                   </option>
                 </select>
               </label>
             </div>
+            <EvidenceAttachment v-if="draft.evidenceId" :evidence-id="draft.evidenceId" :evidence="getEvidenceById(draft.evidenceId)" />
 
             <p v-if="submitError" class="community-error" role="alert">{{ submitError }}</p>
             <div class="form-submit-row">
@@ -376,7 +439,8 @@ import { accountEnabled, accountOrigin, apiRequest, authClient } from '../accoun
 import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
-import { STANDARD_EVIDENCES } from '../inquiry/evidenceCatalog.js'
+import { STANDARD_EVIDENCES, describeEvidence, getEvidenceById } from '../inquiry/evidenceCatalog.js'
+import EvidenceAttachment from '../inquiry/components/EvidenceAttachment.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -392,6 +456,15 @@ const expandedTopicId = ref(null)
 const summaryLoadingIds = reactive({})
 const topicSummaries = reactive({})
 const summaryErrors = reactive({})
+const topicRevisionOpen = reactive({})
+const topicRevisions = reactive({})
+const topicRevisionLoading = reactive({})
+const topicRevisionErrors = reactive({})
+const topicFeedbackOpen = reactive({})
+const topicFeedbackDrafts = reactive({})
+const topicFeedbackErrors = reactive({})
+const topicFeedbackStatus = reactive({})
+const topicFeedbackSubmitting = reactive({})
 const user = ref(null)
 const isAdmin = ref(false)
 const loading = ref(false)
@@ -501,6 +574,50 @@ function toggleTopicSummary(id) {
   if (expandedTopicId.value === id && !topicSummaries[id]) void loadTopicSummary(id)
 }
 
+async function toggleTopicRevisions(id) {
+  topicRevisionOpen[id] = !topicRevisionOpen[id]
+  if (!topicRevisionOpen[id] || topicRevisions[id]) return
+  topicRevisionLoading[id] = true
+  delete topicRevisionErrors[id]
+  try {
+    const result = await apiRequest(`/api/community/hot-topics/${id}/revisions`)
+    if (!Array.isArray(result?.revisions)) throw new Error('来源修订记录格式无效')
+    topicRevisions[id] = result.revisions
+  } catch (cause) {
+    topicRevisionErrors[id] = cause.message || '来源修订记录暂时无法读取。'
+  } finally {
+    topicRevisionLoading[id] = false
+  }
+}
+
+function toggleTopicFeedback(id) {
+  if (!user.value) {
+    hotTopicError.value = '登录后可提交事件纠错反馈。'
+    return
+  }
+  topicFeedbackOpen[id] = !topicFeedbackOpen[id]
+  delete topicFeedbackErrors[id]
+}
+
+async function submitTopicFeedback(topic) {
+  const reason = topicFeedbackDrafts[topic.id]?.trim()
+  if (!reason) return
+  topicFeedbackSubmitting[topic.id] = true
+  delete topicFeedbackErrors[topic.id]
+  try {
+    await apiRequest(`/api/community/hot-topics/${topic.id}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    })
+    topicFeedbackStatus[topic.id] = '已提交，等待人工核对；提交不代表来源记录已更正。'
+    topicFeedbackDrafts[topic.id] = ''
+  } catch (cause) {
+    topicFeedbackErrors[topic.id] = cause.message || '纠错反馈未能提交，请稍后重试。'
+  } finally {
+    topicFeedbackSubmitting[topic.id] = false
+  }
+}
+
 const selectedCategoryName = computed(() => {
   if (!selectedCategory.value) return ''
   const cat = categories.value.find(c => c.id === selectedCategory.value)
@@ -592,21 +709,19 @@ async function loadPosts(append = false) {
     const q = searchQuery.value.toLowerCase()
     pool = pool.filter(p => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q))
   }
-  if (sortMode.value === 'popular') {
-    pool.sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0))
-  }
-
   // 映射统一卡片字段
   const formattedPosts = pool.map(p => ({
     ...p,
+    isDemo: true,
     category: p.category || p.categoryName || '地学学术',
     excerpt: p.excerpt || (p.body ? p.body.slice(0, 120) + '…' : ''),
-    author: p.author?.name || '地理同好',
+    author: '演示人物（非认证身份）',
     authorId: p.author?.id || null,
     createdAt: p.created_at,
     likeCount: p.likesCount || 0,
     replyCount: p.repliesCount || 0,
     acceptedReplyId: p.accepted_reply_id || null,
+    evidenceId: p.evidenceId || p.evidence_card || null,
     linkedExperiment: p.linked_experiment || null
   }))
   const pagePosts = formattedPosts.slice((requestedPage - 1) * 20, requestedPage * 20)
@@ -614,10 +729,7 @@ async function loadPosts(append = false) {
   page.value = requestedPage
   lastPageCount.value = pagePosts.length
   if (!searchQuery.value && !selectedCategory.value && !selectedTag.value && !kind.value) {
-    featuredPosts.value = [...posts.value].sort((a, b) =>
-      ((b.likeCount || b.likesCount || 0) * 3 + (b.replyCount || b.repliesCount || 0) * 2) -
-      ((a.likeCount || a.likesCount || 0) * 3 + (a.replyCount || a.repliesCount || 0) * 2)
-    ).slice(0, 3)
+    featuredPosts.value = posts.value.slice(0, 3)
   }
   loading.value = false
 }
@@ -713,7 +825,7 @@ async function createPost() {
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      likesCount: 1,
+      likesCount: 0,
       bookmarksCount: 0,
       repliesCount: 0,
       replies: []
@@ -784,7 +896,7 @@ async function initCommunity() {
 
     const featuredRequest = !isDemoMode.value ? apiRequest('/api/community/posts?sort=popular')
       .then(featured => {
-        if (!disposed) featuredPosts.value = featured.posts.slice(0, 3)
+        if (!disposed && !isDemoMode.value) featuredPosts.value = featured.posts.slice(0, 3)
       }).catch(cause => {
         if (!disposed) console.warn('热门讨论读取失败：', cause.message)
       }) : Promise.resolve()
@@ -1133,6 +1245,34 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
   margin: 0 0 12px;
   flex: 1;
+}
+
+.hot-topic-card .topic-provenance-note {
+  color: var(--text-faint);
+  font-size: 11px;
+  margin-top: -6px;
+}
+
+.topic-feedback-form {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.topic-feedback-form textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
 }
 
 .topic-summary-toggle {

@@ -3,6 +3,7 @@
  */
 
 const SITE_NAME = '地理共同体'
+const CANONICAL_HOME = 'https://geo.kongnoma279.com/'
 const BASE_TITLE = '地理共同体 · 地理交流、问答与探索'
 const DEFAULT_DESC = '面向地理科学学习者、教师和爱好者的交流社区。提问、分享经验、查找历史讨论，也可探索地理实验与教学资源。'
 const DEFAULT_KEYWORDS = '地理教学系统, 地理共同体, 自然地理学, 地理实验, 3D地球, GIS遥感, 气象气候, 水循环, 地壳断层, 太阳高度角'
@@ -80,10 +81,21 @@ export function updatePageSeo(routeName, customData = {}) {
   setMetaProperty('og:title', finalTitle)
   setMetaProperty('og:description', finalDesc)
   setMetaProperty('og:type', customData.type || 'website')
-  setMetaProperty('og:url', window.location.href)
+  setMetaProperty('og:url', CANONICAL_HOME)
+  setCanonicalUrl(CANONICAL_HOME)
 
   // 4. 注入 JSON-LD Schema.org 结构化数据
   injectJsonLd(finalTitle, finalDesc, customData)
+}
+
+function setCanonicalUrl(url) {
+  let link = document.querySelector('link[rel="canonical"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.setAttribute('rel', 'canonical')
+    document.head.appendChild(link)
+  }
+  link.setAttribute('href', url)
 }
 
 function setMetaTag(name, content) {

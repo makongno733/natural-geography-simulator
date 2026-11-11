@@ -54,6 +54,7 @@ const SECTION_OVERRIDES = Object.freeze([
   sectionOverride('初中|八年级上册|第二章|第一节', ['landform-sandbox', 'landform-process'], [['stream-table', 'default']]),
   sectionOverride('初中|八年级上册|第二章|第二节', ['atmosphere-system', 'atmosphere-process'], [['thermal-circulation', 'atmospheric-circulation']]),
   sectionOverride('初中|八年级上册|第二章|第三节', ['stream-table', 'default'], [['water-cycle-3d', 'water-cycle']]),
+  sectionOverride('高中|必修第一册|第五章|问题研究', ['infiltration', 'default']),
   sectionOverride('高中|必修第一册|第一章|第三节', ['geologic-time', 'default'], [['stratigraphy', 'default']]),
   sectionOverride('高中|必修第一册|第二章|第二节', ['thermal-circulation', 'atmospheric-circulation'], [['coriolis', 'default']]),
   sectionOverride('高中|必修第一册|第三章|第一节', ['water-cycle-3d', 'water-cycle'], [['water-cycle', 'default']]),
@@ -73,9 +74,19 @@ const SECTION_OVERRIDES = Object.freeze([
   sectionOverride('高中|选择性必修1|第四章|第二节', ['water-cycle-3d', 'water-movement'], [['water-cycle', 'default']]),
 ])
 
+const SECTION_OMISSIONS = Object.freeze([
+  '初中|七年级上册|第一章|第二节',
+  '初中|八年级上册|第一章|第一节',
+  '初中|八年级上册|第一章|第三节',
+  '初中|八年级下册|第六章|第一节',
+  '初中|八年级下册|第六章|第二节',
+  '高中|必修第一册|第五章|第一节',
+])
+
 export const experimentLinkConfiguration = Object.freeze({
   chapterDefaults: CHAPTER_DEFAULTS,
   sectionOverrides: SECTION_OVERRIDES,
+  sectionOmissions: SECTION_OMISSIONS,
 })
 
 export function textbookKey(context) {
@@ -127,6 +138,7 @@ function configurationEntries(configuration) {
   return [
     ...(configuration?.chapterDefaults || []).map(entry => Object.freeze({ ...entry, kind: 'chapter-default' })),
     ...(configuration?.sectionOverrides || []).map(entry => Object.freeze({ ...entry, kind: 'section-override' })),
+    ...(configuration?.sectionOmissions || []).map(key => Object.freeze({ key, kind: 'section-omission' })),
   ]
 }
 
@@ -139,9 +151,13 @@ function buildRegistry(grades, configuration = experimentLinkConfiguration) {
   const configurationByKind = configurationEntries(configuration)
   const chapterDefaultsByKey = latestConfigByKey(configurationByKind.filter(entry => entry.kind === 'chapter-default'))
   const sectionOverridesByKey = latestConfigByKey(configurationByKind.filter(entry => entry.kind === 'section-override'))
+  const omittedSectionKeys = new Set(configurationByKind
+    .filter(entry => entry.kind === 'section-omission')
+    .map(entry => entry.key))
 
   for (const context of sectionsFor(grades)) {
     const key = textbookKey(context)
+    if (omittedSectionKeys.has(key)) continue
     const override = sectionOverridesByKey.get(key)
     const chapterDefault = chapterDefaultsByKey.get(chapterKey(context))
     const config = override || chapterDefault
@@ -164,6 +180,7 @@ function validateReferences(entries) {
   const invalidPresets = []
 
   for (const { key, primary, related = [] } of entries) {
+    if (!primary) continue
     for (const [experimentId, presetId] of [primary, ...related]) {
       if (!getExperiment(experimentId)) {
         invalidExperiments.push({ key, experimentId })

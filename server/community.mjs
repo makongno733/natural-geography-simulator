@@ -87,6 +87,11 @@ export function migrateCommunity() {
   if (!columns.includes('evidence_card')) {
     database.exec("ALTER TABLE community_post ADD COLUMN evidence_card TEXT DEFAULT NULL;")
   }
+  const replyColumns = database.prepare('PRAGMA table_info(community_reply)').all().map(column => column.name)
+  if (!replyColumns.includes('updated_at')) {
+    database.exec('ALTER TABLE community_reply ADD COLUMN updated_at TEXT;')
+  }
+  database.exec('UPDATE community_reply SET updated_at = created_at WHERE updated_at IS NULL;')
 
   // 扩展表：点赞、收藏、用户资料、学术交流社群、热点讨论、资源共享库
   database.exec(`
@@ -166,6 +171,7 @@ export function migrateCommunity() {
   const topicColumns = database.prepare('PRAGMA table_info(community_hot_topic)').all().map(column => column.name)
   for (const [name, definition] of [
     ['external_id', 'TEXT'], ['source_url', 'TEXT'], ['occurred_at', 'TEXT'],
+    ['summary_method', "TEXT NOT NULL DEFAULT 'deterministic-source-extract'"],
     ['fetched_at', 'TEXT'], ['post_id', 'INTEGER REFERENCES community_post(id)']
   ]) {
     if (!topicColumns.includes(name)) database.exec(`ALTER TABLE community_hot_topic ADD COLUMN ${name} ${definition}`)
@@ -181,6 +187,60 @@ export function migrateCommunity() {
   ]) {
     if (!syncColumns.includes(name)) database.exec(`ALTER TABLE geo_topic_sync ADD COLUMN ${name} ${definition}`)
   }
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS community_post_revision (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL REFERENCES community_post(id),
+      revision_no INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      tags TEXT NOT NULL DEFAULT '[]',
+      linked_experiment TEXT,
+      editor_id TEXT NOT NULL REFERENCES user(id),
+      created_at TEXT NOT NULL,
+      UNIQUE(post_id, revision_no)
+    );
+    CREATE INDEX IF NOT EXISTS community_post_revision_post ON community_post_revision(post_id, revision_no DESC);
+    CREATE TABLE IF NOT EXISTS community_reply_revision (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reply_id INTEGER NOT NULL REFERENCES community_reply(id),
+      revision_no INTEGER NOT NULL,
+      body TEXT NOT NULL,
+      editor_id TEXT NOT NULL REFERENCES user(id),
+      created_at TEXT NOT NULL,
+      UNIQUE(reply_id, revision_no)
+    );
+    CREATE INDEX IF NOT EXISTS community_reply_revision_reply ON community_reply_revision(reply_id, revision_no DESC);
+    CREATE TABLE IF NOT EXISTS community_hot_topic_revision (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      topic_id INTEGER NOT NULL,
+      revision_no INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      summary_method TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      occurred_at TEXT NOT NULL,
+      fetched_at TEXT NOT NULL,
+      recorded_at TEXT NOT NULL,
+      UNIQUE(topic_id, revision_no)
+    );
+    CREATE INDEX IF NOT EXISTS community_hot_topic_revision_topic ON community_hot_topic_revision(topic_id, revision_no DESC);
+    CREATE TABLE IF NOT EXISTS community_event_feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      topic_id INTEGER NOT NULL,
+      topic_title TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      reporter_id TEXT NOT NULL REFERENCES user(id),
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'resolved', 'dismissed')),
+      created_at TEXT NOT NULL,
+      resolved_at TEXT,
+      resolved_by TEXT REFERENCES user(id),
+      resolution_note TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS community_event_feedback_status ON community_event_feedback(status, created_at DESC);
+  `)
 
   // 预置默认分类
   const seedCat = database.prepare('INSERT OR IGNORE INTO community_category (slug, name, description, sort_order) VALUES (?, ?, ?, ?)')
@@ -192,6 +252,11 @@ export function migrateCommunity() {
 const clean = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null
 const positiveId = value => /^\d+$/.test(String(value)) && Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null
 const isAdmin = userId => database.prepare("SELECT 1 FROM user_role WHERE user_id = ? AND role = 'admin'").get(userId) !== undefined
+const nextEditTime = previous => new Date(Math.max(Date.now(), Date.parse(previous) + 1)).toISOString()
+const findPublishedReply = id => id && database.prepare(`SELECT r.* FROM community_reply r
+  JOIN community_post p ON p.id = r.post_id
+  WHERE r.id = ? AND r.status = 'published' AND p.status = 'published'`).get(id)
+const clearAcceptedReply = id => database.prepare('UPDATE community_post SET accepted_reply_id = NULL WHERE accepted_reply_id = ?').run(id)
 const streams = new Set()
 let streamEventId = 0
 function announce(type, postId) {
@@ -303,7 +368,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
       p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
-      p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
+      CASE WHEN EXISTS (SELECT 1 FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published')
+        THEN p.accepted_reply_id END AS acceptedReplyId,
+      c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
       (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published') AS acceptedAnswerExcerpt,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
@@ -333,8 +400,10 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const currentUserId = req.accountUser?.id || null
 
     const post = database.prepare(`SELECT p.id, p.author_id AS authorId, p.category_id AS categoryId, p.kind, p.title, p.body,
-      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId, p.accepted_reply_id AS acceptedReplyId,
-      p.created_at AS createdAt, c.name AS category, u.name AS author,
+      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
+      CASE WHEN EXISTS (SELECT 1 FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published')
+        THEN p.accepted_reply_id END AS acceptedReplyId,
+      p.created_at AS createdAt, p.updated_at AS updatedAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
       ${currentUserId ? `, (SELECT 1 FROM community_post_like l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
@@ -344,7 +413,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     if (!post) return res.status(404).json({ error: '讨论不存在' })
 
-    const replies = database.prepare(`SELECT r.id, r.parent_id AS parentId, r.body, r.created_at AS createdAt,
+    const replies = database.prepare(`SELECT r.id, r.parent_id AS parentId, r.body, r.created_at AS createdAt, r.updated_at AS updatedAt,
       r.author_id AS authorId, u.name AS author FROM community_reply r JOIN user u ON u.id = r.author_id
       WHERE r.post_id = ? AND r.status = 'published' ORDER BY r.created_at, r.id LIMIT 500`).all(id)
 
@@ -361,6 +430,18 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     }))
 
     res.json({ post: formattedPost, replies: formattedReplies })
+  })
+
+  app.get('/api/community/posts/:id/revisions', (req, res) => {
+    const id = positiveId(req.params.id)
+    if (!id || !database.prepare("SELECT 1 FROM community_post WHERE id = ? AND status = 'published'").get(id)) {
+      return res.status(404).json({ error: '讨论不存在' })
+    }
+    const revisions = database.prepare(`SELECT r.revision_no AS revisionNo, r.title, r.body, r.tags,
+      r.linked_experiment AS linkedExperiment, r.created_at AS editedAt, u.name AS editor
+      FROM community_post_revision r JOIN user u ON u.id = r.editor_id
+      WHERE r.post_id = ? ORDER BY r.revision_no DESC LIMIT 50`).all(id)
+    res.json({ revisions: revisions.map(revision => ({ ...revision, tags: parseTags(revision.tags) })) })
   })
 
   // 5. 发布帖子 / 提问
@@ -401,6 +482,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const canEdit = post.author_id === req.accountUser.id || isAdmin(req.accountUser.id)
     if (!canEdit) return res.status(403).json({ error: '没有权限编辑此讨论' })
+    if (req.body?.expectedUpdatedAt !== undefined && req.body.expectedUpdatedAt !== post.updated_at) {
+      return res.status(409).json({ error: '讨论已被修改，请重新载入后核对再保存' })
+    }
 
     const title = req.body?.title === undefined ? post.title : clean(req.body.title, 120)
     const body = req.body?.body === undefined ? post.body : clean(req.body.body, 10000)
@@ -409,11 +493,23 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     if (!title || !body) return res.status(400).json({ error: '标题与正文不能为空' })
 
-    database.prepare('UPDATE community_post SET title = ?, body = ?, tags = ?, linked_experiment = ?, updated_at = ? WHERE id = ?')
-      .run(title, body, tags, linkedExperiment, new Date().toISOString(), id)
+    const changed = title !== post.title || body !== post.body || tags !== post.tags || linkedExperiment !== post.linked_experiment
+    if (changed) {
+      const revisionNo = database.prepare('SELECT COALESCE(MAX(revision_no), 0) + 1 AS next FROM community_post_revision WHERE post_id = ?')
+        .get(id).next
+      const now = nextEditTime(post.updated_at)
+      database.transaction(() => {
+        database.prepare(`INSERT INTO community_post_revision
+          (post_id, revision_no, title, body, tags, linked_experiment, editor_id, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+          .run(id, revisionNo, post.title, post.body, post.tags, post.linked_experiment, req.accountUser.id, now)
+        database.prepare('UPDATE community_post SET title = ?, body = ?, tags = ?, linked_experiment = ?, updated_at = ? WHERE id = ?')
+          .run(title, body, tags, linkedExperiment, now, id)
+      })()
+    }
 
     announce('post_edit', id)
-    res.json({ status: 'updated' })
+    res.json({ status: 'updated', revisionRecorded: changed })
   })
 
   // 7. 删除帖子（软删除隐藏）
@@ -519,11 +615,66 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
       .get(req.accountUser.id, new Date(Date.now() - 60000).toISOString()).n
     if (recent >= 3) return res.status(429).json({ error: '回复过于频繁，请稍后再试' })
 
-    const result = database.prepare('INSERT INTO community_reply (post_id, parent_id, author_id, body, created_at) VALUES (?, ?, ?, ?, ?)')
-      .run(postId, parentId, req.accountUser.id, body, new Date().toISOString())
+    const now = new Date().toISOString()
+    const result = database.prepare('INSERT INTO community_reply (post_id, parent_id, author_id, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(postId, parentId, req.accountUser.id, body, now, now)
     announce('reply', postId)
     res.status(201).json({ id: result.lastInsertRowid })
   })
+
+  app.get('/api/community/replies/:id/revisions', (req, res) => {
+    const reply = findPublishedReply(positiveId(req.params.id))
+    if (!reply) return res.status(404).json({ error: '回复不存在' })
+    const revisions = database.prepare(`SELECT r.revision_no AS revisionNo, r.body,
+      r.created_at AS editedAt, u.name AS editor
+      FROM community_reply_revision r JOIN user u ON u.id = r.editor_id
+      WHERE r.reply_id = ? ORDER BY r.revision_no DESC LIMIT 50`).all(reply.id)
+    res.json({ revisions })
+  })
+
+  app.patch('/api/community/replies/:id', requireOrigin, requireUser, (req, res) => {
+    const reply = findPublishedReply(positiveId(req.params.id))
+    if (!reply) return res.status(404).json({ error: '回复不存在' })
+    if (reply.author_id !== req.accountUser.id && !isAdmin(req.accountUser.id)) {
+      return res.status(403).json({ error: '没有权限编辑此回复' })
+    }
+    const body = clean(req.body?.body, 3000)
+    if (!body) return res.status(400).json({ error: '回复内容须为 1 至 3000 字' })
+    if (req.body?.expectedUpdatedAt !== undefined && req.body.expectedUpdatedAt !== reply.updated_at) {
+      return res.status(409).json({ error: '回复已被修改，请重新载入后核对再保存' })
+    }
+    const changed = body !== reply.body
+    if (changed) {
+      const now = nextEditTime(reply.updated_at)
+      database.transaction(() => {
+        const revisionNo = database.prepare('SELECT COALESCE(MAX(revision_no), 0) + 1 AS next FROM community_reply_revision WHERE reply_id = ?')
+          .get(reply.id).next
+        database.prepare(`INSERT INTO community_reply_revision (reply_id, revision_no, body, editor_id, created_at)
+          VALUES (?, ?, ?, ?, ?)`).run(reply.id, revisionNo, reply.body, req.accountUser.id, now)
+        database.prepare('UPDATE community_reply SET body = ?, updated_at = ? WHERE id = ?').run(body, now, reply.id)
+        clearAcceptedReply(reply.id)
+      })()
+      announce('reply_edit', reply.post_id)
+    }
+    res.json({ status: 'updated', revisionRecorded: changed })
+  })
+
+  if (typeof app.delete === 'function') {
+    app.delete('/api/community/replies/:id', requireOrigin, requireUser, (req, res) => {
+      const reply = findPublishedReply(positiveId(req.params.id))
+      if (!reply) return res.status(404).json({ error: '回复不存在' })
+      if (reply.author_id !== req.accountUser.id && !isAdmin(req.accountUser.id)) {
+        return res.status(403).json({ error: '没有权限删除此回复' })
+      }
+      database.transaction(() => {
+        database.prepare("UPDATE community_reply SET status = 'hidden', updated_at = ? WHERE id = ?")
+          .run(nextEditTime(reply.updated_at), reply.id)
+        clearAcceptedReply(reply.id)
+      })()
+      announce('reply_delete', reply.post_id)
+      res.json({ status: 'deleted' })
+    })
+  }
 
   // 12. 个人学术主页与资料
   app.get('/api/community/users/:id', (req, res) => {
@@ -538,8 +689,8 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const postsCount = database.prepare("SELECT COUNT(*) AS n FROM community_post WHERE author_id = ? AND status = 'published'").get(userId).n
     const acceptedAnswersCount = database.prepare(`SELECT COUNT(*) AS n FROM community_reply r
-      JOIN community_post p ON p.accepted_reply_id = r.id
-      WHERE r.author_id = ? AND r.status = 'published'`).get(userId).n
+      JOIN community_post p ON p.accepted_reply_id = r.id AND p.id = r.post_id
+      WHERE r.author_id = ? AND r.status = 'published' AND p.status = 'published'`).get(userId).n
     const likesReceived = database.prepare(`SELECT COUNT(*) AS n FROM community_post_like l
       JOIN community_post p ON p.id = l.post_id
       WHERE p.author_id = ?`).get(userId).n
@@ -668,17 +819,53 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
       title: topic.title,
       category: topic.category,
       summary: topic.summary,
-      sourceBasis: `${sourceName} 原文测报`,
+      sourceBasis: topic.summary_method === 'source-description'
+        ? `${sourceName} 原始描述字段`
+        : `${sourceName} 来源字段的规则化摘录`,
       sourceUrl: topic.source_url,
       occurredAt: topic.occurred_at,
       verifiedAt: topic.fetched_at,
-      isMachineGenerated: true,
+      summaryMethod: topic.summary_method,
+      isMachineGenerated: topic.summary_method !== 'source-description',
       isAiGenerated: false,
-      generationMethod: 'deterministic-source-extract',
+      generationMethod: topic.summary_method,
       confidenceLevel: 'source-linked',
-      verificationNote: '这是根据来源字段整理的机器摘录，尚未经人工核验；不包含未经来源证实的影响或推论。'
+      verificationNote: topic.summary_method === 'source-description'
+        ? '此内容来自 NASA EONET 的原始描述字段，尚未经本平台人工核验；请以原始记录及其更新为准。'
+        : '这是按来源字段生成的规则化机器摘录，尚未经本平台人工核验；不包含未经来源证实的影响或推论。'
     }
     res.json(summaryData)
+  })
+
+  app.get('/api/community/hot-topics/:id/revisions', (req, res) => {
+    const id = positiveId(req.params.id)
+    if (!id || !database.prepare('SELECT 1 FROM community_hot_topic WHERE id = ? AND external_id IS NOT NULL').get(id)) {
+      return res.status(404).json({ error: '事件不存在' })
+    }
+    const revisions = database.prepare(`SELECT revision_no AS revisionNo, title, category, summary,
+      summary_method AS summaryMethod, source_url AS sourceUrl, occurred_at AS occurredAt,
+      fetched_at AS fetchedAt, recorded_at AS recordedAt
+      FROM community_hot_topic_revision WHERE topic_id = ? ORDER BY revision_no DESC LIMIT 50`).all(id)
+    res.json({ revisions })
+  })
+
+  app.post('/api/community/hot-topics/:id/feedback', requireOrigin, requireUser, (req, res) => {
+    const id = positiveId(req.params.id)
+    const reason = clean(req.body?.reason, 1000)
+    if (!id || !reason) return res.status(400).json({ error: '请选择事件并填写纠错说明（最多 1000 字）' })
+    const topic = database.prepare('SELECT id, title, source_url FROM community_hot_topic WHERE id = ? AND external_id IS NOT NULL').get(id)
+    if (!topic) return res.status(404).json({ error: '事件记录不存在' })
+    const since = new Date(Date.now() - 86400000).toISOString()
+    const recent = database.prepare('SELECT COUNT(*) AS n FROM community_event_feedback WHERE reporter_id = ? AND created_at > ?')
+      .get(req.accountUser.id, since).n
+    if (recent >= 10) return res.status(429).json({ error: '今天提交的事件纠错已达上限' })
+    const duplicate = database.prepare("SELECT 1 FROM community_event_feedback WHERE reporter_id = ? AND topic_id = ? AND status = 'open'")
+      .get(req.accountUser.id, id)
+    if (duplicate) return res.status(409).json({ error: '你已提交该事件的纠错，正在等待核对' })
+    const result = database.prepare(`INSERT INTO community_event_feedback
+      (topic_id, topic_title, source_url, reporter_id, reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
+      .run(topic.id, topic.title, topic.source_url, req.accountUser.id, reason, new Date().toISOString())
+    res.status(201).json({ id: result.lastInsertRowid, status: 'open' })
   })
 
   app.post('/api/community/hot-topics/:id/discuss', requireOrigin, requireUser, (req, res) => {
@@ -722,13 +909,16 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
   // 16. 举报与审核处理
   app.post('/api/community/reports', requireOrigin, requireUser, (req, res) => {
-    const postId = req.body?.postId ? positiveId(req.body.postId) : null
-    const replyId = req.body?.replyId ? positiveId(req.body.replyId) : null
+    const postId = req.body?.postId != null ? positiveId(req.body.postId) : null
+    const replyId = req.body?.replyId != null ? positiveId(req.body.replyId) : null
     const reason = clean(req.body?.reason, 500)
-    if (!reason || Boolean(postId) === Boolean(replyId)) return res.status(400).json({ error: '请选择一项内容并填写举报原因' })
+    if (!reason || Boolean(postId) === Boolean(replyId) ||
+      (req.body?.postId != null && !postId) || (req.body?.replyId != null && !replyId)) {
+      return res.status(400).json({ error: '请选择一项内容并填写举报原因' })
+    }
     const exists = postId
-      ? database.prepare('SELECT 1 FROM community_post WHERE id = ?').get(postId)
-      : database.prepare('SELECT 1 FROM community_reply WHERE id = ?').get(replyId)
+      ? database.prepare("SELECT 1 FROM community_post WHERE id = ? AND status = 'published'").get(postId)
+      : findPublishedReply(replyId)
     if (!exists) return res.status(404).json({ error: '内容不存在' })
     const recent = database.prepare('SELECT COUNT(*) AS n FROM community_report WHERE reporter_id = ? AND created_at > ?')
       .get(req.accountUser.id, new Date(Date.now() - 86400000).toISOString()).n
@@ -743,7 +933,37 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
   app.get('/api/community/moderation/reports', requireUser, (req, res) => {
     if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
-    res.json({ reports: database.prepare("SELECT * FROM community_report WHERE status = 'open' ORDER BY created_at LIMIT 100").all() })
+    const reports = database.prepare(`SELECT report.*, COALESCE(report.post_id, r.post_id) AS discussionId,
+      CASE WHEN p.status = 'published' OR (r.status = 'published' AND parent.status = 'published')
+        THEN 1 ELSE 0 END AS contentAvailable
+      FROM community_report report LEFT JOIN community_post p ON p.id = report.post_id
+      LEFT JOIN community_reply r ON r.id = report.reply_id LEFT JOIN community_post parent ON parent.id = r.post_id
+      WHERE report.status = 'open' ORDER BY report.created_at LIMIT 100`).all()
+    res.json({ reports: reports.map(report => ({ ...report, contentAvailable: Boolean(report.contentAvailable) })) })
+  })
+
+  app.get('/api/community/moderation/event-feedback', requireUser, (req, res) => {
+    if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
+    const feedback = database.prepare(`SELECT f.id, f.topic_id AS topicId, f.topic_title AS topicTitle,
+      f.source_url AS sourceUrl, f.reason, f.status, f.created_at AS createdAt,
+      u.name AS reporter
+      FROM community_event_feedback f JOIN user u ON u.id = f.reporter_id
+      WHERE f.status = 'open' ORDER BY f.created_at LIMIT 100`).all()
+    res.json({ feedback })
+  })
+
+  app.post('/api/community/moderation/event-feedback/:id', requireOrigin, requireUser, (req, res) => {
+    if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
+    const id = positiveId(req.params.id)
+    const action = req.body?.action
+    const note = typeof req.body?.resolutionNote === 'string' ? req.body.resolutionNote.trim().slice(0, 1000) : ''
+    if (!id || !['resolve', 'dismiss'].includes(action)) return res.status(400).json({ error: '无效的处理操作' })
+    const result = database.prepare(`UPDATE community_event_feedback
+      SET status = ?, resolved_at = ?, resolved_by = ?, resolution_note = ?
+      WHERE id = ? AND status = 'open'`)
+      .run(action === 'resolve' ? 'resolved' : 'dismissed', new Date().toISOString(), req.accountUser.id, note, id)
+    if (!result.changes) return res.status(404).json({ error: '纠错不存在或已处理' })
+    res.json({ status: action === 'resolve' ? 'resolved' : 'dismissed' })
   })
 
   app.post('/api/community/moderation/reports/:id', requireOrigin, requireUser, (req, res) => {
@@ -752,14 +972,20 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     if (!id || !['hide', 'dismiss'].includes(req.body?.action)) return res.status(400).json({ error: '处理操作无效' })
     const report = database.prepare("SELECT * FROM community_report WHERE id = ? AND status = 'open'").get(id)
     if (!report) return res.status(404).json({ error: '举报不存在或已处理' })
+    const now = new Date().toISOString()
+    const reply = report.reply_id && database.prepare('SELECT post_id FROM community_reply WHERE id = ?').get(report.reply_id)
     database.transaction(() => {
       if (req.body.action === 'hide') {
-        if (report.post_id) database.prepare("UPDATE community_post SET status = 'hidden' WHERE id = ?").run(report.post_id)
-        else database.prepare("UPDATE community_reply SET status = 'hidden' WHERE id = ?").run(report.reply_id)
+        if (report.post_id) database.prepare("UPDATE community_post SET status = 'hidden', updated_at = ? WHERE id = ?").run(now, report.post_id)
+        else {
+          database.prepare("UPDATE community_reply SET status = 'hidden', updated_at = ? WHERE id = ?").run(now, report.reply_id)
+          clearAcceptedReply(report.reply_id)
+        }
       }
       database.prepare("UPDATE community_report SET status = 'resolved', resolved_at = ?, resolved_by = ? WHERE id = ?")
-        .run(new Date().toISOString(), req.accountUser.id, id)
+        .run(now, req.accountUser.id, id)
     })()
+    if (req.body.action === 'hide') announce('content_hidden', report.post_id || reply?.post_id)
     res.json({ status: 'resolved' })
   })
 }

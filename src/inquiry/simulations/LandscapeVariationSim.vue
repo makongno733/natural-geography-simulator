@@ -61,14 +61,14 @@
 
         <!-- 水文台站指标面板 -->
         <div class="station-data-box">
-          <h5>📍 星子水文台站实测参考指标：</h5>
+          <h5>教学情境设定指标（非星子站实测）：</h5>
           <div class="metrics-grid">
             <div class="metric-item">
-              <span class="m-title">基准水位</span>
+              <span class="m-title">情境水位</span>
               <span class="m-data">{{ currentWaterLevel }} m</span>
             </div>
             <div class="metric-item">
-              <span class="m-title">湖泊水面面积</span>
+              <span class="m-title">模型水面面积</span>
               <span class="m-data">{{ currentWaterArea }} km²</span>
             </div>
             <div class="metric-item">
@@ -87,7 +87,7 @@
             先从画面中找出直接观察到的差异，区分【看见的颜色边界】与【推测的成因】，点击下方生成证据卡：
           </p>
           <button type="button" class="btn-capture" @click="captureEvidence">
-            📸 捕获本组遥感与台站数据为【科学证据卡】
+            📸 捕获本组教学设定为【仿真记录卡】
           </button>
         </div>
       </div>
@@ -131,7 +131,7 @@
 
             <!-- 星子水文站标示点 -->
             <circle cx="230" cy="40" r="5" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5" />
-            <text x="242" y="44" fill="#ffffff" font-size="11" font-weight="bold">星子站 ({{ currentWaterLevel }}m)</text>
+            <text x="242" y="44" fill="#ffffff" font-size="11" font-weight="bold">星子站位置示意 (设定 {{ currentWaterLevel }}m)</text>
 
             <text x="16" y="224" fill="#f8fafc" font-size="12" font-weight="bold">
               景观特征：{{ landscapeSummary }}
@@ -208,7 +208,7 @@ const seasonName = computed(() => {
   return '春季降雨回升期'
 })
 
-// 水文台站拟合模型（根据鄱阳湖星子站真实长年水文曲线拟合）
+// 教学情境曲线，未关联台站观测记录。
 const currentWaterLevel = computed(() => {
   const m = month.value
   // 6-7月主汛期 19-21米；12-1月枯水期 8-10米；9月干旱 11-13米
@@ -238,7 +238,7 @@ const currentNDWI = computed(() => {
 })
 
 const currentSensorTag = computed(() => {
-  return `Landsat OLI / MODIS Terra (${month.value}月典型中分辨率合成)`
+  return `矢量教学示意 (${month.value}月情境；非卫星影像)`
 })
 
 const landscapeSummary = computed(() => {

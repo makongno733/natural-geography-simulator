@@ -63,6 +63,25 @@ describe('community API with SQLite', () => {
     expect(call('GET', '/api/community/posts', { query: { q: '季风' } }).payload.posts[0].id).toBe(created.payload.id)
   })
 
+  it('keeps the previous public version when a discussion is edited', () => {
+    const created = call('POST', '/api/community/posts', {
+      body: { categoryId: 1, kind: 'discussion', title: '原题目', body: '原观点' }
+    })
+    const id = created.payload.id
+    const updated = call('PATCH', '/api/community/posts/:id', {
+      params: { id }, body: { title: '修订题目', body: '修订观点' }
+    })
+    expect(updated.payload.revisionRecorded).toBe(true)
+    const revisions = call('GET', '/api/community/posts/:id/revisions', { params: { id } })
+    expect(revisions.payload.revisions).toMatchObject([
+      { revisionNo: 1, title: '原题目', body: '原观点', editor: '提问者' }
+    ])
+    expect(call('PATCH', '/api/community/posts/:id', {
+      params: { id }, body: { title: '修订题目', body: '修订观点' }
+    }).payload.revisionRecorded).toBe(false)
+    expect(call('GET', '/api/community/posts/:id/revisions', { params: { id } }).payload.revisions).toHaveLength(1)
+  })
+
   it('rejects an unrelated parent reply and allows a reply in the same discussion', () => {
     const postId = call('GET', '/api/community/posts').payload.posts[0].id
     expect(call('POST', '/api/community/posts/:id/replies', {
@@ -101,6 +120,29 @@ describe('community API with SQLite', () => {
     expect(call('POST', '/api/community/moderation/reports/:id', {
       params: { id: report.payload.id }, userId: 'admin-1', body: { action: 'hide' }
     }).status).toBe(200)
-    expect(call('GET', '/api/community/posts').payload.posts).toHaveLength(1)
+    expect(call('GET', '/api/community/posts').payload.posts).not.toContainEqual(expect.objectContaining({ id: postId }))
+  })
+
+  it('accepts bounded event-correction reports and exposes them only to admins', () => {
+    const topic = database.prepare(`INSERT INTO community_hot_topic
+      (title, category, summary, stats, tag, external_id, source_url, occurred_at, fetched_at)
+      VALUES ('待核对事件', '事件', '摘要', '', '事件', 'EONET_22', 'https://eonet.gsfc.nasa.gov/api/v3/events/EONET_22', ?, ?)`)
+      .run(new Date().toISOString(), new Date().toISOString())
+    const id = Number(topic.lastInsertRowid)
+    expect(call('GET', '/api/community/hot-topics/:id/revisions', { params: { id } }).payload.revisions).toEqual([])
+    const feedback = call('POST', '/api/community/hot-topics/:id/feedback', {
+      params: { id }, body: { reason: '事件位置可能有误' }
+    })
+    expect(feedback.status).toBe(201)
+    expect(call('POST', '/api/community/hot-topics/:id/feedback', {
+      params: { id }, body: { reason: '重复反馈' }
+    }).status).toBe(409)
+    expect(call('GET', '/api/community/moderation/event-feedback').status).toBe(403)
+    const queue = call('GET', '/api/community/moderation/event-feedback', { userId: 'admin-1' })
+    expect(queue.payload.feedback).toMatchObject([{ topicId: id, reason: '事件位置可能有误', status: 'open' }])
+    expect(call('POST', '/api/community/moderation/event-feedback/:id', {
+      params: { id: feedback.payload.id }, userId: 'admin-1',
+      body: { action: 'resolve', resolutionNote: '已对照来源记录' }
+    }).payload.status).toBe('resolved')
   })
 })

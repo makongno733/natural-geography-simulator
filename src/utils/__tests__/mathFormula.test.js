@@ -40,7 +40,8 @@ describe('Math formula renderer and Evidence cards', () => {
     const poyang = getEvidenceById('ev-poyang-winter')
     expect(poyang).not.toBeNull()
     expect(poyang.taskTitle).toContain('鄱阳湖')
-    expect(poyang.facts).toContain('1140 km²')
+    expect(poyang.provenance.status).toBe('unverified')
+    expect(poyang.facts).not.toContain('1140')
 
     const unknown = getEvidenceById('unknown-id')
     expect(unknown).toBeNull()

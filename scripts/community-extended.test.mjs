@@ -330,8 +330,9 @@ describe('Extended Geography Community Platform API', () => {
     }).status).toBe(429)
   })
 
-  it('retrieves verifiable structured AI summary for hot topics', () => {
-    const topic = database.prepare("SELECT id FROM community_hot_topic WHERE external_id IS NOT NULL LIMIT 1").get()
+  it('retrieves a verifiable source summary for hot topics', () => {
+    const topic = database.prepare(`SELECT id, summary_method AS summaryMethod
+      FROM community_hot_topic WHERE external_id IS NOT NULL LIMIT 1`).get()
     if (!topic) return
 
     const res = call('GET', '/api/community/hot-topics/:id/summary', {
@@ -340,7 +341,7 @@ describe('Extended Geography Community Platform API', () => {
     expect(res.status).toBe(200)
     expect(res.payload.isMachineGenerated).toBe(true)
     expect(res.payload.isAiGenerated).toBe(false)
-    expect(res.payload.generationMethod).toBe('deterministic-source-extract')
+    expect(res.payload.generationMethod).toBe(topic.summaryMethod)
     expect(res.payload.confidenceLevel).toBe('source-linked')
     expect(res.payload.sourceBasis).toMatch(/NASA|USGS/)
   })
