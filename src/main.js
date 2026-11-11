@@ -64,7 +64,12 @@ const ChapterRedirect = {
 
 const CosmosCenter = () => import('./cosmos/CosmosCenter.vue')
 
+
+const FanxingPage = () => import('./fanxing/FanxingPage.vue')
+
 const routes = [
+  { path: '/fanxing', name: 'fanxing', component: FanxingPage },
+  { path: '/fanxing/:id', name: 'fanxing-project', component: FanxingPage },
   { path: '/cosmos', name: 'cosmos', component: CosmosCenter },
   { path: '/cosmos/labs', name: 'cosmos-labs', component: CosmosCenter },
   { path: '/cosmos/chapter/:chapter', name: 'cosmos-chapter', component: CosmosCenter },

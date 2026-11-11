@@ -27,6 +27,16 @@
       </div>
     </section>
 
+    <section class="community-wrap" aria-labelledby="fanxing-entry-title">
+      <div class="community-section-heading baroque-frame fanxing-entry">
+        <div>
+          <h2 id="fanxing-entry-title">繁星计划</h2>
+          <p>发现地理研究课题，看看你可以参与什么。</p>
+        </div>
+        <router-link class="baroque-btn baroque-btn-primary" to="/fanxing">浏览课题 →</router-link>
+      </div>
+    </section>
+
     <section v-if="!searchQuery && !selectedCategory && !selectedTag && !kind" class="community-wrap community-trending" aria-labelledby="trending-title">
       <div class="community-section-heading">
         <div>
@@ -817,6 +827,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.fanxing-entry { padding: 20px; margin: 20px 0; flex-wrap: wrap; }
 .topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-muted); }
 /* 社区首页：让搜索和讨论在首屏内可见。 */
 .community-hero {
