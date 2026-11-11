@@ -31,35 +31,17 @@
           {{ navExpanded ? '收起导航 −' : '探索导航 ＋' }}
         </button>
         <nav v-if="!isAccountHost" id="main-navigation" class="app-nav" :class="{ 'is-expanded': navExpanded }" aria-label="主导航">
-          <router-link to="/" class="nav-link" :class="{ active: isHome }">
-            <span class="nav-label">首页</span>
-          </router-link>
-          <router-link to="/community" class="nav-link" :class="{ active: route.path === '/community' || route.path.startsWith('/community/post') }">
+          <router-link to="/" class="nav-link" :class="{ active: isCommunity }">
             <span class="nav-label">社区</span>
           </router-link>
-          <router-link to="/questions" class="nav-link" :class="{ active: route.path === '/questions' }">
-            <span class="nav-label">问答</span>
-          </router-link>
-          <router-link to="/resources" class="nav-link" :class="{ active: route.path === '/resources' }">
-            <span class="nav-label">资源</span>
-          </router-link>
-          <router-link to="/groups" class="nav-link" :class="{ active: route.path === '/groups' }">
-            <span class="nav-label">社群</span>
+          <router-link to="/learning" class="nav-link" :class="{ active: isLearningRoute || route.path === '/practice' }">
+            <span class="nav-label">教学</span>
           </router-link>
           <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">
             <span class="nav-label">地理实验室</span>
           </router-link>
-          <router-link to="/inquiry" class="nav-link" :class="{ active: route.path === '/inquiry' }">
-            <span class="nav-label">探究</span>
-          </router-link>
-          <router-link to="/cosmos" class="nav-link" :class="{ active: route.path.startsWith('/cosmos') || route.path === '/cosmology' }">
-            <span class="nav-label">宇宙与物理</span>
-          </router-link>
-          <router-link to="/calendar" class="nav-link" :class="{ active: route.path === '/calendar' }">
-            <span class="nav-label">日历</span>
-          </router-link>
-          <router-link to="/learning" class="nav-link" :class="{ active: route.path === '/learning' || grade }">
-            <span class="nav-label">教学</span>
+          <router-link to="/fanxing" class="nav-link" :class="{ active: route.name === 'fanxing' || route.name === 'fanxing-project' }">
+            <span class="nav-label">繁星计划</span>
           </router-link>
           <button type="button" class="nav-search-trigger" aria-label="全局搜索 (快捷键 ⌘K)" @click="openCmdPalette">
             <span>🔍 检索</span>
@@ -160,8 +142,10 @@ const LessonAssistant = defineAsyncComponent(() => import('./assistant/LessonAss
 const route = useRoute()
 const router = useRouter()
 const isAccountHost = accountEnabled && window.location.origin === new URL(accountOrigin).origin
-const isHome = computed(() => route.path === '/')
-const isExperiments = computed(() => route.path.startsWith('/experiments') || route.path === '/earth3d')
+const isCommunity = computed(() => route.path === '/' || route.path.startsWith('/community/') ||
+  ['/resources', '/groups', '/calendar'].includes(route.path))
+const isExperiments = computed(() => ['/experiments', '/geo-labs', '/cosmos'].some(path => route.path === path || route.path.startsWith(path + '/')) ||
+  ['/cosmology', '/inquiry'].includes(route.path))
 const grade = computed(() => route.params.grade || '')
 const isLearningRoute = computed(() => route.path === '/learning' || grade.value === '初中' || grade.value === '高中')
 const accountUser = ref(null)

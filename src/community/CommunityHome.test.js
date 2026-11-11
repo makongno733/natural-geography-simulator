@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 const { apiRequest, route } = vi.hoisted(() => ({
-  apiRequest: vi.fn(), route: { path: '/community' }
+  apiRequest: vi.fn(), route: { path: '/', name: 'home', query: {} }
 }))
 vi.mock('../account/client.js', () => ({
   accountEnabled: true, accountOrigin: 'https://account.example',
@@ -27,6 +27,7 @@ const deferred = () => {
 }
 
 beforeEach(() => {
+  route.query = {}
   vi.stubEnv('DEV', false)
   vi.stubGlobal('EventSource', class {
     constructor() { stream = this; this.listeners = {}; this.close = vi.fn() }
@@ -47,6 +48,14 @@ afterEach(() => {
 })
 
 describe('community request lifecycle', () => {
+  it('opens the question filter from a direct community link', async () => {
+    route.query = { kind: 'question' }
+    wrapper = mountCommunity()
+    await flushPromises()
+    expect(wrapper.find('.baroque-filter-btn.active').text()).toContain('学术问答')
+    expect(apiRequest.mock.calls.some(([path]) => path.includes('kind=question'))).toBe(true)
+  })
+
   it('uses immediate scrolling when reduced motion is requested', async () => {
     vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })))
     wrapper = mountCommunity()

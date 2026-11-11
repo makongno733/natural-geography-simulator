@@ -4,7 +4,11 @@
       <div class="exp-badge"><span>观察地理过程</span></div>
       <h1 class="exp-heading">让地球动起来。</h1>
       <p class="exp-lead">直接打开一个三维模型，拖动、观察，再回到教材解释看到的现象。</p>
-      <router-link to="/geo-labs" class="evidence-entry">从真实地球数据进入全部模型 →</router-link>
+      <div class="lab-links">
+        <router-link to="/geo-labs" class="evidence-entry">真实地球数据 →</router-link>
+        <router-link to="/inquiry" class="evidence-entry">地理探究 →</router-link>
+        <router-link to="/cosmos" class="evidence-entry">宇宙与物理 →</router-link>
+      </div>
     </header>
 
     <section class="quick-models" aria-labelledby="practice-link-title">
@@ -135,6 +139,7 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 </script>
 
 <style scoped>
+.lab-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
 .exp-home {
   max-width: 1180px;
   margin: 0 auto;

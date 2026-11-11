@@ -14,7 +14,8 @@
           </form>
           <div class="community-hero-actions">
             <a class="baroque-btn baroque-btn-primary" href="#compose" @click.prevent="focusCompose">发起讨论</a>
-            <a class="baroque-btn" href="#community-feed">浏览全部讨论 ↓</a>
+            <router-link class="baroque-btn" to="/resources">资源馆</router-link>
+            <router-link class="baroque-btn" to="/groups">找社群</router-link>
             <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
           </div>
         </div>
@@ -37,85 +38,6 @@
       </div>
     </section>
 
-    <section v-if="!searchQuery && !selectedCategory && !selectedTag && !kind" class="community-wrap community-trending" aria-labelledby="trending-title">
-      <div class="community-section-heading">
-        <div>
-          <p class="community-eyebrow">COMMUNITY CONVERSATIONS</p>
-          <h2 id="trending-title">大家正在讨论</h2>
-        </div>
-        <button class="community-clear baroque-btn baroque-btn-sm" type="button" @click="setSort('popular'); scrollToFeed()">查看热门讨论 →</button>
-      </div>
-      <div v-if="featuredPosts.length" class="community-trending-grid">
-        <router-link v-for="(post, index) in featuredPosts" :key="post.id" class="community-trending-card" :to="`/community/post/${post.id}`">
-          <span class="trending-rank">{{ String(index + 1).padStart(2, '0') }}</span>
-          <span class="trending-content"><small>{{ post.category }} · {{ post.kind === 'question' ? '问答' : '讨论' }}</small><strong>{{ post.title }}</strong><span>{{ post.replyCount || 0 }} 条回复 · {{ post.likeCount || 0 }} 人赞同</span></span>
-          <span aria-hidden="true">↗</span>
-        </router-link>
-      </div>
-      <p v-else-if="!loading" class="community-state">社区讨论正在积累中，欢迎发起第一场讨论。</p>
-    </section>
-
-    <!-- 地理学前沿热点聚合专栏 -->
-    <section class="community-wrap hot-topics-bar baroque-frame" aria-labelledby="hot-topics-title">
-      <div class="hot-topics-header">
-        <span class="baroque-corner-ornament">❖</span>
-        <h3 id="hot-topics-title">近期地理事件</h3>
-        <span class="hot-topics-subtitle">NASA EONET / USGS 来源记录</span>
-      </div>
-      <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
-      <div class="topic-source-status" aria-label="来源同步状态">
-        <span v-for="source in topicSources" :key="source.source">
-          {{ source.name }} · {{ source.status === 'error' ? '更新失败，保留缓存' : source.stale ? '等待更新' : '已同步' }}
-          <small v-if="source.fetchedAt">（{{ formatDateTime(source.fetchedAt) }}）</small>
-        </span>
-        <button type="button" class="topic-summary-toggle" :disabled="hotTopicLoading" @click="loadHotTopics">
-          {{ hotTopicLoading ? '读取中…' : '刷新记录' }}
-        </button>
-      </div>
-      <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
-      <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
-      <div class="hot-topics-grid">
-        <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
-          <span class="topic-tag">{{ topic.tag }}</span>
-          <h4>{{ topic.title }}</h4>
-          <p>{{ topic.summary }}</p>
-          <button
-            type="button"
-            class="topic-summary-toggle"
-            :aria-expanded="expandedTopicId === topic.id"
-            :aria-controls="`topic-summary-${topic.id}`"
-            @click="toggleTopicSummary(topic.id)"
-          >
-            {{ expandedTopicId === topic.id ? '收起核验信息 ↑' : '查看摘要依据 ↓' }}
-          </button>
-          <div v-if="expandedTopicId === topic.id" :id="`topic-summary-${topic.id}`" class="topic-summary-detail">
-            <p v-if="summaryLoadingIds[topic.id]" role="status">正在读取来源依据…</p>
-            <p v-else-if="summaryErrors[topic.id]" class="community-error" role="alert">
-              {{ summaryErrors[topic.id] }}
-              <button type="button" class="topic-summary-toggle" @click="loadTopicSummary(topic.id)">重试</button>
-            </p>
-            <template v-else-if="topicSummaries[topic.id]">
-              <strong>来源字段机器摘录 · 非 AI 生成</strong>
-              <dl>
-                <div><dt>资料来源</dt><dd>{{ topicSummaries[topic.id].sourceBasis }}</dd></div>
-                <div><dt>事件记录</dt><dd>{{ formatDateTime(topicSummaries[topic.id].occurredAt) }}</dd></div>
-                <div><dt>抓取核对</dt><dd>{{ formatDateTime(topicSummaries[topic.id].verifiedAt) }}</dd></div>
-              </dl>
-              <p class="topic-verification-note">{{ topicSummaries[topic.id].verificationNote }}</p>
-              <a :href="topicSummaries[topic.id].sourceUrl" target="_blank" rel="noopener noreferrer">核对原始记录 ↗</a>
-            </template>
-          </div>
-          <div class="topic-foot">
-            <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
-            <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
-            <button type="button" class="topic-link" :disabled="openingTopicId === topic.id" @click="openTopic(topic)">
-              {{ topic.postId ? '进入讨论 →' : openingTopicId === topic.id ? '正在建立讨论…' : '发起讨论 →' }}
-            </button>
-          </div>
-        </article>
-      </div>
-    </section>
-
     <div id="community-feed" class="community-wrap community-layout">
       <!-- 讨论主栏 -->
       <div class="community-main">
@@ -134,7 +56,6 @@
 
         <div class="community-section-heading">
           <div>
-            <p class="community-eyebrow">THE SCHOLARLY FORUM / 论坛交流</p>
             <h2>{{ searchQuery ? `检索：“${searchQuery}”` : selectedCategoryName ? `${selectedCategoryName} 分区` : selectedTag ? `标签 #${selectedTag}` : '全部讨论' }}</h2>
           </div>
           <button v-if="searchQuery || selectedCategory || kind || selectedTag || onlySolved" class="community-clear baroque-btn baroque-btn-sm" type="button" @click="clearFilters">清除全部筛选</button>
@@ -366,10 +287,73 @@
         </section>
       </aside>
     </div>
+
+    <!-- 地理学前沿热点聚合专栏 -->
+    <section class="community-wrap hot-topics-bar baroque-frame" aria-labelledby="hot-topics-title">
+      <div class="hot-topics-header">
+        <span class="baroque-corner-ornament">❖</span>
+        <h3 id="hot-topics-title">近期地理事件</h3>
+        <span class="hot-topics-subtitle">NASA EONET / USGS 来源记录</span>
+        <router-link class="baroque-btn baroque-btn-sm" to="/calendar">打开地理日历</router-link>
+      </div>
+      <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
+      <div class="topic-source-status" aria-label="来源同步状态">
+        <span v-for="source in topicSources" :key="source.source">
+          {{ source.name }} · {{ source.status === 'error' ? '更新失败，保留缓存' : source.stale ? '等待更新' : '已同步' }}
+          <small v-if="source.fetchedAt">（{{ formatDateTime(source.fetchedAt) }}）</small>
+        </span>
+        <button type="button" class="topic-summary-toggle" :disabled="hotTopicLoading" @click="loadHotTopics">
+          {{ hotTopicLoading ? '读取中…' : '刷新记录' }}
+        </button>
+      </div>
+      <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
+      <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
+      <div class="hot-topics-grid">
+        <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
+          <span class="topic-tag">{{ topic.tag }}</span>
+          <h4>{{ eventDisplayTitle(topic.title) }}</h4>
+          <p>{{ topic.summary }}</p>
+          <button
+            type="button"
+            class="topic-summary-toggle"
+            :aria-expanded="expandedTopicId === topic.id"
+            :aria-controls="`topic-summary-${topic.id}`"
+            @click="toggleTopicSummary(topic.id)"
+          >
+            {{ expandedTopicId === topic.id ? '收起核验信息 ↑' : '查看摘要依据 ↓' }}
+          </button>
+          <div v-if="expandedTopicId === topic.id" :id="`topic-summary-${topic.id}`" class="topic-summary-detail">
+            <p v-if="summaryLoadingIds[topic.id]" role="status">正在读取来源依据…</p>
+            <p v-else-if="summaryErrors[topic.id]" class="community-error" role="alert">
+              {{ summaryErrors[topic.id] }}
+              <button type="button" class="topic-summary-toggle" @click="loadTopicSummary(topic.id)">重试</button>
+            </p>
+            <template v-else-if="topicSummaries[topic.id]">
+              <strong>来源字段机器摘录 · 非 AI 生成</strong>
+              <dl>
+                <div><dt>资料来源</dt><dd>{{ topicSummaries[topic.id].sourceBasis }}</dd></div>
+                <div><dt>事件记录</dt><dd>{{ formatDateTime(topicSummaries[topic.id].occurredAt) }}</dd></div>
+                <div><dt>抓取核对</dt><dd>{{ formatDateTime(topicSummaries[topic.id].verifiedAt) }}</dd></div>
+              </dl>
+              <p class="topic-verification-note">{{ topicSummaries[topic.id].verificationNote }}</p>
+              <a :href="topicSummaries[topic.id].sourceUrl" target="_blank" rel="noopener noreferrer">核对原始记录 ↗</a>
+            </template>
+          </div>
+          <div class="topic-foot">
+            <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
+            <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
+            <button type="button" class="topic-link" :disabled="openingTopicId === topic.id" @click="openTopic(topic)">
+              {{ topic.postId ? '进入讨论 →' : openingTopicId === topic.id ? '正在建立讨论…' : '发起讨论 →' }}
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
+import { eventDisplayTitle } from './eventTitle.js'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { accountEnabled, accountOrigin, apiRequest, authClient } from '../account/client.js'
@@ -382,7 +366,6 @@ const router = useRouter()
 const route = useRoute()
 const categories = ref([])
 const posts = ref([])
-const featuredPosts = ref([])
 const hotTopics = ref([])
 const hotTopicError = ref('')
 const topicSources = ref([])
@@ -402,7 +385,7 @@ const queryInput = ref('')
 const searchQuery = ref('')
 const selectedCategory = ref(null)
 const selectedTag = ref('')
-const kind = ref(route.path === '/questions' ? 'question' : '')
+const kind = ref(route.query.kind === 'question' ? 'question' : '')
 const onlySolved = ref(false)
 const sortMode = ref('newest')
 const page = ref(1)
@@ -613,12 +596,6 @@ async function loadPosts(append = false) {
   posts.value = append ? [...posts.value, ...pagePosts] : pagePosts
   page.value = requestedPage
   lastPageCount.value = pagePosts.length
-  if (!searchQuery.value && !selectedCategory.value && !selectedTag.value && !kind.value) {
-    featuredPosts.value = [...posts.value].sort((a, b) =>
-      ((b.likeCount || b.likesCount || 0) * 3 + (b.replyCount || b.repliesCount || 0) * 2) -
-      ((a.likeCount || a.likesCount || 0) * 3 + (a.replyCount || a.repliesCount || 0) * 2)
-    ).slice(0, 3)
-  }
   loading.value = false
 }
 
@@ -631,7 +608,7 @@ function resetAndLoad() {
   void loadPosts()
 }
 function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad(); scrollToFeed() }
-function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = route.path === '/questions' ? 'question' : ''; onlySolved.value = false; resetAndLoad() }
+function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = ''; onlySolved.value = false; resetAndLoad() }
 function setCategory(id) { selectedCategory.value = selectedCategory.value === id ? null : id; resetAndLoad() }
 function setKind(value) { kind.value = value; if (value === 'discussion') onlySolved.value = false; resetAndLoad() }
 function toggleSolved() { onlySolved.value = !onlySolved.value; if (onlySolved.value) kind.value = 'question'; resetAndLoad() }
@@ -733,14 +710,11 @@ async function createPost() {
   }
 }
 
-watch(() => route.path, (newPath) => {
-  if (newPath === '/questions') {
-    kind.value = 'question'
-    resetAndLoad()
-  } else if (newPath === '/community') {
-    kind.value = ''
-    resetAndLoad()
-  }
+watch(() => route.query.kind, (value) => {
+  if (route.name !== 'home') return
+  kind.value = value === 'question' ? 'question' : ''
+  onlySolved.value = false
+  resetAndLoad()
 })
 
 async function initCommunity() {
@@ -782,13 +756,7 @@ async function initCommunity() {
       draft.categoryId = String(categories.value[0].id)
     }
 
-    const featuredRequest = !isDemoMode.value ? apiRequest('/api/community/posts?sort=popular')
-      .then(featured => {
-        if (!disposed) featuredPosts.value = featured.posts.slice(0, 3)
-      }).catch(cause => {
-        if (!disposed) console.warn('热门讨论读取失败：', cause.message)
-      }) : Promise.resolve()
-    await Promise.all([loadPosts(), featuredRequest])
+    await loadPosts()
 
     if (!disposed && !isDemoMode.value && typeof EventSource !== 'undefined') {
       try {
@@ -844,19 +812,9 @@ onBeforeUnmount(() => {
 .community-search input { background: transparent; color: #10263d; border: 0; min-height: 46px; }
 .community-search input::placeholder { color: #66788a; }
 .community-hero-actions { gap: 8px; }
-.community-trending { margin-bottom: 28px; }
-.community-trending .community-section-heading { margin-bottom: 14px; }
-.community-trending-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.community-trending-card { display: flex; gap: 12px; min-width: 0; padding: 17px; color: var(--geo-ocean-deep); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); text-decoration: none; box-shadow: var(--shadow-sm); }
-.community-trending-card:hover, .community-trending-card:focus-visible { border-color: var(--geo-ocean); box-shadow: var(--shadow-md); }
-.trending-rank { color: var(--baroque-bronze); font-weight: 800; font-size: 19px; }
-.trending-content { display: grid; gap: 7px; min-width: 0; flex: 1; }
-.trending-content small, .trending-content span { color: var(--text-muted); font-size: 12px; }
-.trending-content strong { font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
 .hot-topics-bar { padding: 20px 24px; margin-bottom: 30px; }
 .hot-topic-card { background: var(--surface); }
 .community-layout { scroll-margin-top: 24px; }
-@media (max-width: 860px) { .community-trending-grid { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .community-hero { padding: 28px 0; } .community-search { flex-direction: column; border-radius: 16px; } .community-search button { width: 100%; } }
 /* 继承并深化全局巴洛克与古典地理学会视觉系统 */
 .community-page {
@@ -869,7 +827,7 @@ onBeforeUnmount(() => {
   isolation: isolate;
   background: linear-gradient(118deg, #102d3a 8%, #124957 62%, #17646a);
   color: #f7f5ed;
-  padding: 56px 0 50px;
+  padding: 32px 0;
   margin-bottom: 30px;
   border-bottom: 0;
   border-radius: 0 0 44px 44px;
@@ -879,7 +837,7 @@ onBeforeUnmount(() => {
 .community-hero-inner {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: clamp(24px, 4vw, 64px);
 }
@@ -917,8 +875,6 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: no-preference) {
   .community-intro { animation: community-arrive .65s var(--geo-flow-ease) both; }
   .community-discovery { animation: community-arrive .85s var(--geo-flow-ease) both; }
-  .community-trending-card { transition: translate .25s var(--geo-flow-ease), border-color .25s ease, box-shadow .25s ease; }
-  .community-trending-card:hover { translate: 0 -3px; }
 }
 @keyframes community-arrive {
   from { opacity: 0; translate: 0 14px; }
