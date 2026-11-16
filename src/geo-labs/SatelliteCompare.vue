@@ -2,7 +2,7 @@
   <section class="lab-page">
     <header class="lab-intro">
       <router-link to="/geo-labs" class="back">← 地理实证实验</router-link>
-      <p class="eyebrow">NASA EARTH OBSERVATION · 卫星影像</p>
+      <p class="eyebrow">美国国家航空航天局（NASA）对地观测 · 多时相卫星影像</p>
       <h1>同一地点，两天的地球</h1>
       <p>移动滑杆比较两天的真实卫星影像。先描述你看见的变化，再用地理知识解释；云层、观测时间和影像分辨率也可能影响判断。</p>
     </header>

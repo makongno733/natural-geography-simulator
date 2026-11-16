@@ -295,6 +295,18 @@ function onResize() { if (engine) engine.resize() }
 .param-label { color: var(--text); }
 .param-val { color: var(--accent); font-weight: 600; }
 
+@media (max-width: 768px) {
+  .sandbox-root { height: auto; min-height: 600px; }
+  .sandbox-body { flex-direction: column; height: auto; }
+  .viewport-area { order: -1; min-height: 300px; height: 320px; }
+  .module-panel, .info-panel {
+    width: 100%;
+    border-right: 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}
+
 :global(.glossary-mask) {
   position: fixed; inset: 0; z-index: 100; background: transparent;
 }

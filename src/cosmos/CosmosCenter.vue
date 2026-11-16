@@ -42,7 +42,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
   <header class="cx-top">
     <router-link to="/cosmos" class="cx-wordmark">
       GEO <b>COSMOS</b>
-      <small>宇宙、时空与基本物理知识中心</small>
+      <small>宇宙与物理知识中心</small>
     </router-link>
     <div class="cx-tools">
       <router-link to="/cosmos/labs">交互实验室 ↗</router-link>
@@ -58,25 +58,25 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
   <!-- 首页横幅区 -->
   <section v-if="isHome" class="cx-hero">
     <div>
-      <span class="cx-eyebrow">A FIELD GUIDE TO THE UNIVERSE · 第二版</span>
+      <span class="cx-eyebrow">宇宙、时空与基本物理探索指南</span>
       <h1>从地球出发，<br>追问时空的边界。</h1>
       <p>
-        在观测与理论之间建立严谨联系。从天体距离阶梯、狭义与广义相对论时空几何，到标准模型粒子图谱与弦理论重点专题，不仅理解物理如何描绘宇宙，更辨认科学尚未回答的前沿边界。
+        在观测现象与物理模型之间建立联系。从天体距离怎么测量、时钟为什么因运动变慢，到标准模型粒子与弦理论探索，不仅学习物理学家如何解释宇宙，更分清哪些是确凿观测、哪些是仍在检验中的假说。
       </p>
       <div class="cx-actions">
-        <router-link class="cx-primary" to="/cosmos/chapter/strings-origins">进入弦理论专题 (D1—D11) ↗</router-link>
-        <router-link to="/cosmos/chapter/particles">查阅标准模型粒子图谱 →</router-link>
-        <router-link to="/cosmos/labs">动手做一次物理实验 →</router-link>
+        <router-link class="cx-primary" to="/cosmos/chapter/astronomy">从零开始：天文学与距离测定 ↗</router-link>
+        <router-link to="/cosmos/chapter/strings-origins">进入弦理论专题 (D1—D11) →</router-link>
+        <router-link to="/cosmos/labs">动手做物理实验 →</router-link>
       </div>
     </div>
     <div class="cx-orbit" aria-hidden="true">
       <div></div><div></div><div></div>
-      <span>SPACE<br>TIME<br>MATTER</span>
+      <span>空间<br>时间<br>物质</span>
     </div>
     <footer>
-      <span>01 / 观测与证据</span>
-      <span>02 / 数学与自洽</span>
-      <span>03 / 假设与检验边界</span>
+      <span>01 / 先看观测与证据</span>
+      <span>02 / 再学数学与物理模型</span>
+      <span>03 / 辨清假设与检验边界</span>
     </footer>
   </section>
 
@@ -85,7 +85,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
     <!-- 侧边导航栏 -->
     <aside class="cx-sidebar">
       <label for="cx-search">检索知识章节</label>
-      <input id="cx-search" v-model="query" type="search" placeholder="搜索：弦、红移、超对称、D膜…">
+      <input id="cx-search" v-model="query" type="search" placeholder="搜索：红移、光速、超对称、D膜…">
 
       <label for="cx-level">学习层级</label>
       <select id="cx-level" v-model="level">
@@ -94,7 +94,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
         <option>进阶</option>
       </select>
 
-      <nav aria-label="Cosmos 章节导航">
+      <nav aria-label="宇宙与物理章节导航">
         <router-link to="/cosmos">知识总览 (22 篇)</router-link>
         <router-link to="/cosmos/labs">三个交互物理实验</router-link>
 
@@ -108,7 +108,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
             {{ item.title }}
           </router-link>
         </template>
-        <p v-if="!filtered.length" class="cx-empty-notice">没有匹配章节，请更换关键词。</p>
+        <p v-if="!filtered.length" class="cx-empty-notice">没有找到匹配章节，换个词试试看。</p>
       </nav>
 
       <router-link to="/cosmology" class="cx-legacy-link">原宇宙学交互课 ↗</router-link>
@@ -118,10 +118,51 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
     <main class="cx-content">
       <!-- 首页总览 -->
       <template v-if="isHome">
+        <!-- 初学者推荐路径卡片 -->
+        <div class="cx-beginner-box">
+          <div class="cx-beginner-header">
+            <span class="cx-beginner-badge">🌱 初次来访推荐导读</span>
+            <h3>第一次来：建议从这 4 篇生活化探索开始</h3>
+          </div>
+          <p class="cx-beginner-desc">
+            不用先记复杂的张量和偏微分方程，先从肉眼可见的天空、时钟、星系膨胀与物质积木看起：
+          </p>
+          <div class="cx-beginner-grid">
+            <router-link to="/cosmos/chapter/astronomy" class="cx-beginner-card">
+              <span class="cx-step">01</span>
+              <div>
+                <strong>天空位置与宇宙测距</strong>
+                <small>从两只眼睛看手指的视差，到测算恒星距离</small>
+              </div>
+            </router-link>
+            <router-link to="/cosmos/chapter/relativity" class="cx-beginner-card">
+              <span class="cx-step">02</span>
+              <div>
+                <strong>狭义相对论：时间属于哪只钟</strong>
+                <small>为什么高速运动的时钟变慢？光速为何不变？</small>
+              </div>
+            </router-link>
+            <router-link to="/cosmos/chapter/cosmology" class="cx-beginner-card">
+              <span class="cx-step">03</span>
+              <div>
+                <strong>膨胀的宇宙：空间在被拉伸</strong>
+                <small>遥远星系的光波长为什么被拉长？</small>
+              </div>
+            </router-link>
+            <router-link to="/cosmos/chapter/particles" class="cx-beginner-card">
+              <span class="cx-step">04</span>
+              <div>
+                <strong>标准模型：构成世界的粒子积木</strong>
+                <small>夸克、电子与传递力场的微观使者</small>
+              </div>
+            </router-link>
+          </div>
+        </div>
+
         <div class="cx-section-heading">
           <div>
-            <span class="cx-eyebrow">KNOWLEDGE ATLAS</span>
-            <h2>知识地图与探索方向</h2>
+            <span class="cx-eyebrow">全景知识地图</span>
+            <h2>全部知识章节</h2>
           </div>
           <span>{{ chapters.length }} 篇核心导读 · 3 个交互实验 · 3 大前沿探索仪器</span>
         </div>
@@ -149,8 +190,8 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
 
         <section class="cx-panel">
           <h2>一条循序渐进的现代物理学习路径</h2>
-          <p>天文测量与距离阶梯 → 狭义相对论（光锥与同时性） → 广义相对论（弯曲时空） → 现代宇宙学（FLRW 膨胀与年龄） → 量子场论与标准模型粒子 → 弦理论专题（D1—D11 全面深化） → 理论边界与科学哲学。</p>
-          <p>先理解可测量的量，再阅读抽象数学结构；每一步都追问：这项结论来自自然观测、理论推导，还是尚待检验的推测假设？</p>
+          <p>天文测量与距离阶梯 → 狭义相对论（光锥与同时性） → 广义相对论（弯曲时空） → 现代宇宙学（红移与尺度因子） → 量子场论与标准模型粒子 → 弦理论专题（D1—D11 体系化进阶） → 理论边界与科学哲学。</p>
+          <p>先看身边可观察的现象，再读数学解释；每一步都追问：这项结论来自自然观测、理论推导，还是尚待检验的推测假设？</p>
           <div class="cx-link-row">
             <a href="https://science.nasa.gov/universe/" target="_blank" rel="noopener noreferrer">NASA 宇宙观测中心 ↗</a> ·
             <a href="https://home.cern/science/physics" target="_blank" rel="noopener noreferrer">CERN 欧洲核子研究中心 ↗</a> ·
@@ -161,7 +202,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
 
       <!-- 交互实验室 -->
       <template v-else-if="isLabs">
-        <span class="cx-eyebrow">INTERACTIVE LABORATORY</span>
+        <span class="cx-eyebrow">交互物理实验室</span>
         <h1>让物理公式成为可动手检验的实验室</h1>
         <p>改变速度与红移，观察光锥、同时性与膨胀距离；调节弦振动模态与边界条件，探索二维世界面演化。</p>
         <Labs />
@@ -181,7 +222,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
           <p><strong>📚 前置知识：</strong>{{ chapter.prerequisites }}</p>
         </section>
 
-        <h2>核心概念与理论解释</h2>
+        <h2>核心概念与观察解释</h2>
         <p v-for="paragraph in chapter.body" :key="paragraph">{{ paragraph }}</p>
 
         <!-- 针对特定专题的高能交互仪器嵌入 -->
@@ -197,8 +238,9 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
           <DualityNetwork />
         </section>
 
-        <details class="cx-panel" open>
-          <summary>关键公式与符号含义</summary>
+        <!-- 大学进阶折叠面板（默认折叠，按需展开） -->
+        <details class="cx-panel">
+          <summary>大学进阶：关键公式与符号含义（推导边界）</summary>
           <div class="cx-formula">{{ chapter.formula }}</div>
           <p>{{ chapter.symbols }}</p>
           <p><b>适用条件与推导边界：</b>{{ chapter.conditions }}</p>
@@ -220,6 +262,28 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
             <summary>查看详细解析</summary>
             <p>{{ chapter.answer }}</p>
           </details>
+
+          <!-- 带着问题去社区讨论真实入口 -->
+          <div class="cx-chapter-discuss-cta">
+            <div class="cx-cta-text">
+              <strong>💬 带着本章问题参与社区讨论</strong>
+              <p>遇到想不通的现象，或者对公式推导有疑问？把你的观察和思考带到社区，与老师和同学们一起交流。</p>
+            </div>
+            <router-link
+              :to="{
+                path: '/community',
+                query: {
+                  compose: 1,
+                  title: `【宇宙与物理讨论】关于《${chapter.title}》的思考`,
+                  body: `在阅读《${chapter.title}》时，我对这一问题产生了思考：&#10;&#10;问题：${chapter.question}&#10;&#10;我看到/想到的解释是：……&#10;&#10;我还没完全想通的是：……`,
+                  kind: 'question'
+                }
+              }"
+              class="cx-discuss-btn"
+            >
+              带着这个问题去社区讨论 ↗
+            </router-link>
+          </div>
         </section>
 
         <!-- 上下一篇快速翻阅导航 -->
@@ -257,7 +321,7 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
 
       <!-- 教师模式升级面板 -->
       <section v-if="teacher" class="cx-panel cx-teacher">
-        <span class="cx-eyebrow">TEACHING NOTES · 教师模式</span>
+        <span class="cx-eyebrow">教师备课与研讨指南</span>
         <h2>{{ chapter ? `《${chapter.title}》教学设计` : 'Cosmos 课程体系组织建议' }}</h2>
 
         <template v-if="chapter?.pedagogy">
@@ -276,8 +340,8 @@ const groups = computed(() => [...new Set(filtered.value.map(c => c.group))])
 
     <!-- 右侧阅读罗盘 -->
     <aside class="cx-context">
-      <span class="cx-eyebrow">READING COMPASS</span>
-      <h3>科学罗盘 · 严谨求实</h3>
+      <span class="cx-eyebrow">科学罗盘</span>
+      <h3>实事求是 · 保持追问</h3>
       <p>
         观测支持 ≠ 无所不知<br>
         数学自洽 ≠ 自然存在<br>

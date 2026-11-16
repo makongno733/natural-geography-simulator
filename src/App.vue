@@ -10,7 +10,7 @@
           <BrandMark />
           <div class="brand-text">
             <span class="brand-name">中学地理教学系统</span>
-            <span class="brand-sub">ACCOUNT CENTER · 账号服务</span>
+            <span class="brand-sub">账号服务</span>
           </div>
         </a>
 
@@ -34,11 +34,20 @@
           <router-link to="/" class="nav-link" :class="{ active: isCommunity }">
             <span class="nav-label">社区</span>
           </router-link>
-          <router-link to="/learning" class="nav-link" :class="{ active: isLearningRoute || route.path === '/practice' }">
-            <span class="nav-label">教学</span>
+          <router-link to="/learning" class="nav-link" :class="{ active: isLearningRoute || route.path === '/practice' || route.path === '/knowledge' }">
+            <span class="nav-label">教材课程</span>
           </router-link>
           <router-link to="/experiments" class="nav-link" :class="{ active: isExperiments }">
             <span class="nav-label">地理实验室</span>
+          </router-link>
+          <router-link to="/inquiry" class="nav-link" :class="{ active: route.path.startsWith('/inquiry') }">
+            <span class="nav-label">创新探究</span>
+          </router-link>
+          <router-link to="/geo-labs" class="nav-link" :class="{ active: route.path.startsWith('/geo-labs') }">
+            <span class="nav-label">真实数据</span>
+          </router-link>
+          <router-link to="/cosmos" class="nav-link" :class="{ active: route.path.startsWith('/cosmos') || route.path === '/cosmology' }">
+            <span class="nav-label">宇宙与物理</span>
           </router-link>
           <router-link to="/fanxing" class="nav-link" :class="{ active: route.name === 'fanxing' || route.name === 'fanxing-project' }">
             <span class="nav-label">繁星计划</span>
@@ -47,7 +56,7 @@
             <span>🔍 检索</span>
             <kbd class="nav-kbd">⌘K</kbd>
           </button>
-          <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="accountUser ? `#/community/user/${accountUser.id}` : `${accountOrigin}/#/account`">
+          <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="accountUser ? `#/community/user/${accountUser.id}` : loginHref" @click="rememberReturnPath">
             <span>{{ accountUser ? '我的主页' : '登录 / 注册' }}</span>
           </a>
         </nav>
@@ -82,6 +91,7 @@
               <router-link to="/初中">初中地理（七~八年级）</router-link>
               <router-link to="/高中">高中地理（必修第一/二册）</router-link>
               <router-link to="/高中">选择性必修（1~3册）</router-link>
+              <router-link to="/knowledge">结构化知识库</router-link>
             </div>
             <div class="footer-col">
               <h4>地学科学探究</h4>
@@ -102,6 +112,8 @@
               <router-link to="/geo">地质年代标尺</router-link>
               <router-link to="/earth3d">地球三维系统</router-link>
               <router-link to="/disasters">自然灾害模拟</router-link>
+              <router-link to="/resources">开放地理数据馆</router-link>
+              <router-link to="/groups">学习与研究社群</router-link>
             </div>
           </div>
         </div>
@@ -144,15 +156,29 @@ const router = useRouter()
 const isAccountHost = accountEnabled && window.location.origin === new URL(accountOrigin).origin
 const isCommunity = computed(() => route.path === '/' || route.path.startsWith('/community/') ||
   ['/resources', '/groups', '/calendar'].includes(route.path))
-const isExperiments = computed(() => ['/experiments', '/geo-labs', '/cosmos'].some(path => route.path === path || route.path.startsWith(path + '/')) ||
-  ['/cosmology', '/inquiry'].includes(route.path))
+const isExperiments = computed(() => route.path === '/experiments' || route.path.startsWith('/experiments/'))
 const grade = computed(() => route.params.grade || '')
-const isLearningRoute = computed(() => route.path === '/learning' || grade.value === '初中' || grade.value === '高中')
+const isLearningRoute = computed(() => route.path === '/learning' || grade.value === '初中' || grade.value === '高中' || grade.value === '大学')
 const accountUser = ref(null)
 const navExpanded = ref(false)
 const brandMark = ref(null)
 const cmdPaletteRef = ref(null)
 const guideTourRef = ref(null)
+
+const loginHref = computed(() => {
+  const returnPath = route.fullPath && route.fullPath !== '/account' ? route.fullPath : '/'
+  const base = accountOrigin || ''
+  return `${base}/#/account?redirect=${encodeURIComponent(returnPath)}`
+})
+
+function rememberReturnPath() {
+  if (accountUser.value) return
+  try {
+    if (route.fullPath && route.fullPath !== '/account') {
+      localStorage.setItem('geo_auth_return_to', route.fullPath)
+    }
+  } catch {}
+}
 
 function openCmdPalette() {
   cmdPaletteRef.value?.open()
@@ -440,6 +466,7 @@ onBeforeUnmount(() => {
 .app-main {
   position: relative;
   flex: 1;
+  min-height: calc(100svh - 64px);
   width: 100%;
   min-width: 0;
 }

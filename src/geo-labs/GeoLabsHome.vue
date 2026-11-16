@@ -1,9 +1,9 @@
 <template>
   <section class="labs">
     <header>
-      <p class="eyebrow">GEOGRAPHY EVIDENCE LABS</p>
+      <p class="eyebrow">真实地球数据与证据实验室</p>
       <h1>从真实地球，到地理模型</h1>
-      <p>先观察真实影像与高程，再用模型解释过程，最后回到教材与练习检验自己的解释。</p>
+      <p>先观察真实卫星影像与数字高程模型（DEM），再用三维模型解释过程，最后回到教材与练习检验自己的解释。</p>
       <nav class="jump-links" aria-label="本页导航"><router-link :to="{ path: '/geo-labs', hash: '#journeys' }">按问题探究</router-link><router-link :to="{ path: '/geo-labs', hash: '#data-labs' }">真实数据实验</router-link><router-link :to="{ path: '/geo-labs', hash: '#model-index' }">全部模型</router-link></nav>
     </header>
     <section id="journeys" class="section" aria-labelledby="journeys-title">
@@ -23,9 +23,9 @@
     <h2 id="data-title">真实数据实验</h2>
     <p class="index-intro">想从地球运动继续走向宇宙尺度？<router-link to="/cosmology">进入宇宙学交互课 →</router-link></p>
     <div class="cards">
-      <router-link to="/geo-labs/satellite" class="card"><span>01 · NASA GIBS</span><h2>卫星影像对比</h2><p>同一地点、两个日期，滑动比较云、地表与积雪的可见变化。</p><strong>开始观察 →</strong></router-link>
-      <router-link to="/geo-labs/terrain" class="card"><span>02 · COPERNICUS DEM</span><h2>真实三维地形</h2><p>旋转珠峰附近的真实高程，沿纬线读一条地形剖面。</p><strong>查看地形 →</strong></router-link>
-      <router-link to="/geo-labs/ai" class="card"><span>03 · PRITHVI EO 2.0</span><h2>遥感 AI 实验</h2><p>前往官方演示运行开源遥感模型，辨别观测与模型推断。</p><strong>进入实验 →</strong></router-link>
+      <router-link to="/geo-labs/satellite" class="card"><span>01 · 全球卫星影像（NASA GIBS）</span><h2>卫星影像对比</h2><p>同一地点、两个日期，滑动比较云、地表与积雪的可见变化。</p><strong>开始观察 →</strong></router-link>
+      <router-link to="/geo-labs/terrain" class="card"><span>02 · 数字高程模型（Copernicus DEM）</span><h2>真实三维地形</h2><p>旋转珠峰附近的真实网格高程，沿纬线读一条地形剖面。</p><strong>查看地形 →</strong></router-link>
+      <router-link to="/geo-labs/ai" class="card"><span>03 · 开源遥感模型（Prithvi EO 2.0）</span><h2>遥感 AI 实验</h2><p>前往官方演示运行开源遥感模型，辨别观测与模型推断。</p><strong>进入实验 →</strong></router-link>
     </div>
 
     <!-- 空间大地测量与曲率分析工具 -->

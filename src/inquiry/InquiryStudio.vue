@@ -4,10 +4,11 @@
     <header class="hub-hero">
       <div class="wide-container">
         <div class="hero-content">
-          <p class="hero-kicker">GEOGRAPHY INNOVATION INQUIRY CENTER · 地理创新探究中心</p>
+          <p class="hero-kicker">地理创新探究中心</p>
           <h1 class="hero-title">从一张图、一个模型，<br>走向一个完整的科学解释。</h1>
           <p class="hero-lead">
-            面向 2026 教学创新与学科素养发布标准。在三维仿真与真实遥感中严格控制变量，采集客观证据，区分“事实”与“推论”，依托思维支架与 7 维量规完成可审阅、可推演的探究闭环。
+            为什么同一场雨，有的路口积水，有的没有？先选两种地面，在模型里给它们相同的雨量，比较流走的水有多少。记下你看到的差别，再说它能支持什么解释。<br>
+            <strong>探究步骤：</strong>提出问题 → 决定只改哪一项 → 记录你看到的结果 → 用证据解释 → 想想还有没有别的原因 → 整理并去社区讨论。
           </p>
 
           <!-- 模式切换主导航 (Tabs) -->
@@ -19,7 +20,7 @@
               :class="['tab-btn', { active: activeTab === 'workbench' }]"
               @click="switchTab('workbench')"
             >
-              <span class="tab-badge">STUDENT</span>
+              <span class="tab-badge">动手探究</span>
               <strong>学生探究工作台</strong>
             </button>
             <button
@@ -29,7 +30,7 @@
               :class="['tab-btn', { active: activeTab === 'tasks' }]"
               @click="switchTab('tasks')"
             >
-              <span class="tab-badge">FLAGSHIPS</span>
+              <span class="tab-badge">课题范例</span>
               <strong>三大旗舰探究课题</strong>
             </button>
             <button
@@ -39,7 +40,7 @@
               :class="['tab-btn', { active: activeTab === 'teacher' }]"
               @click="switchTab('teacher')"
             >
-              <span class="tab-badge">TEACHER</span>
+              <span class="tab-badge">评价看板</span>
               <strong>教师工作台与量规</strong>
             </button>
             <button
@@ -49,7 +50,7 @@
               :class="['tab-btn', { active: activeTab === 'showcase' }]"
               @click="switchTab('showcase')"
             >
-              <span class="tab-badge">GALLERY</span>
+              <span class="tab-badge">成果展示</span>
               <strong>课堂展示墙 (已脱敏)</strong>
             </button>
             <button
@@ -59,7 +60,7 @@
               :class="['tab-btn demo-btn', { active: activeTab === 'demo' }]"
               @click="switchTab('demo')"
             >
-              <span class="tab-badge pulse">LIVE</span>
+              <span class="tab-badge pulse">演练</span>
               <strong>5-7分钟发布会演练</strong>
             </button>
           </div>

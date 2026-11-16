@@ -1026,6 +1026,116 @@
   margin: 16px 0;
 }
 
+/* 初学者导读盒子 */
+.cx-beginner-box {
+  background: var(--cx-panel);
+  border: 1px solid var(--cx-panel-border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.cx-beginner-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--cx-success);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.cx-beginner-desc {
+  font-size: 13px;
+  color: var(--cx-muted);
+  margin-bottom: 14px;
+}
+
+.cx-beginner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.cx-beginner-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--cx-bg);
+  border: 1px solid var(--cx-line);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.cx-beginner-card:hover {
+  border-color: var(--cx-accent);
+  transform: translateY(-1px);
+}
+
+.cx-beginner-card .cx-step {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--cx-accent);
+}
+
+.cx-beginner-card strong {
+  display: block;
+  font-size: 13px;
+  color: var(--cx-text);
+  margin-bottom: 2px;
+}
+
+.cx-beginner-card small {
+  font-size: 11px;
+  color: var(--cx-muted);
+  line-height: 1.4;
+}
+
+/* 带着问题去讨论 CTA */
+.cx-chapter-discuss-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.cx-cta-text strong {
+  display: block;
+  font-size: 14px;
+  color: var(--cx-text);
+  margin-bottom: 4px;
+}
+
+.cx-cta-text p {
+  font-size: 12px;
+  color: var(--cx-muted);
+  margin: 0;
+}
+
+.cx-discuss-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--cx-accent);
+  color: #04101c !important;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.cx-discuss-btn:hover {
+  opacity: 0.9;
+}
+
 /* 移动端与响应式适配 */
 @media (max-width: 1024px) {
   .cx-layout {

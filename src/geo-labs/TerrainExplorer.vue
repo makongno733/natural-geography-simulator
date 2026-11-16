@@ -2,9 +2,9 @@
   <section class="lab-page">
     <header class="lab-intro">
       <router-link to="/geo-labs" class="back">← 地理实证实验</router-link>
-      <p class="eyebrow">COPERNICUS DEM · 真实高程</p>
+      <p class="eyebrow">哥白尼数字高程模型（Copernicus DEM）· 真实高程</p>
       <h1>从等高线走进喜马拉雅</h1>
-      <p>这块地形由 Copernicus GLO-90 高程数据生成，范围为东经 86.75°—87°、北纬 27.75°—28°。支持在三维地形中任意选定两点交互提取地貌剖面，量化高差与起伏特征。</p>
+      <p>这块三维地形由哥白尼 GLO-90 <strong>数字高程模型（DEM：用规则网格记录地面海拔高度的数据）</strong>生成，范围为东经 86.75°—87°、北纬 27.75°—28°。先调节高度夸张或选择剖面方向，观察山脊、河谷与坡度的变化。</p>
     </header>
 
     <div class="terrain-layout">

@@ -23,7 +23,7 @@ function selectParticle(id) {
 <div class="cx-particle-atlas">
   <div class="cx-atlas-header">
     <div>
-      <span class="cx-eyebrow">STANDARD MODEL & BEYOND · PDG 2024</span>
+      <span class="cx-eyebrow">基本粒子图谱 · PDG 2024 标准</span>
       <h3>基本粒子交互图谱与高能物理数据库</h3>
     </div>
     <p class="cx-subtext">严格基于 Particle Data Group (PDG 2024) 国际数据标准，区分费米子、规范玻色子、标量希格斯粒子与假想引力子。</p>

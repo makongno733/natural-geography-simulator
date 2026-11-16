@@ -2,17 +2,28 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import LandscapeVariationSim from './LandscapeVariationSim.vue'
 
+const mountOpts = {
+  global: {
+    stubs: {
+      'router-link': {
+        template: '<a><slot /></a>'
+      }
+    }
+  }
+}
+
 describe('LandscapeVariationSim Component', () => {
   it('renders Poyang lake satellite simulation and station data', () => {
-    const wrapper = mount(LandscapeVariationSim)
+    const wrapper = mount(LandscapeVariationSim, mountOpts)
     expect(wrapper.text()).toContain('鄱阳湖水陆变迁')
     expect(wrapper.text()).toContain('星子站')
+    expect(wrapper.text()).toContain('带着这个观察去社区提问 / 讨论')
     expect(wrapper.find('svg.rs-svg').exists()).toBe(true)
     expect(wrapper.find('svg.profile-svg').exists()).toBe(true)
   })
 
   it('switches month presets and updates water level and area', async () => {
-    const wrapper = mount(LandscapeVariationSim)
+    const wrapper = mount(LandscapeVariationSim, mountOpts)
     const presetButtons = wrapper.findAll('.btn-preset')
     expect(presetButtons.length).toBe(3)
 
@@ -28,7 +39,7 @@ describe('LandscapeVariationSim Component', () => {
   })
 
   it('captures an evidence card with satellite and hydrological station facts', async () => {
-    const wrapper = mount(LandscapeVariationSim)
+    const wrapper = mount(LandscapeVariationSim, mountOpts)
     const captureBtn = wrapper.find('.btn-capture')
     expect(captureBtn.exists()).toBe(true)
 

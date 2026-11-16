@@ -35,4 +35,11 @@ describe('Global Geography Search Index', () => {
     const results = queryGlobalGeography('地理')
     expect(results.length).toBeLessThanOrEqual(12)
   })
+
+  it('searches across expanded experiments, junior/senior textbooks, and cosmos topics', () => {
+    expect(queryGlobalGeography('喀斯特').some(r => r.route.includes('landform-sandbox'))).toBe(true)
+    expect(queryGlobalGeography('七年级').some(r => r.route.includes('/初中/'))).toBe(true)
+    expect(queryGlobalGeography('弦理论').some(r => r.route === '/cosmos')).toBe(true)
+    expect(queryGlobalGeography('ERA5').some(r => r.route === '/resources')).toBe(true)
+  })
 })

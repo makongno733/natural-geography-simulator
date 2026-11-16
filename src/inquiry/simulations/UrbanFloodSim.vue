@@ -280,6 +280,32 @@
         </div>
       </div>
     </div>
+
+    <!-- 探究思考与带着问题去讨论模块 -->
+    <div class="inquiry-discussion-box">
+      <div class="discussion-badge">💬 探究思考与讨论</div>
+      <h4>思考与讨论：地表铺装如何改变雨水去向？</h4>
+      <p class="discussion-prompt">
+        保持雨量相同（例如 50 mm/h 暴雨），把地表从硬化沥青改为透水铺装或天然植被后，流走的水（地表径流）变多还是变少？你的观察依据是什么？在真实城市街区里，还有什么因素（例如地下排水管网容量、连续暴雨土壤饱和）是当前模型还没算进去的？
+      </p>
+      <div class="discussion-actions">
+        <router-link
+          :to="{
+            path: '/community',
+            query: {
+              compose: 1,
+              title: `【城市内涝探究】雨量相同下，${currentSurfaceName}对地表径流与下渗的影响观察`,
+              body: `我在城市内涝仿真实验台里设置了降雨强度 ${rainIntensity} mm/h，历时 ${rainDuration} 分钟。&#10;&#10;我看到：地表材质为「${currentSurfaceName}」时，下渗补给率为 ${Math.round(calcInfiltrationRatio * 100)}%，地表径流峰值为 ${calcPeakDischarge} m³/s，积水深度约为 ${calcWaterDepth} mm。&#10;&#10;我猜：……&#10;&#10;我还想知道：在真实街区里，排水管网或地形坡度会如何改变这一结果？`,
+              linkedExperiment: 'water-cycle-3d',
+              kind: 'discussion'
+            }
+          }"
+          class="btn-go-discuss"
+        >
+          带着这个观察去社区提问 / 讨论 ↗
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -769,6 +795,55 @@ input[type="range"] {
 
 .metric-item.highlight .m-val {
   color: #38bdf8;
+}
+
+.inquiry-discussion-box {
+  margin-top: 20px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-left: 4px solid #38bdf8;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.discussion-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.inquiry-discussion-box h4 {
+  font-size: 15px;
+  margin: 0 0 8px 0;
+  color: #f8fafc;
+}
+
+.discussion-prompt {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cbd5e1;
+  margin: 0 0 14px 0;
+}
+
+.btn-go-discuss {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #38bdf8;
+  color: #0f172a !important;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.btn-go-discuss:hover {
+  opacity: 0.9;
 }
 
 @keyframes rainAnim {

@@ -38,7 +38,7 @@
 
     <section class="inquiry-entry section-frame" aria-labelledby="inquiry-entry-title">
       <div class="inquiry-intro-wrap">
-        <span class="eyebrow">GEOGRAPHY INNOVATION INQUIRY CENTER · 创新探究</span>
+        <span class="eyebrow">地理创新探究中心</span>
         <h2 id="inquiry-entry-title">地理创新探究中心：从一个模型，走向科学解释。</h2>
         <p>连接课本章节、三维仿真与真实遥感。三大旗舰任务覆盖自然过程、空间数据与人地决策；提供完整证据链采集、思维支架与 7 维量规评价。</p>
 
@@ -101,7 +101,7 @@
 
     <section id="terrain" class="terrain-story section-frame" aria-labelledby="terrain-title">
       <div class="section-heading terrain-heading">
-        <span class="eyebrow">SPATIAL RELATIONSHIP / 地势</span>
+        <span class="eyebrow">空间格局与地势阶梯</span>
         <h2 id="terrain-title">从高原走向海洋</h2>
         <p>选择一段地势阶梯，观察地形如何影响河流流向、气候与人类活动。下图是教学示意，不代表实测高程剖面。</p>
       </div>
@@ -129,7 +129,7 @@
 
     <section id="field-notes" class="field-notes section-frame" aria-labelledby="notes-title">
       <div class="section-heading notes-heading">
-        <span class="eyebrow">FIELD NOTES / 实景与遥感</span>
+        <span class="eyebrow">实景摄影与卫星遥感</span>
         <h2 id="notes-title">读一幅图，认识一片土地</h2>
         <p>摄影记录地表样貌，遥感提供另一种空间尺度。每张影像都标明来源；图片与教材主题相关，不代表教材封面取景地。</p>
       </div>
@@ -159,7 +159,7 @@
     </section>
 
     <section class="course-footer section-frame" aria-labelledby="continue-title">
-      <span class="eyebrow">CONTINUE THE JOURNEY</span>
+      <span class="eyebrow">继续探索</span>
       <h2 id="continue-title">把眼前的地理现象，带回课堂。</h2>
       <div class="course-links">
         <router-link to="/初中">初中地理 <span aria-hidden="true">↗</span></router-link>
@@ -172,10 +172,11 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { geoOptimizedAsset } from './geoAssets.js'
-import HomeEarth3D from './HomeEarth3D.vue'
 import { planets } from './planetCatalog.js'
+
+const HomeEarth3D = defineAsyncComponent(() => import('./HomeEarth3D.vue'))
 
 const selectedHomePlanet = ref(planets[2])
 

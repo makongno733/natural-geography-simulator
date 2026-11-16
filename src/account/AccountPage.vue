@@ -1,9 +1,12 @@
 <template>
   <div class="account-shell">
     <div class="account-card">
-      <p class="eyebrow">KONGNOMA · 地理学习</p>
+      <div class="account-top-row">
+        <p class="eyebrow">地理共同体 · 账号中心</p>
+        <a :href="returnHref" class="back-origin-link">← {{ hasCustomReturn ? '返回刚才的页面' : '返回首页' }}</a>
+      </div>
       <h1>{{ session?.user ? '我的学习账号' : mode === 'signup' ? '创建学习账号' : mode === 'forgot' ? '重设密码' : mode === 'reset' ? '设置新密码' : '欢迎回来' }}</h1>
-      <p class="intro">登录后可以在课程章节发表评论，参与学习讨论。</p>
+      <p class="intro">登录后即可在社区提问与回复、在课程章节发表评论，并向教师提交探究报告。</p>
 
       <p v-if="message" class="notice" role="status">{{ message }}</p>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
@@ -14,7 +17,7 @@
           <span>{{ session.user.email }}</span>
         </div>
         <div class="actions">
-          <a :href="`${siteOrigin}/#/`" class="primary">返回地理课程</a>
+          <a :href="returnHref" class="primary">{{ hasCustomReturn ? '返回刚才浏览的页面 →' : '返回地理课程' }}</a>
           <button type="button" class="secondary" @click="signOut">退出登录</button>
         </div>
       </template>
@@ -40,7 +43,7 @@
           <button v-if="mode === 'signin'" type="button" class="switch" @click="mode = 'forgot'; error = ''; message = ''">忘记密码？</button>
           <button v-if="mode === 'forgot' || mode === 'reset'" type="button" class="switch" @click="mode = 'signin'; error = ''; message = ''">返回登录</button>
         </template>
-        <p v-if="!config.email" class="notice">登录服务正在配置中，请稍后再试。</p>
+        <p v-if="!config.email" class="notice">登录服务正在配置中，请稍后再试。你仍可先返回继续浏览课程、操作 3D 实验和保存本地探究草稿。</p>
       </template>
       <p class="account-legal-links">
         <a :href="`${siteOrigin}/privacy`">隐私政策</a>
@@ -52,7 +55,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { accountEnabled, accountOrigin, apiRequest, authClient, siteOrigin } from './client.js'
 
 const mode = ref(new URLSearchParams(window.location.search).has('token') ? 'reset' : 'signin')
@@ -65,7 +68,26 @@ const busy = ref(false)
 const error = ref('')
 const message = ref('')
 
+function resolveRedirectPath() {
+  try {
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : ''
+    const fromHash = new URLSearchParams(hashQuery).get('redirect')
+    const fromSearch = new URLSearchParams(window.location.search).get('redirect')
+    const fromStorage = localStorage.getItem('geo_auth_return_to')
+    const candidate = (fromHash || fromSearch || fromStorage || '/').trim()
+    if (candidate.startsWith('/') && !candidate.startsWith('//') && !candidate.startsWith('/account')) {
+      return candidate
+    }
+  } catch {}
+  return '/'
+}
+
+const redirectPath = ref(resolveRedirectPath())
+const hasCustomReturn = computed(() => redirectPath.value && redirectPath.value !== '/')
+const returnHref = computed(() => `${siteOrigin}/#${redirectPath.value}`)
+
 onMounted(async () => {
+  redirectPath.value = resolveRedirectPath()
   if (!accountEnabled) { message.value = '账号服务尚未上线'; return }
   try {
     config.value = await apiRequest('/api/config')
@@ -82,7 +104,7 @@ async function submitEmail() {
   busy.value = true
   try {
     const result = mode.value === 'signup'
-      ? await authClient.signUp.email({ name: name.value, email: email.value, password: password.value, callbackURL: `${siteOrigin}/#/` })
+      ? await authClient.signUp.email({ name: name.value, email: email.value, password: password.value, callbackURL: returnHref.value })
       : await authClient.signIn.email({ email: email.value, password: password.value })
     if (result.error) throw new Error(result.error.message || '操作失败')
     if (mode.value === 'signup') {
@@ -90,6 +112,11 @@ async function submitEmail() {
       password.value = ''
     } else {
       session.value = (await authClient.getSession()).data
+      try { localStorage.removeItem('geo_auth_return_to') } catch {}
+      message.value = '登录成功！'
+      if (hasCustomReturn.value && typeof window !== 'undefined' && (!siteOrigin || window.location.origin === new URL(siteOrigin, window.location.origin).origin)) {
+        window.location.hash = `#${redirectPath.value}`
+      }
     }
   } catch (cause) {
     error.value = cause.message || '操作失败'
@@ -143,7 +170,10 @@ async function resetPassword() {
 <style scoped>
 .account-shell { min-height: calc(100vh - 60px); display: grid; place-items: center; padding: 28px 20px 80px; }
 .account-card { width: min(100%, 440px); padding: 36px; border: 1px solid var(--border); border-radius: var(--radius-box); background: var(--surface); box-shadow: var(--shadow-md); }
-.eyebrow { color: var(--geo-ocean); letter-spacing: .16em; font-size: 11px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, monospace; }
+.account-top-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 4px; }
+.eyebrow { margin: 0; color: var(--geo-ocean); letter-spacing: .16em; font-size: 11px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, monospace; }
+.back-origin-link { color: var(--geo-ocean); font-size: 12.5px; font-weight: 600; text-decoration: none; }
+.back-origin-link:hover { text-decoration: underline; }
 h1 { margin: 8px 0; font-size: 28px; font-weight: 800; color: var(--geo-ocean-deep); letter-spacing: -0.02em; }
 .intro { color: var(--text-muted); line-height: 1.7; font-size: 14.5px; }
 form, .actions { display: grid; gap: 14px; margin-top: 24px; }
