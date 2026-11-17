@@ -35,6 +35,10 @@
         <router-link v-if="knowledgeChapter" :to="knowledgeRoute({ book: knowledgeCode, chapter: knowledgeChapter.id })" class="knowledge-entry">
           查看本节知识库草案 · 待教研复核 →
         </router-link>
+        <div v-if="returnedFromExperiment" class="return-exp-banner" role="status" aria-live="polite">
+          <span>✓ 已从 3D 实验返回《{{ sectionId }} {{ sectionData.title }}》原阅读位置</span>
+          <button type="button" class="return-exp-dismiss" @click="returnedFromExperiment = false">知道了</button>
+        </div>
         <TextbookExperimentCard
           v-if="experimentLink"
           :link="experimentLink"
@@ -167,7 +171,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, defineAsyncComponent, h } from 'vue'
+import { ref, reactive, computed, watch, defineAsyncComponent, h, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSection, getChapter } from './data/catalogLoader.js'
 import { loadSectionContent } from './data/contentLoader.js'
@@ -334,6 +338,7 @@ const extraContent = computed(() => {
   return loadedContent.value
 })
 
+const returnedFromExperiment = ref(false)
 let loadGeneration = 0
 
 watch([gradeId, bookId, chapterId, sectionId], async () => {
@@ -351,6 +356,7 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
   loadedContent.value = null
   figureAssets.value = {}
   knowledgeBook.value = null
+  returnedFromExperiment.value = false
   loading.value = true
 
   try {
@@ -377,7 +383,26 @@ watch([gradeId, bookId, chapterId, sectionId], async () => {
       }).catch(() => {})
     }
   } finally {
-    if (generation === loadGeneration) loading.value = false
+    if (generation === loadGeneration) {
+      loading.value = false
+      try {
+        if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+          const raw = sessionStorage.getItem('geo_textbook_return_state')
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            const currentKey = [ids.grade, ids.book, ids.chapter, ids.section].join('|')
+            if (parsed && parsed.key === currentKey) {
+              returnedFromExperiment.value = true
+              sessionStorage.removeItem('geo_textbook_return_state')
+              await nextTick()
+              if (typeof window.scrollTo === 'function' && Number(parsed.scrollY) > 0) {
+                window.scrollTo({ top: Number(parsed.scrollY), behavior: 'auto' })
+              }
+            }
+          }
+        }
+      } catch {}
+    }
   }
 }, { immediate: true })
 
@@ -748,5 +773,31 @@ const nextSection = computed(() => {
   .mindmap-branches {
     grid-template-columns: 1fr;
   }
+}
+
+.return-exp-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  background: #ecfdf5;
+  border: 1px solid #34d399;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #065f46;
+}
+.return-exp-dismiss {
+  background: #ffffff;
+  border: 1px solid #34d399;
+  color: #065f46;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 </style>

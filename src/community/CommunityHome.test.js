@@ -250,4 +250,26 @@ describe('community request lifecycle', () => {
     expect(globe.text()).toContain('进热力环流实验 →')
     delete window.__FORCE_GLOBE_FALLBACK__
   })
+
+  it('renders structured 3D solar-motion evidence preview in compose and handles incomplete legacy evidence gracefully', async () => {
+    window.__FORCE_GLOBE_FALLBACK__ = true
+    localStorage.clear()
+    route.query = {
+      compose: '1',
+      kind: 'discussion',
+      linkedExperiment: 'solar-motion',
+      evidenceId: 'ev-solar-motion-solstice',
+      compareUrl: '/experiments/astronomy/solar-motion?lat=40&season=summer&compare=winter&shared=1'
+    }
+    wrapper = mountCommunity()
+    await flushPromises()
+
+    const preview = wrapper.get('.compose-evidence-preview')
+    expect(preview.text()).toContain('地平天球太阳视运动与正午太阳高度 3D 几何模型')
+    expect(preview.text()).toContain('教学仿真，非现场实测')
+    expect(preview.text()).toContain('73.4°')
+    expect(preview.text()).toContain('26.6°')
+    expect(preview.text()).toContain('打开同一次观察')
+    delete window.__FORCE_GLOBE_FALLBACK__
+  })
 })

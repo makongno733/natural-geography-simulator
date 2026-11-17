@@ -149,6 +149,48 @@ $$f = 2\\Omega \\sin\\phi$$
         parent_id: null
       }
     ]
+  },
+  {
+    id: 104,
+    title: '【3D 太阳视运动对照】北京（40°N）夏至（H=73.4°）与冬至（H=26.6°）正午高度与住宅采光楼间距探讨',
+    body: `在学习高中选择性必修 1 第一章第二节“地球运动的地理意义”时，我用站内的「太阳周日视运动与高度角 3D 实验室」固定北纬 40°（北京），在子午面正视观察角下并排对比了夏至与冬至：
+
+- **夏至日（δ=+23.4°）**：东北升、西北落，正午太阳高度 $H = 73.4^\\circ$，2.5m 立竿正午北向影长仅 0.74m，昼长约 14.9 小时；
+- **冬至日（δ=-23.4°）**：东南升、西南落，正午太阳高度降至 $H = 26.6^\\circ$（相差 $46.9^\\circ$），2.5m 立竿正午北向影长拉长到 5.00m（约为竿高的 2 倍），昼长缩短至 9.1 小时。
+
+由此可见，北纬 40° 住宅区设计南北楼间距 $L$ 时，若前楼高度为 $H_{楼}$，至少需要满足 $L \\ge H_{楼} \\cdot \\cot 26.6^\\circ \\approx 2 H_{楼}$，才能保证后楼底层在冬至日正午也能获得日照。大家可以点下方卡片直接打开同一次 3D 观察验证！`,
+    kind: 'discussion',
+    category_id: 2,
+    categoryName: '自然地理学',
+    categorySlug: 'physical',
+    tags: ['地球运动', '正午太阳高度', '太阳视运动', '建筑采光'],
+    linked_experiment: 'solar-motion',
+    evidenceId: 'ev-solar-motion-solstice',
+    author: {
+      id: 'demo-user-astro',
+      name: '北辰天文地理社',
+      title: '高二地理探究小组',
+      avatar: null
+    },
+    created_at: '2026-10-26 15:20',
+    updated_at: '2026-10-26 15:20',
+    likesCount: 31,
+    bookmarksCount: 18,
+    repliesCount: 1,
+    accepted_reply_id: null,
+    replies: [
+      {
+        id: 205,
+        author: {
+          id: 'demo-user-teacher',
+          name: '明德地理教研',
+          title: '省级示范高中地理特级教师'
+        },
+        body: '用 3D 子午面正视角对比夏至和冬至非常直观！如果继续往高纬推到漠河（53.5°N），冬至日正午太阳高度只有 13.1°，楼间距系数更要超过楼高的 4 倍。',
+        created_at: '2026-10-26 16:00',
+        parent_id: null
+      }
+    ]
   }
 ]
 

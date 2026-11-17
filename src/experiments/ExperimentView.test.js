@@ -182,4 +182,15 @@ describe('ExperimentView', () => {
 
     expect(wrapper.get('.related-card').attributes('href')).toContain('/experiments/meteorology/slow-experiment')
   })
+
+  it('shows the textbook observation focus and interactive 10-second self-check card when ready', async () => {
+    const { wrapper } = await mountView('/experiments/meteorology/thermal-circulation?preset=atmospheric-circulation&grade=高中&book=必修第一册&chapter=第二章&section=第二节')
+    await flushPromises()
+
+    expect(wrapper.get('.ev-observe-focus').text()).toContain('本节观察重点')
+    const selfCheck = wrapper.get('.ev-selfcheck-card')
+    expect(selfCheck.text()).toContain('10 秒观察自测')
+    await selfCheck.findAll('.sc-option-btn')[0].trigger('click')
+    expect(selfCheck.get('.sc-feedback').text()).toContain('判断正确')
+  })
 })

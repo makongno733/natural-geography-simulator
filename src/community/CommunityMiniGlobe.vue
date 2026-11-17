@@ -136,7 +136,7 @@ const GLOBE_TASKS = {
     description:
       '对准东亚季风区（长江中下游湖区），移动卷帘对比相隔两周的真实卫星真彩色影像（分辨率 250m–1km），观察雨带云系移动与湖泊水体变化。',
     ctaText: '看真实卫星影像',
-    route: '/geo-labs/satellite'
+    route: '/geo-labs/satellite?place=china&dateA=2024-06-01&dateB=2024-06-15&from=home-globe'
   },
   thermal: {
     key: 'thermal',

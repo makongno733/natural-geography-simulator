@@ -36,6 +36,33 @@ const relatedInquiry = computed(() => {
   return null
 })
 
+const OBSERVATION_QUESTIONS = Object.freeze({
+  'solar-motion': '同一地点（如北京 40°N），切换夏至与冬至，观察正午太阳高度角 H（73.4° vs 26.6°）、日出日落方位与正午竿影长度如何变化？',
+  seasons: '地球绕日公转时地轴空间指向保持不变，切换夏至与冬至，太阳直射点纬度和晨昏线倾角发生了什么变化？',
+  'thermal-circulation': '同在海边，切换白昼与夜晚，近地面高低压与水平风向（海风 vs 陆风）为什么会发生反转？',
+  'water-cycle-3d': '保持降雨强度不变，切换硬化地面与植被下垫面，地表径流与地下下渗比例会发生怎样的消长？',
+  'fault-model': '水平挤压与水平拉张分别会形成逆断层（地垒/断块山）还是正断层（地堑/裂谷）？'
+})
+
+const drivingQuestion = computed(() => {
+  const expId = props.link?.primary?.experimentId
+  return OBSERVATION_QUESTIONS[expId] || '进入 3D 实验室切换关键条件，观察空间结构与关键读数的同步变化。'
+})
+
+function saveScrollBeforeEnter() {
+  try {
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      const tb = props.textbook || {}
+      const key = [tb.grade, tb.book, tb.chapter, tb.section].filter(Boolean).join('|')
+      sessionStorage.setItem('geo_textbook_return_state', JSON.stringify({
+        key,
+        scrollY: Math.round(window.scrollY || 0),
+        ts: Date.now()
+      }))
+    }
+  } catch {}
+}
+
 function warmPrimary() {
   const experimentId = props.link?.primary?.experimentId
   if (!experimentId) return
@@ -51,9 +78,12 @@ function warmPrimary() {
 <template>
   <section v-if="link?.primary && primaryRoute" class="experiment-card" aria-labelledby="experiment-card-title">
     <div class="experiment-copy">
-      <p class="experiment-eyebrow">配套 3D 实验</p>
+      <p class="experiment-eyebrow">配套 3D 实验 · 带着问题去观察</p>
       <h3 id="experiment-card-title">{{ link.primary.title }}</h3>
       <p class="experiment-purpose">{{ link.primary.purpose }}</p>
+      <p class="experiment-driving-q">
+        <strong>🎯 进场观察问题：</strong>{{ drivingQuestion }}
+      </p>
     </div>
 
     <div class="experiment-actions">
@@ -61,6 +91,7 @@ function warmPrimary() {
         data-primary-experiment
         class="primary-experiment"
         :to="primaryRoute"
+        @click="saveScrollBeforeEnter"
         @pointerenter="warmPrimary"
         @focusin="warmPrimary"
         @touchstart="warmPrimary"
@@ -72,6 +103,7 @@ function warmPrimary() {
         v-if="relatedInquiry"
         class="inquiry-hub-link"
         :to="`/inquiry?task=${relatedInquiry.id}`"
+        @click="saveScrollBeforeEnter"
       >
         🌟 探究中心：{{ relatedInquiry.title }} ➔
       </router-link>
@@ -83,6 +115,7 @@ function warmPrimary() {
           :key="`${item.reference.experimentId}:${item.reference.presetId}`"
           data-related-experiment
           :to="item.route"
+          @click="saveScrollBeforeEnter"
         >
           {{ item.reference.title }}
         </router-link>
@@ -138,6 +171,16 @@ function warmPrimary() {
   margin: 8px 0 0;
   line-height: 1.7;
   color: var(--text-muted);
+}
+.experiment-driving-q {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(2, 132, 199, 0.08);
+  border-left: 3px solid var(--geo-ocean, #0284c7);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--geo-ocean-deep, #0c4a6e);
 }
 .experiment-actions {
   display: grid;
