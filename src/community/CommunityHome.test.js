@@ -177,7 +177,7 @@ describe('community request lifecycle', () => {
     expect(saved.linkedExperiment).toBe('water-cycle-3d')
   })
 
-  it('localizes USGS earthquake and storm titles while preserving original record title', async () => {
+  it('localizes USGS earthquake and storm titles while preserving original record title, and cleans raw URLs/UTC strings', async () => {
     apiRequest.mockImplementation(async path => {
       if (path.includes('/categories')) return { categories: [{ id: 1, name: '自然地理' }] }
       if (path.includes('/hot-topics')) {
@@ -187,7 +187,9 @@ describe('community request lifecycle', () => {
               id: 'eq-1',
               tag: '地震',
               title: 'M6.4 地震 · 30 km WSW of Lata, Solomon Islands',
-              summary: 'USGS 记录',
+              summary: 'https://eonet.gsfc.nasa.gov/api/v3/events/EONET_123 最近记录为 2026-11-16 14:20 UTC',
+              occurredAt: '2026-11-16T14:20:00Z',
+              fetchedAt: '2026-11-16T14:35:00Z',
               sourceUrl: 'https://earthquake.usgs.gov/'
             }
           ],
@@ -200,5 +202,32 @@ describe('community request lifecycle', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('所罗门群岛 Lata西南偏西约 30 公里 · M6.4 地震')
     expect(wrapper.text()).toContain('原文：M6.4 地震 · 30 km WSW of Lata, Solomon Islands')
+    expect(wrapper.text()).not.toContain('https://eonet.gsfc.nasa.gov/api/v3/events/EONET_123')
+    expect(wrapper.text()).toContain('北京时间 UTC+8')
+    expect(wrapper.text()).toContain('可讨论问题')
+  })
+
+  it('shows loading skeleton and never flashes empty-state message before initial posts request completes', async () => {
+    const pendingPosts = deferred()
+    const pendingCategories = deferred()
+    apiRequest.mockImplementation(path => {
+      if (path.includes('/categories')) return pendingCategories.promise
+      if (path.includes('/hot-topics')) return Promise.resolve({ topics: [], sources: [] })
+      return pendingPosts.promise
+    })
+    wrapper = mountCommunity()
+    expect(wrapper.find('.skeleton-stack').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('暂时没有符合条件的讨论')
+
+    pendingCategories.resolve({ categories: [{ id: 1, name: '自然地理' }] })
+    await flushPromises()
+    // Even after categories resolve, while posts are still loading, must NOT show empty state
+    expect(wrapper.find('.skeleton-stack').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('暂时没有符合条件的讨论')
+
+    pendingPosts.resolve({ posts: [] })
+    await flushPromises()
+    expect(wrapper.find('.skeleton-stack').exists()).toBe(false)
+    expect(wrapper.text()).toContain('暂时没有符合条件的讨论')
   })
 })

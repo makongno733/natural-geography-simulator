@@ -15,6 +15,25 @@ const categoryNames = new Map([
   ['earthquakes', '地震']
 ])
 
+function formatBeijingTimeText(isoStr) {
+  try {
+    const d = new Date(isoStr)
+    if (Number.isNaN(d.getTime())) return isoStr
+    const cn = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(d)
+    return `${cn}（北京时间 UTC+8）`
+  } catch {
+    return isoStr
+  }
+}
+
 export function normalizeEonetEvent(event, fetchedAt) {
   if (!/^EONET_\d+$/.test(event?.id || '')) return null
   const title = typeof event.title === 'string' ? event.title.trim().slice(0, 120) : ''
@@ -25,8 +44,12 @@ export function normalizeEonetEvent(event, fetchedAt) {
   const category = categoryNames.get(event.categories?.[0]?.id) || '自然地理事件'
   const occurredAt = new Date(latest.date).toISOString()
   const sourceUrl = `https://eonet.gsfc.nasa.gov/api/v3/events/${event.id}`
-  const description = typeof event.description === 'string' ? event.description.trim().slice(0, 300) : ''
-  const summary = description || `NASA EONET 收录的${category}事件，最近一次位置或状态记录为 ${occurredAt.slice(0, 16).replace('T', ' ')} UTC。事件范围与时间可能是近似值，请查看原始记录核实。`
+  const rawDesc = typeof event.description === 'string'
+    ? event.description.replace(/https?:\/\/[^\s)）]+/gi, '').trim().slice(0, 300)
+    : ''
+  const summary = rawDesc.length >= 8
+    ? rawDesc
+    : `NASA EONET 收录的${category}事件，最近一次位置或状态记录时间为 ${formatBeijingTimeText(occurredAt)}。事件范围与时间可能是近似值，请查看原始记录核实。`
   return { externalId: event.id, title, category, summary, sourceUrl, occurredAt, fetchedAt, tag: category }
 }
 
@@ -43,7 +66,7 @@ export function normalizeUsgsEarthquake(feature, fetchedAt) {
     ? props.place.trim().slice(0, 120) : '位置待核实'
   const title = `M${mag} 地震 · ${place}`.slice(0, 120)
   const sourceUrl = `https://earthquake.usgs.gov/earthquakes/eventpage/${encodeURIComponent(id)}`
-  const summary = `USGS 显著地震目录记录：震级 M${mag}，位置 ${place}，记录时间 ${occurredAt.toISOString().slice(0, 16).replace('T', ' ')} UTC。震级与位置可能修订，请查看原始记录。`
+  const summary = `USGS 显著地震目录记录：震级 M${mag}，位置 ${place}，事件记录时间 ${formatBeijingTimeText(occurredAt.toISOString())}。震级与位置可能修订，请查看原始记录。`
   return {
     externalId: `USGS_${id}`,
     title,

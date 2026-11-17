@@ -4,16 +4,43 @@
       <div class="community-tides" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="community-wrap community-hero-inner">
         <div class="community-intro">
-          <p class="community-hero-badge">地理社区 · 一起提问、分享与讨论</p>
-          <h1 id="community-title">从一个问题，开始一场讨论</h1>
-          <p class="community-lead">搜索已有经验，看看大家在聊什么；也欢迎分享你的观察和观点。</p>
-          <form class="community-search baroque-search" role="search" @submit.prevent="runSearch">
+          <p class="community-hero-badge">地理共同体 · 观察 · 实证 · 讨论</p>
+          <h1 id="community-title">从一个真实地理问题，开始对照与讨论</h1>
+
+          <!-- 首屏核心实验直达卡（桌面与 390×844 手机首屏均可一键开始） -->
+          <div class="flagship-compare-card" role="region" aria-label="3分钟城市内涝对照实验入口">
+            <div class="flagship-card-body">
+              <div class="flagship-card-badges">
+                <span class="flagship-tag-main">🌧 3 分钟互动对照实验</span>
+                <span class="flagship-tag-sim">教学仿真，非现场实测</span>
+              </div>
+              <h2 class="flagship-question">同一场雨，哪种路面积水更严重？</h2>
+              <p class="flagship-desc">
+                固定 <strong>50 mm/h</strong> 暴雨、历时 <strong>60 分钟</strong>：并排切换「水泥/沥青（峰值 <strong>44.4 m³/s</strong>）」与「天然植被（<strong>11.7 m³/s</strong>）」，记下一句解释即可生成可复现证据卡。
+              </p>
+            </div>
+            <div class="flagship-card-cta">
+              <router-link
+                to="/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation"
+                class="baroque-btn baroque-btn-primary flagship-start-btn"
+              >
+                开始比较 →
+              </router-link>
+            </div>
+          </div>
+
+          <!-- 清楚区分“搜讨论”与“搜全站” -->
+          <form class="community-search baroque-search" role="search" aria-label="搜索社区讨论" @submit.prevent="runSearch">
             <label class="sr-only" for="community-query">搜索社区讨论</label>
-            <input id="community-query" v-model="queryInput" type="search" placeholder="搜索话题、问题或关键词" maxlength="100" />
-            <button class="baroque-btn baroque-btn-primary" type="submit">搜索讨论</button>
+            <input id="community-query" v-model="queryInput" type="search" placeholder="搜讨论：输入话题、问题或关键词" maxlength="100" />
+            <button class="baroque-btn baroque-btn-primary" type="submit">搜讨论</button>
           </form>
+
           <div class="community-hero-actions">
             <a class="baroque-btn baroque-btn-primary" href="#compose" @click.prevent="focusCompose">发起讨论</a>
+            <button type="button" class="baroque-btn hero-global-search-btn" @click="triggerGlobalSearch">
+              🔍 搜全站（实验 / 教材 / 数据）
+            </button>
             <router-link class="baroque-btn" to="/resources">资源馆</router-link>
             <router-link class="baroque-btn" to="/groups">找社群</router-link>
             <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
@@ -21,9 +48,21 @@
         </div>
         <aside class="community-discovery" aria-label="地理探索路径">
           <p class="discovery-eyebrow">从观察，流向理解</p>
-          <router-link to="/calendar"><span>01</span><div><strong>看见地球的变化</strong><small>天象观察与真实地震记录</small></div><span aria-hidden="true">↗</span></router-link>
-          <router-link to="/inquiry"><span>02</span><div><strong>用证据回应好奇</strong><small>提出假设，参与地理探究</small></div><span aria-hidden="true">↗</span></router-link>
-          <router-link to="/learning"><span>03</span><div><strong>让知识彼此连接</strong><small>回到教材，理解过程与机理</small></div><span aria-hidden="true">↗</span></router-link>
+          <router-link to="/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation">
+            <span>01</span>
+            <div><strong>动手对照：城市内涝仿真</strong><small>50 mm/h 暴雨下不同地表径流对比</small></div>
+            <span aria-hidden="true">↗</span>
+          </router-link>
+          <router-link to="/geo-labs/satellite">
+            <span>02</span>
+            <div><strong>真实数据：多时相卫星影像</strong><small>NASA 实测遥感卷帘对比与来源核验</small></div>
+            <span aria-hidden="true">↗</span>
+          </router-link>
+          <router-link to="/learning">
+            <span>03</span>
+            <div><strong>教材精读：让知识彼此连接</strong><small>回到初高中与大学教材理解机理</small></div>
+            <span aria-hidden="true">↗</span>
+          </router-link>
         </aside>
       </div>
     </section>
@@ -31,10 +70,13 @@
     <section class="community-wrap" aria-labelledby="fanxing-entry-title">
       <div class="community-section-heading baroque-frame fanxing-entry">
         <div>
-          <h2 id="fanxing-entry-title">繁星计划</h2>
-          <p>发现地理研究课题，看看你可以参与什么。</p>
+          <div class="fanxing-title-row">
+            <h2 id="fanxing-entry-title">繁星计划</h2>
+            <span class="fanxing-preview-badge">课题协作示例预览</span>
+          </div>
+          <p>浏览地理探究协作课题示例，了解研究招募、分工与阶段性成果展示流程（当前为课题示范预览）。</p>
         </div>
-        <router-link class="baroque-btn baroque-btn-primary" to="/fanxing">浏览课题 →</router-link>
+        <router-link class="baroque-btn" to="/fanxing">浏览课题示例 →</router-link>
       </div>
     </section>
 
@@ -45,7 +87,7 @@
         <aside v-if="isDemoMode" class="demo-mode-banner" aria-label="运行模式提示">
           <div class="demo-banner-content">
             <span class="demo-banner-tag">✦ 学术演示模式</span>
-            <span>当前云端账号服务暂未连接，已自动载入高保真地理学术讨论样例；发帖及交互将在本地浏览器即时生效。</span>
+            <span>当前云端账号服务暂未连接，已载入本地地理学术讨论示例；发帖及交互将在本机浏览器即时生效。</span>
           </div>
           <div class="demo-banner-actions">
             <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="retryOnline">
@@ -64,8 +106,8 @@
         <!-- 筛选与排序控制器 -->
         <div class="community-toolbar">
           <div class="community-filters" aria-label="讨论类型">
-            <button type="button" :class="['baroque-filter-btn', { active: kind === '' }]" @click="setKind('')">全部动态</button>
-            <button type="button" :class="['baroque-filter-btn', { active: kind === 'question' }]" @click="setKind('question')">❓ 学术问答</button>
+            <button type="button" :class="['baroque-filter-btn', { active: kind === '' && !onlySolved }]" @click="setKind('')">全部动态</button>
+            <button type="button" :class="['baroque-filter-btn', { active: kind === 'question' && !onlySolved }]" @click="setKind('question')">❓ 学术问答</button>
             <button type="button" :class="['baroque-filter-btn', { active: kind === 'discussion' }]" @click="setKind('discussion')">💬 经验探讨</button>
             <button type="button" :class="['baroque-filter-btn', { active: onlySolved }]" :aria-pressed="onlySolved" @click="toggleSolved">✓ 已采纳问答</button>
           </div>
@@ -75,8 +117,8 @@
           </div>
         </div>
 
-        <!-- 骨架屏加载状态 -->
-        <div v-if="loading && !posts.length" class="skeleton-stack" aria-busy="true">
+        <!-- 骨架屏加载状态（请求未完成前绝不闪现空状态） -->
+        <div v-if="(loading || !initialLoaded) && !posts.length && !error" class="skeleton-stack" aria-busy="true" role="status">
           <div v-for="i in 3" :key="i" class="skeleton-card" style="margin-bottom: 16px">
             <div class="skeleton-box skeleton-line skeleton-line-short"></div>
             <div class="skeleton-box skeleton-line skeleton-line-title"></div>
@@ -92,7 +134,7 @@
             <button class="baroque-btn baroque-btn-sm" type="button" @click="enableLocalPreviewDemo()">浏览离线精选讨论示例</button>
           </span>
         </p>
-        <p v-else-if="!posts.length" class="community-state">暂时没有符合条件的讨论。换个关键词，或发起新讨论吧。</p>
+        <p v-else-if="initialLoaded && !loading && !posts.length" class="community-state">暂时没有符合条件的讨论。换个关键词，或发起新讨论吧。</p>
 
         <div v-else class="community-post-list">
           <article v-for="post in posts" :key="post.id" class="community-post-card baroque-frame">
@@ -103,7 +145,7 @@
               </span>
               <span v-if="post.acceptedReplyId" class="accepted-pill">✓ 最佳答案已采纳</span>
               <span v-if="post.linkedExperiment" class="experiment-pill">🔬 附带 3D 实验</span>
-              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">📊 挂载实测证据</span>
+              <span v-if="post.evidenceId" class="evidence-badge" style="margin-left: 4px">📊 附带探究证据卡</span>
             </div>
 
             <h3 class="post-title">
@@ -230,6 +272,26 @@
               </label>
             </div>
 
+            <!-- 讨论发帖预览：当挂载了探究证据卡时，清晰展示模型名称、条件、结果、证据类型、适用边界与「教学仿真，非现场实测」说明 -->
+            <div v-if="selectedEvidenceCard" class="compose-evidence-preview" role="region" aria-label="已附带的科学证据卡预览">
+              <div class="cep-head">
+                <span class="cep-badge">📊 已附带探究证据卡</span>
+                <span class="cep-disclaimer">{{ selectedEvidenceCard.disclaimer || '教学仿真，非现场实测' }}</span>
+              </div>
+              <h4 class="cep-title">{{ selectedEvidenceCard.title }}</h4>
+              <p v-if="selectedEvidenceCard.modelName" class="cep-meta">
+                <strong>模型名称：</strong>{{ selectedEvidenceCard.modelName }} · <strong>证据类型：</strong>{{ selectedEvidenceCard.evidenceType }}
+              </p>
+              <p v-if="selectedEvidenceCard.conditions" class="cep-meta">
+                <strong>实验/观测条件：</strong>{{ selectedEvidenceCard.conditions }}
+              </p>
+              <p class="cep-facts">{{ selectedEvidenceCard.facts }}</p>
+              <p v-if="selectedEvidenceCard.limitations" class="cep-limits">{{ selectedEvidenceCard.limitations }}</p>
+              <router-link :to="draft.compareUrl || selectedEvidenceCard.route" class="cep-reproduce-link">
+                🔗 打开可复现对照实验（核对同一组参数与结果）↗
+              </router-link>
+            </div>
+
             <p v-if="submitError" class="community-error" role="alert">{{ submitError }}</p>
             <div class="form-submit-row">
               <span v-if="draftSavedHint" class="draft-saved-hint">{{ draftSavedHint }}</span>
@@ -317,25 +379,54 @@
         <span class="hot-topics-subtitle">美国国家航空航天局（NASA EONET）与美国地质调查局（USGS）来源记录</span>
         <router-link class="baroque-btn baroque-btn-sm" to="/calendar">打开地理日历</router-link>
       </div>
-      <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
+      <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里区分机构监测事件线索与站内用户讨论，不代表全网热度排名。</p>
       <div class="topic-source-status" aria-label="来源同步状态">
         <span v-for="source in topicSources" :key="source.source">
           {{ source.name }} · {{ source.status === 'error' ? '更新失败，保留缓存' : source.stale ? '等待更新' : '已同步' }}
-          <small v-if="source.fetchedAt">（{{ formatDateTime(source.fetchedAt) }}）</small>
+          <small v-if="source.fetchedAt">（站点同步：{{ formatDateTime(source.fetchedAt) }}）</small>
         </span>
         <button type="button" class="topic-summary-toggle" :disabled="hotTopicLoading" @click="loadHotTopics">
           {{ hotTopicLoading ? '读取中…' : '刷新记录' }}
+        </button>
+        <button v-if="!hotTopics.length" type="button" class="topic-summary-toggle" @click="loadSampleHotTopics">
+          查看监测事件卡片示例
         </button>
       </div>
       <p v-if="hotTopicError" class="community-state community-error" role="status">{{ hotTopicError }}</p>
       <p v-else-if="!hotTopics.length" class="community-state" role="status">暂时没有可核实的近期事件，请稍后再看。</p>
       <div class="hot-topics-grid">
         <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
-          <span class="topic-tag">{{ topic.tag }}</span>
+          <div class="topic-card-badges">
+            <span class="topic-tag">{{ topic.tag }}</span>
+            <span class="topic-origin-badge">{{ getEventOriginBadge(topic).label }}</span>
+            <span v-if="topic.isSample" class="topic-sample-badge">离线格式示例</span>
+          </div>
           <h4>{{ eventDisplayTitle(topic.title) }}</h4>
           <small v-if="eventDisplayTitle(topic.title) !== topic.title" class="topic-raw-title">原文：{{ topic.title }}</small>
-          <p>{{ topic.summary }}</p>
+
+          <dl class="topic-structured-meta">
+            <div>
+              <dt>📍 监测地点</dt>
+              <dd>{{ extractEventPlace(topic) }}</dd>
+            </div>
+            <div>
+              <dt>🕒 事件记录时间</dt>
+              <dd>{{ formatDateTime(topic.occurredAt) }}</dd>
+            </div>
+            <div>
+              <dt>🔄 站点同步时间</dt>
+              <dd>{{ formatDateTime(topic.fetchedAt) }}</dd>
+            </div>
+          </dl>
+
+          <p class="topic-clean-summary">{{ cleanEventSummary(topic.summary, topic) }}</p>
+
+          <div class="topic-question-box">
+            <span>💡 {{ buildEventDiscussionQuestion(topic) }}</span>
+          </div>
+
           <button
+            v-if="!topic.isSample"
             type="button"
             class="topic-summary-toggle"
             :aria-expanded="expandedTopicId === topic.id"
@@ -362,10 +453,9 @@
             </template>
           </div>
           <div class="topic-foot">
-            <small>最近记录 {{ formatDate(topic.occurredAt) }} · 抓取 {{ formatDate(topic.fetchedAt) }}</small>
-            <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
+            <a :href="topic.sourceUrl" target="_blank" rel="noopener noreferrer">查看原始监测记录 ↗</a>
             <button type="button" class="topic-link" :disabled="openingTopicId === topic.id" @click="openTopic(topic)">
-              {{ topic.postId ? '进入讨论 →' : openingTopicId === topic.id ? '正在建立讨论…' : '发起讨论 →' }}
+              {{ topic.postId ? '进入讨论 →' : openingTopicId === topic.id ? '正在建立讨论…' : '带着事件线索去提问 →' }}
             </button>
           </div>
         </article>
@@ -375,14 +465,21 @@
 </template>
 
 <script setup>
-import { eventDisplayTitle } from './eventTitle.js'
+import {
+  eventDisplayTitle,
+  formatEventTimeWithTz,
+  cleanEventSummary,
+  extractEventPlace,
+  buildEventDiscussionQuestion,
+  getEventOriginBadge
+} from './eventTitle.js'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { accountEnabled, accountOrigin, apiRequest, authClient } from '../account/client.js'
 import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
-import { STANDARD_EVIDENCES } from '../inquiry/evidenceCatalog.js'
+import { STANDARD_EVIDENCES, getEvidenceById } from '../inquiry/evidenceCatalog.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -399,7 +496,8 @@ const topicSummaries = reactive({})
 const summaryErrors = reactive({})
 const user = ref(null)
 const isAdmin = ref(false)
-const loading = ref(false)
+const loading = ref(true)
+const initialLoaded = ref(false)
 const submitting = ref(false)
 const error = ref('')
 const submitError = ref('')
@@ -426,8 +524,17 @@ const draft = reactive({
   title: '',
   body: '',
   linkedExperiment: '',
-  evidenceId: ''
+  evidenceId: '',
+  compareUrl: ''
 })
+
+const selectedEvidenceCard = computed(() => getEvidenceById(draft.evidenceId))
+
+function triggerGlobalSearch() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('geo:open-global-search'))
+  }
+}
 
 const loginComposeHref = computed(() => {
   const base = accountOrigin || ''
@@ -554,11 +661,34 @@ const formatDate = value => {
   }
 }
 
-const formatDateTime = value => {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '时间未提供' : new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-  }).format(date)
+const formatDateTime = value => formatEventTimeWithTz(value)
+
+function loadSampleHotTopics() {
+  hotTopicError.value = ''
+  hotTopics.value = [
+    {
+      id: 'sample-usgs-1',
+      title: 'M6.4 地震 · 30 km WSW of Lata, Solomon Islands',
+      tag: '地震',
+      category: '地震',
+      summary: 'USGS 显著地震目录记录：震级 M6.4，震源位于所罗门群岛拉塔西南偏西约 30 公里海域。',
+      sourceUrl: 'https://earthquake.usgs.gov/earthquakes/map/',
+      occurredAt: '2026-11-16T14:20:00Z',
+      fetchedAt: '2026-11-16T14:35:00Z',
+      isSample: true
+    },
+    {
+      id: 'sample-eonet-1',
+      title: 'Super Typhoon Man-yi',
+      tag: '强风暴',
+      category: '强风暴',
+      summary: 'NASA EONET 收录的西太平洋热带气旋监测记录，卫星云图显示清晰眼墙结构。',
+      sourceUrl: 'https://eonet.gsfc.nasa.gov/',
+      occurredAt: '2026-11-16T12:00:00Z',
+      fetchedAt: '2026-11-16T14:35:00Z',
+      isSample: true
+    }
+  ]
 }
 
 async function loadTopicSummary(id) {
@@ -627,12 +757,13 @@ async function loadPosts(append = false) {
       if (selectedTag.value) params.set('tag', selectedTag.value)
       if (sortMode.value === 'popular') params.set('sort', 'popular')
       const result = await apiRequest(`/api/community/posts?${params}`, { signal: controller.signal })
-      if (disposed || version !== postsVersion) return
+      if (disposed || controller.signal.aborted || version !== postsVersion) return
       if (!Array.isArray(result?.posts)) throw new Error('讨论服务返回的数据不完整')
       posts.value = append ? [...posts.value, ...result.posts] : result.posts
       page.value = requestedPage
       lastPageCount.value = result.posts.length
       loading.value = false
+      initialLoaded.value = true
       return
     }
   } catch (cause) {
@@ -640,16 +771,20 @@ async function loadPosts(append = false) {
     if (!allowDemoMode) {
       error.value = cause.message || '讨论暂时无法载入，请稍后重试。'
       loading.value = false
+      initialLoaded.value = true
       return
     }
     isDemoMode.value = true
   }
+
+  if (disposed || controller.signal.aborted || version !== postsVersion) return
 
   if (!allowDemoMode && !isDemoMode.value) {
     posts.value = []
     lastPageCount.value = 0
     error.value = '云端社区尚未连接，暂时无法获取讨论。'
     loading.value = false
+    initialLoaded.value = true
     return
   }
 
@@ -696,6 +831,7 @@ async function loadPosts(append = false) {
   page.value = requestedPage
   lastPageCount.value = pagePosts.length
   loading.value = false
+  initialLoaded.value = true
 }
 
 function enableLocalPreviewDemo() {
@@ -720,15 +856,34 @@ function setKind(value) { kind.value = value; if (value === 'discussion') onlySo
 function toggleSolved() { onlySolved.value = !onlySolved.value; if (onlySolved.value) kind.value = 'question'; resetAndLoad() }
 function setSort(mode) { sortMode.value = mode; resetAndLoad() }
 function filterByTag(tag) { selectedTag.value = tag; resetAndLoad() }
+
+function prefillComposeFromTopic(topic) {
+  const displayTitle = eventDisplayTitle(topic.title)
+  draft.kind = 'question'
+  draft.title = `【近期地理事件探讨】${displayTitle}`
+  draft.body =
+    `【事件线索来源】${getEventOriginBadge(topic).label}\n` +
+    `【监测地点】${extractEventPlace(topic)}\n` +
+    `【事件记录时间】${formatDateTime(topic.occurredAt)}\n` +
+    `【站点同步时间】${formatDateTime(topic.fetchedAt)}\n` +
+    `【原始监测链接】${topic.sourceUrl}\n\n` +
+    `【探讨问题】${buildEventDiscussionQuestion(topic)}\n\n` +
+    `【我的初步观察与分析】：`
+  saveDraftToStorage()
+  focusCompose()
+}
+
 async function openTopic(topic) {
   if (topic.postId) return router.push(`/community/post/${topic.postId}`)
-  if (isDemoMode.value) {
-    hotTopicError.value = '云端社区未连接，暂时无法建立可公开讨论的事件帖子。'
+  if (isDemoMode.value || topic.isSample) {
+    prefillComposeFromTopic(topic)
+    hotTopicError.value = '已将该事件线索、时间与来源链接填入下方发帖框，可直接编辑并发布探讨。'
     return
   }
 
   if (!user.value) {
-    hotTopicError.value = '请先登录，再发起实时事件的学术讨论。'
+    prefillComposeFromTopic(topic)
+    hotTopicError.value = '请先登录，再发起实时事件的学术讨论（事件线索已为你保存在下方发帖草稿中）。'
     return
   }
   openingTopicId.value = topic.id
@@ -737,7 +892,8 @@ async function openTopic(topic) {
     const result = await apiRequest(`/api/community/hot-topics/${topic.id}/discuss`, { method: 'POST' })
     await router.push(`/community/post/${result.id}`)
   } catch (cause) {
-    hotTopicError.value = cause.message || '暂时无法发起讨论，请稍后重试。'
+    prefillComposeFromTopic(topic)
+    hotTopicError.value = cause.message || '暂时无法直接建立事件帖，已将事件线索填入下方发帖框。'
   } finally {
     openingTopicId.value = null
   }
@@ -784,7 +940,7 @@ async function createPost() {
       return
     }
 
-    // 仅开发环境使用的演示数据
+    // 仅开发环境或显式开启的本地演示模式数据
     const newId = Date.now()
     const catObj = categories.value.find(c => c.id === Number(draft.categoryId))
     const localPost = {
@@ -838,6 +994,9 @@ function applyRouteQueryParams() {
   if (typeof q.evidenceId === 'string' && q.evidenceId.trim()) {
     draft.evidenceId = q.evidenceId.trim()
   }
+  if (typeof q.compareUrl === 'string' && q.compareUrl.trim()) {
+    draft.compareUrl = q.compareUrl.trim()
+  }
   if (q.compose && (q.kind === 'question' || q.kind === 'discussion')) {
     draft.kind = q.kind
   }
@@ -867,7 +1026,7 @@ watch(() => route.query.q, (value) => {
 })
 
 watch(
-  () => [route.query.compose, route.query.title, route.query.body, route.query.linkedExperiment, route.query.evidenceId],
+  () => [route.query.compose, route.query.title, route.query.body, route.query.linkedExperiment, route.query.evidenceId, route.query.compareUrl],
   () => {
     if (route.name !== 'home') return
     applyRouteQueryParams()
@@ -889,6 +1048,8 @@ async function initCommunity() {
 
   try {
     void loadHotTopics()
+    // 并行发起帖子加载与分类/会话读取，避免等待会话期间讨论区空白或闪现空结果
+    const postsTask = loadPosts()
     const [categoryResult, sessionResult] = await Promise.allSettled([
       apiRequest('/api/community/categories'),
       authClient.getSession()
@@ -917,7 +1078,7 @@ async function initCommunity() {
       draft.categoryId = Number(mockCategories[0].id)
     }
 
-    await loadPosts()
+    await postsTask
 
     if (!disposed && !isDemoMode.value && typeof EventSource !== 'undefined') {
       try {
@@ -939,7 +1100,7 @@ async function initCommunity() {
     hotTopics.value = []
     hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
     if (!draft.categoryId && categories.value.length) {
-      draft.categoryId = String(categories.value[0].id)
+      draft.categoryId = Number(categories.value[0].id)
     }
     await loadPosts()
   }
@@ -956,31 +1117,270 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.fanxing-entry { padding: 20px; margin: 20px 0; flex-wrap: wrap; }
+.fanxing-entry { padding: 16px 20px; margin: 16px 0; flex-wrap: wrap; gap: 12px; }
+.fanxing-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.fanxing-preview-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* 首屏 3 分钟城市内涝互动对照旗舰入口卡 */
+.flagship-compare-card {
+  background: rgba(7, 29, 39, 0.72);
+  border: 1.5px solid rgba(125, 211, 252, 0.45);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.flagship-card-body {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.flagship-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.flagship-tag-main {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+.flagship-tag-sim {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fde68a;
+  border: 1px solid rgba(245, 158, 11, 0.48);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.flagship-question {
+  margin: 0 0 4px;
+  font-size: clamp(17px, 2.2vw, 21px);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.flagship-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #dbeafe;
+}
+
+.flagship-start-btn {
+  white-space: nowrap;
+  font-weight: 800;
+  padding: 10px 18px;
+  font-size: 14px;
+  background: linear-gradient(135deg, #0284c7, #0f766e);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.hero-global-search-btn {
+  border-color: rgba(163, 233, 221, 0.45);
+}
+
+/* 发帖框挂载证据卡预览 */
+.compose-evidence-preview {
+  background: #f0f9ff;
+  border: 1px solid #7dd3fc;
+  border-left: 4px solid #0284c7;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.cep-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.cep-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.cep-disclaimer {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.cep-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: #0c4a6e;
+}
+
+.cep-meta {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.cep-facts {
+  margin: 6px 0;
+  font-size: 12.5px;
+  color: #0f172a;
+  line-height: 1.55;
+}
+
+.cep-limits {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.cep-reproduce-link {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0284c7;
+  text-decoration: none;
+}
+
+.cep-reproduce-link:hover {
+  text-decoration: underline;
+}
+
+/* 结构化事件卡片扩展样式 */
+.topic-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.topic-origin-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f5132;
+  background: #d1e7dd;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.topic-sample-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.topic-structured-meta {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  background: rgba(15, 39, 66, 0.04);
+  border-radius: 8px;
+  font-size: 11.5px;
+  display: grid;
+  gap: 4px;
+}
+
+.topic-structured-meta div {
+  display: grid;
+  grid-template-columns: 105px 1fr;
+  gap: 6px;
+}
+
+.topic-structured-meta dt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.topic-structured-meta dd {
+  margin: 0;
+  color: var(--geo-ocean-deep);
+  font-weight: 600;
+}
+
+.topic-question-box {
+  background: #f0f9ff;
+  border-left: 3px solid #0284c7;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #0c4a6e;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
 .topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-muted); }
 .topic-raw-title { display: block; font-size: 11.5px; color: var(--text-faint); margin: -4px 0 8px; font-family: ui-monospace, SFMono-Regular, monospace; }
 .compose-login-banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 18px; margin-bottom: 18px; text-align: left; }
 .compose-scaffold-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 10px 14px; background: var(--geo-ocean-surface); border: 1px solid var(--border); border-left: 4px solid var(--geo-ocean); border-radius: 8px; margin-bottom: 14px; font-size: 13px; color: var(--text); }
 .scaffold-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .draft-saved-hint { font-size: 12px; color: var(--geo-green); font-weight: 600; margin-right: 12px; }
-/* 社区首页：让搜索和讨论在首屏内可见。 */
+/* 社区首页：让搜索、3分钟对照入口和讨论在首屏内清晰可见。 */
 .community-hero {
-  padding: 38px 0 34px;
-  margin-bottom: 30px;
+  padding: 28px 0 24px;
+  margin-bottom: 20px;
   background: #10263d;
 }
-.community-intro { max-width: 860px; }
-.community-hero h1 { font-family: inherit; font-size: clamp(28px, 4vw, 44px); margin-bottom: 10px; }
-.community-hero-badge { margin-bottom: 10px; letter-spacing: .04em; }
-.community-lead { margin-bottom: 18px; font-size: 15px; line-height: 1.55; }
-.community-search { max-width: 760px; margin-bottom: 16px; }
-.community-search input { background: transparent; color: #10263d; border: 0; min-height: 46px; }
+.community-intro { max-width: 860px; min-width: 0; }
+.community-hero h1 { font-family: inherit; font-size: clamp(24px, 3.6vw, 38px); margin-bottom: 12px; }
+.community-hero-badge { margin-bottom: 8px; letter-spacing: .04em; }
+.community-lead { margin-bottom: 14px; font-size: 14.5px; line-height: 1.5; }
+.community-search { max-width: 760px; margin-bottom: 12px; }
+.community-search input { background: transparent; color: #10263d; border: 0; min-height: 44px; }
 .community-search input::placeholder { color: #66788a; }
 .community-hero-actions { gap: 8px; }
 .hot-topics-bar { padding: 20px 24px; margin-bottom: 30px; }
 .hot-topic-card { background: var(--surface); }
 .community-layout { scroll-margin-top: 24px; }
-@media (max-width: 520px) { .community-hero { padding: 28px 0; } .community-search { flex-direction: column; border-radius: 16px; } .community-search button { width: 100%; } }
+.community-main { min-width: 0; }
+.community-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.community-sort { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 520px) {
+  .community-hero { padding: 18px 0 16px; }
+  .community-search { flex-direction: row; border-radius: 14px; padding: 4px; }
+  .community-search input { min-height: 38px; padding: 0 10px; font-size: 13px; }
+  .community-search button { width: auto; padding: 6px 14px; font-size: 13px; white-space: nowrap; }
+  .flagship-compare-card { padding: 12px; margin-bottom: 10px; gap: 10px; }
+  .flagship-card-cta, .flagship-start-btn { width: 100%; text-align: center; justify-content: center; }
+  .baroque-filter-btn { padding: 6px 11px; font-size: 12.5px; }
+}
 /* 继承并深化全局巴洛克与古典地理学会视觉系统 */
 .community-page {
   padding-bottom: 90px;
@@ -992,10 +1392,10 @@ onBeforeUnmount(() => {
   isolation: isolate;
   background: linear-gradient(118deg, #102d3a 8%, #124957 62%, #17646a);
   color: #f7f5ed;
-  padding: 32px 0;
-  margin-bottom: 30px;
+  padding: 26px 0;
+  margin-bottom: 20px;
   border-bottom: 0;
-  border-radius: 0 0 44px 44px;
+  border-radius: 0 0 36px 36px;
   box-shadow: var(--shadow-md);
 }
 
@@ -1004,7 +1404,7 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: minmax(0, 1.75fr) minmax(280px, 1fr);
   align-items: center;
-  gap: clamp(24px, 4vw, 56px);
+  gap: clamp(16px, 3vw, 44px);
 }
 
 .community-tides { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
@@ -1021,19 +1421,19 @@ onBeforeUnmount(() => {
 .community-tides span:nth-child(2) { right: -55px; top: -45px; }
 .community-tides span:nth-child(3) { right: 10px; top: 20px; }
 .community-discovery {
-  padding: 20px;
+  padding: 18px;
   border: 1px solid rgba(178, 230, 223, 0.26);
-  border-radius: 24px;
+  border-radius: 20px;
   background: rgba(7, 39, 48, 0.36);
 }
-.discovery-eyebrow { margin: 0 0 12px; color: #c7e6df; font-size: 13px; letter-spacing: .08em; }
-.community-discovery a { display: flex; align-items: center; gap: 12px; padding: 14px 0; color: #fff; text-decoration: none; }
+.discovery-eyebrow { margin: 0 0 10px; color: #c7e6df; font-size: 12.5px; letter-spacing: .08em; }
+.community-discovery a { display: flex; align-items: center; gap: 10px; padding: 11px 0; color: #fff; text-decoration: none; }
 .community-discovery a + a { border-top: 1px solid rgba(178, 230, 223, 0.18); }
 .community-discovery a > span:first-child { font: 12px ui-monospace, monospace; color: #a8dcd2; }
 .community-discovery a > span:last-child { margin-left: auto; }
-.community-discovery a div { display: grid; gap: 4px; }
-.community-discovery strong { font-size: 15px; }
-.community-discovery small { color: #c7e6df; font-size: 12px; }
+.community-discovery a div { display: grid; gap: 2px; }
+.community-discovery strong { font-size: 14px; }
+.community-discovery small { color: #c7e6df; font-size: 11.5px; }
 .community-discovery a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
 .community-discovery a:focus-visible { outline: 2px solid #c7e6df; outline-offset: 4px; border-radius: 8px; }
 
@@ -1046,12 +1446,18 @@ onBeforeUnmount(() => {
   to { opacity: 1; translate: 0 0; }
 }
 @media (max-width: 1000px) {
-  .community-hero-inner { grid-template-columns: 1fr; }
-  .community-discovery { display: none; }
+  .community-hero-inner { grid-template-columns: 1fr; gap: 14px; }
+  .community-discovery {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+  .community-discovery a {
+    padding: 8px 0;
+  }
 }
 @media (max-width: 520px) {
-  .community-hero { padding: 32px 0; border-radius: 0 0 28px 28px; }
-  .community-hero h1 { line-height: 1.35; }
+  .community-hero { padding: 18px 0; border-radius: 0 0 24px 24px; }
+  .community-hero h1 { line-height: 1.3; font-size: 22px; }
 }
 
 .community-hero-badge {

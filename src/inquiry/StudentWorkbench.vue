@@ -77,6 +77,14 @@
         <div class="driving-card">
           <span class="q-kicker">核心驱动问题：</span>
           <p class="driving-text">{{ task.drivingQuestion }}</p>
+          <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1">
+            <span style="font-size: 13px; color: #0369a1; font-weight: 600">
+              ⚡ 想先动手做 3 分钟对照实验、拿到第一张科学证据卡，再逐步完善变量设计与报告？
+            </span>
+            <button type="button" class="btn-next" style="padding: 6px 14px; font-size: 13px" @click="currentStep = 3">
+              直接开始对照实验（第 3 步）→
+            </button>
+          </div>
         </div>
       </div>
 
@@ -181,10 +189,10 @@
     <!-- 步骤三：动手仿真与证据链 -->
     <section v-show="currentStep === 3" class="step-panel" aria-labelledby="step3-heading">
       <div class="panel-intro">
-        <span class="step-tag">第 3 步 · 动手仿真与实证记录</span>
+        <span class="step-tag">第 3 步 · 动手仿真与实证记录（教学仿真，非现场实测）</span>
         <h3 id="step3-heading">在交互模型中生成对比证据</h3>
         <p class="intro-desc">
-          保持降雨强度与历时不变，分别测试不同工况。每次测试后点击【捕获为科学证据卡】，形成完整的对照证据链。
+          保持降雨强度与历时不变，分别测试不同工况。每次测试后点击【生成对照证据卡】或【捕获为科学证据卡】，形成完整的对照证据链。
         </p>
       </div>
 
@@ -201,10 +209,14 @@
         @update="onUpdateCard"
       />
 
-      <div class="step-footer-actions">
-        <button type="button" class="btn-prev" @click="currentStep = 2">← 上一步</button>
+      <!-- 渐进式展开：完成第一个对照结果后，逐步进入变量设计、反例质证与完整报告/教师量规 -->
+      <div class="step-footer-actions" style="flex-wrap: wrap; gap: 10px">
+        <button type="button" class="btn-prev" @click="currentStep = 2">← 补充变量设计（第 2 步）</button>
         <button type="button" class="btn-next" @click="currentStep = 4">
-          下一步：因果机制解释与反例 →
+          下一步：因果解释与反例边界（第 4 步）→
+        </button>
+        <button type="button" class="btn-prev" @click="currentStep = 6">
+          直接查看完整报告与评价量规（第 6 步）→
         </button>
       </div>
     </section>
@@ -389,7 +401,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   inquiryState,
   getCurrentDraft,
@@ -417,9 +430,35 @@ const props = defineProps({
   }
 })
 
-const currentStep = ref(1)
+let maybeRoute = null
+try {
+  maybeRoute = useRoute()
+} catch {
+  maybeRoute = null
+}
+
+function resolveInitialStep(q) {
+  if (!q) return 1
+  if (q.mode === 'compare' || q.shared === '1' || q.surfaceA || q.surfaceB) return 3
+  const stepNum = Number(q.step)
+  if (stepNum >= 1 && stepNum <= 6) return stepNum
+  return 1
+}
+
+const currentStep = ref(resolveInitialStep(maybeRoute?.query))
 const newControlledInput = ref('')
 const studentSelfScores = ref({})
+
+if (maybeRoute) {
+  watch(
+    () => maybeRoute.query,
+    (q) => {
+      if (q && (q.mode === 'compare' || q.shared === '1' || q.step)) {
+        currentStep.value = resolveInitialStep(q)
+      }
+    }
+  )
+}
 
 const steps = [
   { num: 1, name: '驱动问题与猜想' },
@@ -433,6 +472,9 @@ const steps = [
 const draft = computed(() => getCurrentDraft())
 
 onMounted(async () => {
+  if (maybeRoute?.query) {
+    currentStep.value = resolveInitialStep(maybeRoute.query)
+  }
   await syncCloudDraft(props.task.id)
   try { await syncStudentReviews() } catch {}
 })

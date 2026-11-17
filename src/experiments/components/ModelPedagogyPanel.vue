@@ -196,7 +196,12 @@ const communityDiscussRoute = computed(() => {
   const firstLimit = Array.isArray(props.limitations) ? props.limitations[0] : props.limitations
   const cleanBadge = badgeText.value.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, '').trim()
   const title = `【实验观察】在「${cleanBadge}」中调节参数后的现象探讨`
-  const body = `我在「${cleanBadge}」实验模型中进行了操作（${firstChange || '调节实验参数'}）。\n\n我看到：${firstObserve || '……'}\n\n我猜：这是因为……\n\n我还想知道：真实地理环境中，${firstLimit || '还有哪些因素会影响这一过程？'}`
+  const body =
+    `【模型来源与证据类型】${cleanBadge}（教学仿真，非现场实测）\n` +
+    `【实验条件与操作】${firstChange || '调节实验参数'}\n\n` +
+    `【我看到】${firstObserve || '……'}\n\n` +
+    `【我猜】这是因为……\n\n` +
+    `【适用边界与追问】模型适用边界：${firstLimit || '定性教学仿真'}。在真实地理环境中，还有哪些因素会影响这一结果？`
   return `/?compose=1&kind=discussion&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}#compose`
 })
 </script>
