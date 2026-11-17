@@ -103,4 +103,39 @@ describe('community API with SQLite', () => {
     }).status).toBe(200)
     expect(call('GET', '/api/community/posts').payload.posts).toHaveLength(1)
   })
+
+  it('deduplicates rapid identical post and reply submissions within 60s and persists custom evidence metadata', () => {
+    const postPayload = {
+      categoryId: 4,
+      kind: 'question',
+      title: '多时相卫星影像卷帘对比复验',
+      body: '对比 2024-06-01 与 2024-06-15 长江中下游 MODIS 影像。',
+      evidenceId: 'ev-satellite-east-asia',
+      compareUrl: '/geo-labs/satellite?place=china&dateA=2024-06-01&dateB=2024-06-15&split=50&shared=1',
+      evidenceTitle: '中国东部多时相卫星卷帘证据',
+      conditions: '左侧 2024-06-01 vs 右侧 2024-06-15',
+      facts: '【真实卫星观测 · NASA MODIS Terra】无云窗口水体边界对比'
+    }
+    const first = call('POST', '/api/community/posts', { userId: 'user-1', body: postPayload })
+    const second = call('POST', '/api/community/posts', { userId: 'user-1', body: postPayload })
+    expect(first.status).toBe(201)
+    expect(second.status).toBe(201)
+    expect(second.payload.id).toBe(first.payload.id)
+    expect(second.payload.deduplicated).toBe(true)
+
+    const detail = call('GET', '/api/community/posts/:id', { params: { id: first.payload.id } })
+    expect(detail.payload.post.compareUrl).toBe(postPayload.compareUrl)
+    expect(detail.payload.post.evidenceTitle).toBe(postPayload.evidenceTitle)
+    expect(detail.payload.post.facts).toContain('真实卫星观测')
+
+    const r1 = call('POST', '/api/community/posts/:id/replies', {
+      params: { id: first.payload.id }, userId: 'user-2', body: { body: '补充地面水文站实测核对。' }
+    })
+    const r2 = call('POST', '/api/community/posts/:id/replies', {
+      params: { id: first.payload.id }, userId: 'user-2', body: { body: '补充地面水文站实测核对。' }
+    })
+    expect(r1.status).toBe(201)
+    expect(r2.payload.id).toBe(r1.payload.id)
+    expect(r2.payload.deduplicated).toBe(true)
+  })
 })

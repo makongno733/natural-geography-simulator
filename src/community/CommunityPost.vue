@@ -54,8 +54,53 @@
             <button v-if="canManage" class="baroque-btn baroque-btn-sm" type="button" @click="deletePost">
               🗑 删除讨论
             </button>
-            <button class="community-report" type="button" @click="reportPost">⚠ 举报违规</button>
+            <button
+              class="community-report"
+              type="button"
+              :aria-expanded="showReportBox"
+              @click="showReportBox = !showReportBox"
+            >
+              ⚠ 举报 / 纠错反馈
+            </button>
           </div>
+        </div>
+
+        <!-- 内嵌式内容举报与学术纠错反馈面板（无需阻塞弹窗，支持登录举报与访客直达站主） -->
+        <div v-if="showReportBox" class="report-inline-panel" role="region" aria-label="内容举报与纠错反馈">
+          <div class="rip-head">
+            <strong>🛡 内容监督与学术纠错反馈</strong>
+            <button type="button" class="rip-close" @click="showReportBox = false">收起 ×</button>
+          </div>
+          <div class="rip-chips">
+            <button
+              v-for="r in ['数据/地名/单位有误', '未标明真实观测或教学仿真', '广告或无关灌水', '不友善或违规内容']"
+              :key="r"
+              type="button"
+              class="formula-chip"
+              @click="reportReason = r"
+            >
+              {{ r }}
+            </button>
+          </div>
+          <div class="rip-input-row">
+            <input
+              v-model.trim="reportReason"
+              type="text"
+              maxlength="300"
+              placeholder="请填写具体违规原因或科学纠错建议（1–300 字）…"
+              aria-label="举报或纠错原因"
+            />
+            <button type="button" class="baroque-btn baroque-btn-sm baroque-btn-primary" :disabled="reporting" @click="submitReport">
+              {{ reporting ? '提交中…' : '提交举报反馈' }}
+            </button>
+            <a
+              :href="`mailto:makongno733@gmail.com?subject=${encodeURIComponent('【地理共同体内容反馈】' + (post.title || ''))}&body=${encodeURIComponent('反馈内容：' + (reportReason || '') + '\n页面地址：' + currentHref)}`"
+              class="baroque-btn baroque-btn-sm"
+            >
+              ✉ 邮件联系站主 ↗
+            </a>
+          </div>
+          <p v-if="reportFeedbackMsg" class="rip-feedback" role="status">{{ reportFeedbackMsg }}</p>
         </div>
 
         <div class="community-prose detail-body" v-html="renderGeoScholarlyText(post.body)"></div>
@@ -231,7 +276,12 @@
             rows="5"
             placeholder="写下你的观察依据、解释过程或补充资料（支持 $公式$ 与 $$块级公式$$）……"
           />
-          <p v-if="replyError" class="community-error" role="alert">{{ replyError }}</p>
+          <div v-if="replyError" class="community-error" role="alert" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap">
+            <span>{{ replyError }}</span>
+            <button type="button" class="baroque-btn baroque-btn-sm" :disabled="submitting" @click="sendReply">
+              🔄 重新尝试发表
+            </button>
+          </div>
           <div class="reply-submit-row">
             <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="submitting">
               {{ submitting ? '正在发表…' : '发表回答与评论 ✦' }}
@@ -266,6 +316,11 @@ const parentId = ref(null)
 const replyInput = ref(null)
 const isDemoMode = ref(false)
 const allowDemoMode = import.meta.env.DEV
+const showReportBox = ref(false)
+const reportReason = ref('')
+const reporting = ref(false)
+const reportFeedbackMsg = ref('')
+const currentHref = computed(() => (typeof window !== 'undefined' ? window.location.href : 'https://geo.kongnoma279.com'))
 let stream
 
 const loginReturnHref = computed(() => {
@@ -530,19 +585,37 @@ async function deletePost() {
   }
 }
 
-async function reportPost() {
-  const reason = window.prompt('请简要说明学术规范违规或虚假信息举报原因：')
-  if (!reason?.trim()) return
+async function submitReport() {
+  const reason = reportReason.value.trim()
+  if (!reason) {
+    reportFeedbackMsg.value = '请先点选或填写举报/纠错原因。'
+    return
+  }
+  reporting.value = true
+  reportFeedbackMsg.value = ''
   try {
-    if (!isDemoMode.value) {
+    if (!isDemoMode.value && user.value) {
       await apiRequest('/api/community/reports', {
         method: 'POST',
         body: JSON.stringify({ postId: post.value.id, reason })
       })
+      reportFeedbackMsg.value = '✓ 学术监督举报已递交至后台工单，管理员将尽快核对处理。'
+      toast.success('学术监督举报已递交，管理员将核对处理。')
+    } else {
+      try {
+        const list = JSON.parse(localStorage.getItem('geo_local_reports_v1') || '[]')
+        list.unshift({ postId: post.value?.id, reason, createdAt: new Date().toISOString() })
+        localStorage.setItem('geo_local_reports_v1', JSON.stringify(list.slice(0, 50)))
+      } catch {}
+      reportFeedbackMsg.value = '✓ 已在本机记录你的反馈！如需加急处理，也可登录后提交云端工单或点击右侧「邮件联系站主」。'
+      toast.success('反馈已记录')
     }
-    toast.success('学术监督举报已递交，管委会将核对处理。')
+    reportReason.value = ''
   } catch (cause) {
+    reportFeedbackMsg.value = cause.message || '提交举报失败，请重试或点击右侧邮件联系站主。'
     toast.error(cause.message || '提交举报失败')
+  } finally {
+    reporting.value = false
   }
 }
 
@@ -569,6 +642,55 @@ onBeforeUnmount(() => stream?.close())
 </script>
 
 <style scoped>
+.report-inline-panel {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+  color: #92400e;
+}
+.rip-close {
+  background: transparent;
+  border: 0;
+  color: #92400e;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rip-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rip-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rip-input-row input {
+  flex: 1 1 220px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.rip-feedback {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #065f46;
+}
 .community-detail {
   padding-top: 36px;
   padding-bottom: 90px;

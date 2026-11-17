@@ -47,6 +47,7 @@ export function migrateCommunity() {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS community_reply_post ON community_reply(post_id, created_at);
+    CREATE INDEX IF NOT EXISTS community_reply_post_status ON community_reply(post_id, status);
     CREATE TABLE IF NOT EXISTS community_report (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       reporter_id TEXT NOT NULL REFERENCES user(id),
@@ -86,6 +87,18 @@ export function migrateCommunity() {
   }
   if (!columns.includes('evidence_card')) {
     database.exec("ALTER TABLE community_post ADD COLUMN evidence_card TEXT DEFAULT NULL;")
+  }
+  if (!columns.includes('compare_url')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN compare_url TEXT DEFAULT NULL;")
+  }
+  if (!columns.includes('evidence_title')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN evidence_title TEXT DEFAULT NULL;")
+  }
+  if (!columns.includes('evidence_conditions')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN evidence_conditions TEXT DEFAULT NULL;")
+  }
+  if (!columns.includes('evidence_facts')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN evidence_facts TEXT DEFAULT NULL;")
   }
 
   // 扩展表：点赞、收藏、用户资料、学术交流社群、热点讨论、资源共享库
@@ -303,6 +316,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
       p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
+      p.compare_url AS compareUrl, p.evidence_title AS evidenceTitle, p.evidence_conditions AS conditions, p.evidence_facts AS facts,
       p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
       (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published') AS acceptedAnswerExcerpt,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
@@ -333,7 +347,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const currentUserId = req.accountUser?.id || null
 
     const post = database.prepare(`SELECT p.id, p.author_id AS authorId, p.category_id AS categoryId, p.kind, p.title, p.body,
-      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId, p.accepted_reply_id AS acceptedReplyId,
+      p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
+      p.compare_url AS compareUrl, p.evidence_title AS evidenceTitle, p.evidence_conditions AS conditions, p.evidence_facts AS facts,
+      p.accepted_reply_id AS acceptedReplyId,
       p.created_at AS createdAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
       (SELECT COUNT(*) FROM community_post_bookmark b WHERE b.post_id = p.id) AS bookmarkCount
@@ -376,17 +392,34 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const evidenceCard = typeof req.body?.evidenceId === 'string' && req.body.evidenceId.trim().length <= 60
       ? req.body.evidenceId.trim()
       : null
+    const compareUrl = typeof req.body?.compareUrl === 'string' && req.body.compareUrl.trim().length <= 500
+      ? req.body.compareUrl.trim()
+      : null
+    const evidenceTitle = typeof req.body?.evidenceTitle === 'string' ? clean(req.body.evidenceTitle, 160) : null
+    const evidenceConditions = typeof req.body?.conditions === 'string' ? clean(req.body.conditions, 300) : null
+    const evidenceFacts = typeof req.body?.facts === 'string' ? clean(req.body.facts, 500) : null
 
     if (!title || !body || !categoryId || !kind) return res.status(400).json({ error: '请完整填写标题、内容、分区和类型' })
     if (!database.prepare('SELECT 1 FROM community_category WHERE id = ? AND active = 1').get(categoryId)) return res.status(400).json({ error: '分区不存在' })
+
+    // 60 秒内相同作者、标题与正文幂等防重复提交（防止弱网重试或双击产生重复帖）
+    const dupWindow = new Date(Date.now() - 60000).toISOString()
+    const duplicatePost = database.prepare(
+      "SELECT id FROM community_post WHERE author_id = ? AND title = ? AND body = ? AND created_at > ? AND status = 'published' ORDER BY id DESC LIMIT 1"
+    ).get(req.accountUser.id, title, body, dupWindow)
+    if (duplicatePost) {
+      return res.status(201).json({ id: duplicatePost.id, deduplicated: true })
+    }
 
     const recent = database.prepare('SELECT COUNT(*) AS n FROM community_post WHERE author_id = ? AND created_at > ?')
       .get(req.accountUser.id, new Date(Date.now() - 3600000).toISOString()).n
     if (recent >= 5) return res.status(429).json({ error: '发帖过于频繁，请稍后再试' })
 
     const now = new Date().toISOString()
-    const result = database.prepare('INSERT INTO community_post (author_id, category_id, kind, title, body, tags, linked_experiment, evidence_card, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(req.accountUser.id, categoryId, kind, title, body, tags, linkedExperiment, evidenceCard, now, now)
+    const result = database.prepare(
+      `INSERT INTO community_post (author_id, category_id, kind, title, body, tags, linked_experiment, evidence_card, compare_url, evidence_title, evidence_conditions, evidence_facts, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(req.accountUser.id, categoryId, kind, title, body, tags, linkedExperiment, evidenceCard, compareUrl, evidenceTitle, evidenceConditions, evidenceFacts, now, now)
 
     announce('post', result.lastInsertRowid)
     res.status(201).json({ id: result.lastInsertRowid })
@@ -515,8 +548,16 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     if (!database.prepare("SELECT 1 FROM community_post WHERE id = ? AND status = 'published'").get(postId)) return res.status(404).json({ error: '讨论不存在' })
     if (parentId && !database.prepare("SELECT 1 FROM community_reply WHERE id = ? AND post_id = ? AND status = 'published'").get(parentId, postId)) return res.status(400).json({ error: '引用的回复不存在' })
 
+    const dupWindow = new Date(Date.now() - 60000).toISOString()
+    const duplicateReply = database.prepare(
+      "SELECT id FROM community_reply WHERE post_id = ? AND author_id = ? AND body = ? AND created_at > ? AND status = 'published' ORDER BY id DESC LIMIT 1"
+    ).get(postId, req.accountUser.id, body, dupWindow)
+    if (duplicateReply) {
+      return res.status(201).json({ id: duplicateReply.id, deduplicated: true })
+    }
+
     const recent = database.prepare('SELECT COUNT(*) AS n FROM community_reply WHERE author_id = ? AND created_at > ?')
-      .get(req.accountUser.id, new Date(Date.now() - 60000).toISOString()).n
+      .get(req.accountUser.id, dupWindow).n
     if (recent >= 3) return res.status(429).json({ error: '回复过于频繁，请稍后再试' })
 
     const result = database.prepare('INSERT INTO community_reply (post_id, parent_id, author_id, body, created_at) VALUES (?, ?, ?, ?, ?)')

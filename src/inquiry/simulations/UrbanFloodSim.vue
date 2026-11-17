@@ -156,9 +156,9 @@
       <div class="qc-step-block">
         <div class="qc-step-title">
           <span class="qc-num">3</span>
-          <strong>记录一句解释，生成可分享的科学证据卡：</strong>
+          <strong>记录一句你自己的解释，生成可分享的科学证据卡：</strong>
           <button type="button" class="btn-fill-claim" @click="fillSampleClaim">
-            ✨ 填入实证解释参考句
+            ✨ 填入参考示例解释（可修改）
           </button>
         </div>
         <div class="claim-input-row">
@@ -168,7 +168,8 @@
             type="text"
             maxlength="240"
             aria-label="一句话科学解释"
-            :placeholder="`例如：固定 ${rainIntensity} mm/h、${rainDuration} 分钟暴雨，${metricsB.surfaceName}下渗率（${metricsB.infiltrationPercent}%）高于${metricsA.surfaceName}（${metricsA.infiltrationPercent}%），使径流峰值从 ${metricsA.peakDischarge} 降至 ${metricsB.peakDischarge} m³/s。`"
+            :placeholder="`请用自己的话记录（或点击右上角填入参考示例）：例如对比 ${metricsA.surfaceName} 与 ${metricsB.surfaceName} 的下渗率与洪峰差异…`"
+            @input="saveFloodSessionState"
           />
           <button type="button" class="btn-generate-evidence" @click="generateAndShowEvidenceCard">
             📋 生成对照证据卡
@@ -183,7 +184,7 @@
             <span class="gec-type-badge">📊 科学对照证据卡</span>
             <span class="gec-sim-badge">{{ comparisonCard.disclaimer }}</span>
           </div>
-          <span class="gec-status">{{ copyFeedback || '✓ 证据卡已就绪，可复制链接在任意新会话还原对照' }}</span>
+          <span class="gec-status">{{ copyFeedback || '✓ 公开链接仅含实验参数，私人草稿已分离保护' }}</span>
         </div>
 
         <h5 class="gec-main-title">{{ comparisonCard.title }}</h5>
@@ -220,7 +221,7 @@
             </dd>
           </div>
           <div class="gec-meta-item full-span">
-            <dt>我的实证解释</dt>
+            <dt>{{ studentClaim && studentClaim.trim() ? '我的实证解释' : '实证解释（当前为参考示例，可在上方输入框写下你的解释）' }}</dt>
             <dd>{{ comparisonCard.claim }}</dd>
           </div>
           <div class="gec-meta-item full-span gec-limit-box">
@@ -230,7 +231,9 @@
         </dl>
 
         <div class="gec-share-bar">
-          <label class="share-url-label" for="reproducible-share-url">可复现公开分享链接（不含私人草稿与账号信息）：</label>
+          <label class="share-url-label" for="reproducible-share-url">
+            🔒 <strong>将公开分享的内容：</strong>仅包含降雨强度（{{ rainIntensity }} mm/h）、历时（{{ rainDuration }} 分钟）、坡度（{{ slope }}°）与两组地面类型，<strong>不含你的私人草稿或账号信息</strong>（链接共 {{ shareUrl.length }} 字符）：
+          </label>
           <div class="share-url-controls">
             <input
               id="reproducible-share-url"
@@ -243,7 +246,7 @@
             <button type="button" class="btn-copy-share" @click="copyShareLink">
               {{ copyFeedback ? '✓ 已复制分享链接' : '🔗 复制分享链接' }}
             </button>
-            <router-link :to="communityDiscussRoute" class="btn-discuss-evidence">
+            <router-link :to="communityDiscussRoute" class="btn-discuss-evidence" @click="prepareCommunityDraft">
               💬 带着这张证据卡去社区讨论 ↗
             </router-link>
           </div>
@@ -530,6 +533,7 @@
         <router-link
           :to="communityDiscussRoute"
           class="btn-go-discuss"
+          @click="prepareCommunityDraft"
         >
           带着这个观察去社区提问 / 讨论 ↗
         </router-link>
@@ -551,6 +555,7 @@ import {
 } from './urbanFloodModel.js'
 
 const emit = defineEmits(['capture'])
+const FLOOD_SESSION_KEY = 'geo_urban_flood_state_v1'
 
 let maybeRoute = null
 let maybeRouter = null
@@ -584,7 +589,47 @@ const showComparisonEvidence = ref(false)
 const isSharedSession = ref(false)
 const copyFeedback = ref('')
 
+function saveFloodSessionState() {
+  try {
+    sessionStorage.setItem(
+      FLOOD_SESSION_KEY,
+      JSON.stringify({
+        surfaceA: surfaceA.value,
+        surfaceB: surfaceB.value,
+        rainIntensity: rainIntensity.value,
+        rainDuration: rainDuration.value,
+        slope: slope.value,
+        spongeCapacity: spongeCapacity.value,
+        userGuess: userGuess.value,
+        studentClaim: studentClaim.value
+      })
+    )
+  } catch {}
+}
+
 function restoreFromQuery(q) {
+  const hasExplicitQuery = Boolean(q && (q.rain || q.surfaceA || q.surfaceB || q.shared === '1'))
+  try {
+    const returnPending = sessionStorage.getItem('geo_urban_flood_return_pending') === '1'
+    const savedRaw = sessionStorage.getItem(FLOOD_SESSION_KEY)
+    if (returnPending && savedRaw) {
+      sessionStorage.removeItem('geo_urban_flood_return_pending')
+      const saved = JSON.parse(savedRaw)
+      if (!hasExplicitQuery && saved) {
+        if (saved.rainIntensity) rainIntensity.value = Number(saved.rainIntensity) || 50
+        if (saved.rainDuration) rainDuration.value = Number(saved.rainDuration) || 60
+        if (saved.slope) slope.value = Number(saved.slope) || 2
+        if (saved.spongeCapacity) spongeCapacity.value = Number(saved.spongeCapacity) || 25
+        if (saved.surfaceA) surfaceA.value = saved.surfaceA
+        if (saved.surfaceB) surfaceB.value = saved.surfaceB
+        if (saved.userGuess) userGuess.value = saved.userGuess
+      }
+      if (saved?.studentClaim && !(q && q.claim)) {
+        studentClaim.value = saved.studentClaim
+      }
+    }
+  } catch {}
+
   const parsed = parseUrbanFloodShareQuery(q)
   if (!parsed) return
   rainIntensity.value = parsed.rainIntensity
@@ -603,9 +648,7 @@ function restoreFromQuery(q) {
 }
 
 onMounted(() => {
-  if (maybeRoute?.query) {
-    restoreFromQuery(maybeRoute.query)
-  }
+  restoreFromQuery(maybeRoute?.query || {})
 })
 
 if (maybeRoute) {
@@ -618,6 +661,10 @@ if (maybeRoute) {
     }
   )
 }
+
+watch([surfaceA, surfaceB, rainIntensity, rainDuration, slope, spongeCapacity], () => {
+  saveFloodSessionState()
+})
 
 // 当前焦点地面指标（保持与单地面控制区完全一致）
 const currentMetrics = computed(() =>
@@ -703,6 +750,7 @@ const refHydroPath = computed(() => {
   return `M 40 110 Q ${x * 0.7} ${y} ${x} ${y} T 470 108`
 })
 
+// 公开可复现分享链接：仅包含实验参数（雨强、历时、坡度、两组地表类型），与私人草稿彻底分离
 const shareQueryObj = computed(() =>
   serializeUrbanFloodShareQuery({
     surfaceA: surfaceA.value,
@@ -711,8 +759,7 @@ const shareQueryObj = computed(() =>
     rainDuration: rainDuration.value,
     slope: slope.value,
     spongeCapacity: spongeCapacity.value,
-    guess: userGuess.value,
-    claim: studentClaim.value || comparisonCard.value.claim
+    guess: userGuess.value
   })
 )
 
@@ -727,35 +774,59 @@ const shareUrl = computed(() => {
   return `${base}#${shareRelativeRoute.value}`
 })
 
-const communityDiscussRoute = computed(() => {
+// 社区讨论路由：URL 仅携带精简的可复现参数（< 150 字符），完整草稿与观察解释通过本机存储传递
+const communityDiscussRoute = computed(() => ({
+  path: '/community',
+  query: {
+    compose: '1',
+    kind: 'question',
+    evidenceId: 'ev-urban-sponge',
+    linkedExperiment: 'water-cycle-3d',
+    rain: String(rainIntensity.value),
+    duration: String(rainDuration.value),
+    slope: String(slope.value),
+    surfaceA: surfaceA.value,
+    surfaceB: surfaceB.value
+  }
+}))
+
+function prepareCommunityDraft() {
+  saveFloodSessionState()
   const c = comparisonCard.value
   const mA = c.groupA
   const mB = c.groupB
-  return {
-    path: '/community',
-    query: {
-      compose: 1,
-      kind: 'question',
-      evidenceId: 'ev-urban-sponge',
-      linkedExperiment: 'water-cycle-3d',
-      compareUrl: shareRelativeRoute.value,
-      title: `【城市内涝探究】雨量相同（${mA.rainIntensity}mm/h·${mA.rainDuration}分钟）下，${mA.surfaceName}与${mB.surfaceName}对地表径流与下渗的影响观察`,
-      body:
-        `我在「${c.modelName}」（${c.disclaimer}）中进行了控制变量对照实验：\n\n` +
-        `【固定实验条件】${c.conditionsText}\n` +
-        `我看到：\n` +
-        `- 对照组 A（${mA.surfaceName}）：下渗补给率 ${mA.infiltrationPercent}%，地表径流峰值 ${mA.peakDischarge} m³/s，达峰历时 ${mA.timeToPeak} 分钟，估算积水 ${mA.waterDepth} mm；\n` +
-        `- 对照组 B（${mB.surfaceName}）：下渗补给率 ${mB.infiltrationPercent}%，地表径流峰值 ${mB.peakDischarge} m³/s，达峰历时 ${mB.timeToPeak} 分钟，估算积水 ${mB.waterDepth} mm（相比 A 峰值相差 ${c.peakDiff} m³/s，削峰率 ${c.relativeReduction}%）。\n\n` +
-        `我猜 / 我的解释：${c.claim}\n\n` +
-        `【适用边界与说明】：${c.limitations}\n` +
-        `【可复现对照链接】：#${shareRelativeRoute.value}\n\n` +
-        `我还想知道：在真实城市街区里，地下排水管网容量或连续多日降雨导致的土壤饱和，会如何改变这一仿真结论？`
-    }
+  const payload = {
+    kind: 'question',
+    categoryId: 2,
+    title: `【城市内涝探究】雨量相同（${mA.rainIntensity}mm/h·${mA.rainDuration}分钟）下，${mA.surfaceName}与${mB.surfaceName}对地表径流与下渗的影响观察`,
+    body:
+      `我在「${c.modelName}」（**${c.disclaimer}**）中进行了控制变量对照实验：\n\n` +
+      `【固定实验条件】${c.conditionsText}\n` +
+      `我看到：\n` +
+      `- 对照组 A（${mA.surfaceName}）：下渗补给率 ${mA.infiltrationPercent}%，地表径流峰值 ${mA.peakDischarge} m³/s，达峰历时 ${mA.timeToPeak} 分钟，估算积水 ${mA.waterDepth} mm；\n` +
+      `- 对照组 B（${mB.surfaceName}）：下渗补给率 ${mB.infiltrationPercent}%，地表径流峰值 ${mB.peakDischarge} m³/s，达峰历时 ${mB.timeToPeak} 分钟，估算积水 ${mB.waterDepth} mm（相比 A 峰值相差 ${c.peakDiff} m³/s，削峰率 ${c.relativeReduction}%）。\n\n` +
+      `我猜 / 我的解释：${c.claim}\n\n` +
+      `【适用边界与说明】：${c.limitations}\n` +
+      `【可复现对照链接】：#${shareRelativeRoute.value}\n\n` +
+      `我还想知道：在真实城市街区里，地下排水管网容量或连续多日降雨导致的土壤饱和，会如何改变这一仿真结论？`,
+    linkedExperiment: 'water-cycle-3d',
+    evidenceId: 'ev-urban-sponge',
+    compareUrl: shareRelativeRoute.value,
+    evidenceTitle: c.title,
+    conditions: c.conditionsText,
+    facts: c.observation,
+    tagsInput: '城市内涝, 海绵城市, 水循环'
   }
-})
+  try {
+    sessionStorage.setItem('geo_urban_flood_return_pending', '1')
+    sessionStorage.setItem('geo_pending_compose_payload', JSON.stringify(payload))
+    localStorage.setItem('geo_community_post_draft_v1', JSON.stringify(payload))
+  } catch {}
+}
 
 function selectGuess(val) {
   userGuess.value = val
+  saveFloodSessionState()
 }
 
 function onCompareSurfaceChange(which) {
@@ -777,12 +848,14 @@ function resetStandardCompare() {
   surfaceB.value = 'vegetation'
   surface.value = 'vegetation'
   copyFeedback.value = ''
+  saveFloodSessionState()
 }
 
 function fillSampleClaim() {
   const mA = metricsA.value
   const mB = metricsB.value
-  studentClaim.value = `保持 ${mA.rainIntensity} mm/h、${mA.rainDuration} 分钟暴雨不变，${mB.surfaceName}下渗率（${mB.infiltrationPercent}%）远高于${mA.surfaceName}（${mA.infiltrationPercent}%），使地表径流峰值从 ${mA.peakDischarge} m³/s 降至 ${mB.peakDischarge} m³/s。`
+  studentClaim.value = `【参考示例】保持 ${mA.rainIntensity} mm/h、${mA.rainDuration} 分钟暴雨不变，${mB.surfaceName}下渗率（${mB.infiltrationPercent}%）远高于${mA.surfaceName}（${mA.infiltrationPercent}%），使地表径流峰值从 ${mA.peakDischarge} m³/s 降至 ${mB.peakDischarge} m³/s。`
+  saveFloodSessionState()
 }
 
 function syncShareQueryToUrl() {
@@ -792,10 +865,8 @@ function syncShareQueryToUrl() {
 }
 
 function generateAndShowEvidenceCard() {
-  if (!studentClaim.value.trim()) {
-    fillSampleClaim()
-  }
   showComparisonEvidence.value = true
+  saveFloodSessionState()
   syncShareQueryToUrl()
   captureEvidence()
 }

@@ -215,7 +215,7 @@
         <h3 id="sm-evidence-title">把刚才观察到的「{{ seasonAObj.name }} vs {{ seasonBObj.name }}」正午高度与影长对照生成证据卡</h3>
       </div>
       <button type="button" class="sme-fill-btn" @click="fillDefaultClaim">
-        ✨ 填入当前纬度对照结论
+        ✨ 填入参考示例结论（可修改）
       </button>
     </div>
 
@@ -226,12 +226,13 @@
         v-model="studentClaim"
         type="text"
         maxlength="240"
-        :placeholder="`例如：固定 ${activePlace || latitude + '°'}（${latitude}°N），夏至正午太阳高度 ${metricsA.noonH}° 高于冬至 ${metricsB.noonH}°，冬至正午北向竿影最长（${metricsB.shadowM}m）。`"
+        :placeholder="`请用你自己的话写下观察结论（或点击右上角填入参考示例）：例如对比 ${activePlace || latitude + '°'} 夏至与冬至的正午太阳高度角 H 与竿影变化…`"
+        @input="saveSolarSessionState"
       />
       <button type="button" class="sme-preview-btn" @click="showEvidenceCard = true">
         📋 预览 3D 对照证据卡
       </button>
-      <router-link :to="communityDiscussRoute" class="sme-discuss-btn">
+      <router-link :to="communityDiscussRoute" class="sme-discuss-btn sm-btn-discuss" @click="prepareCommunityDraft">
         💬 带着这张证据卡去社区讨论 ↗
       </router-link>
     </div>
@@ -242,7 +243,7 @@
           <span class="sme-badge-primary">📐 3D 地球运动对照证据卡</span>
           <span class="sme-badge-sim">教学仿真，非现场实测</span>
         </div>
-        <span class="sme-copy-hint">{{ shareCopyHint || '✓ 可复制链接在新浏览器会话还原同一对照角度与参数' }}</span>
+        <span class="sme-copy-hint">{{ shareCopyHint || '✓ 公开链接仅含 3D 参数与视角，不含私人草稿' }}</span>
       </div>
 
       <h4 class="sme-card-title">{{ evidenceCard.title }}</h4>
@@ -273,7 +274,7 @@
           </dd>
         </div>
         <div class="full-span">
-          <dt>我的观察与解释</dt>
+          <dt>{{ studentClaim && studentClaim.trim() ? '我的观察与解释' : '观察描述（当前为参考示例，可在上方输入框写下你的结论）' }}</dt>
           <dd>{{ effectiveClaim }}</dd>
         </div>
         <div class="full-span sme-limit-box">
@@ -283,7 +284,9 @@
       </dl>
 
       <div class="sme-share-bar">
-        <label for="sm-share-url" class="sme-share-label">可复现公开分享链接（不含私人草稿，新会话打开自动对齐正午子午面视角）：</label>
+        <label for="sm-share-url" class="sme-share-label">
+          🔒 <strong>将公开分享的内容：</strong>仅含观测纬度（{{ latitude }}°）、二至日对照条件与观察视角（{{ activeCameraLabel }}），<strong>不含私人草稿</strong>（链接共 {{ shareFullUrl.length }} 字符）：
+        </label>
         <div class="sme-share-controls">
           <input
             id="sm-share-url"
@@ -296,7 +299,7 @@
           <button type="button" class="sme-copy-btn" @click="copyShareLink">
             {{ shareCopyHint ? '✓ 已复制分享链接' : '🔗 复制分享链接' }}
           </button>
-          <router-link :to="communityDiscussRoute" class="sme-discuss-btn">
+          <router-link :to="communityDiscussRoute" class="sme-discuss-btn sm-btn-discuss" @click="prepareCommunityDraft">
             💬 带着证据卡去社区发帖 ↗
           </router-link>
         </div>
@@ -502,27 +505,22 @@ export default {
     },
     defaultClaimText() {
       const placeLabel = this.activePlace ? `${this.activePlace}（${this.latitude}°${this.latitude >= 0 ? 'N' : 'S'}）` : `${this.latitude}°${this.latitude >= 0 ? 'N' : 'S'}`
-      return `固定观测地 ${placeLabel}：夏至日（δ=+23.4°）正午太阳高度角 H = ${this.metricsA.noonH}°，2.5m 立竿正午影长 ${this.metricsA.shadowM}m，昼长 ${this.metricsA.daylength}h；切换至冬至日（δ=-23.4°）后，正午太阳高度角降至 ${this.metricsB.noonH}°（相差 ${this.altitudeDiff}°），正午影长拉长至 ${this.metricsB.shadowM}m，昼长缩短至 ${this.metricsB.daylength}h。`
+      return `【参考示例】固定观测地 ${placeLabel}：夏至日（δ=+23.4°）正午太阳高度角 H = ${this.metricsA.noonH}°，2.5m 立竿正午影长 ${this.metricsA.shadowM}m，昼长 ${this.metricsA.daylength}h；切换至冬至日（δ=-23.4°）后，正午太阳高度角降至 ${this.metricsB.noonH}°（相差 ${this.altitudeDiff}°），正午影长拉长至 ${this.metricsB.shadowM}m，昼长缩短至 ${this.metricsB.daylength}h。`
     },
     effectiveClaim() {
       return (this.studentClaim && this.studentClaim.trim()) ? this.studentClaim.trim() : this.defaultClaimText
     },
+    // 公开可复现分享链接：仅包含公开 3D 参数（纬度、节气、视角），不含私人草稿，确保链接精简（约 125 字符）且在手机微信/QQ 稳定打开
     shareRelativeRoute() {
       const params = new URLSearchParams({
-        preset: this.preset?.id || 'default',
         lat: String(this.latitude),
-        place: this.activePlace || '',
         season: this.seasonKey,
         compare: 'winter',
         view: this.cameraPreset || 'meridian',
-        claim: this.effectiveClaim,
         shared: '1'
       })
-      if (this.lessonContext?.grade) {
-        params.set('grade', this.lessonContext.grade)
-        params.set('book', this.lessonContext.book)
-        params.set('chapter', this.lessonContext.chapter)
-        params.set('section', this.lessonContext.section)
+      if (this.activePlace) {
+        params.set('place', this.activePlace)
       }
       return `/experiments/astronomy/solar-motion?${params.toString()}`
     },
@@ -545,7 +543,6 @@ export default {
       }
     },
     communityDiscussRoute() {
-      const placeLabel = this.activePlace ? `${this.activePlace}（${this.latitude}°${this.latitude >= 0 ? 'N' : 'S'}）` : `${this.latitude}°${this.latitude >= 0 ? 'N' : 'S'}`
       return {
         path: '/community',
         query: {
@@ -553,19 +550,9 @@ export default {
           kind: 'discussion',
           linkedExperiment: 'solar-motion',
           evidenceId: 'ev-solar-motion-solstice',
-          compareUrl: this.shareRelativeRoute,
-          evidenceTitle: this.evidenceCard.title,
-          conditions: this.evidenceCard.conditions,
-          facts: this.evidenceCard.facts,
-          title: `【3D 太阳视运动对照】${placeLabel} 夏至（H=${this.metricsA.noonH}°）与冬至（H=${this.metricsB.noonH}°）正午高度与影长观察`,
-          body:
-            `我在「太阳周日视运动与高度角 3D 实验室」中完成了同纬度二至日对照观察（**教学仿真，非现场实测**）：\n\n` +
-            `- **固定观测条件**：${placeLabel}，正午真太阳时（12:00），子午面正视观察角\n` +
-            `- **条件 A（夏至 δ=+23.4°）**：正午太阳高度 $H = ${this.metricsA.noonH}^\\circ$，昼长约 ${this.metricsA.daylength} 小时，2.5m 立竿正午影长 ${this.metricsA.shadowM} m（${this.metricsA.sunrise}）\n` +
-            `- **条件 B（冬至 δ=-23.4°）**：正午太阳高度 $H = ${this.metricsB.noonH}^\\circ$，昼长约 ${this.metricsB.daylength} 小时，2.5m 立竿正午影长 ${this.metricsB.shadowM} m（${this.metricsB.sunrise}）\n` +
-            `- **我的观察结论**：${this.effectiveClaim}\n` +
-            `- **可复现 3D 对照链接**：${this.shareRelativeRoute}\n` +
-            `- **延伸讨论问题**：如果观测地进一步向高纬移动到漠河（53.5°N），冬至日正午太阳高度和楼间距系数会如何变化？`
+          lat: String(this.latitude),
+          season: this.seasonKey,
+          view: this.cameraPreset || 'meridian'
         }
       }
     }
@@ -580,12 +567,77 @@ export default {
     window.removeEventListener('resize', this.onResize)
   },
   methods: {
+    saveSolarSessionState() {
+      try {
+        sessionStorage.setItem(
+          'geo_solar_motion_state_v1',
+          JSON.stringify({
+            latitude: this.latitude,
+            activePlace: this.activePlace,
+            seasonKey: this.seasonKey,
+            cameraPreset: this.cameraPreset,
+            studentClaim: this.studentClaim
+          })
+        )
+      } catch {}
+    },
+
+    prepareCommunityDraft() {
+      this.saveSolarSessionState()
+      const placeLabel = this.activePlace ? `${this.activePlace}（${this.latitude}°${this.latitude >= 0 ? 'N' : 'S'}）` : `${this.latitude}°${this.latitude >= 0 ? 'N' : 'S'}`
+      const payload = {
+        kind: 'discussion',
+        categoryId: 2,
+        title: `【3D 太阳视运动对照】${placeLabel} 夏至（H=${this.metricsA.noonH}°）与冬至（H=${this.metricsB.noonH}°）正午高度与影长观察`,
+        body:
+          `我在「太阳周日视运动与高度角 3D 实验室」中完成了同纬度二至日对照观察（**教学仿真，非现场实测**）：\n\n` +
+          `- **固定观测条件**：${placeLabel}，正午真太阳时（12:00），子午面正视观察角\n` +
+          `- **条件 A（夏至 δ=+23.4°）**：正午太阳高度 $H = ${this.metricsA.noonH}^\\circ$，昼长约 ${this.metricsA.daylength} 小时，2.5m 立竿正午影长 ${this.metricsA.shadowM} m（${this.metricsA.sunrise}）\n` +
+          `- **条件 B（冬至 δ=-23.4°）**：正午太阳高度 $H = ${this.metricsB.noonH}^\\circ$，昼长约 ${this.metricsB.daylength} 小时，2.5m 立竿正午影长 ${this.metricsB.shadowM} m（${this.metricsB.sunrise}）\n` +
+          `- **我的观察结论**：${this.effectiveClaim}\n` +
+          `- **可复现 3D 对照链接**：#${this.shareRelativeRoute}\n` +
+          `- **延伸讨论问题**：如果观测地进一步向高纬移动到漠河（53.5°N），冬至日正午太阳高度和楼间距系数会如何变化？`,
+        linkedExperiment: 'solar-motion',
+        evidenceId: 'ev-solar-motion-solstice',
+        compareUrl: this.shareRelativeRoute,
+        evidenceTitle: this.evidenceCard.title,
+        conditions: this.evidenceCard.conditions,
+        facts: this.evidenceCard.facts,
+        tagsInput: '太阳高度角, 地球运动, 二至日对照'
+      }
+      try {
+        sessionStorage.setItem('geo_pending_compose_payload', JSON.stringify(payload))
+        localStorage.setItem('geo_community_post_draft_v1', JSON.stringify(payload))
+      } catch {}
+    },
+
     initFromQuery() {
       const q = this.$route?.query || {}
+      const hasExplicitQuery = Boolean(q.lat !== undefined || q.season || q.decl !== undefined || q.view || q.cam || q.shared === '1')
+      try {
+        const savedRaw = sessionStorage.getItem('geo_solar_motion_state_v1')
+        if (savedRaw) {
+          const saved = JSON.parse(savedRaw)
+          if (!hasExplicitQuery && saved) {
+            if (saved.latitude !== undefined) this.latitude = Number(saved.latitude) || 40
+            if (saved.activePlace !== undefined) this.activePlace = saved.activePlace
+            if (saved.seasonKey && SEASONS.some(s => s.key === saved.seasonKey)) this.seasonKey = saved.seasonKey
+            if (saved.cameraPreset) this.cameraPreset = saved.cameraPreset
+          }
+          if (saved?.studentClaim && !q.claim) {
+            this.studentClaim = saved.studentClaim
+          }
+        }
+      } catch {}
+
       if (q.lat !== undefined) {
         const parsedLat = Number(q.lat)
         if (!Number.isNaN(parsedLat) && parsedLat >= -90 && parsedLat <= 90) {
           this.latitude = parsedLat
+          const matchedPlace = this.presetPlaces.find(p => Math.abs(p.lat - parsedLat) < 0.5)
+          if (!q.place) {
+            this.activePlace = matchedPlace ? matchedPlace.name : ''
+          }
         }
       }
       if (typeof q.place === 'string') {
@@ -593,14 +645,19 @@ export default {
       }
       if (typeof q.season === 'string' && SEASONS.some(s => s.key === q.season)) {
         this.seasonKey = q.season
+      } else if (q.decl !== undefined) {
+        const d = Number(q.decl)
+        if (d > 10) this.seasonKey = 'summer'
+        else if (d < -10) this.seasonKey = 'winter'
+        else if (!Number.isNaN(d)) this.seasonKey = 'equinox'
       }
-      if (typeof q.view === 'string' && ['meridian', 'horizon', '3d'].includes(q.view)) {
-        this.cameraPreset = q.view
+      const viewParam = q.view || q.cam
+      if (typeof viewParam === 'string' && ['meridian', 'horizon', '3d'].includes(viewParam)) {
+        this.cameraPreset = viewParam
       }
+      // 兼容旧版带 ?claim=... 的公开链接；新会话默认留空供学生填写
       if (typeof q.claim === 'string' && q.claim.trim()) {
         this.studentClaim = q.claim.trim()
-      } else {
-        this.studentClaim = this.defaultClaimText
       }
       if (q.shared === '1') {
         this.isSharedSession = true
@@ -611,6 +668,7 @@ export default {
     fillDefaultClaim() {
       this.studentClaim = this.defaultClaimText
       this.showEvidenceCard = true
+      this.saveSolarSessionState()
     },
 
     async copyShareLink() {
@@ -618,7 +676,7 @@ export default {
         if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(this.shareFullUrl)
         }
-        this.shareCopyHint = '✓ 已复制分享链接，可在新浏览器会话直接还原同一次 3D 对照'
+        this.shareCopyHint = '✓ 已复制可复现分享链接（仅含观测参数，不含私人草稿）'
       } catch {
         this.shareCopyHint = '✓ 请直接选中上方链接复制'
       }

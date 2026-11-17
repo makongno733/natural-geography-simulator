@@ -38,6 +38,11 @@ async function requireUser(req, res, next) {
 
 async function optionalUser(req, _res, next) {
   try {
+    const cookieHeader = req.headers?.cookie
+    if (!cookieHeader || !cookieHeader.includes('better-auth')) {
+      req.accountUser = null
+      return next()
+    }
     const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) })
     req.accountUser = session?.user || null
     next()
@@ -52,10 +57,35 @@ function sectionKey(value) {
   return parts.length === 4 && parts.every((part) => part.length > 0 && part.length <= 60) ? value : null
 }
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
+app.get('/api/health', (_req, res) => {
+  try {
+    database.prepare('SELECT 1 AS ok').get()
+    const geoSync = database.prepare("SELECT fetched_at AS fetchedAt, status FROM geo_event_sync WHERE source = 'usgs'").get() || null
+    let topicSync = []
+    try {
+      topicSync = database.prepare('SELECT source, fetched_at AS fetchedAt, status, record_count AS recordCount FROM geo_topic_sync').all()
+    } catch {}
+    const mem = process.memoryUsage()
+    res.json({
+      status: 'ok',
+      db: 'ok',
+      uptimeSeconds: Math.round(process.uptime()),
+      memoryMb: {
+        rss: Math.round(mem.rss / 1048576),
+        heapUsed: Math.round(mem.heapUsed / 1048576)
+      },
+      sources: {
+        geoEvents: geoSync,
+        hotTopics: topicSync
+      }
+    })
+  } catch {
+    res.status(503).json({ status: 'error', db: 'unavailable' })
+  }
+})
 app.get('/api/config', (_req, res) => res.json({ email: mailReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
 app.get('/api/geo-events', async (_req, res) => {
-  res.set('Cache-Control', 'public, max-age=300')
+  res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   res.json(await getGeoEvents())
 })
 

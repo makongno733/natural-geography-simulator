@@ -2,8 +2,11 @@ import { database, migrateGeoEvents } from './database.mjs'
 
 export const EARTHQUAKE_FEED = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson'
 const SYNC_INTERVAL_MS = 60 * 60 * 1000
+const RETRY_MS = 5 * 60 * 1000
 const RETENTION_MS = 366 * 24 * 60 * 60 * 1000
 let pendingSync = null
+let lastAttemptAt = 0
+let lastSyncError = false
 
 function chinaPlace(place) {
   return /(?:,\s*(?:China|Taiwan|Hong Kong|Macau))$/i.test(place || '')
@@ -36,49 +39,71 @@ export function normalizeEarthquake(feature, fetchedAt) {
 
 export async function syncEarthquakes() {
   if (pendingSync) return pendingSync
+  lastAttemptAt = Date.now()
   pendingSync = (async () => {
-    const fetchedAt = new Date().toISOString()
-    const response = await fetch(EARTHQUAKE_FEED, { signal: AbortSignal.timeout(12000) })
-    if (!response.ok) throw new Error(`USGS HTTP ${response.status}`)
-    const payload = await response.json()
-    if (!Array.isArray(payload.features)) throw new Error('USGS feed format changed')
-    const upsert = database.prepare(`INSERT INTO geo_earthquake
-      (id, occurred_at, updated_at, magnitude, place, longitude, latitude, depth_km, source_url, fetched_at)
-      VALUES (@id, @occurredAt, @updatedAt, @magnitude, @place, @longitude, @latitude, @depthKm, @sourceUrl, @fetchedAt)
-      ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at, magnitude=excluded.magnitude,
-      place=excluded.place, longitude=excluded.longitude, latitude=excluded.latitude,
-      depth_km=excluded.depth_km, source_url=excluded.source_url, fetched_at=excluded.fetched_at`)
-    database.transaction(() => {
-      for (const feature of payload.features) {
-        const event = normalizeEarthquake(feature, fetchedAt)
-        if (event) upsert.run(event)
-      }
-      database.prepare('DELETE FROM geo_earthquake WHERE occurred_at < ?')
-        .run(new Date(Date.now() - RETENTION_MS).toISOString())
-      database.prepare(`INSERT INTO geo_event_sync (source, fetched_at, status) VALUES ('usgs', ?, 'ok')
-        ON CONFLICT(source) DO UPDATE SET fetched_at=excluded.fetched_at, status=excluded.status`).run(fetchedAt)
-    })()
+    try {
+      const fetchedAt = new Date().toISOString()
+      const response = await fetch(EARTHQUAKE_FEED, { signal: AbortSignal.timeout(12000) })
+      if (!response.ok) throw new Error(`USGS HTTP ${response.status}`)
+      const payload = await response.json()
+      if (!Array.isArray(payload.features)) throw new Error('USGS feed format changed')
+      const upsert = database.prepare(`INSERT INTO geo_earthquake
+        (id, occurred_at, updated_at, magnitude, place, longitude, latitude, depth_km, source_url, fetched_at)
+        VALUES (@id, @occurredAt, @updatedAt, @magnitude, @place, @longitude, @latitude, @depthKm, @sourceUrl, @fetchedAt)
+        ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at, magnitude=excluded.magnitude,
+        place=excluded.place, longitude=excluded.longitude, latitude=excluded.latitude,
+        depth_km=excluded.depth_km, source_url=excluded.source_url, fetched_at=excluded.fetched_at`)
+      database.transaction(() => {
+        for (const feature of payload.features) {
+          const event = normalizeEarthquake(feature, fetchedAt)
+          if (event) upsert.run(event)
+        }
+        database.prepare('DELETE FROM geo_earthquake WHERE occurred_at < ?')
+          .run(new Date(Date.now() - RETENTION_MS).toISOString())
+        database.prepare(`INSERT INTO geo_event_sync (source, fetched_at, status) VALUES ('usgs', ?, 'ok')
+          ON CONFLICT(source) DO UPDATE SET fetched_at=excluded.fetched_at, status=excluded.status`).run(fetchedAt)
+      })()
+      lastSyncError = false
+    } catch (error) {
+      lastSyncError = true
+      database.prepare(`INSERT INTO geo_event_sync (source, fetched_at, status) VALUES ('usgs', '', 'error')
+        ON CONFLICT(source) DO UPDATE SET status='error'`).run()
+      throw error
+    }
   })().finally(() => { pendingSync = null })
   return pendingSync
 }
 
 export async function getGeoEvents() {
-  const sync = database.prepare("SELECT fetched_at AS fetchedAt FROM geo_event_sync WHERE source = 'usgs'").get()
-  let refreshError = false
-  if (!sync || Date.now() - Date.parse(sync.fetchedAt) > SYNC_INTERVAL_MS) {
+  const now = Date.now()
+  const sync = database.prepare("SELECT fetched_at AS fetchedAt, status FROM geo_event_sync WHERE source = 'usgs'").get()
+  const isStale = !sync?.fetchedAt || now - Date.parse(sync.fetchedAt) > SYNC_INTERVAL_MS
+  const canRetry = now - lastAttemptAt >= RETRY_MS
+
+  if (!sync && canRetry) {
     try { await syncEarthquakes() } catch (error) {
-      console.error('USGS calendar sync failed:', error)
-      refreshError = true
+      console.error('USGS calendar initial sync failed:', error.message)
     }
+  } else if (isStale && canRetry && !pendingSync) {
+    void syncEarthquakes().catch(error => {
+      console.error('USGS calendar background sync failed:', error.message)
+    })
   }
-  const latest = database.prepare("SELECT fetched_at AS fetchedAt FROM geo_event_sync WHERE source = 'usgs'").get()
+
+  const latest = database.prepare("SELECT fetched_at AS fetchedAt, status FROM geo_event_sync WHERE source = 'usgs'").get()
   const earthquakes = database.prepare(`SELECT id, occurred_at AS occurredAt, updated_at AS updatedAt,
     magnitude, place, longitude, latitude, depth_km AS depthKm, source_url AS sourceUrl
     FROM geo_earthquake WHERE occurred_at >= ? AND
       (place LIKE '%, China' OR place LIKE '%, Taiwan' OR place LIKE '%, Hong Kong' OR place LIKE '%, Macau')
     ORDER BY occurred_at DESC LIMIT 1000`)
-    .all(new Date(Date.now() - RETENTION_MS).toISOString())
-  return { earthquakes, fetchedAt: latest?.fetchedAt || null, refreshError, source: EARTHQUAKE_FEED }
+    .all(new Date(now - RETENTION_MS).toISOString())
+  return {
+    earthquakes,
+    fetchedAt: latest?.fetchedAt || null,
+    refreshError: lastSyncError || latest?.status === 'error',
+    updating: Boolean(pendingSync),
+    source: EARTHQUAKE_FEED
+  }
 }
 
 export function startGeoEventSync() {

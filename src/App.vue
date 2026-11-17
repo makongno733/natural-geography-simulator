@@ -142,10 +142,13 @@
       </div>
     </footer>
 
-    <div v-if="accountEnabled" class="site-legal-links" aria-label="网站信息">
-      <a :href="`${siteOrigin}/privacy`">隐私政策</a>
-      <a :href="`${siteOrigin}/terms`">服务条款</a>
-      <a href="mailto:makongno733@gmail.com">联系网站</a>
+    <div v-if="!isAccountHost" class="site-legal-links" aria-label="网站合规、反馈与联系信息">
+      <a href="./privacy.html">隐私政策</a>
+      <a href="./terms.html">服务条款</a>
+      <router-link to="/?compose=1&kind=question#compose">💬 问题反馈与内容纠错</router-link>
+      <a href="mailto:makongno733@gmail.com?subject=%E3%80%90%E5%9C%B0%E7%90%86%E5%85%B1%E5%90%8C%E4%BD%93%E5%86%85%E5%AE%B9%E4%B8%BE%E6%8A%A5%E4%B8%8E%E5%8F%8D%E9%A6%88%E3%80%91">
+        ✉ 违规举报与联系站主 (makongno733@gmail.com)
+      </a>
     </div>
 
     <LessonAssistant v-if="!isAccountHost && isLearningRoute" />

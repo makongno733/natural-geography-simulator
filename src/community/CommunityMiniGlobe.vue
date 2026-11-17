@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
 
 .ring-dir-txt {
   fill: #bae6fd;
-  font-size: 9px;
+  font-size: 11px;
   font-family: ui-monospace, monospace;
   font-weight: 700;
 }
@@ -385,7 +385,7 @@ onBeforeUnmount(() => {
   background: rgba(4, 19, 32, 0.88);
   border: 1px solid rgba(125, 211, 252, 0.45);
   color: #e0f2fe;
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -414,7 +414,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(125, 211, 252, 0.35);
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   min-height: 28px;
@@ -428,7 +428,7 @@ onBeforeUnmount(() => {
 }
 
 .globe-fallback-pill {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: #bae6fd;
   background: rgba(15, 39, 66, 0.72);
   padding: 3px 8px;
@@ -457,7 +457,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(125, 211, 252, 0.25);
   border-radius: 8px;
   padding: 4px 10px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   min-height: 30px;
@@ -483,7 +483,7 @@ onBeforeUnmount(() => {
 }
 
 .globe-nature-badge {
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 999px;
@@ -502,7 +502,7 @@ onBeforeUnmount(() => {
 }
 
 .globe-coord-label {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #93c5fd;
   font-family: ui-monospace, monospace;
 }
@@ -556,7 +556,7 @@ onBeforeUnmount(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 11px;
+  font-size: 11.5px;
   color: #94a3b8;
 }
 
@@ -587,62 +587,58 @@ onBeforeUnmount(() => {
 
 @media (max-width: 560px) {
   .community-mini-globe {
-    padding: 9px 11px;
-    border-radius: 14px;
+    padding: 11px 12px;
+    border-radius: 16px;
   }
   .globe-main-row {
-    grid-template-columns: 100px minmax(0, 1fr);
-    gap: 9px;
+    grid-template-columns: 108px minmax(0, 1fr);
+    gap: 10px;
   }
   .globe-stage-wrap {
-    gap: 4px;
+    gap: 5px;
   }
   .globe-stage {
-    width: 94px;
-    height: 94px;
+    width: 100px;
+    height: 100px;
   }
   .globe-pin-tag {
-    font-size: 9px;
-    padding: 1px 5px;
-    bottom: 4px;
+    font-size: 11px;
+    padding: 2px 6px;
+    bottom: 2px;
   }
   .globe-ctrl-btn {
-    padding: 2px 6px;
-    font-size: 10px;
-    min-height: 22px;
+    padding: 3px 7px;
+    font-size: 11.5px;
+    min-height: 26px;
   }
   .globe-task-panel {
-    gap: 4px;
+    gap: 5px;
   }
   .globe-tab-btn {
-    padding: 2px 7px;
-    font-size: 10.5px;
-    min-height: 24px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    min-height: 26px;
   }
   .globe-question-title {
-    font-size: 13.5px;
-    line-height: 1.25;
+    font-size: 14.5px;
+    line-height: 1.3;
   }
   .globe-question-desc {
-    font-size: 11px;
-    line-height: 1.32;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.45;
   }
   .globe-cta-row {
-    margin-top: 2px;
+    margin-top: 3px;
   }
   .globe-cta-btn {
     width: 100%;
-    padding: 5px 10px;
-    font-size: 12px;
+    padding: 7px 12px;
+    font-size: 13px;
   }
   .globe-credit-line {
-    margin-top: 5px;
-    padding-top: 4px;
-    font-size: 10px;
+    margin-top: 6px;
+    padding-top: 5px;
+    font-size: 11.5px;
   }
 }
 </style>

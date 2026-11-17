@@ -41,6 +41,7 @@
             <button type="button" class="baroque-btn hero-global-search-btn" @click="triggerGlobalSearch">
               🔍 搜全站（实验 / 教材 / 数据）
             </button>
+            <router-link class="baroque-btn" to="/learning">📖 教材课程</router-link>
             <router-link class="baroque-btn" to="/resources">资源馆</router-link>
             <router-link class="baroque-btn" to="/groups">找社群</router-link>
             <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
@@ -48,27 +49,6 @@
         </div>
         <div class="community-hero-right">
           <CommunityMiniGlobe />
-
-          <aside class="community-discovery community-discovery-compact" aria-label="地理探索路径">
-            <p class="discovery-eyebrow">从观察，流向理解</p>
-            <div class="discovery-links-grid">
-              <router-link to="/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation">
-                <span>01</span>
-                <div><strong>动手对照：城市内涝仿真</strong><small>50 mm/h 暴雨径流对比</small></div>
-                <span aria-hidden="true">↗</span>
-              </router-link>
-              <router-link to="/geo-labs/satellite">
-                <span>02</span>
-                <div><strong>真实数据：多时相卫星影像</strong><small>NASA 遥感卷帘对比</small></div>
-                <span aria-hidden="true">↗</span>
-              </router-link>
-              <router-link to="/learning">
-                <span>03</span>
-                <div><strong>教材精读：让知识彼此连接</strong><small>初高中与大学教材机理</small></div>
-                <span aria-hidden="true">↗</span>
-              </router-link>
-            </div>
-          </aside>
         </div>
       </div>
     </section>
@@ -340,9 +320,31 @@
               </router-link>
             </div>
 
-            <p v-if="submitError" class="community-error" role="alert">{{ submitError }}</p>
+            <!-- 发帖效果实时预览（支持预览标题、正文公式与结构化证据卡） -->
+            <div v-if="showComposePreview && (draft.title || draft.body)" class="compose-live-preview" role="region" aria-label="发帖效果预览">
+              <div class="clp-head">
+                <span class="clp-badge">👁 发帖效果预览</span>
+                <span class="clp-sub">{{ draft.kind === 'question' ? '学术问答' : '经验交流' }} · 发布后将公开展示</span>
+              </div>
+              <h4 class="clp-title">{{ draft.title || '（尚未填写标题）' }}</h4>
+              <div class="community-prose clp-body" v-html="renderGeoScholarlyText(draft.body || '')"></div>
+            </div>
+
+            <div v-if="submitError" class="community-error compose-submit-error" role="alert">
+              <span>{{ submitError }}</span>
+              <button type="button" class="baroque-btn baroque-btn-sm" :disabled="submitting" @click="createPost">
+                🔄 重新尝试发布（草稿已保存在本机）
+              </button>
+            </div>
             <div class="form-submit-row">
               <span v-if="draftSavedHint" class="draft-saved-hint">{{ draftSavedHint }}</span>
+              <button
+                type="button"
+                class="baroque-btn compose-preview-toggle"
+                @click="showComposePreview = !showComposePreview"
+              >
+                {{ showComposePreview ? '收起预览 ▲' : '👁 预览发帖效果' }}
+              </button>
               <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="submitting">
                 {{ submitting ? '正在发布…' : (!user && !isDemoMode ? '保存草稿并去登录发布 ↗' : '发布讨论 ✦') }}
               </button>
@@ -526,7 +528,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { accountEnabled, accountOrigin, apiRequest, authClient } from '../account/client.js'
 import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
-import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
+import { GEO_FORMULA_PRESETS, renderGeoScholarlyText } from '../utils/mathFormula.js'
 import { STANDARD_EVIDENCES, getEvidenceById, resolveCommunityEvidence } from '../inquiry/evidenceCatalog.js'
 import CommunityMiniGlobe from './CommunityMiniGlobe.vue'
 
@@ -548,6 +550,7 @@ const isAdmin = ref(false)
 const loading = ref(true)
 const initialLoaded = ref(false)
 const submitting = ref(false)
+const showComposePreview = ref(false)
 const error = ref('')
 const submitError = ref('')
 const queryInput = ref('')
@@ -565,6 +568,8 @@ const isDemoMode = ref(false)
 const allowDemoMode = import.meta.env.DEV
 
 const DRAFT_STORAGE_KEY = 'geo_community_post_draft_v1'
+const PENDING_COMPOSE_KEY = 'geo_pending_compose_payload'
+const HOME_SCROLL_KEY = 'geo_home_scroll_y'
 const draftSavedHint = ref('')
 
 const draft = reactive({
@@ -1067,6 +1072,32 @@ function applyRouteQueryParams() {
     queryInput.value = q.q.trim()
     searchQuery.value = q.q.trim()
   }
+
+  // 1. 优先读取从卫星页、3D太阳高度或内涝页通过本机存储传递的结构化草稿（避免在 URL 中重复编码长正文）
+  if (q.compose) {
+    try {
+      const pendingRaw = sessionStorage.getItem(PENDING_COMPOSE_KEY)
+      if (pendingRaw) {
+        const pending = JSON.parse(pendingRaw)
+        sessionStorage.removeItem(PENDING_COMPOSE_KEY)
+        if (pending && typeof pending === 'object') {
+          if (pending.kind) draft.kind = pending.kind
+          if (pending.categoryId) draft.categoryId = Number(pending.categoryId) || 1
+          if (pending.title) draft.title = pending.title
+          if (pending.body) draft.body = pending.body
+          if (pending.linkedExperiment !== undefined) draft.linkedExperiment = pending.linkedExperiment
+          if (pending.evidenceId !== undefined) draft.evidenceId = pending.evidenceId
+          if (pending.compareUrl !== undefined) draft.compareUrl = pending.compareUrl
+          if (pending.evidenceTitle !== undefined) draft.evidenceTitle = pending.evidenceTitle
+          if (pending.conditions !== undefined) draft.conditions = pending.conditions
+          if (pending.facts !== undefined) draft.facts = pending.facts
+          if (pending.tagsInput !== undefined) tagsInput.value = pending.tagsInput
+        }
+      }
+    } catch {}
+  }
+
+  // 2. 兼容显式 URL 参数与精简可复现参数
   if (typeof q.title === 'string' && q.title.trim()) {
     draft.title = q.title.trim()
   }
@@ -1094,6 +1125,70 @@ function applyRouteQueryParams() {
   if (q.compose && (q.kind === 'question' || q.kind === 'discussion')) {
     draft.kind = q.kind
   }
+
+  // 3. 若用户在新标签页直接打开精简讨论 URL（无 sessionStorage 时），根据精简参数自动补全可复现链接与模板草稿
+  if (q.compose && draft.evidenceId) {
+    if (draft.evidenceId === 'ev-satellite-east-asia' && (q.place || q.dateA || q.dateB)) {
+      const place = typeof q.place === 'string' ? q.place : 'china'
+      const dA = typeof q.dateA === 'string' ? q.dateA : '2024-06-01'
+      const dB = typeof q.dateB === 'string' ? q.dateB : '2024-06-15'
+      const sp = q.split !== undefined ? String(q.split) : '50'
+      if (!draft.compareUrl) {
+        draft.compareUrl = `/geo-labs/satellite?place=${encodeURIComponent(place)}&dateA=${encodeURIComponent(dA)}&dateB=${encodeURIComponent(dB)}&split=${encodeURIComponent(sp)}&shared=1`
+      }
+      if (!draft.title) {
+        draft.title = `【多时相遥感判读】${dA} vs ${dB} 卫星影像地表与云系差异探讨`
+      }
+      if (!draft.body) {
+        const ev = selectedEvidenceCard.value
+        draft.body =
+          `我在「多时相卫星影像对比」工具中对比了 **${dA} vs ${dB}** 的实测卫星影像（**真实卫星观测 · NASA MODIS Terra**）：\n\n` +
+          `- **可复现对比链接**：#${draft.compareUrl}\n` +
+          `- **观察说明**：${ev?.facts || ''}\n` +
+          `- **我想请教的问题**：这一变化主要受什么季节性大气或水文过程驱动？`
+      }
+    } else if (draft.evidenceId === 'ev-solar-motion-solstice' && (q.lat !== undefined || q.season)) {
+      const lat = q.lat !== undefined ? String(q.lat) : '40'
+      const season = typeof q.season === 'string' ? q.season : 'summer'
+      const view = typeof q.view === 'string' ? q.view : 'meridian'
+      if (!draft.compareUrl) {
+        draft.compareUrl = `/experiments/astronomy/solar-motion?lat=${encodeURIComponent(lat)}&season=${encodeURIComponent(season)}&compare=winter&view=${encodeURIComponent(view)}&shared=1`
+      }
+      if (!draft.title) {
+        draft.title = `【3D 太阳视运动对照】${lat}° 纬度夏至与冬至正午高度角与影长观察`
+      }
+      if (!draft.body) {
+        const ev = selectedEvidenceCard.value
+        draft.body =
+          `我在「太阳周日视运动与高度角 3D 实验室」中完成了同纬度二至日对照观察（**教学仿真，非现场实测**）：\n\n` +
+          `- **观测条件**：${ev?.conditions || `${lat}° 纬度`}\n` +
+          `- **观察结论**：${ev?.facts || ''}\n` +
+          `- **可复现 3D 对照链接**：#${draft.compareUrl}`
+      }
+    } else if (draft.evidenceId === 'ev-urban-sponge' && (q.rain || q.surfaceA || q.surfaceB)) {
+      const rain = q.rain ? String(q.rain) : '50'
+      const dur = q.duration ? String(q.duration) : '60'
+      const slp = q.slope ? String(q.slope) : '2'
+      const sA = typeof q.surfaceA === 'string' ? q.surfaceA : 'concrete'
+      const sB = typeof q.surfaceB === 'string' ? q.surfaceB : 'vegetation'
+      if (!draft.compareUrl) {
+        draft.compareUrl = `/inquiry?task=urban-flood&mode=compare&shared=1&rain=${encodeURIComponent(rain)}&duration=${encodeURIComponent(dur)}&slope=${encodeURIComponent(slp)}&surfaceA=${encodeURIComponent(sA)}&surfaceB=${encodeURIComponent(sB)}`
+      }
+      if (!draft.title) {
+        draft.title = `【城市内涝探究】${rain}mm/h·${dur}分钟暴雨下不同铺装径流与下渗对照`
+      }
+      if (!draft.body) {
+        const ev = selectedEvidenceCard.value
+        draft.body =
+          `我在「城市暴雨产流与海绵下渗仿真模型」（**教学仿真，非现场实测**）中完成了对照实验：\n\n` +
+          `- **实验条件**：${ev?.conditions || `${rain} mm/h · ${dur} 分钟`}\n` +
+          `- **对照结果**：${ev?.facts || ''}\n` +
+          `- **可复现对照链接**：#${draft.compareUrl}`
+      }
+    }
+    saveDraftToStorage()
+  }
+
   if (q.compose) {
     setTimeout(() => {
       focusCompose()
@@ -1130,6 +1225,16 @@ watch(
 async function initCommunity() {
   restoreDraftFromStorage()
   applyRouteQueryParams()
+  if (!route.query?.compose && typeof window !== 'undefined') {
+    try {
+      const savedScrollY = Number(sessionStorage.getItem(HOME_SCROLL_KEY))
+      if (savedScrollY > 80) {
+        setTimeout(() => {
+          window.scrollTo({ top: savedScrollY, behavior: 'auto' })
+        }, 80)
+      }
+    } catch {}
+  }
   if (!accountEnabled) {
     isDemoMode.value = allowDemoMode
     categories.value = allowDemoMode ? mockCategories : []
@@ -1202,6 +1307,9 @@ async function initCommunity() {
 
 onMounted(initCommunity)
 onBeforeUnmount(() => {
+  if (typeof window !== 'undefined' && typeof window.scrollY === 'number') {
+    try { sessionStorage.setItem(HOME_SCROLL_KEY, String(Math.round(window.scrollY))) } catch {}
+  }
   disposed = true
   stream?.close()
   clearTimeout(topicRefreshTimer)
@@ -1215,7 +1323,7 @@ onBeforeUnmount(() => {
 .fanxing-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .fanxing-preview-badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #92400e;
   background: #fef3c7;
@@ -1255,7 +1363,7 @@ onBeforeUnmount(() => {
 .flagship-tag-main {
   background: #0284c7;
   color: #ffffff;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
@@ -1265,7 +1373,7 @@ onBeforeUnmount(() => {
   background: rgba(245, 158, 11, 0.22);
   color: #fde68a;
   border: 1px solid rgba(245, 158, 11, 0.48);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -1298,6 +1406,49 @@ onBeforeUnmount(() => {
 
 .hero-global-search-btn {
   border-color: rgba(163, 233, 221, 0.45);
+}
+
+/* 发帖实时预览与失败重试 */
+.compose-live-preview {
+  background: #ffffff;
+  border: 1.5px dashed #0284c7;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.clp-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.clp-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.clp-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+.clp-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #0f172a;
+}
+.clp-body {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.6;
+}
+.compose-submit-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 /* 发帖框挂载证据卡预览 */
@@ -1366,7 +1517,7 @@ onBeforeUnmount(() => {
   color: #0369a1;
 }
 .pes-nature {
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 999px;
@@ -1398,7 +1549,7 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 .pes-col small {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: #64748b;
   font-weight: 600;
 }
@@ -1407,7 +1558,7 @@ onBeforeUnmount(() => {
   color: #0f172a;
 }
 .pes-vs {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   color: #0284c7;
   padding: 0 4px;
@@ -1482,7 +1633,7 @@ onBeforeUnmount(() => {
 }
 
 .topic-origin-badge {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #0f5132;
   background: #d1e7dd;
@@ -1491,7 +1642,7 @@ onBeforeUnmount(() => {
 }
 
 .topic-sample-badge {
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #92400e;
   background: #fef3c7;
@@ -1618,41 +1769,6 @@ onBeforeUnmount(() => {
 }
 .community-tides span:nth-child(2) { right: -55px; top: -45px; }
 .community-tides span:nth-child(3) { right: 10px; top: 20px; }
-.community-discovery {
-  padding: 10px 14px;
-  border: 1px solid rgba(178, 230, 223, 0.24);
-  border-radius: 16px;
-  background: rgba(7, 39, 48, 0.36);
-}
-.discovery-eyebrow { margin: 0 0 6px; color: #c7e6df; font-size: 11px; letter-spacing: .08em; font-weight: 700; }
-.discovery-links-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-.community-discovery a {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 6px 8px;
-  color: #fff;
-  text-decoration: none;
-  background: rgba(15, 39, 66, 0.38);
-  border: 1px solid rgba(178, 230, 223, 0.14);
-  border-radius: 10px;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-.community-discovery a:hover {
-  background: rgba(2, 132, 199, 0.28);
-  border-color: rgba(125, 211, 252, 0.45);
-}
-.community-discovery a > span:first-child { font: 11px ui-monospace, monospace; color: #a8dcd2; margin-top: 2px; flex-shrink: 0; white-space: nowrap; }
-.community-discovery a > span:last-child { margin-left: auto; font-size: 11px; color: #93c5fd; flex-shrink: 0; }
-.community-discovery a div { display: grid; gap: 1px; min-width: 0; }
-.community-discovery strong { font-size: 12px; line-height: 1.3; }
-.community-discovery small { color: #c7e6df; font-size: 10.5px; line-height: 1.3; }
-.community-discovery a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
-.community-discovery a:focus-visible { outline: 2px solid #c7e6df; outline-offset: 4px; border-radius: 8px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .community-intro { animation: community-arrive .65s var(--geo-flow-ease) both; }
@@ -1664,22 +1780,17 @@ onBeforeUnmount(() => {
 }
 @media (max-width: 1000px) {
   .community-hero-inner { grid-template-columns: 1fr; gap: 12px; }
-  .community-discovery {
-    padding: 10px 12px;
-    border-radius: 14px;
-  }
 }
 @media (max-width: 520px) {
   .community-hero { padding: 14px 0; border-radius: 0 0 24px 24px; }
   .community-hero h1 { line-height: 1.25; font-size: 21px; margin-bottom: 8px; }
-  .discovery-links-grid { grid-template-columns: 1fr; gap: 6px; }
 }
 
 .community-hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, monospace;
   letter-spacing: 0.16em;
   font-weight: 700;
