@@ -230,4 +230,24 @@ describe('community request lifecycle', () => {
     expect(wrapper.find('.skeleton-stack').exists()).toBe(false)
     expect(wrapper.text()).toContain('暂时没有符合条件的讨论')
   })
+
+  it('renders the hero mini-globe with East Asia observation task, tab switching, and static fallback when WebGL is unavailable', async () => {
+    window.__FORCE_GLOBE_FALLBACK__ = true
+    wrapper = mountCommunity()
+    await flushPromises()
+
+    const globe = wrapper.find('.community-mini-globe')
+    expect(globe.exists()).toBe(true)
+    expect(globe.text()).toContain('同一地点，卫星隔两周拍到了什么？')
+    expect(globe.text()).toContain('看真实卫星影像 →')
+    expect(globe.text()).toContain('NASA Blue Marble')
+    expect(globe.find('.globe-static-preview img').exists()).toBe(true)
+
+    const tabs = globe.findAll('.globe-tab-btn')
+    expect(tabs).toHaveLength(2)
+    await tabs[1].trigger('click')
+    expect(globe.text()).toContain('同在海边，白天和夜晚风为什么反着吹？')
+    expect(globe.text()).toContain('进热力环流实验 →')
+    delete window.__FORCE_GLOBE_FALLBACK__
+  })
 })

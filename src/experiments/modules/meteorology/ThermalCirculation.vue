@@ -116,14 +116,43 @@
     <div class="tc-canvas-wrap">
       <canvas ref="cvs"></canvas>
       <div class="view-overlay">
-        <span class="overlay-tag">{{ currentScenarioTitle }}</span>
-        <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由旋转' : '锁定正视观察'">
-          {{ locked ? '🔒 正视观察锁定' : '🔓 自由漫游' }}
-        </button>
+        <div class="overlay-tags-left">
+          <span class="overlay-tag">{{ currentScenarioTitle }}</span>
+          <span class="overlay-sim-tag">教学仿真示意 · ΔT = {{ tempDiff }}°C</span>
+        </div>
+        <div class="overlay-actions-right">
+          <button
+            type="button"
+            class="diurnal-quick-btn"
+            @click="setDaytime(!isDaytime)"
+          >
+            {{ isDaytime ? '☀️ 当前：白昼（点击切夜晚看风向反转）' : '🌙 当前：夜晚（点击切白昼看风向反转）' }}
+          </button>
+          <button class="lock-btn" @click="toggleLock" :title="locked ? '解锁自由旋转' : '锁定正视观察'">
+            {{ locked ? '🔒 正视观察锁定' : '🔓 自由漫游' }}
+          </button>
+        </div>
       </div>
-      <div class="temp-legend">
-        <span class="heat-pill">🔥 受热区 (空气膨胀上升 · 气压降低)</span>
-        <span class="cold-pill">❄️ 受冷区 (空气收缩下沉 · 气压升高)</span>
+
+      <!-- 直观风向与昼夜冷热源观测读数条（解决学生难以一眼读出风向与昼夜反转的问题） -->
+      <div class="tc-wind-hud" role="region" aria-label="近地面风向与冷热源实时读数">
+        <div :class="['hud-zone-pill', isDaytime ? 'is-warm' : 'is-cool']">
+          <span class="zone-title">{{ leftZoneTitle }}</span>
+          <span class="zone-state">{{ isDaytime ? '🔥 受热膨胀上升 · 近地低压 (L)' : '❄️ 冷却收缩下沉 · 近地高压 (H)' }}</span>
+        </div>
+
+        <div class="hud-wind-center" :class="isDaytime ? 'wind-leftward' : 'wind-rightward'">
+          <span class="wind-caption">近地面水平风向（高压 H → 低压 L）</span>
+          <strong class="wind-main-readout">
+            <span class="wind-arrow-icon" aria-hidden="true">{{ isDaytime ? '⬅️' : '➡️' }}</span>
+            {{ surfaceWindDesc }}
+          </strong>
+        </div>
+
+        <div :class="['hud-zone-pill', isDaytime ? 'is-cool' : 'is-warm']">
+          <span class="zone-title">{{ rightZoneTitle }}</span>
+          <span class="zone-state">{{ isDaytime ? '❄️ 冷却收缩下沉 · 近地高压 (H)' : '🔥 受热膨胀上升 · 近地低压 (L)' }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -239,15 +268,35 @@ export default {
         return this.isDaytime ? '从谷底吹向山坡（谷风）' : '从山坡吹向谷底（山风）'
       }
       if (this.currentScenarioKey === 'urban-heat-island') {
-        return '由郊区吹向城市中心（市郊风）'
+        return this.isDaytime ? '由郊区吹向城市中心（市郊风）' : '由城区吹向郊区（逆环流示意）'
       }
-      return '由冷源近地面吹向热源近地面'
+      return this.isDaytime
+        ? '从右侧冷源(H)吹向左侧热源(L)'
+        : '从左侧冷源(H)吹向右侧热源(L)'
+    },
+    leftZoneTitle() {
+      if (this.currentScenarioKey === 'land-sea-breeze') return '🏖️ 左侧：陆地'
+      if (this.currentScenarioKey === 'valley-breeze') return '⛰️ 左侧：山坡'
+      if (this.currentScenarioKey === 'urban-heat-island') return '🏙️ 左侧：城区'
+      return '⚗️ 左侧：实验板 A'
+    },
+    rightZoneTitle() {
+      if (this.currentScenarioKey === 'land-sea-breeze') return '🌊 右侧：海洋'
+      if (this.currentScenarioKey === 'valley-breeze') return '🏞️ 右侧：谷底'
+      if (this.currentScenarioKey === 'urban-heat-island') return '🌲 右侧：郊区'
+      return '⚗️ 右侧：实验板 B'
     },
   },
   mounted() {
-    if (this.preset?.id) {
-      if (this.preset.id === 'land-sea-breeze') this.currentScenarioKey = 'land-sea-breeze'
-      else if (this.preset.id === 'thermal-cell') this.currentScenarioKey = 'thermal-cell'
+    const queryPreset = this.$route?.query?.preset || this.$route?.query?.scenario
+    if (queryPreset === 'land-sea-breeze' || this.preset?.id === 'land-sea-breeze') {
+      this.currentScenarioKey = 'land-sea-breeze'
+    } else if (queryPreset === 'valley-breeze' || this.preset?.id === 'valley-breeze') {
+      this.currentScenarioKey = 'valley-breeze'
+    } else if (queryPreset === 'urban-heat-island' || this.preset?.id === 'urban-heat-island') {
+      this.currentScenarioKey = 'urban-heat-island'
+    } else if (queryPreset === 'thermal-cell') {
+      this.currentScenarioKey = 'thermal-cell'
     }
     this.initScene()
     window.addEventListener('resize', this.onResize)
@@ -325,7 +374,7 @@ export default {
       this.isobarGroup = new THREE.Group()
       this.scene.add(this.isobarGroup)
 
-      // 5. High / Low pressure billboard labels
+      // 5. High / Low pressure billboard labels & directional wind vector arrows
       this.labelGroup = new THREE.Group()
       this.scene.add(this.labelGroup)
 
@@ -360,36 +409,57 @@ export default {
 
       // Add ground & aloft pressure badges
       if (leftIsHeat) {
-        this.createPressureSprite('低压 (L)', -4.5, 0.8, 0, '#ef4444')
-        this.createPressureSprite('高压 (H)', -4.5, 8.5, 0, '#f59e0b')
-        this.createPressureSprite('高压 (H)', 4.5, 0.8, 0, '#38bdf8')
-        this.createPressureSprite('低压 (L)', 4.5, 8.5, 0, '#64748b')
+        this.createPressureSprite('低压 (L)', -4.5, 0.9, 0, '#f87171')
+        this.createPressureSprite('高压 (H)', -4.5, 8.5, 0, '#fbbf24')
+        this.createPressureSprite('高压 (H)', 4.5, 0.9, 0, '#38bdf8')
+        this.createPressureSprite('低压 (L)', 4.5, 8.5, 0, '#94a3b8')
       } else {
-        this.createPressureSprite('高压 (H)', -4.5, 0.8, 0, '#38bdf8')
-        this.createPressureSprite('低压 (L)', -4.5, 8.5, 0, '#64748b')
-        this.createPressureSprite('低压 (L)', 4.5, 0.8, 0, '#ef4444')
-        this.createPressureSprite('高压 (H)', 4.5, 8.5, 0, '#f59e0b')
+        this.createPressureSprite('高压 (H)', -4.5, 0.9, 0, '#38bdf8')
+        this.createPressureSprite('低压 (L)', -4.5, 8.5, 0, '#94a3b8')
+        this.createPressureSprite('低压 (L)', 4.5, 0.9, 0, '#f87171')
+        this.createPressureSprite('高压 (H)', 4.5, 8.5, 0, '#fbbf24')
       }
+
+      // 3D 近地面风向与高空风向矢量箭头（让学生一眼看清 H → L 风向）
+      const surfaceDir = new THREE.Vector3(leftIsHeat ? -1 : 1, 0, 0)
+      const surfaceOrigin = new THREE.Vector3(leftIsHeat ? 2.4 : -2.4, 1.35, 1.6)
+      const surfaceArrow = new THREE.ArrowHelper(surfaceDir, surfaceOrigin, 4.8, 0x38bdf8, 0.9, 0.55)
+      this.labelGroup.add(surfaceArrow)
+
+      const aloftDir = new THREE.Vector3(leftIsHeat ? 1 : -1, 0, 0)
+      const aloftOrigin = new THREE.Vector3(leftIsHeat ? -2.4 : 2.4, 7.65, 1.6)
+      const aloftArrow = new THREE.ArrowHelper(aloftDir, aloftOrigin, 4.8, 0xfbbf24, 0.85, 0.5)
+      this.labelGroup.add(aloftArrow)
+
+      this.createPressureSprite(
+        leftIsHeat ? '⬅ 近地面风 (H→L)' : '➡ 近地面风 (H→L)',
+        0,
+        2.15,
+        1.6,
+        '#7dd3fc',
+        260,
+        3.6
+      )
 
       this.rebuildIsobars()
     },
 
-    createPressureSprite(text, x, y, z, color) {
+    createPressureSprite(text, x, y, z, color, width = 160, scaleX = 2.4) {
       const canvas = document.createElement('canvas')
-      canvas.width = 160
+      canvas.width = width
       canvas.height = 64
       const ctx = canvas.getContext('2d')
       ctx.fillStyle = color
-      ctx.font = 'bold 28px "Noto Serif SC", sans-serif'
+      ctx.font = 'bold 26px "Noto Serif SC", sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(text, 80, 32)
+      ctx.fillText(text, width / 2, 32)
 
       const tex = new THREE.CanvasTexture(canvas)
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true })
       const sprite = new THREE.Sprite(mat)
       sprite.position.set(x, y, z)
-      sprite.scale.set(2.4, 0.9, 1)
+      sprite.scale.set(scaleX, 0.9, 1)
       this.labelGroup.add(sprite)
     },
 
@@ -801,16 +871,57 @@ export default {
   right: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
   pointer-events: none;
 }
+.overlay-tags-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .overlay-tag {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 12px;
+  font-weight: 700;
   color: #f8fafc;
+}
+.overlay-sim-tag {
+  background: rgba(245, 158, 11, 0.22);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fde68a;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.overlay-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.diurnal-quick-btn {
+  pointer-events: auto;
+  background: rgba(2, 132, 199, 0.85);
+  border: 1px solid #7dd3fc;
+  color: #ffffff;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.diurnal-quick-btn:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
 }
 .lock-btn {
   pointer-events: auto;
@@ -823,32 +934,77 @@ export default {
   cursor: pointer;
 }
 
-.temp-legend {
+.tc-wind-hud {
   position: absolute;
-  bottom: 14px;
-  left: 14px;
-  right: 14px;
-  display: flex;
-  justify-content: space-between;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(200px, 1.35fr) minmax(140px, 1fr);
+  gap: 8px;
+  align-items: stretch;
   pointer-events: none;
 }
-.heat-pill {
-  background: rgba(239, 68, 68, 0.25);
-  border: 1px solid rgba(239, 68, 68, 0.6);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  color: #fca5a5;
+
+.hud-zone-pill {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.hud-zone-pill.is-warm {
+  background: rgba(127, 29, 29, 0.78);
+  border: 1px solid rgba(248, 113, 113, 0.65);
+  color: #fee2e2;
+}
+
+.hud-zone-pill.is-cool {
+  background: rgba(12, 74, 110, 0.78);
+  border: 1px solid rgba(56, 189, 248, 0.65);
+  color: #e0f2fe;
+}
+
+.zone-title {
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.zone-state {
+  font-size: 10.5px;
+  opacity: 0.92;
+}
+
+.hud-wind-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(7, 24, 42, 0.9);
+  border: 1.5px solid rgba(56, 189, 248, 0.75);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.wind-caption {
+  font-size: 10px;
+  color: #93c5fd;
   font-weight: 600;
 }
-.cold-pill {
-  background: rgba(2, 132, 199, 0.25);
-  border: 1px solid rgba(2, 132, 199, 0.6);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  color: #7dd3fc;
-  font-weight: 600;
+
+.wind-main-readout {
+  font-size: 12.5px;
+  color: #ffffff;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 @media (max-width: 768px) {
@@ -859,11 +1015,17 @@ export default {
     width: 100%;
   }
   .tc-canvas-wrap {
-    min-height: 320px;
+    min-height: 360px;
   }
-  .temp-legend {
-    flex-direction: column;
-    gap: 4px;
+  .tc-wind-hud {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .hud-zone-pill {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 10px;
   }
 }
 </style>

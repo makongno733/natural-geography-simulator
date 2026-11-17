@@ -46,24 +46,30 @@
             <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
           </div>
         </div>
-        <aside class="community-discovery" aria-label="地理探索路径">
-          <p class="discovery-eyebrow">从观察，流向理解</p>
-          <router-link to="/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation">
-            <span>01</span>
-            <div><strong>动手对照：城市内涝仿真</strong><small>50 mm/h 暴雨下不同地表径流对比</small></div>
-            <span aria-hidden="true">↗</span>
-          </router-link>
-          <router-link to="/geo-labs/satellite">
-            <span>02</span>
-            <div><strong>真实数据：多时相卫星影像</strong><small>NASA 实测遥感卷帘对比与来源核验</small></div>
-            <span aria-hidden="true">↗</span>
-          </router-link>
-          <router-link to="/learning">
-            <span>03</span>
-            <div><strong>教材精读：让知识彼此连接</strong><small>回到初高中与大学教材理解机理</small></div>
-            <span aria-hidden="true">↗</span>
-          </router-link>
-        </aside>
+        <div class="community-hero-right">
+          <CommunityMiniGlobe />
+
+          <aside class="community-discovery community-discovery-compact" aria-label="地理探索路径">
+            <p class="discovery-eyebrow">从观察，流向理解</p>
+            <div class="discovery-links-grid">
+              <router-link to="/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation">
+                <span>01</span>
+                <div><strong>动手对照：城市内涝仿真</strong><small>50 mm/h 暴雨径流对比</small></div>
+                <span aria-hidden="true">↗</span>
+              </router-link>
+              <router-link to="/geo-labs/satellite">
+                <span>02</span>
+                <div><strong>真实数据：多时相卫星影像</strong><small>NASA 遥感卷帘对比</small></div>
+                <span aria-hidden="true">↗</span>
+              </router-link>
+              <router-link to="/learning">
+                <span>03</span>
+                <div><strong>教材精读：让知识彼此连接</strong><small>初高中与大学教材机理</small></div>
+                <span aria-hidden="true">↗</span>
+              </router-link>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
 
@@ -480,6 +486,7 @@ import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
 import { STANDARD_EVIDENCES, getEvidenceById } from '../inquiry/evidenceCatalog.js'
+import CommunityMiniGlobe from './CommunityMiniGlobe.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1402,9 +1409,16 @@ onBeforeUnmount(() => {
 .community-hero-inner {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.75fr) minmax(280px, 1fr);
-  align-items: center;
-  gap: clamp(16px, 3vw, 44px);
+  grid-template-columns: minmax(0, 1.32fr) minmax(350px, 1.05fr);
+  align-items: start;
+  gap: clamp(16px, 2.6vw, 34px);
+}
+
+.community-hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
 }
 
 .community-tides { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
@@ -1421,43 +1435,60 @@ onBeforeUnmount(() => {
 .community-tides span:nth-child(2) { right: -55px; top: -45px; }
 .community-tides span:nth-child(3) { right: 10px; top: 20px; }
 .community-discovery {
-  padding: 18px;
-  border: 1px solid rgba(178, 230, 223, 0.26);
-  border-radius: 20px;
+  padding: 10px 14px;
+  border: 1px solid rgba(178, 230, 223, 0.24);
+  border-radius: 16px;
   background: rgba(7, 39, 48, 0.36);
 }
-.discovery-eyebrow { margin: 0 0 10px; color: #c7e6df; font-size: 12.5px; letter-spacing: .08em; }
-.community-discovery a { display: flex; align-items: center; gap: 10px; padding: 11px 0; color: #fff; text-decoration: none; }
-.community-discovery a + a { border-top: 1px solid rgba(178, 230, 223, 0.18); }
-.community-discovery a > span:first-child { font: 12px ui-monospace, monospace; color: #a8dcd2; }
-.community-discovery a > span:last-child { margin-left: auto; }
-.community-discovery a div { display: grid; gap: 2px; }
-.community-discovery strong { font-size: 14px; }
-.community-discovery small { color: #c7e6df; font-size: 11.5px; }
+.discovery-eyebrow { margin: 0 0 6px; color: #c7e6df; font-size: 11px; letter-spacing: .08em; font-weight: 700; }
+.discovery-links-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.community-discovery a {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 8px;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(15, 39, 66, 0.38);
+  border: 1px solid rgba(178, 230, 223, 0.14);
+  border-radius: 10px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.community-discovery a:hover {
+  background: rgba(2, 132, 199, 0.28);
+  border-color: rgba(125, 211, 252, 0.45);
+}
+.community-discovery a > span:first-child { font: 11px ui-monospace, monospace; color: #a8dcd2; margin-top: 2px; flex-shrink: 0; white-space: nowrap; }
+.community-discovery a > span:last-child { margin-left: auto; font-size: 11px; color: #93c5fd; flex-shrink: 0; }
+.community-discovery a div { display: grid; gap: 1px; min-width: 0; }
+.community-discovery strong { font-size: 12px; line-height: 1.3; }
+.community-discovery small { color: #c7e6df; font-size: 10.5px; line-height: 1.3; }
 .community-discovery a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
 .community-discovery a:focus-visible { outline: 2px solid #c7e6df; outline-offset: 4px; border-radius: 8px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .community-intro { animation: community-arrive .65s var(--geo-flow-ease) both; }
-  .community-discovery { animation: community-arrive .85s var(--geo-flow-ease) both; }
+  .community-hero-right { animation: community-arrive .85s var(--geo-flow-ease) both; }
 }
 @keyframes community-arrive {
   from { opacity: 0; translate: 0 14px; }
   to { opacity: 1; translate: 0 0; }
 }
 @media (max-width: 1000px) {
-  .community-hero-inner { grid-template-columns: 1fr; gap: 14px; }
+  .community-hero-inner { grid-template-columns: 1fr; gap: 12px; }
   .community-discovery {
-    padding: 12px 14px;
+    padding: 10px 12px;
     border-radius: 14px;
-  }
-  .community-discovery a {
-    padding: 8px 0;
   }
 }
 @media (max-width: 520px) {
-  .community-hero { padding: 18px 0; border-radius: 0 0 24px 24px; }
-  .community-hero h1 { line-height: 1.3; font-size: 22px; }
+  .community-hero { padding: 14px 0; border-radius: 0 0 24px 24px; }
+  .community-hero h1 { line-height: 1.25; font-size: 21px; margin-bottom: 8px; }
+  .discovery-links-grid { grid-template-columns: 1fr; gap: 6px; }
 }
 
 .community-hero-badge {
@@ -2114,6 +2145,81 @@ onBeforeUnmount(() => {
   }
   .community-form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .community-hero {
+    padding: 10px 0 12px;
+    margin-bottom: 12px;
+    border-radius: 0 0 22px 22px;
+  }
+  .community-hero-inner {
+    gap: 8px;
+  }
+  .community-hero-badge {
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  .community-hero h1 {
+    font-size: 18.5px;
+    line-height: 1.22;
+    margin: 0 0 6px;
+  }
+  .flagship-compare-card {
+    padding: 8px 10px;
+    margin: 0 0 6px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+  .flagship-card-badges {
+    margin-bottom: 3px;
+    gap: 5px;
+  }
+  .flagship-tag-main,
+  .flagship-tag-sim {
+    font-size: 10px;
+    padding: 1px 7px;
+  }
+  .flagship-question {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .flagship-desc {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  .flagship-card-cta,
+  .flagship-start-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    min-height: 32px;
+  }
+  .community-search {
+    margin-bottom: 6px;
+    padding: 3px;
+    gap: 6px;
+  }
+  .community-search input {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 12.5px;
+  }
+  .community-search button {
+    padding: 4px 12px;
+    font-size: 12.5px;
+    min-height: 32px;
+  }
+  .community-hero-actions {
+    gap: 5px;
+  }
+  .community-hero-actions .baroque-btn {
+    padding: 4px 9px;
+    font-size: 11.5px;
+    min-height: 30px;
   }
 }
 </style>
