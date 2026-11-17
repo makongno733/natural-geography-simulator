@@ -35,8 +35,9 @@ export default defineConfig({
           if (!id.includes('node_modules')) return null;
           if (id.includes('/better-auth/') || id.includes('/@better-auth/') || id.includes('/better-call/')) return 'vendor-auth';
           if (id.includes('maplibre-gl') || id.includes('@maplibre')) return 'vendor-map';
-          if (id.includes('three')) return 'vendor-three';
-          if (id.includes('vue-router')) return 'vendor-vue';
+          if (id.includes('three') || id.includes('meshline')) return 'vendor-three';
+          if (id.includes('@fullcalendar') || id.includes('preact')) return 'vendor-calendar';
+          if (id.includes('/vue/') || id.includes('/@vue/') || id.includes('vue-router')) return 'vendor-vue';
           return 'vendor-core';
         }
       }

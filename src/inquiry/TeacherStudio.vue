@@ -3,7 +3,7 @@
     <!-- 教师看板顶部统计 -->
     <div class="studio-header">
       <div class="title-group">
-        <span class="studio-badge">TEACHER COCKPIT · 教研评估与学情看板</span>
+        <span class="studio-badge">教师工作台 · 教学评估与学情看板</span>
         <h3>地理创新探究教师工作台</h3>
         <p class="studio-lead">获授权的教师可查看班级正式提交、比对猜想与结论、追踪证据链，并按表现性量规批阅。真实学生作品暂不公开展示。</p>
       </div>

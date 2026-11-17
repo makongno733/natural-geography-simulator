@@ -57,22 +57,22 @@ const steps = [
   {
     target: '.app-header',
     title: '🌐 欢迎来到地理共同体',
-    description: '集地理科学前沿探讨、三维动力学实验、教材大概念体系与真实遥感于一体的开放学术空间。'
+    description: '在这里可以一起观察地理现象、动手做 3D 实验、阅读初高中与大学教材，并和同学老师讨论问题。'
   },
   {
     target: '.nav-search-trigger',
-    title: '🔍 全局知识与实验检索 (⌘K)',
-    description: '随时按下 Cmd+K (Windows 下为 Ctrl+K) 或点击顶栏检索，可秒级穿梭到任何三维实验、教材大概念或学术讨论。'
+    title: '🔍 全站知识与实验检索 (⌘K)',
+    description: '随时按下 Cmd+K（Windows 下为 Ctrl+K）或点击顶栏“检索”，即可快速查找任何 3D 实验、教材章节、探究任务或社区问题。'
   },
   {
     target: '.community-hero-actions',
-    title: '✍ 研讨交流与学术提问',
-    description: '在论坛提出地学真问题，挂载实测探究证据卡与 3D 动力学实验模型，与全国地理学者同行切磋。'
+    title: '✍ 提问、分享与讨论',
+    description: '看到不理解的地理现象或实验结果？点击“发起讨论”，写下你的观察和猜想，还可以直接附上 3D 模型和证据卡。'
   },
   {
     target: '.hot-topics-bar',
-    title: '🛰 前沿观察与学术资源馆',
-    description: '跟踪青藏高原暖湿化、遥感基础模型等前沿热点，查阅由官方开放许可背书的高精度 DEM 与气象再分析数据。'
+    title: '🛰 近期地球事件与开放数据',
+    description: '查看来自美国地质调查局（USGS）和 NASA 的近期地震、风暴与天象记录，或前往资源馆获取地形与气候数据。'
   }
 ]
 
@@ -81,7 +81,6 @@ const currentStep = computed(() => steps[currentStepIndex.value])
 function updatePosition() {
   const targetEl = document.querySelector(currentStep.value.target)
   if (!targetEl) {
-    // 若找不到目标元素，居中显示
     cardPositionStyle.value = {
       top: '50%',
       left: '50%',
@@ -91,15 +90,15 @@ function updatePosition() {
   }
 
   const rect = targetEl.getBoundingClientRect()
-  const top = Math.min(window.innerHeight - 280, Math.max(20, rect.bottom + 16))
-  const left = Math.min(window.innerWidth - 380, Math.max(20, rect.left))
+  const cardWidth = Math.min(380, Math.max(260, window.innerWidth - 32))
+  const top = Math.min(Math.max(16, window.innerHeight - 280), Math.max(16, rect.bottom + 16))
+  const left = Math.max(16, Math.min(window.innerWidth - cardWidth - 16, rect.left))
 
   cardPositionStyle.value = {
     top: `${top}px`,
     left: `${left}px`
   }
 
-  // 平滑滚动至视口内
   targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
@@ -134,13 +133,6 @@ function startTour(force = false) {
     nextTick(updatePosition)
   }
 }
-
-onMounted(() => {
-  // 首次访问延迟 800ms 平滑拉起
-  setTimeout(() => {
-    startTour(false)
-  }, 800)
-})
 
 defineExpose({
   startTour

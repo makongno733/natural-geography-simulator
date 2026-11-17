@@ -20,7 +20,7 @@ import { computed } from 'vue'
 <template>
 <div class="cx-duality-map">
   <div class="cx-duality-header">
-    <span class="cx-eyebrow">DUALITY WEB & M-THEORY</span>
+    <span class="cx-eyebrow">对偶网络与 M 理论</span>
     <h3>超弦理论对偶网络交互拓扑图</h3>
     <p class="cx-subtext">点击任意对偶连接线或按钮，探索 T 对偶、S 对偶与 11 维 M 理论强弱极限的严谨物理机制。</p>
   </div>

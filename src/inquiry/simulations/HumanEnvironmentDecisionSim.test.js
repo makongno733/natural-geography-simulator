@@ -2,16 +2,27 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import HumanEnvironmentDecisionSim from './HumanEnvironmentDecisionSim.vue'
 
+const mountOpts = {
+  global: {
+    stubs: {
+      'router-link': {
+        template: '<a><slot /></a>'
+      }
+    }
+  }
+}
+
 describe('HumanEnvironmentDecisionSim Component', () => {
   it('renders multi-objective decision controls and radar chart', () => {
-    const wrapper = mount(HumanEnvironmentDecisionSim)
+    const wrapper = mount(HumanEnvironmentDecisionSim, mountOpts)
     expect(wrapper.text()).toContain('临江特大重化工业基地区位重塑与生态红线决策台')
     expect(wrapper.find('svg.radar-svg').exists()).toBe(true)
     expect(wrapper.text()).toContain('利益相关方冲突证据档案')
+    expect(wrapper.text()).toContain('带着这个决策方案去社区提问 / 讨论')
   })
 
   it('allows switching between 3 decision plans and displays tradeoffs', async () => {
-    const wrapper = mount(HumanEnvironmentDecisionSim)
+    const wrapper = mount(HumanEnvironmentDecisionSim, mountOpts)
     const planButtons = wrapper.findAll('.btn-plan-select')
     expect(planButtons.length).toBe(3)
 
@@ -26,7 +37,7 @@ describe('HumanEnvironmentDecisionSim Component', () => {
   })
 
   it('captures a decision trade-off evidence card', async () => {
-    const wrapper = mount(HumanEnvironmentDecisionSim)
+    const wrapper = mount(HumanEnvironmentDecisionSim, mountOpts)
     const captureBtn = wrapper.find('.btn-capture')
     expect(captureBtn.exists()).toBe(true)
 

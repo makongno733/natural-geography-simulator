@@ -33,6 +33,11 @@
       </div>
     </section>
 
+    <div class="exp-tip-banner">
+      <span class="tip-icon">💡</span>
+      <p><strong>动手建议：</strong>选一个感兴趣的模型 → 试着只改变一个按钮或滑块 → 看哪里的水流、风向、岩层或光影发生变化 → 比较两次结果的区别，再带着你的观察去社区讨论。</p>
+    </div>
+
     <h2 class="exp-categories-title">按主题继续探索</h2>
     <div class="exp-grid">
       <router-link
@@ -41,7 +46,7 @@
         :to="`/experiments/${category.id}`"
         :class="['exp-card', `exp-card-${category.id}`]"
       >
-        <div class="exp-card-icon">{{ String(index + 1).padStart(2, '0') }} / {{ category.en }}</div>
+        <div class="exp-card-icon">{{ String(index + 1).padStart(2, '0') }} · {{ category.tag }}</div>
         <h2 class="exp-card-title">{{ category.label }}</h2>
         <div class="exp-card-desc">{{ category.desc }}</div>
         <span class="exp-card-enter">进入实验模块 →</span>
@@ -104,10 +109,10 @@ import { getTextbooksForExperiment } from '../textbook/data/experimentLinks.js'
 import { grades } from '../textbook/data/index.js'
 
 const categories = [
-  { id: 'meteorology', en: 'ATMOSPHERE', label: '气象与气候学', desc: '热力环流 · 地转偏向力 · 云与降水模拟' },
-  { id: 'hydrology', en: 'WATER', label: '水文与流水地貌', desc: '河谷冲淤 · 地下水运移 · 自然水循环' },
-  { id: 'geology', en: 'LANDFORMS', label: '地质与地表形态', desc: '褶皱断层构造 · 沉积地层 · 矿物鉴定' },
-  { id: 'astronomy', en: 'SPACE', label: '地球运动与天体', desc: '月相变化 · 四季昼夜交替 · 行星视运动' },
+  { id: 'meteorology', en: 'ATMOSPHERE', tag: '大气气象', label: '气象与气候学', desc: '热力环流 · 地转偏向力 · 云与降水模拟' },
+  { id: 'hydrology', en: 'WATER', tag: '陆地水文', label: '水文与流水地貌', desc: '河谷冲淤 · 地下水运移 · 自然水循环' },
+  { id: 'geology', en: 'LANDFORMS', tag: '地质构造', label: '地质与地表形态', desc: '褶皱断层构造 · 沉积地层 · 矿物鉴定' },
+  { id: 'astronomy', en: 'SPACE', tag: '地球天体', label: '地球运动与天体', desc: '月相变化 · 四季昼夜交替 · 行星视运动' },
 ]
 const quickModels = [
   { topic: '地球结构', name: '地球内部圈层', to: '/earth3d' },
@@ -190,6 +195,22 @@ const filteredExperiments = computed(() => listExperiments().filter(experiment =
 .quick-model:focus-visible { outline:3px solid white; outline-offset:-4px; }
 .quick-model-topic { grid-column:1/-1; color:#b8cfbd; font-size:12px; }
 .quick-model strong { font-size:20px; }
+.exp-tip-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #eaf5f1;
+  border: 1px solid #95bdb9;
+  border-left: 4px solid #2d6a4f;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 28px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.exp-tip-banner p { margin: 0; }
+.tip-icon { font-size: 18px; }
 .exp-categories-title { margin:0 0 18px; color:#1b3933; font-size:24px; }
 
 .exp-grid {

@@ -2,7 +2,7 @@
   <div class="geo-calendar page-shell">
     <section class="calendar-hero">
       <div class="calendar-hero-copy">
-        <span class="calendar-eyebrow">GEOGRAPHY IN TIME / 地理时间轴</span>
+        <span class="calendar-eyebrow">地理时间轴与实时事件</span>
         <h1>把正在发生的地球，<br><em>放进日历。</em></h1>
         <p>一年地理观察计划：看得见的夜空、季节变化，以及持续更新的地震记录。</p>
         <div class="calendar-hero-tags"><span>北京时间</span><span>来源可追溯</span><span>预测与实录分开</span></div>
@@ -20,7 +20,7 @@
     <section class="calendar-board" aria-labelledby="calendar-heading">
       <div class="calendar-toolbar">
         <div>
-          <span class="calendar-section-index">01 / MONTH VIEW</span>
+          <span class="calendar-section-index">01 · 月度日历视图</span>
           <h2 id="calendar-heading">{{ selectedYear }} 年 {{ selectedMonth }} 月</h2>
           <p>{{ monthSummary }}</p>
         </div>
@@ -45,7 +45,7 @@
         </div>
 
         <aside class="calendar-details" aria-live="polite">
-          <span class="calendar-section-index">02 / EVENT NOTES</span>
+          <span class="calendar-section-index">02 · 当日观察笔记</span>
           <h3>{{ selectedDateLabel }}</h3>
           <p class="details-caption">{{ selectedDayEvents.length ? '读一则短故事，再核对事实与来源' : monthSeason ? '这一天没有具体事件。可读本月的观察故事。' : '这一天没有该类别的事件，请选择其他日期。' }}</p>
           <article v-for="event in selectedDayEvents" :key="event.id" class="event-card" :class="`event-${event.type}`">
@@ -64,7 +64,7 @@
     </section>
 
     <section class="calendar-bottom">
-      <div><span class="calendar-section-index">03 / LIVE RECORD</span><h2>地震记录</h2><p>服务器每小时尝试同步一次 USGS 最近 30 天的 M4.5+ 地震，保留最多约一年。仅收录其地名标为中国相关地区的记录；这不是严格国界判定，震级、位置也可能修订。</p><p class="sync-state">{{ syncStatus }}</p></div>
+      <div><span class="calendar-section-index">03 · 近期地震记录</span><h2>地震记录</h2><p>服务器每小时尝试同步一次美国地质调查局（USGS）最近 30 天的 M4.5+ 地震，保留最多约一年。仅收录其地名标为中国相关地区的记录；这不是严格国界判定，震级、位置也可能修订。</p><p class="sync-state">{{ syncStatus }}</p></div>
       <div class="recent-list"><div v-if="!quakes.length" class="empty-record">{{ loading ? '正在读取服务器记录…' : '当前没有可显示的记录。' }}</div><a v-for="quake in quakes.slice(0, 5)" :key="quake.id" :href="quake.sourceUrl" target="_blank" rel="noopener noreferrer"><time>{{ quake.date }}</time><strong>{{ quake.title }}</strong><span>↗</span></a></div>
     </section>
     <p class="calendar-footnote">数据用途：地理教学与观察规划。灾害信息请以有关部门的正式发布为准；本页不提供预警。<a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" target="_blank" rel="noopener noreferrer">USGS 数据说明 ↗</a></p>

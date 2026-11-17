@@ -194,5 +194,11 @@ watch(() => route.fullPath, loadExperiment, { immediate: true })
 .related-card:hover { box-shadow: var(--shadow-sm); border-color: var(--geo-ocean); transform: var(--geo-btn-elevate); }
 .related-name { font-size: 14.5px; font-weight: 700; color: var(--geo-ocean-deep); }
 .related-shared { font-size: 11.5px; color: var(--text-muted); }
+.ev-shell :deep(.angle-ticks) { color: #94a3b8 !important; font-size: 11px !important; }
+@media (max-width: 768px) {
+  .ev-shell :deep(:is(.aero-theme, .hydro-theme, .geo-theme, .astro-theme, .sys-theme)) {
+    flex-direction: column-reverse !important;
+  }
+}
 @media (max-width: 720px) { .ev-shell { padding: 12px 12px 28px; } .ev-breadcrumb { font-size: 11px; } .ev-title { font-size: 20px; } }
 </style>

@@ -3,7 +3,7 @@
     <router-link class="community-back" to="/community">← 返回社区</router-link>
 
     <header class="groups-hero baroque-frame">
-      <p class="community-eyebrow">ACADEMIC GUILDS & SOCIETIES / 专业学社</p>
+      <p class="community-eyebrow">学习与研究交流社群</p>
       <h1>地理学术社群与研讨共同体</h1>
       <p class="groups-lead">
         浏览已登记的地理交流社群，也欢迎推荐拥有公开展示授权的社群。

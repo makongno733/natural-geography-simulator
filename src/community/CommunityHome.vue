@@ -87,7 +87,10 @@
         <p v-else-if="error && !posts.length" class="community-state community-error" role="alert">
           {{ error }}
           <br />
-          <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadPosts()">重新尝试</button>
+          <span style="display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px">
+            <button class="baroque-btn baroque-btn-sm" type="button" @click="loadPosts()">重新尝试</button>
+            <button class="baroque-btn baroque-btn-sm" type="button" @click="enableLocalPreviewDemo()">浏览离线精选讨论示例</button>
+          </span>
         </p>
         <p v-else-if="!posts.length" class="community-state">暂时没有符合条件的讨论。换个关键词，或发起新讨论吧。</p>
 
@@ -141,29 +144,46 @@
         <section id="compose" ref="composeRef" class="community-compose baroque-frame" aria-labelledby="compose-title">
           <div class="community-section-heading">
             <div>
-              <p class="community-eyebrow">INSCRIBE TO THE GUILD</p>
+              <p class="community-eyebrow">提问与分享</p>
               <h2 id="compose-title">发起讨论</h2>
             </div>
           </div>
-          <p v-if="!user && !isDemoMode" class="community-state">登录后即可提出问题、分享经验和发表见解。<a :href="`${accountOrigin}/#/account`">登录 / 注册 ↗</a></p>
-          <form v-else class="community-compose-form" @submit.prevent="createPost">
+
+          <div v-if="!user && !isDemoMode" class="community-state compose-login-banner">
+            <span>登录后就能提问和回复。你在这里填写的草稿会自动保存在本机，登录后不会丢失。</span>
+            <a :href="loginComposeHref" class="baroque-btn baroque-btn-sm baroque-btn-primary" style="margin-left: 10px" @click="rememberComposeReturn">登录 / 注册 ↗</a>
+          </div>
+
+          <form class="community-compose-form" @submit.prevent="createPost">
+            <!-- 学生友好提问模板提示条 -->
+            <div class="compose-scaffold-bar">
+              <div class="scaffold-text">
+                <strong>💡 提问小帮手：</strong>
+                <span>可以先写“我看到……；我猜……，因为……；我还想知道……”，也可以只提一个你想弄懂的问题。</span>
+              </div>
+              <div class="scaffold-actions">
+                <button type="button" class="formula-chip" @click="applyStudentScaffold">插入观察提问模板</button>
+                <button v-if="draft.title || draft.body" type="button" class="formula-chip" @click="clearDraft">清空草稿</button>
+              </div>
+            </div>
+
             <div class="community-form-row">
               <label>讨论类型
                 <select v-model="draft.kind">
-                  <option value="question">提出科学问答 (寻找同行解答)</option>
-                  <option value="discussion">经验与学术交流 (分享观察见闻)</option>
+                  <option value="question">提出科学问答 (寻找解答)</option>
+                  <option value="discussion">经验与学术交流 (分享观察与想法)</option>
                 </select>
               </label>
               <label>学科分区
                 <select v-model.number="draft.categoryId" required>
-                  <option disabled value="">请选择专业领域分区</option>
-                  <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+                  <option disabled value="">请选择学科分区</option>
+                  <option v-for="category in (categories.length ? categories : mockCategories)" :key="category.id" :value="category.id">{{ category.name }}</option>
                 </select>
               </label>
             </div>
 
             <label>议题标题
-              <input v-model.trim="draft.title" required maxlength="120" placeholder="用一句话清晰阐明你的核心地理学术问题或讨论主题" />
+              <input v-model.trim="draft.title" required maxlength="120" placeholder="用一句话写下你想问的问题或观察到的现象（例如：为什么同纬度沿海比内陆温差小？）" />
             </label>
 
             <!-- 公式快捷助手工具栏 -->
@@ -181,17 +201,17 @@
               </button>
             </div>
 
-            <label>正文内容 (支持学术描述、野外观察数据、定理依据，支持 $公式$ 与 $$块级公式$$)
-              <textarea v-model.trim="draft.body" required maxlength="10000" rows="7" placeholder="提供完整的地貌背景、空间尺度、观测数据或已尝试的计算推导。请尊重科学求证精神，并注明引用来源与数据出处。" />
+            <label>正文内容（支持写观察现象、实验结果或思考过程，也支持 $公式$ 与 $$块级公式$$）
+              <textarea v-model.trim="draft.body" required maxlength="10000" rows="7" placeholder="我看到：……&#10;我猜：……，因为……&#10;我还想知道：……（也可以只写你困惑的一点，有数据或模型来源欢迎一并附上）" />
             </label>
 
             <div class="community-form-row">
-              <label>学科标签 (英文逗号或空格隔开)
-                <input v-model.trim="tagsInput" maxlength="60" placeholder="如：地貌学, 喀斯特, 遥感解译, 考研真题" />
+              <label>话题标签 (逗号或空格隔开，可选)
+                <input v-model.trim="tagsInput" maxlength="60" placeholder="如：城市内涝, 热力环流, 喀斯特, 遥感" />
               </label>
-              <label>挂载站内 3D 实验 (可选)
+              <label>附上站内 3D 实验 (可选)
                 <select v-model="draft.linkedExperiment">
-                  <option value="">不挂载实验模型</option>
+                  <option value="">不附带实验模型</option>
                   <option value="fault-model">断层模型（挤压造山与断裂）</option>
                   <option value="thermal-circulation">热力环流与风向动力学</option>
                   <option value="water-cycle-3d">三维水循环与陆地径流</option>
@@ -200,9 +220,9 @@
                   <option value="stream-table">水土冲刷微缩实验台</option>
                 </select>
               </label>
-              <label>挂载探究实测证据卡 (可选)
+              <label>附上探究证据卡 (可选)
                 <select v-model="draft.evidenceId">
-                  <option value="">不挂载实测证据卡</option>
+                  <option value="">不附带探究证据卡</option>
                   <option v-for="ev in STANDARD_EVIDENCES" :key="ev.id" :value="ev.id">
                     [{{ ev.taskTitle }}] {{ ev.title }}
                   </option>
@@ -212,8 +232,9 @@
 
             <p v-if="submitError" class="community-error" role="alert">{{ submitError }}</p>
             <div class="form-submit-row">
+              <span v-if="draftSavedHint" class="draft-saved-hint">{{ draftSavedHint }}</span>
               <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="submitting">
-                {{ submitting ? '正在呈交讨论…' : '发布学术探讨 ✦' }}
+                {{ submitting ? '正在发布…' : (!user && !isDemoMode ? '保存草稿并去登录发布 ↗' : '发布讨论 ✦') }}
               </button>
             </div>
           </form>
@@ -226,7 +247,7 @@
         <section class="community-side-block baroque-frame">
           <div class="side-block-header">
             <span class="baroque-corner-ornament">⚜</span>
-            <h2>专业分区</h2>
+            <h2>学科分区</h2>
           </div>
           <p v-if="!categories.length" class="community-side-note">正在载入学科分区……</p>
           <div class="category-menu">
@@ -252,9 +273,9 @@
         <section class="community-side-block baroque-frame group-side-promo">
           <div class="side-block-header">
             <span class="baroque-corner-ornament">📜</span>
-            <h2>学术交流群</h2>
+            <h2>学习与研究社群</h2>
           </div>
-          <p class="side-promo-desc">找同行、聊科研、备考研、磨教案。社群信息在核实公开展示授权后收录；也欢迎先在站内公开讨论。</p>
+          <p class="side-promo-desc">找同学、聊课题、备考研、磨教案。社群信息在核实公开展示授权后收录；也欢迎先在站内公开讨论。</p>
           <router-link to="/groups" class="baroque-btn baroque-btn-sm baroque-btn-brass promo-btn">
             浏览全部社群导航 →
           </router-link>
@@ -269,19 +290,19 @@
           <div class="side-link-list">
             <router-link to="/experiments" class="side-exp-link">
               <span>🔬 3D 虚拟地理实验室</span>
-              <small>29+ 项动力学交互仿真</small>
+              <small>29 项地理过程三维交互模型</small>
             </router-link>
             <router-link to="/resources" class="side-exp-link">
               <span>📚 开放地理科学数据馆</span>
-              <small>DEM、ERA5、矢量底图</small>
+              <small>找地形（DEM）、天气（ERA5）与地图数据</small>
             </router-link>
             <router-link to="/geo-labs" class="side-exp-link">
               <span>🛰 真实遥感数据探究</span>
-              <small>珠峰DEM剖面、MODIS对比</small>
+              <small>珠峰地形剖面与多时相卫星影像对比</small>
             </router-link>
             <router-link to="/calendar" class="side-exp-link">
-              <span>⏳ 空间地学时空历法</span>
-              <small>天象预测与全球地震实录</small>
+              <span>⏳ 地理时间轴与日历</span>
+              <small>节气天象预测与全球地震实录</small>
             </router-link>
           </div>
         </section>
@@ -293,7 +314,7 @@
       <div class="hot-topics-header">
         <span class="baroque-corner-ornament">❖</span>
         <h3 id="hot-topics-title">近期地理事件</h3>
-        <span class="hot-topics-subtitle">NASA EONET / USGS 来源记录</span>
+        <span class="hot-topics-subtitle">美国国家航空航天局（NASA EONET）与美国地质调查局（USGS）来源记录</span>
         <router-link class="baroque-btn baroque-btn-sm" to="/calendar">打开地理日历</router-link>
       </div>
       <p class="community-side-note">按来源的最近记录时间排列；事件位置与时间可能是近似值。这里不代表全网热度排名。</p>
@@ -312,6 +333,7 @@
         <article v-for="topic in hotTopics" :key="topic.id" class="hot-topic-card">
           <span class="topic-tag">{{ topic.tag }}</span>
           <h4>{{ eventDisplayTitle(topic.title) }}</h4>
+          <small v-if="eventDisplayTitle(topic.title) !== topic.title" class="topic-raw-title">原文：{{ topic.title }}</small>
           <p>{{ topic.summary }}</p>
           <button
             type="button"
@@ -395,14 +417,91 @@ const tagsInput = ref('')
 const isDemoMode = ref(false)
 const allowDemoMode = import.meta.env.DEV
 
+const DRAFT_STORAGE_KEY = 'geo_community_post_draft_v1'
+const draftSavedHint = ref('')
+
 const draft = reactive({
   kind: 'question',
-  categoryId: '',
+  categoryId: mockCategories[0]?.id || 1,
   title: '',
   body: '',
   linkedExperiment: '',
   evidenceId: ''
 })
+
+const loginComposeHref = computed(() => {
+  const base = accountOrigin || ''
+  return `${base}/#/account?redirect=${encodeURIComponent('/?compose=1#compose')}`
+})
+
+function saveDraftToStorage() {
+  try {
+    if (!draft.title && !draft.body && !tagsInput.value && !draft.linkedExperiment && !draft.evidenceId) {
+      localStorage.removeItem(DRAFT_STORAGE_KEY)
+      draftSavedHint.value = ''
+      return
+    }
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+      kind: draft.kind,
+      categoryId: Number(draft.categoryId) || 1,
+      title: draft.title,
+      body: draft.body,
+      linkedExperiment: draft.linkedExperiment,
+      evidenceId: draft.evidenceId,
+      tagsInput: tagsInput.value
+    }))
+    draftSavedHint.value = '✓ 草稿已自动保存在本机'
+  } catch {}
+}
+
+function restoreDraftFromStorage() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.kind) draft.kind = parsed.kind
+      if (parsed.categoryId) draft.categoryId = Number(parsed.categoryId) || 1
+      if (parsed.title && !draft.title) draft.title = parsed.title
+      if (parsed.body && !draft.body) draft.body = parsed.body
+      if (parsed.linkedExperiment && !draft.linkedExperiment) draft.linkedExperiment = parsed.linkedExperiment
+      if (parsed.evidenceId && !draft.evidenceId) draft.evidenceId = parsed.evidenceId
+      if (parsed.tagsInput && !tagsInput.value) tagsInput.value = parsed.tagsInput
+    }
+  } catch {}
+}
+
+function clearDraft() {
+  draft.title = ''
+  draft.body = ''
+  tagsInput.value = ''
+  draft.linkedExperiment = ''
+  draft.evidenceId = ''
+  draftSavedHint.value = ''
+  try { localStorage.removeItem(DRAFT_STORAGE_KEY) } catch {}
+}
+
+function applyStudentScaffold() {
+  const template = '我看到：\n\n我猜：……，因为……\n\n我还想知道：'
+  if (!draft.body.trim()) {
+    draft.body = template
+  } else if (!draft.body.includes('我看到：')) {
+    draft.body = `${draft.body.trim()}\n\n${template}`
+  }
+  saveDraftToStorage()
+}
+
+function rememberComposeReturn() {
+  saveDraftToStorage()
+  try {
+    localStorage.setItem('geo_auth_return_to', '/?compose=1#compose')
+  } catch {}
+}
+
+watch(
+  () => [draft.kind, draft.categoryId, draft.title, draft.body, draft.linkedExperiment, draft.evidenceId, tagsInput.value],
+  () => { saveDraftToStorage() }
+)
 
 function insertFormulaToDraft(latex) {
   const snippet = ` $${latex}$ `
@@ -546,7 +645,7 @@ async function loadPosts(append = false) {
     isDemoMode.value = true
   }
 
-  if (!allowDemoMode) {
+  if (!allowDemoMode && !isDemoMode.value) {
     posts.value = []
     lastPageCount.value = 0
     error.value = '云端社区尚未连接，暂时无法获取讨论。'
@@ -599,6 +698,13 @@ async function loadPosts(append = false) {
   loading.value = false
 }
 
+function enableLocalPreviewDemo() {
+  isDemoMode.value = true
+  if (!categories.value.length) categories.value = mockCategories
+  try { sessionStorage.setItem('geo_community_demo_preview', '1') } catch {}
+  void loadPosts()
+}
+
 function preferredScroll() { return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }
 function scrollToFeed() { document.getElementById('community-feed')?.scrollIntoView({ behavior: preferredScroll() }) }
 function resetAndLoad() {
@@ -641,12 +747,19 @@ function focusCompose() { composeRef.value?.scrollIntoView({ behavior: preferred
 
 async function retryOnline() {
   isDemoMode.value = false
+  try { sessionStorage.removeItem('geo_community_demo_preview') } catch {}
   await initCommunity()
 }
 
 async function createPost() {
   if (!draft.title.trim() || !draft.body.trim()) {
     submitError.value = '请填写完整的标题和探讨内容。'
+    return
+  }
+  if (!user.value && !isDemoMode.value) {
+    rememberComposeReturn()
+    toast.info('草稿已保存在本机，登录后即可直接发布！')
+    window.location.href = loginComposeHref.value
     return
   }
   submitting.value = true
@@ -660,12 +773,13 @@ async function createPost() {
 
     if (!isDemoMode.value && accountEnabled) {
       const result = await apiRequest('/api/community/posts', { method: 'POST', body: JSON.stringify(payload) })
-      toast.success('学术探讨已成功发布！')
+      clearDraft()
+      toast.success('讨论已成功发布！')
       await router.push(`/community/post/${result.id}`)
       return
     }
 
-    if (!allowDemoMode) {
+    if (!allowDemoMode && !isDemoMode.value) {
       submitError.value = '云端社区尚未连接，暂时无法发布讨论。'
       return
     }
@@ -697,11 +811,7 @@ async function createPost() {
     }
     saveLocalDemoPost(localPost)
     toast.success('【演示模式】探讨已暂存于本地，可在列表中查看')
-    draft.title = ''
-    draft.body = ''
-    tagsInput.value = ''
-    draft.linkedExperiment = ''
-    draft.evidenceId = ''
+    clearDraft()
     await loadPosts()
   } catch (cause) {
     submitError.value = cause.message
@@ -710,20 +820,69 @@ async function createPost() {
   }
 }
 
+function applyRouteQueryParams() {
+  const q = route.query || {}
+  if (typeof q.q === 'string' && q.q.trim()) {
+    queryInput.value = q.q.trim()
+    searchQuery.value = q.q.trim()
+  }
+  if (typeof q.title === 'string' && q.title.trim()) {
+    draft.title = q.title.trim()
+  }
+  if (typeof q.body === 'string' && q.body.trim()) {
+    draft.body = q.body.trim()
+  }
+  if (typeof q.linkedExperiment === 'string' && q.linkedExperiment.trim()) {
+    draft.linkedExperiment = q.linkedExperiment.trim()
+  }
+  if (typeof q.evidenceId === 'string' && q.evidenceId.trim()) {
+    draft.evidenceId = q.evidenceId.trim()
+  }
+  if (q.compose && (q.kind === 'question' || q.kind === 'discussion')) {
+    draft.kind = q.kind
+  }
+  if (q.compose) {
+    setTimeout(() => {
+      focusCompose()
+    }, 120)
+  }
+}
+
 watch(() => route.query.kind, (value) => {
   if (route.name !== 'home') return
+  if (route.query?.compose) return
   kind.value = value === 'question' ? 'question' : ''
   onlySolved.value = false
   resetAndLoad()
 })
 
+watch(() => route.query.q, (value) => {
+  if (route.name !== 'home') return
+  const nextQ = typeof value === 'string' ? value.trim() : ''
+  if (nextQ !== searchQuery.value) {
+    queryInput.value = nextQ
+    searchQuery.value = nextQ
+    resetAndLoad()
+  }
+})
+
+watch(
+  () => [route.query.compose, route.query.title, route.query.body, route.query.linkedExperiment, route.query.evidenceId],
+  () => {
+    if (route.name !== 'home') return
+    applyRouteQueryParams()
+  }
+)
+
 async function initCommunity() {
+  restoreDraftFromStorage()
+  applyRouteQueryParams()
   if (!accountEnabled) {
     isDemoMode.value = allowDemoMode
     categories.value = allowDemoMode ? mockCategories : []
     hotTopics.value = []
     hotTopicError.value = '云端服务尚未连接，实时事件暂不可用。'
-    if (allowDemoMode) draft.categoryId = String(mockCategories[0].id)
+    if (allowDemoMode && !draft.categoryId) draft.categoryId = Number(mockCategories[0].id)
     await loadPosts()
     return
   }
@@ -753,7 +912,9 @@ async function initCommunity() {
     }
 
     if (!draft.categoryId && categories.value.length) {
-      draft.categoryId = String(categories.value[0].id)
+      draft.categoryId = Number(categories.value[0].id)
+    } else if (!draft.categoryId && mockCategories.length) {
+      draft.categoryId = Number(mockCategories[0].id)
     }
 
     await loadPosts()
@@ -797,13 +958,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .fanxing-entry { padding: 20px; margin: 20px 0; flex-wrap: wrap; }
 .topic-source-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--text-muted); }
+.topic-raw-title { display: block; font-size: 11.5px; color: var(--text-faint); margin: -4px 0 8px; font-family: ui-monospace, SFMono-Regular, monospace; }
+.compose-login-banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 18px; margin-bottom: 18px; text-align: left; }
+.compose-scaffold-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 10px 14px; background: var(--geo-ocean-surface); border: 1px solid var(--border); border-left: 4px solid var(--geo-ocean); border-radius: 8px; margin-bottom: 14px; font-size: 13px; color: var(--text); }
+.scaffold-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.draft-saved-hint { font-size: 12px; color: var(--geo-green); font-weight: 600; margin-right: 12px; }
 /* 社区首页：让搜索和讨论在首屏内可见。 */
 .community-hero {
   padding: 38px 0 34px;
   margin-bottom: 30px;
   background: #10263d;
 }
-.community-hero-inner { display: block; }
 .community-intro { max-width: 860px; }
 .community-hero h1 { font-family: inherit; font-size: clamp(28px, 4vw, 44px); margin-bottom: 10px; }
 .community-hero-badge { margin-bottom: 10px; letter-spacing: .04em; }
@@ -837,9 +1002,9 @@ onBeforeUnmount(() => {
 .community-hero-inner {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.75fr) minmax(280px, 1fr);
   align-items: center;
-  gap: clamp(24px, 4vw, 64px);
+  gap: clamp(24px, 4vw, 56px);
 }
 
 .community-tides { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }

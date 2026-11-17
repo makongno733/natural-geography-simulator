@@ -156,4 +156,49 @@ describe('community request lifecycle', () => {
     expect(wrapper.findAll('.community-post-card')).toHaveLength(1)
     expect(wrapper.text()).toContain('讨论 77')
   })
+
+  it('prefills compose form from deep-link query and persists draft to localStorage even when logged out', async () => {
+    localStorage.clear()
+    route.query = {
+      compose: '1',
+      kind: 'discussion',
+      title: '【城市内涝探究】透水铺装观察',
+      body: '我看到：下渗率提高',
+      linkedExperiment: 'water-cycle-3d'
+    }
+    wrapper = mountCommunity()
+    await flushPromises()
+    const titleInput = wrapper.find('#compose input[placeholder*="写下你想问的问题"]')
+    const bodyTextarea = wrapper.find('#compose textarea')
+    expect(titleInput.element.value).toBe('【城市内涝探究】透水铺装观察')
+    expect(bodyTextarea.element.value).toContain('我看到：下渗率提高')
+    const saved = JSON.parse(localStorage.getItem('geo_community_post_draft_v1') || '{}')
+    expect(saved.title).toBe('【城市内涝探究】透水铺装观察')
+    expect(saved.linkedExperiment).toBe('water-cycle-3d')
+  })
+
+  it('localizes USGS earthquake and storm titles while preserving original record title', async () => {
+    apiRequest.mockImplementation(async path => {
+      if (path.includes('/categories')) return { categories: [{ id: 1, name: '自然地理' }] }
+      if (path.includes('/hot-topics')) {
+        return {
+          topics: [
+            {
+              id: 'eq-1',
+              tag: '地震',
+              title: 'M6.4 地震 · 30 km WSW of Lata, Solomon Islands',
+              summary: 'USGS 记录',
+              sourceUrl: 'https://earthquake.usgs.gov/'
+            }
+          ],
+          sources: []
+        }
+      }
+      return { posts: [post(1)] }
+    })
+    wrapper = mountCommunity()
+    await flushPromises()
+    expect(wrapper.text()).toContain('所罗门群岛 Lata西南偏西约 30 公里 · M6.4 地震')
+    expect(wrapper.text()).toContain('原文：M6.4 地震 · 30 km WSW of Lata, Solomon Islands')
+  })
 })

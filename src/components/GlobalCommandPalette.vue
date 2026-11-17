@@ -19,7 +19,7 @@
 
       <!-- 快速推荐热词标签 -->
       <div v-if="!query.trim()" class="cmd-suggestions">
-        <span class="cmd-hint-title">常用学术检索：</span>
+        <span class="cmd-hint-title">热门检索：</span>
         <button
           v-for="tag in quickTags"
           :key="tag"
@@ -35,9 +35,17 @@
       <div class="cmd-results-list" role="listbox">
         <p v-if="query.trim() && searchingCommunity" class="cmd-search-status" role="status">正在检索社区讨论…</p>
         <p v-if="query.trim() && communitySearchFailed" class="cmd-search-status" role="status">社区检索暂时不可用，以下仅显示教学与实验结果。</p>
-        <p v-if="query.trim() && !searchingCommunity && !communitySearchFailed && !displayList.length" class="cmd-empty">
-          未检索到与“{{ query }}”匹配的内容，请尝试更换关键词或按学科浏览。
-        </p>
+        <div v-if="query.trim() && !searchingCommunity && !communitySearchFailed && !displayList.length" class="cmd-empty">
+          <p>未检索到与“{{ query }}”匹配的现成内容，你可以直接去社区搜索或把这个疑问发出来：</p>
+          <div class="cmd-empty-actions">
+            <button type="button" class="cmd-action-btn" @click="goSearchInCommunity">
+              🔍 在社区讨论中搜索“{{ query.trim() }}”
+            </button>
+            <button type="button" class="cmd-action-btn cmd-action-primary" @click="goAskInCommunity">
+              ✍ 把“{{ query.trim() }}”作为新问题提问
+            </button>
+          </div>
+        </div>
 
         <div
           v-for="(item, idx) in displayList"
@@ -85,7 +93,7 @@ const communitySearchFailed = ref(false)
 let searchTimer
 let searchVersion = 0
 
-const quickTags = ['热力环流', 'DEM高程', '海绵城市', '太阳高度角', '流水侵蚀', '青藏高原']
+const quickTags = ['热力环流', '喀斯特', '海绵城市', '太阳高度角', 'DEM', '水循环', '必修一', '红移']
 
 const results = computed(() => {
   return queryGlobalGeography(query.value)
@@ -96,7 +104,7 @@ const displayList = computed(() => {
     return [...communityResults.value.slice(0, 6), ...results.value].slice(0, 12)
   }
   // 默认推荐经典实验与探究
-  return EXPERIMENT_INDEX.slice(0, 5)
+  return EXPERIMENT_INDEX.slice(0, 6)
 })
 
 watch(displayList, () => {
@@ -164,6 +172,22 @@ function selectItem(item) {
   close()
   if (item.route) {
     router.push(item.route)
+  }
+}
+
+function goSearchInCommunity() {
+  const q = query.value.trim()
+  close()
+  if (q) {
+    router.push({ path: '/', query: { q }, hash: '#community-feed' })
+  }
+}
+
+function goAskInCommunity() {
+  const q = query.value.trim()
+  close()
+  if (q) {
+    router.push({ path: '/', query: { compose: '1', kind: 'question', title: q }, hash: '#compose' })
   }
 }
 
@@ -306,10 +330,38 @@ defineExpose({
 }
 
 .cmd-empty {
-  padding: 36px 20px;
+  padding: 28px 20px;
   text-align: center;
   font-size: 14px;
   color: var(--text-muted);
+}
+
+.cmd-empty p {
+  margin: 0 0 14px;
+}
+
+.cmd-empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cmd-action-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--geo-ocean);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cmd-action-primary {
+  background: var(--geo-ocean);
+  border-color: var(--geo-ocean);
+  color: #ffffff;
 }
 
 .cmd-search-status {

@@ -165,8 +165,10 @@
 
       <!-- 撰写回复表单 -->
       <section class="community-compose community-reply-form baroque-frame" aria-labelledby="reply-title">
-        <h2 id="reply-title">参与学术研讨</h2>
-        <p v-if="!user" class="community-state">登录后参与同行探讨。<a :href="`${accountOrigin}/#/account`">登录 / 注册 ↗</a></p>
+        <h2 id="reply-title">参与讨论与回答</h2>
+        <p v-if="!user && !isDemoMode" class="community-state">
+          登录后就能提问和回复。<a :href="loginReturnHref" @click="rememberPostReturn">登录 / 注册 ↗</a>
+        </p>
         <form v-else @submit.prevent="sendReply">
           <p v-if="parentId" class="replying-notice">
             正在引用回复 #{{ parentId }}
@@ -196,12 +198,12 @@
             required
             maxlength="3000"
             rows="5"
-            placeholder="提出你的学术论证、野外观察、公式推导或文献支持（支持 $公式$ 与 $$块级公式$$）……"
+            placeholder="写下你的观察依据、解释过程或补充资料（支持 $公式$ 与 $$块级公式$$）……"
           />
           <p v-if="replyError" class="community-error" role="alert">{{ replyError }}</p>
           <div class="reply-submit-row">
             <button class="baroque-btn baroque-btn-primary" type="submit" :disabled="submitting">
-              {{ submitting ? '正在发表…' : '呈交解答与评论 ✦' }}
+              {{ submitting ? '正在发表…' : '发表回答与评论 ✦' }}
             </button>
           </div>
         </form>
@@ -234,6 +236,18 @@ const replyInput = ref(null)
 const isDemoMode = ref(false)
 const allowDemoMode = import.meta.env.DEV
 let stream
+
+const loginReturnHref = computed(() => {
+  const path = route.fullPath || `/community/post/${route.params.id}`
+  return `${accountOrigin || ''}/#/account?redirect=${encodeURIComponent(path)}`
+})
+
+function rememberPostReturn() {
+  try {
+    const path = route.fullPath || `/community/post/${route.params.id}`
+    localStorage.setItem('geo_auth_return_to', path)
+  } catch {}
+}
 
 const attachedEvidence = computed(() => {
   if (!post.value) return null
@@ -295,18 +309,21 @@ async function loadPost() {
     isDemoMode.value = false
     return
   } catch {
-    if (!allowDemoMode) {
+    const targetId = Number(route.params.id)
+    const localPosts = getLocalDemoPosts()
+    const all = [...localPosts, ...mockPosts]
+    const matched = all.find(p => p.id === targetId)
+    let demoPreviewOptIn = false
+    try { demoPreviewOptIn = sessionStorage.getItem('geo_community_demo_preview') === '1' } catch {}
+
+    if (!allowDemoMode && !demoPreviewOptIn && !matched) {
       post.value = null
       replies.value = []
       error.value = '讨论暂时无法载入，或该讨论已被移除。请稍后重试。'
       return
     }
-    // 仅开发环境读取演示数据
+    // 离线演示数据回退（顶部显著标注“✦ 离线演示探讨”）
     isDemoMode.value = true
-    const targetId = Number(route.params.id)
-    const localPosts = getLocalDemoPosts()
-    const all = [...localPosts, ...mockPosts]
-    const matched = all.find(p => p.id === targetId)
 
     if (matched) {
       post.value = {
@@ -417,7 +434,8 @@ async function toggleLike() {
   try {
     if (!isDemoMode.value) {
       if (!user.value) {
-        window.location.href = `${accountOrigin}/#/account`
+        rememberPostReturn()
+        window.location.href = loginReturnHref.value
         return
       }
       const res = await apiRequest(`/api/community/posts/${post.value.id}/like`, { method: 'POST' })
@@ -438,7 +456,8 @@ async function toggleBookmark() {
   try {
     if (!isDemoMode.value) {
       if (!user.value) {
-        window.location.href = `${accountOrigin}/#/account`
+        rememberPostReturn()
+        window.location.href = loginReturnHref.value
         return
       }
       const res = await apiRequest(`/api/community/posts/${post.value.id}/bookmark`, { method: 'POST' })

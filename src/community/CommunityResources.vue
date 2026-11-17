@@ -3,17 +3,29 @@
     <router-link class="community-back" to="/community">← 返回社区</router-link>
 
     <header class="resources-hero baroque-frame">
-      <p class="community-eyebrow">OPEN GEOGRAPHY DATA & ASSETS / 开放数据</p>
+      <p class="community-eyebrow">开放地理数据与教学资源</p>
       <h1>权威地理科学数据与开放资源馆</h1>
       <p class="resources-lead">
-        汇集具有明确开放科学许可、高分辨率与时空连续性的全球与区域地理科学公共数据集。
+        汇集具有明确开放科学许可的全球与区域地理公共数据集。包含<strong>数字高程模型（DEM：用网格记录地面高度，可画地形剖面）</strong>、<strong>大气再分析（ERA5：逐小时还原全球历史天气与气候）</strong>及卫星遥感影像。
       </p>
       <div class="resources-badges">
-        <span>🌐 开放科学计划</span>
+        <span>🌐 开放科学许可</span>
         <span>🛰 航天与对地观测</span>
-        <span>📚 中学课标大概念配套</span>
+        <span>📚 初高中与大学探究可用</span>
       </div>
     </header>
+
+    <aside v-if="usingFallbackCatalog" class="demo-mode-banner" role="status">
+      <div class="demo-banner-content">
+        <span class="demo-banner-tag">📚 已核实开放数据目录</span>
+        <span>当前未连接云端扩展库，已为您展示内置核实的官方开放科学数据集（NASA / 哥白尼计划 / 国家基础地理信息 / 美国地质调查局 USGS）。</span>
+      </div>
+      <div class="demo-banner-actions">
+        <button class="baroque-btn baroque-btn-sm" type="button" :disabled="loading" @click="loadResources">
+          {{ loading ? '同步中…' : '重试云端同步' }}
+        </button>
+      </div>
+    </aside>
 
     <!-- 资源搜索与分类过滤 -->
     <div class="res-control-bar">
@@ -21,7 +33,7 @@
         <input
           v-model.trim="filterKeyword"
           type="search"
-          placeholder="搜索高程 DEM、气象再分析、卫星遥感、土地利用……"
+          placeholder="搜索地形高程 DEM、气象再分析 ERA5、卫星遥感、矢量底图……"
           aria-label="搜索开放资源"
         />
       </div>
@@ -56,9 +68,12 @@
       <button class="baroque-btn baroque-btn-sm" style="margin-top: 12px" @click="loadResources">重新加载</button>
     </p>
 
-    <p v-else-if="!filteredResources.length" class="community-state" role="status">
-      {{ filterKeyword ? `没有找到匹配“${filterKeyword}”的资源，请尝试其他关键词。` : '暂无已收录的开放资源，欢迎推荐有明确来源与使用许可的数据。' }}
-    </p>
+    <div v-else-if="!filteredResources.length" class="community-state" role="status">
+      <p>{{ filterKeyword ? `没有找到匹配“${filterKeyword}”的资源，请尝试其他关键词。` : '暂无已收录的开放资源，欢迎推荐有明确来源与使用许可的数据。' }}</p>
+      <button v-if="filterKeyword || selectedCategory !== '全部'" type="button" class="baroque-btn baroque-btn-sm" style="margin-top: 8px" @click="filterKeyword = ''; selectedCategory = '全部'">
+        清除筛选条件
+      </button>
+    </div>
 
     <div v-else class="resources-grid">
       <article v-for="res in filteredResources" :key="res.id" class="resource-card baroque-frame">
@@ -100,10 +115,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { apiRequest } from '../account/client.js'
+import { mockResources } from './mockData.js'
 
 const resources = ref([])
 const loading = ref(false)
 const error = ref('')
+const usingFallbackCatalog = ref(false)
 const filterKeyword = ref('')
 const selectedCategory = ref('全部')
 
@@ -136,10 +153,12 @@ async function loadResources() {
   try {
     const res = await apiRequest('/api/community/resources')
     if (!Array.isArray(res?.resources)) throw new Error('资源数据格式错误')
-    resources.value = res.resources
+    resources.value = res.resources.length ? res.resources : mockResources
+    usingFallbackCatalog.value = false
   } catch {
-    resources.value = []
-    error.value = '资源目录暂时无法载入，请稍后重试。'
+    resources.value = mockResources
+    usingFallbackCatalog.value = true
+    error.value = ''
   } finally {
     loading.value = false
   }

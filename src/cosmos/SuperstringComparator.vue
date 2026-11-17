@@ -25,7 +25,7 @@ const comparisonDimensions = [
 <div class="cx-comparator">
   <div class="cx-comparator-header">
     <div>
-      <span class="cx-eyebrow">THEORY MATRIX</span>
+      <span class="cx-eyebrow">超弦理论对照矩阵</span>
       <h3>五种 10 维超弦理论并排深度对比</h3>
     </div>
     <p class="cx-subtext">选择任意两种理论进行逐项对照，辨明手征性、超对称数、规范群真实来源与对偶映射。</p>

@@ -184,6 +184,31 @@
         </div>
       </div>
     </div>
+
+    <!-- 探究思考与带着问题去讨论模块 -->
+    <div class="inquiry-discussion-box">
+      <div class="discussion-badge">💬 探究思考与讨论</div>
+      <h4>思考与讨论：为什么同一湖区在夏冬两季像两个世界？</h4>
+      <p class="discussion-prompt">
+        切换 7 月主汛期与 1 月枯水期后，星子站水位、水面面积与植被指数（NDVI）分别发生了什么变化？为什么水位只变动约 10 米，湖面面积却相差数倍？结合右侧浅碟形湖盆剖面，带上你的观察去社区讨论。
+      </p>
+      <div class="discussion-actions">
+        <router-link
+          :to="{
+            path: '/community',
+            query: {
+              compose: 1,
+              title: `【鄱阳湖景观探究】${month}月（${seasonName}）水位与湖盆地形对湿地景观的影响`,
+              body: `我在鄱阳湖水陆变迁推演台选择了 ${month} 月（${seasonName}）。\n\n我看到：星子站基准水位约为 ${currentWaterLevel} m，水面面积约 ${currentWaterArea} km²，植被指数 NDVI 约为 ${currentNDVI}，呈现${landscapeSummary}。\n\n我猜：水位变化之所以引起面积剧烈变化，是因为……\n\n我还想知道：上游水库蓄水或极端伏旱会如何改变候鸟越冬栖息地？`,
+              kind: 'discussion'
+            }
+          }"
+          class="btn-go-discuss"
+        >
+          带着这个观察去社区提问 / 讨论 ↗
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -588,6 +613,46 @@ input[type="range"] {
 .profile-svg {
   width: 100%;
   height: 90px;
+}
+
+.inquiry-discussion-box {
+  margin-top: 20px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-left: 4px solid #38bdf8;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.discussion-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.inquiry-discussion-box h4 {
+  font-size: 15px;
+  margin: 0 0 8px 0;
+  color: #f8fafc;
+}
+.discussion-prompt {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cbd5e1;
+  margin: 0 0 14px 0;
+}
+.btn-go-discuss {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #38bdf8;
+  color: #0f172a !important;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
 }
 
 @media (max-width: 840px) {

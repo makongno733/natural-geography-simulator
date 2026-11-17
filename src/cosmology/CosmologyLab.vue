@@ -4,11 +4,11 @@
       <nav class="breadcrumbs" aria-label="当前位置"><router-link to="/geo-labs">地学科学探究</router-link><span aria-hidden="true">/</span><span>宇宙如何演化</span></nav>
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">COSMOLOGY FIELD GUIDE · 交互式课程</p>
+          <p class="eyebrow">宇宙学交互课 · 观测证据与模型推导</p>
           <h1>宇宙如何<br><em>演化？</em></h1>
           <p class="lead">从时空的几何出发，沿着可检验的证据，理解宇宙为何膨胀，以及我们怎样知道它曾经更热、更密。</p>
-          <div class="hero-actions"><router-link :to="{ path: '/cosmology', hash: '#path' }" class="primary-link">开始探索 <span aria-hidden="true">↘</span></router-link><button type="button" class="teacher-toggle" :aria-pressed="teacherMode" @click="teacherMode = !teacherMode">{{ teacherMode ? '退出讲授模式' : '开启讲授模式' }}</button></div>
-          <p class="hero-note">适合地理师范生 · 约 15–25 分钟 · 支持键盘操作</p>
+          <div class="hero-actions"><router-link :to="{ path: '/cosmology', hash: '#path' }" class="primary-link">开始探索 <span aria-hidden="true">↘</span></router-link><button type="button" class="teacher-toggle" :aria-pressed="teacherMode" @click="teacherMode = !teacherMode">{{ teacherMode ? '退出讲授模式' : '开启讲授模式' }}</button><router-link :to="{ path: '/community', query: { compose: 1, kind: 'question', title: '【宇宙学交互课】关于宇宙膨胀与光谱红移的思考', body: `我在宇宙学交互课里把发光时的尺度因子调到 aₑ = ${scale.toFixed(2)}，看到对应红移 z = ${redshift.toFixed(2)}，接收波长拉长到 ${observedWavelength.toFixed(0)} nm。\n\n我猜：……\n\n我还想知道：为什么星系内部的恒星和地球不会跟着空间膨胀一起变大？` } }" class="teacher-toggle">💬 带着红移观察去讨论 ↗</router-link></div>
+          <p class="hero-note">适合初高中进阶与地理师范生 · 约 15–25 分钟 · 支持键盘操作</p>
         </div>
         <div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div><div class="orbit-core"></div><span class="orbit-label label-one">空间</span><span class="orbit-label label-two">时间</span><span class="orbit-label label-three">物质</span></div>
       </header>

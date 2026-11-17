@@ -93,7 +93,7 @@ const worldsheetSlices = computed(() => {
 <div class="cosmos-labs">
   <!-- ══════════════ 实验 01：狭义相对论与时空光锥 ══════════════ -->
   <section class="cx-panel">
-    <span class="cx-eyebrow">EXPERIMENT 01 · 狭义相对论与时空几何</span>
+    <span class="cx-eyebrow">实验一 · 狭义相对论与时空几何</span>
     <h2>运动如何改变测量与同时性？</h2>
     <p>拖动相对速度滑块，实时观察洛伦兹钟慢、尺缩以及闵氏时空中的“光锥”与“同时性倾斜面”。</p>
 
@@ -158,7 +158,7 @@ const worldsheetSlices = computed(() => {
 
   <!-- ══════════════ 实验 02：现代宇宙学与 FLRW 积分计算 ══════════════ -->
   <section class="cx-panel">
-    <span class="cx-eyebrow">EXPERIMENT 02 · 现代宇宙学与标度膨胀</span>
+    <span class="cx-eyebrow">实验二 · 现代宇宙学与标度膨胀</span>
     <h2>波长伸长、共动距离与宇宙年龄计算器</h2>
     <p>约定今天 a₀ = 1，不仅可观察波长随标度因子 a 的延展，还可基于弗里德曼方程进行真实宇宙学积分距离计算。</p>
 
@@ -242,7 +242,7 @@ const worldsheetSlices = computed(() => {
 
   <!-- ══════════════ 实验 03：弦模态类比与世界面 ══════════════ -->
   <section class="cx-panel">
-    <span class="cx-eyebrow">EXPERIMENT 03 · 弦的模态类比与世界面扫掠</span>
+    <span class="cx-eyebrow">实验三 · 弦的模态类比与世界面扫掠</span>
     <h2>从边界条件到振动模态与世界面</h2>
     <div class="cx-alert-badge">经典类比 (Classical Analogy) · 严禁视为量子引力粒子谱模拟</div>
 
@@ -317,6 +317,27 @@ const worldsheetSlices = computed(() => {
       <p><b>世界面概念：</b>一维弦在时间演化下扫过二维曲面（Worldsheet）。开启世界面扫掠可以看到沿时间 τ 展开的多重弦截面。</p>
       <p><b>思考：</b>为什么真实量子弦论需要 26 维或 10 维临界空间，而我们这里仅用一维位移就能画出振动？（因为经典波动方程在任意维数都存在解，而量子弦的一致性需要消除世界面共形反常与保持洛伦兹代数封闭）。</p>
     </details>
+
+    <div class="cx-chapter-discuss-cta" style="margin-top: 16px;">
+      <div class="cx-cta-text">
+        <strong>💬 带着实验发现去讨论</strong>
+        <p>在调大模态阶数 n 或切换开闭弦时，你发现了什么有趣的节点规律？来社区和大家一起聊聊。</p>
+      </div>
+      <router-link
+        :to="{
+          path: '/community',
+          query: {
+            compose: 1,
+            title: `【物理实验观察】弦振动模态 n=${mode} 与边界条件探索`,
+            body: `我在物理实验室调节了经典弦振动：\\n\\n当前模态阶数：n = ${mode}\\n边界类型：${closed ? '闭弦周期边界' : '固定两端开弦'}\\n\\n我观察到的现象是：……\\n\\n我的疑问是：……`,
+            kind: 'discussion'
+          }
+        }"
+        class="cx-discuss-btn"
+      >
+        去社区发起这个讨论 ↗
+      </router-link>
+    </div>
   </section>
 </div>
 </template>

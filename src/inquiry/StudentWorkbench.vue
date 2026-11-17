@@ -40,6 +40,14 @@
       </div>
     </div>
 
+    <!-- 顶部提交状态与反馈提示条（任意步骤点击顶部提交均可见） -->
+    <div v-if="submitResultMsg && currentStep !== 6" :class="['submit-result-banner', submitResultStatus]" role="status" aria-live="polite" style="margin-bottom: 16px">
+      <p>{{ submitResultMsg }}</p>
+      <router-link v-if="submitResultStatus === 'warning'" :to="{ path: '/account', query: { redirect: `/inquiry?task=${task.id}` } }" class="btn-goto-login">
+        去登录学生账号 ➔
+      </router-link>
+    </div>
+
     <!-- 课标与教学目标指引条 -->
     <div class="standards-banner">
       <span class="banner-kicker">🎯 课标契合点：</span>
@@ -64,7 +72,7 @@
     <!-- 步骤一：驱动问题与已有前概念 -->
     <section v-show="currentStep === 1" class="step-panel" aria-labelledby="step1-heading">
       <div class="panel-intro">
-        <span class="step-tag">STEP 01 / 问题驱动与前概念诊断</span>
+        <span class="step-tag">第 1 步 · 问题驱动与前概念诊断</span>
         <h3 id="step1-heading">从一个真实的地理问题出发</h3>
         <div class="driving-card">
           <span class="q-kicker">核心驱动问题：</span>
@@ -88,7 +96,7 @@
 
       <div class="form-block highlight-block">
         <label for="initial-hypothesis">
-          <strong>2. 我的初始猜想与假说 (Hypothesis V1)：</strong>
+          <strong>2. 我的初始猜想与假说（版本 V1）：</strong>
           <small>请用一句话提出可被实验检验的猜想（必须包含因果关系，如“如果……那么……”）：</small>
         </label>
         <textarea
@@ -110,7 +118,7 @@
     <!-- 步骤二：变量与控制条件 -->
     <section v-show="currentStep === 2" class="step-panel" aria-labelledby="step2-heading">
       <div class="panel-intro">
-        <span class="step-tag">STEP 02 / 科学实验设计</span>
+        <span class="step-tag">第 2 步 · 科学实验设计</span>
         <h3 id="step2-heading">控制变量：怎样做才是一场公平的实验？</h3>
         <p class="intro-desc">
           如果同时改变降雨强度和地面材质，就无法判断积水是因为“雨太大”还是“地面不透水”。为了得出科学结论，必须严格执行单一变量对照。
@@ -173,7 +181,7 @@
     <!-- 步骤三：动手仿真与证据链 -->
     <section v-show="currentStep === 3" class="step-panel" aria-labelledby="step3-heading">
       <div class="panel-intro">
-        <span class="step-tag">STEP 03 / 动手仿真与实证记录</span>
+        <span class="step-tag">第 3 步 · 动手仿真与实证记录</span>
         <h3 id="step3-heading">在交互模型中生成对比证据</h3>
         <p class="intro-desc">
           保持降雨强度与历时不变，分别测试不同工况。每次测试后点击【捕获为科学证据卡】，形成完整的对照证据链。
@@ -204,7 +212,7 @@
     <!-- 步骤四：解释与反例质证 -->
     <section v-show="currentStep === 4" class="step-panel" aria-labelledby="step4-heading">
       <div class="panel-intro">
-        <span class="step-tag">STEP 04 / 机制阐释与边界意识</span>
+        <span class="step-tag">第 4 步 · 机制阐释与边界意识</span>
         <h3 id="step4-heading">用地理原理阐明因果，并寻找反例</h3>
       </div>
 
@@ -261,7 +269,7 @@
     <!-- 步骤五：AI 助学支架 -->
     <section v-show="currentStep === 5" class="step-panel" aria-labelledby="step5-heading">
       <div class="panel-intro">
-        <span class="step-tag">STEP 05 / 助学顾问与思维深化</span>
+        <span class="step-tag">第 5 步 · 助学顾问与思维深化</span>
         <h3 id="step5-heading">向助学顾问求助，检查证据漏洞</h3>
       </div>
 
@@ -283,19 +291,19 @@
     <!-- 步骤六：修订结论与成果对比 -->
     <section v-show="currentStep === 6" class="step-panel" aria-labelledby="step6-heading">
       <div class="panel-intro">
-        <span class="step-tag">STEP 06 / 思维转变与成果总结</span>
+        <span class="step-tag">第 6 步 · 思维转变与成果总结</span>
         <h3 id="step6-heading">思维增量：证据如何改变了我的认知？</h3>
       </div>
 
       <!-- 原假说 vs 修订结论 双向对照卡片 -->
       <div class="comparison-contrast-card">
         <div class="contrast-col before">
-          <span class="col-badge">原猜想 (Version 1)</span>
+          <span class="col-badge">原猜想（版本 V1）</span>
           <p>{{ draft.initialHypothesis || '（尚未记录初始猜想）' }}</p>
         </div>
         <div class="contrast-divider" aria-hidden="true">➔</div>
         <div class="contrast-col after">
-          <span class="col-badge">修订结论 (Version 2)</span>
+          <span class="col-badge">修订结论（版本 V2）</span>
           <textarea
             v-model="draft.revisedConclusion"
             rows="4"
@@ -339,7 +347,7 @@
       <!-- 提交状态与反馈提示条 -->
       <div v-if="submitResultMsg" :class="['submit-result-banner', submitResultStatus]" role="status" aria-live="polite">
         <p>{{ submitResultMsg }}</p>
-        <router-link v-if="submitResultStatus === 'warning'" to="/account" class="btn-goto-login">
+        <router-link v-if="submitResultStatus === 'warning'" :to="{ path: '/account', query: { redirect: `/inquiry?task=${task.id}` } }" class="btn-goto-login">
           去登录学生账号 ➔
         </router-link>
       </div>
@@ -351,6 +359,21 @@
         <button type="button" class="btn-big-print" @click="exportHtml">
           🖨 打印 / 网页预览报告
         </button>
+        <router-link
+          class="btn-big-print"
+          style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center"
+          :to="{
+            path: '/community',
+            query: {
+              compose: 1,
+              kind: 'discussion',
+              title: `【探究分享】${task.shortTitle || task.title}：我的观察与结论`,
+              body: `我在「${task.title}」探究课题中做了对比实验。\n\n我看到：${draft.causalExplanation || '通过调整变量，观察到了显著的数据变化。'}\n\n我的结论：${draft.revisedConclusion || draft.initialHypothesis || '……'}\n\n我还想知道：${draft.nextQuestions || '在真实地理环境中还有哪些影响因素？'}`
+            }
+          }"
+        >
+          💬 带着探究结论去社区讨论 ↗
+        </router-link>
         <button
           type="button"
           class="btn-big-submit"

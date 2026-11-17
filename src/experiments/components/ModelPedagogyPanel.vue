@@ -110,6 +110,15 @@
           <span class="chip-title">针对性强化训练</span>
           <span class="chip-arrow">→</span>
         </router-link>
+
+        <router-link
+          :to="communityDiscussRoute"
+          class="connect-chip chip-discuss"
+        >
+          <span class="chip-type">社区交流</span>
+          <span class="chip-title">带着实验观察去提问 / 讨论</span>
+          <span class="chip-arrow">↗</span>
+        </router-link>
       </div>
     </div>
   </div>
@@ -179,6 +188,16 @@ const textbookRoute = computed(() => {
   if (!props.textbookLink) return '/'
   const { grade = '高中', book = '必修第一册', chapter, section } = props.textbookLink
   return `/${encodeURIComponent(grade)}/${encodeURIComponent(book)}/${encodeURIComponent(chapter)}/${encodeURIComponent(section)}`
+})
+
+const communityDiscussRoute = computed(() => {
+  const firstObserve = Array.isArray(props.observe) ? props.observe[0] : props.observe
+  const firstChange = Array.isArray(props.change) ? props.change[0] : props.change
+  const firstLimit = Array.isArray(props.limitations) ? props.limitations[0] : props.limitations
+  const cleanBadge = badgeText.value.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, '').trim()
+  const title = `【实验观察】在「${cleanBadge}」中调节参数后的现象探讨`
+  const body = `我在「${cleanBadge}」实验模型中进行了操作（${firstChange || '调节实验参数'}）。\n\n我看到：${firstObserve || '……'}\n\n我猜：这是因为……\n\n我还想知道：真实地理环境中，${firstLimit || '还有哪些因素会影响这一过程？'}`
+  return `/?compose=1&kind=discussion&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}#compose`
 })
 </script>
 

@@ -3,7 +3,7 @@ import { accountOrigin } from './config.js'
 
 export { accountEnabled, accountOrigin, siteOrigin } from './config.js'
 export { apiRequest } from './api.js'
-export const authClient = createAuthClient({
+export const authClient = /*#__PURE__*/ createAuthClient({
   baseURL: accountOrigin || undefined,
   fetchOptions: { credentials: 'include' }
 })

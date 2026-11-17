@@ -2,9 +2,19 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 import Labs from './CosmosLabs.vue'
 
+const mountOpts = {
+  global: {
+    stubs: {
+      'router-link': {
+        template: '<a><slot /></a>'
+      }
+    }
+  }
+}
+
 describe('CosmosLabs expanded interactions & features', () => {
   it('renders Minkowski spacetime cone and updates simultaneity line on velocity change', async () => {
-    const wrapper = mount(Labs)
+    const wrapper = mount(Labs, mountOpts)
     // Verify cone SVG presence
     expect(wrapper.find('.cx-cone-svg').exists()).toBe(true)
     expect(wrapper.text()).toContain('未来光锥')
@@ -18,7 +28,7 @@ describe('CosmosLabs expanded interactions & features', () => {
   })
 
   it('computes FLRW comoving distance, luminosity distance, and cosmic age', async () => {
-    const wrapper = mount(Labs)
+    const wrapper = mount(Labs, mountOpts)
     const zInput = wrapper.find('input[type=number]')
     await zInput.setValue('1.5')
 
@@ -35,7 +45,7 @@ describe('CosmosLabs expanded interactions & features', () => {
   })
 
   it('supports worldsheet sweeping and interactive stepping controls', async () => {
-    const wrapper = mount(Labs)
+    const wrapper = mount(Labs, mountOpts)
 
     // Initially worldsheet slices are not rendered
     const initialPolylines = wrapper.findAll('polyline')
@@ -60,7 +70,7 @@ describe('CosmosLabs expanded interactions & features', () => {
     const rafSpy = vi.spyOn(window, 'requestAnimationFrame')
     const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame')
 
-    const wrapper = mount(Labs)
+    const wrapper = mount(Labs, mountOpts)
     const playBtn = wrapper.findAll('button').find(b => b.text().includes('播放振动'))
     await playBtn.trigger('click')
     expect(playBtn.text()).toContain('暂停动画')

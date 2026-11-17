@@ -156,6 +156,32 @@
         </div>
       </div>
     </div>
+
+    <!-- 探究思考与带着问题去讨论模块 -->
+    <div class="inquiry-discussion-box">
+      <div class="discussion-badge">💬 探究思考与讨论</div>
+      <h4>思考与讨论：人地关系决策为什么没有“唯一满分标准答案”？</h4>
+      <p class="discussion-prompt">
+        当你把“生态安全权重”调高时，哪个方案得分最高？如果优先考虑“社会民生与职工安置”，排名又会怎样变化？说说你最终推荐的方案、你的证据依据，以及你将如何弥补受损一方的利益。
+      </p>
+      <div class="discussion-actions">
+        <router-link
+          :to="{
+            path: '/community',
+            query: {
+              compose: 1,
+              title: `【区域决策探究】临江重工业区位选择：我为什么推荐「${currentPlan.shortName}」`,
+              body: `在重工业搬迁与生态红线多目标决策台中，我将权重设为：生态安全 ${weights.eco}%、经济税收 ${weights.tax}%、投资可控 ${weights.cost}%、社会民生 ${weights.social}%。\n\n我看到：「${currentPlan.shortName}」综合得分为 ${getCompositeScore(currentPlan)} 分（生态 ${currentPlan.ecoScore} / 经济 ${currentPlan.taxScore} / 成本 ${currentPlan.costScore} / 民生 ${currentPlan.socialScore}）。\n\n我的主张与理由：……\n\n我还想讨论：如何配套补偿措施来化解该方案的主要短板（${currentPlan.tradeOffs}）？`,
+              linkedExperiment: 'human-environment',
+              kind: 'discussion'
+            }
+          }"
+          class="btn-go-discuss"
+        >
+          带着这个决策方案去社区提问 / 讨论 ↗
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -628,6 +654,46 @@ input[type="range"] {
   color: #94a3b8;
   line-height: 1.45;
   font-style: italic;
+}
+
+.inquiry-discussion-box {
+  margin-top: 20px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-left: 4px solid #38bdf8;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.discussion-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.inquiry-discussion-box h4 {
+  font-size: 15px;
+  margin: 0 0 8px 0;
+  color: #f8fafc;
+}
+.discussion-prompt {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cbd5e1;
+  margin: 0 0 14px 0;
+}
+.btn-go-discuss {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #38bdf8;
+  color: #0f172a !important;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
 }
 
 @media (max-width: 840px) {

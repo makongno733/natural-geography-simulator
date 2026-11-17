@@ -2,16 +2,26 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import UrbanFloodSim from './UrbanFloodSim.vue'
 
+const mountOpts = {
+  global: {
+    stubs: {
+      'router-link': {
+        template: '<a><slot /></a>'
+      }
+    }
+  }
+}
+
 describe('UrbanFloodSim Component', () => {
   it('renders simulation controls and SVG stages', () => {
-    const wrapper = mount(UrbanFloodSim)
+    const wrapper = mount(UrbanFloodSim, mountOpts)
     expect(wrapper.text()).toContain('城市暴雨产流与海绵下渗仿真实验台')
     expect(wrapper.find('svg.profile-svg').exists()).toBe(true)
     expect(wrapper.find('svg.hydro-svg').exists()).toBe(true)
   })
 
   it('switches presets and recalculates runoff reduction rate', async () => {
-    const wrapper = mount(UrbanFloodSim)
+    const wrapper = mount(UrbanFloodSim, mountOpts)
     const presetButtons = wrapper.findAll('.btn-preset')
     expect(presetButtons.length).toBe(3)
 
@@ -23,7 +33,7 @@ describe('UrbanFloodSim Component', () => {
   })
 
   it('captures an evidence card with structured params and observation-inference distinction', async () => {
-    const wrapper = mount(UrbanFloodSim)
+    const wrapper = mount(UrbanFloodSim, mountOpts)
     const captureBtn = wrapper.find('.btn-capture')
     expect(captureBtn.exists()).toBe(true)
 

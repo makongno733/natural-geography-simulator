@@ -470,8 +470,18 @@ function onResize() {
   .module-panel { width: 160px; }
   .info-panel { width: 200px; }
 }
-@media (max-width: 640px) {
-  .module-panel, .info-panel { display: none; }
+@media (max-width: 680px) {
+  .sandbox-root { height: auto; min-height: 600px; }
+  .sandbox-body { flex-direction: column; height: auto; }
+  .viewport-area { order: -1; min-height: 300px; height: 320px; }
+  .module-panel, .info-panel {
+    display: block;
+    width: 100%;
+    max-height: none;
+    border-right: 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
 }
 
 /* Glossary popup (non-scoped, teleported to body) */
