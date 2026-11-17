@@ -34,9 +34,9 @@
       <!-- 检索结果列表 -->
       <div class="cmd-results-list" role="listbox">
         <p v-if="query.trim() && searchingCommunity" class="cmd-search-status" role="status">正在检索社区讨论…</p>
-        <p v-if="query.trim() && communitySearchFailed" class="cmd-search-status" role="status">社区检索暂时不可用，以下仅显示教学与实验结果。</p>
-        <div v-if="query.trim() && !searchingCommunity && !communitySearchFailed && !displayList.length" class="cmd-empty">
-          <p>未检索到与“{{ query }}”匹配的现成内容，你可以直接去社区搜索或把这个疑问发出来：</p>
+        <p v-if="query.trim() && communitySearchFailed && displayList.length" class="cmd-search-status" role="status">社区检索暂时不可用，以下仅显示教学与实验结果。</p>
+        <div v-if="query.trim() && !searchingCommunity && !displayList.length" class="cmd-empty">
+          <p>未检索到与“{{ query }}”匹配的现成实验或教材，你可以直接去社区搜索讨论或把这个疑问发出来：</p>
           <div class="cmd-empty-actions">
             <button type="button" class="cmd-action-btn" @click="goSearchInCommunity">
               🔍 在社区讨论中搜索“{{ query.trim() }}”
@@ -79,7 +79,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { queryGlobalGeography, EXPERIMENT_INDEX } from '../utils/globalSearchIndex.js'
+import { queryGlobalGeography, EXPERIMENT_INDEX, LAB_INDEX } from '../utils/globalSearchIndex.js'
 import { accountEnabled, apiRequest } from '../account/client.js'
 
 const router = useRouter()
@@ -93,7 +93,16 @@ const communitySearchFailed = ref(false)
 let searchTimer
 let searchVersion = 0
 
-const quickTags = ['热力环流', '喀斯特', '海绵城市', '太阳高度角', 'DEM', '水循环', '必修一', '红移']
+const quickTags = [
+  '海风为什么吹向陆地',
+  '同一场雨哪种路面积水更严重',
+  '热力环流',
+  '喀斯特',
+  '正午太阳高度',
+  '背斜为什么变成山谷',
+  '多时相遥感',
+  '必修一'
+]
 
 const results = computed(() => {
   return queryGlobalGeography(query.value)
@@ -101,10 +110,11 @@ const results = computed(() => {
 
 const displayList = computed(() => {
   if (query.value.trim()) {
-    return [...communityResults.value.slice(0, 6), ...results.value].slice(0, 12)
+    // 最相关的实验、探究、教材与真实数据排在前面，社区讨论关联结果附后
+    return [...results.value, ...communityResults.value.slice(0, 4)].slice(0, 12)
   }
-  // 默认推荐经典实验与探究
-  return EXPERIMENT_INDEX.slice(0, 6)
+  // 默认推荐核心对照实验与三维实验
+  return [LAB_INDEX[0], ...EXPERIMENT_INDEX.slice(0, 5)].filter(Boolean)
 })
 
 watch(displayList, () => {

@@ -26,6 +26,9 @@
           <div class="head-left">
             <span class="card-num">证据 #{{ cards.length - index }}</span>
             <span class="tag-badge" v-if="card.tag">{{ card.tag }}</span>
+            <span class="tag-badge" v-if="card.disclaimer || card.evidenceType" style="background: #fef3c7; color: #92400e">
+              {{ card.disclaimer || card.evidenceType }}
+            </span>
           </div>
           <div class="head-right">
             <span class="card-source">{{ card.source }}</span>
@@ -64,6 +67,11 @@
           <div class="box-row inference">
             <span class="badge inf-badge">💡 我推测的因果机制</span>
             <p class="content-text">{{ card.inference || '（未记录推断机制）' }}</p>
+          </div>
+
+          <div v-if="card.limitations" class="box-row" style="border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 4px">
+            <span class="badge" style="background: #fef3c7; color: #92400e">⚠️ 适用边界与说明</span>
+            <p class="content-text" style="font-size: 12px; color: #64748b">{{ card.limitations }}</p>
           </div>
         </div>
 

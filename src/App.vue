@@ -26,10 +26,25 @@
           <a class="nav-link" :href="`${siteOrigin}/#/`">返回课程</a>
         </nav>
 
-        <button v-if="!isAccountHost" class="mobile-nav-toggle" type="button" aria-controls="main-navigation"
-          :aria-expanded="navExpanded" @click="navExpanded = !navExpanded">
-          {{ navExpanded ? '收起导航 −' : '探索导航 ＋' }}
-        </button>
+        <div v-if="!isAccountHost" class="mobile-header-actions">
+          <button
+            type="button"
+            class="mobile-search-trigger"
+            aria-label="搜全站：实验、教材、数据与探究 (快捷键 ⌘K)"
+            @click="openCmdPalette"
+          >
+            🔍 搜全站
+          </button>
+          <button
+            class="mobile-nav-toggle"
+            type="button"
+            aria-controls="main-navigation"
+            :aria-expanded="navExpanded"
+            @click="navExpanded = !navExpanded"
+          >
+            {{ navExpanded ? '收起导航 −' : '探索导航 ＋' }}
+          </button>
+        </div>
         <nav v-if="!isAccountHost" id="main-navigation" class="app-nav" :class="{ 'is-expanded': navExpanded }" aria-label="主导航">
           <router-link to="/" class="nav-link" :class="{ active: isCommunity }">
             <span class="nav-label">社区</span>
@@ -52,8 +67,8 @@
           <router-link to="/fanxing" class="nav-link" :class="{ active: route.name === 'fanxing' || route.name === 'fanxing-project' }">
             <span class="nav-label">繁星计划</span>
           </router-link>
-          <button type="button" class="nav-search-trigger" aria-label="全局搜索 (快捷键 ⌘K)" @click="openCmdPalette">
-            <span>🔍 检索</span>
+          <button type="button" class="nav-search-trigger" aria-label="搜全站：实验、教材、数据与探究 (快捷键 ⌘K)" @click="openCmdPalette">
+            <span>🔍 搜全站</span>
             <kbd class="nav-kbd">⌘K</kbd>
           </button>
           <a v-if="accountEnabled" class="nav-link nav-account-btn" :href="accountUser ? `#/community/user/${accountUser.id}` : loginHref" @click="rememberReturnPath">
@@ -215,6 +230,7 @@ router.afterEach((to) => {
 
 onMounted(() => {
   if (typeof window === 'undefined') return
+  window.addEventListener('geo:open-global-search', openCmdPalette)
   if (accountEnabled) {
     import('./account/client.js')
       .then(({ authClient }) => authClient.getSession())
@@ -225,6 +241,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearTimeout(navTimer)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('geo:open-global-search', openCmdPalette)
+  }
 })
 </script>
 
@@ -285,17 +304,39 @@ onBeforeUnmount(() => {
   gap: 20px;
 }
 
+.mobile-header-actions {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-search-trigger {
+  min-height: 40px;
+  border: 1px solid var(--baroque-border-gold);
+  border-radius: 10px;
+  padding: 6px 11px;
+  background: var(--surface);
+  color: var(--geo-ocean-deep);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .mobile-nav-toggle {
   display: none;
-  min-height: 44px;
+  min-height: 40px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 6px 11px;
   background: var(--accent-soft);
   color: var(--accent-strong);
   font: inherit;
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .brand {
@@ -602,12 +643,13 @@ onBeforeUnmount(() => {
 @media (max-width: 1100px) {
   .header-inner {
     height: auto;
-    padding: 10px 16px;
+    padding: 8px 14px;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
   }
-  .brand { min-height: 44px; flex: 1; }
+  .brand { min-height: 40px; flex: 1; }
+  .mobile-header-actions { display: inline-flex; }
   .mobile-nav-toggle { display: inline-flex; align-items: center; }
   .app-nav {
     display: none;

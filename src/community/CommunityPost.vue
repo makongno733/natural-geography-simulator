@@ -65,16 +65,28 @@
           <span v-for="t in post.tags" :key="t" class="detail-tag-item">#{{ t }}</span>
         </div>
 
-        <!-- 挂载的探究实测证据卡 -->
+        <!-- 挂载的探究证据卡（明确展示模型名称、条件、结果、证据类型、适用边界与「教学仿真，非现场实测」说明） -->
         <div v-if="attachedEvidence" class="evidence-attach-box baroque-frame">
-          <div class="evidence-header">
-            <span class="evidence-badge">📊 地学探究实测证据卡</span>
+          <div class="evidence-header" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+            <span class="evidence-badge">📊 探究科学证据卡</span>
+            <span class="evidence-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #f59e0b">
+              {{ attachedEvidence.disclaimer || '教学仿真，非现场实测' }}
+            </span>
             <small class="evidence-task-title">{{ attachedEvidence.taskTitle }}</small>
           </div>
           <h4 class="evidence-title">{{ attachedEvidence.title }}</h4>
+          <p v-if="attachedEvidence.modelName" class="evidence-facts" style="margin-bottom: 4px">
+            <strong>模型名称：</strong>{{ attachedEvidence.modelName }} · <strong>证据类型：</strong>{{ attachedEvidence.evidenceType }}
+          </p>
+          <p v-if="attachedEvidence.conditions" class="evidence-facts" style="margin-bottom: 4px">
+            <strong>实验/观测条件：</strong>{{ attachedEvidence.conditions }}
+          </p>
           <p class="evidence-facts">{{ attachedEvidence.facts }}</p>
+          <p v-if="attachedEvidence.limitations" class="evidence-facts" style="font-size: 12px; color: #64748b">
+            {{ attachedEvidence.limitations }}
+          </p>
           <router-link :to="attachedEvidence.route" class="evidence-action-link">
-            前往探究仿真模型进行多变量验证 ↗
+            前往可复现对照实验模型核对参数与结果 ↗
           </router-link>
         </div>
 
