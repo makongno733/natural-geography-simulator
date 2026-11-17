@@ -161,6 +161,33 @@
             <p class="post-excerpt">{{ post.excerpt }}</p>
             <p v-if="post.acceptedAnswerExcerpt" class="post-excerpt">✓ 已采纳回答：{{ post.acceptedAnswerExcerpt }}</p>
 
+            <!-- 社区列表内嵌结构化证据卡摘要（先看静态对照结论与来源，点击后再按需打开完整 3D/遥感场景） -->
+            <div v-if="resolvePostEvidence(post)" class="post-evidence-strip" role="region" aria-label="帖子附带的观察证据卡">
+              <div class="pes-head">
+                <span class="pes-model">{{ resolvePostEvidence(post).modelName }}</span>
+                <span :class="['pes-nature', resolvePostEvidence(post).isRealData ? 'is-real' : 'is-sim']">
+                  {{ resolvePostEvidence(post).disclaimer }}
+                </span>
+              </div>
+              <div v-if="resolvePostEvidence(post).groupA && resolvePostEvidence(post).groupB" class="pes-compare-row">
+                <div class="pes-col">
+                  <small>{{ resolvePostEvidence(post).groupA.label }}</small>
+                  <strong>{{ resolvePostEvidence(post).groupA.metric }}</strong>
+                </div>
+                <span class="pes-vs" aria-hidden="true">vs</span>
+                <div class="pes-col">
+                  <small>{{ resolvePostEvidence(post).groupB.label }}</small>
+                  <strong>{{ resolvePostEvidence(post).groupB.metric }}</strong>
+                </div>
+              </div>
+              <div class="pes-foot">
+                <span class="pes-cond">{{ resolvePostEvidence(post).conditions }}</span>
+                <router-link :to="resolvePostEvidence(post).route" class="pes-open-link" @click.stop>
+                  🔬 打开同一次观察 ↗
+                </router-link>
+              </div>
+            </div>
+
             <!-- 标签列表 -->
             <div v-if="post.tags && post.tags.length" class="post-tags-row">
               <span v-for="t in post.tags" :key="t" class="post-tag-item" @click.stop="filterByTag(t)">#{{ t }}</span>
@@ -260,6 +287,8 @@
               <label>附上站内 3D 实验 (可选)
                 <select v-model="draft.linkedExperiment">
                   <option value="">不附带实验模型</option>
+                  <option value="solar-motion">太阳视运动与正午太阳高度 3D 实验室</option>
+                  <option value="seasons">四季成因与太阳直射点回归运动</option>
                   <option value="fault-model">断层模型（挤压造山与断裂）</option>
                   <option value="thermal-circulation">热力环流与风向动力学</option>
                   <option value="water-cycle-3d">三维水循环与陆地径流</option>
@@ -278,23 +307,36 @@
               </label>
             </div>
 
-            <!-- 讨论发帖预览：当挂载了探究证据卡时，清晰展示模型名称、条件、结果、证据类型、适用边界与「教学仿真，非现场实测」说明 -->
+            <!-- 讨论发帖预览：当挂载了探究证据卡时，清晰展示模型名称、条件、结果、证据类型、适用边界与「教学仿真／真实观测」说明 -->
             <div v-if="selectedEvidenceCard" class="compose-evidence-preview" role="region" aria-label="已附带的科学证据卡预览">
               <div class="cep-head">
-                <span class="cep-badge">📊 已附带探究证据卡</span>
-                <span class="cep-disclaimer">{{ selectedEvidenceCard.disclaimer || '教学仿真，非现场实测' }}</span>
+                <span class="cep-badge">📊 已附带科学观察证据卡</span>
+                <span :class="['cep-disclaimer', { 'is-real': selectedEvidenceCard.isRealData }]">
+                  {{ selectedEvidenceCard.disclaimer || '教学仿真，非现场实测' }}
+                </span>
               </div>
               <h4 class="cep-title">{{ selectedEvidenceCard.title }}</h4>
               <p v-if="selectedEvidenceCard.modelName" class="cep-meta">
-                <strong>模型名称：</strong>{{ selectedEvidenceCard.modelName }} · <strong>证据类型：</strong>{{ selectedEvidenceCard.evidenceType }}
+                <strong>模型/图层名称：</strong>{{ selectedEvidenceCard.modelName }} · <strong>证据类型：</strong>{{ selectedEvidenceCard.evidenceType }}
               </p>
               <p v-if="selectedEvidenceCard.conditions" class="cep-meta">
                 <strong>实验/观测条件：</strong>{{ selectedEvidenceCard.conditions }}
               </p>
+              <div v-if="selectedEvidenceCard.groupA && selectedEvidenceCard.groupB" class="pes-compare-row" style="margin: 8px 0">
+                <div class="pes-col">
+                  <small>{{ selectedEvidenceCard.groupA.label }}</small>
+                  <strong>{{ selectedEvidenceCard.groupA.metric }}</strong>
+                </div>
+                <span class="pes-vs" aria-hidden="true">vs</span>
+                <div class="pes-col">
+                  <small>{{ selectedEvidenceCard.groupB.label }}</small>
+                  <strong>{{ selectedEvidenceCard.groupB.metric }}</strong>
+                </div>
+              </div>
               <p class="cep-facts">{{ selectedEvidenceCard.facts }}</p>
               <p v-if="selectedEvidenceCard.limitations" class="cep-limits">{{ selectedEvidenceCard.limitations }}</p>
               <router-link :to="draft.compareUrl || selectedEvidenceCard.route" class="cep-reproduce-link">
-                🔗 打开可复现对照实验（核对同一组参数与结果）↗
+                🔗 打开同一次观察（核对同一组参数与结果）↗
               </router-link>
             </div>
 
@@ -485,7 +527,7 @@ import { accountEnabled, accountOrigin, apiRequest, authClient } from '../accoun
 import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
-import { STANDARD_EVIDENCES, getEvidenceById } from '../inquiry/evidenceCatalog.js'
+import { STANDARD_EVIDENCES, getEvidenceById, resolveCommunityEvidence } from '../inquiry/evidenceCatalog.js'
 import CommunityMiniGlobe from './CommunityMiniGlobe.vue'
 
 const router = useRouter()
@@ -532,10 +574,30 @@ const draft = reactive({
   body: '',
   linkedExperiment: '',
   evidenceId: '',
-  compareUrl: ''
+  compareUrl: '',
+  evidenceTitle: '',
+  conditions: '',
+  facts: ''
 })
 
-const selectedEvidenceCard = computed(() => getEvidenceById(draft.evidenceId))
+const selectedEvidenceCard = computed(() =>
+  resolveCommunityEvidence(draft.evidenceId, {
+    compareUrl: draft.compareUrl,
+    evidenceTitle: draft.evidenceTitle,
+    conditions: draft.conditions,
+    facts: draft.facts
+  })
+)
+
+function resolvePostEvidence(post) {
+  if (!post?.evidenceId && !post?.compareUrl) return null
+  return resolveCommunityEvidence(post.evidenceId, {
+    compareUrl: post.compareUrl,
+    evidenceTitle: post.evidenceTitle,
+    conditions: post.conditions,
+    facts: post.facts
+  })
+}
 
 function triggerGlobalSearch() {
   if (typeof window !== 'undefined') {
@@ -562,6 +624,10 @@ function saveDraftToStorage() {
       body: draft.body,
       linkedExperiment: draft.linkedExperiment,
       evidenceId: draft.evidenceId,
+      compareUrl: draft.compareUrl,
+      evidenceTitle: draft.evidenceTitle,
+      conditions: draft.conditions,
+      facts: draft.facts,
       tagsInput: tagsInput.value
     }))
     draftSavedHint.value = '✓ 草稿已自动保存在本机'
@@ -580,6 +646,10 @@ function restoreDraftFromStorage() {
       if (parsed.body && !draft.body) draft.body = parsed.body
       if (parsed.linkedExperiment && !draft.linkedExperiment) draft.linkedExperiment = parsed.linkedExperiment
       if (parsed.evidenceId && !draft.evidenceId) draft.evidenceId = parsed.evidenceId
+      if (parsed.compareUrl && !draft.compareUrl) draft.compareUrl = parsed.compareUrl
+      if (parsed.evidenceTitle && !draft.evidenceTitle) draft.evidenceTitle = parsed.evidenceTitle
+      if (parsed.conditions && !draft.conditions) draft.conditions = parsed.conditions
+      if (parsed.facts && !draft.facts) draft.facts = parsed.facts
       if (parsed.tagsInput && !tagsInput.value) tagsInput.value = parsed.tagsInput
     }
   } catch {}
@@ -591,6 +661,10 @@ function clearDraft() {
   tagsInput.value = ''
   draft.linkedExperiment = ''
   draft.evidenceId = ''
+  draft.compareUrl = ''
+  draft.evidenceTitle = ''
+  draft.conditions = ''
+  draft.facts = ''
   draftSavedHint.value = ''
   try { localStorage.removeItem(DRAFT_STORAGE_KEY) } catch {}
 }
@@ -960,6 +1034,10 @@ async function createPost() {
       tags,
       linked_experiment: draft.linkedExperiment || null,
       evidenceId: draft.evidenceId || null,
+      compareUrl: draft.compareUrl || null,
+      evidenceTitle: draft.evidenceTitle || null,
+      conditions: draft.conditions || null,
+      facts: draft.facts || null,
       author: {
         id: 'me',
         name: user.value?.name || '我 (本地研究者)',
@@ -1003,6 +1081,15 @@ function applyRouteQueryParams() {
   }
   if (typeof q.compareUrl === 'string' && q.compareUrl.trim()) {
     draft.compareUrl = q.compareUrl.trim()
+  }
+  if (typeof q.evidenceTitle === 'string' && q.evidenceTitle.trim()) {
+    draft.evidenceTitle = q.evidenceTitle.trim()
+  }
+  if (typeof q.conditions === 'string' && q.conditions.trim()) {
+    draft.conditions = q.conditions.trim()
+  }
+  if (typeof q.facts === 'string' && q.facts.trim()) {
+    draft.facts = q.facts.trim()
   }
   if (q.compose && (q.kind === 'question' || q.kind === 'discussion')) {
     draft.kind = q.kind
@@ -1247,6 +1334,103 @@ onBeforeUnmount(() => {
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
+}
+
+.cep-disclaimer.is-real {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #34d399;
+}
+
+.post-evidence-strip {
+  margin: 10px 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #bae6fd;
+  border-left: 4px solid #0284c7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pes-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pes-model {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0369a1;
+}
+.pes-nature {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+.pes-nature.is-sim {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+.pes-nature.is-real {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #34d399;
+}
+.pes-compare-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.pes-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.pes-col small {
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 600;
+}
+.pes-col strong {
+  font-size: 12px;
+  color: #0f172a;
+}
+.pes-vs {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0284c7;
+  padding: 0 4px;
+}
+.pes-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11.5px;
+}
+.pes-cond {
+  color: #475569;
+}
+.pes-open-link {
+  font-weight: 700;
+  color: #0284c7;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pes-open-link:hover {
+  text-decoration: underline;
 }
 
 .cep-title {
@@ -2108,25 +2292,42 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-radius: var(--radius-box);
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .community-compose-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+  min-width: 0;
 }
 
 .community-form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  min-width: 0;
 }
 
 .community-compose label {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   font-size: 13px;
   font-weight: 700;
   color: var(--geo-ocean);
+  min-width: 0;
+}
+
+.community-compose input,
+.community-compose select,
+.community-compose textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .form-submit-row {

@@ -65,28 +65,47 @@
           <span v-for="t in post.tags" :key="t" class="detail-tag-item">#{{ t }}</span>
         </div>
 
-        <!-- 挂载的探究证据卡（明确展示模型名称、条件、结果、证据类型、适用边界与「教学仿真，非现场实测」说明） -->
+        <!-- 挂载的探究证据卡（明确展示模型名称、条件、两组结果、证据类型、适用边界与「教学仿真／真实观测」说明） -->
         <div v-if="attachedEvidence" class="evidence-attach-box baroque-frame">
           <div class="evidence-header" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
-            <span class="evidence-badge">📊 探究科学证据卡</span>
-            <span class="evidence-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #f59e0b">
+            <span class="evidence-badge">📊 科学观察证据卡</span>
+            <span
+              class="evidence-badge"
+              :style="attachedEvidence.isRealData
+                ? 'background: #d1fae5; color: #065f46; border: 1px solid #34d399'
+                : 'background: #fef3c7; color: #92400e; border: 1px solid #f59e0b'"
+            >
               {{ attachedEvidence.disclaimer || '教学仿真，非现场实测' }}
             </span>
             <small class="evidence-task-title">{{ attachedEvidence.taskTitle }}</small>
           </div>
           <h4 class="evidence-title">{{ attachedEvidence.title }}</h4>
           <p v-if="attachedEvidence.modelName" class="evidence-facts" style="margin-bottom: 4px">
-            <strong>模型名称：</strong>{{ attachedEvidence.modelName }} · <strong>证据类型：</strong>{{ attachedEvidence.evidenceType }}
+            <strong>模型/图层名称：</strong>{{ attachedEvidence.modelName }} · <strong>证据类型：</strong>{{ attachedEvidence.evidenceType }}
           </p>
-          <p v-if="attachedEvidence.conditions" class="evidence-facts" style="margin-bottom: 4px">
+          <p v-if="attachedEvidence.conditions" class="evidence-facts" style="margin-bottom: 6px">
             <strong>实验/观测条件：</strong>{{ attachedEvidence.conditions }}
           </p>
+          <div
+            v-if="attachedEvidence.groupA && attachedEvidence.groupB"
+            style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; margin: 8px 0"
+          >
+            <div>
+              <div style="font-size: 11px; color: #64748b; font-weight: 700">{{ attachedEvidence.groupA.label }}</div>
+              <strong style="font-size: 13px; color: #0f172a">{{ attachedEvidence.groupA.metric }}</strong>
+            </div>
+            <span style="font-size: 11px; font-weight: 800; color: #0284c7">vs</span>
+            <div>
+              <div style="font-size: 11px; color: #64748b; font-weight: 700">{{ attachedEvidence.groupB.label }}</div>
+              <strong style="font-size: 13px; color: #0f172a">{{ attachedEvidence.groupB.metric }}</strong>
+            </div>
+          </div>
           <p class="evidence-facts">{{ attachedEvidence.facts }}</p>
           <p v-if="attachedEvidence.limitations" class="evidence-facts" style="font-size: 12px; color: #64748b">
             {{ attachedEvidence.limitations }}
           </p>
           <router-link :to="attachedEvidence.route" class="evidence-action-link">
-            前往可复现对照实验模型核对参数与结果 ↗
+            🔬 打开同一次观察（还原对照参数与视角）↗
           </router-link>
         </div>
 
@@ -231,7 +250,7 @@ import { accountOrigin, apiRequest, authClient } from '../account/client.js'
 import { mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { renderGeoScholarlyText, GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
-import { getEvidenceById } from '../inquiry/evidenceCatalog.js'
+import { getEvidenceById, resolveCommunityEvidence } from '../inquiry/evidenceCatalog.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -263,7 +282,12 @@ function rememberPostReturn() {
 
 const attachedEvidence = computed(() => {
   if (!post.value) return null
-  return getEvidenceById(post.value.evidenceId)
+  return resolveCommunityEvidence(post.value.evidenceId, {
+    compareUrl: post.value.compareUrl,
+    evidenceTitle: post.value.evidenceTitle,
+    conditions: post.value.conditions,
+    facts: post.value.facts
+  })
 })
 
 function insertFormulaToReply(latex) {
@@ -292,6 +316,8 @@ const canManage = computed(() => {
 
 function getExperimentRoute(modelKey) {
   const map = {
+    'solar-motion': '/experiments/astronomy/solar-motion',
+    seasons: '/experiments/astronomy/seasons',
     'fault-model': '/experiments/geology/fault-model',
     'thermal-circulation': '/experiments/meteorology/thermal-circulation',
     'water-cycle-3d': '/experiments/systems/water-cycle-3d',
@@ -351,6 +377,11 @@ async function loadPost() {
         updatedAt: matched.updated_at,
         tags: matched.tags || [],
         linkedExperiment: matched.linked_experiment || null,
+        evidenceId: matched.evidenceId || null,
+        compareUrl: matched.compareUrl || null,
+        evidenceTitle: matched.evidenceTitle || null,
+        conditions: matched.conditions || null,
+        facts: matched.facts || null,
         acceptedReplyId: matched.accepted_reply_id || null,
         likeCount: matched.likesCount || 0,
         bookmarkCount: matched.bookmarksCount || 0,
