@@ -123,7 +123,7 @@
       :mechanism="pedagogy.mechanism"
       :limitations="pedagogy.limitations"
       :real-data-lab="{ title: 'NASA 卫星真彩色珠峰山体影像对比', path: '/geo-labs/satellite', desc: '真实卫星影像看雪线与山体反照率' }"
-      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第四章', section: '第一节' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第四章', section: '第二节' }"
       practice-link="/practice"
       @reset="resetTerrainView"
     />

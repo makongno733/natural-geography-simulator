@@ -61,4 +61,25 @@ describe('InquiryStudio Hub Page', () => {
     expect(wrapper.text()).toContain('探究成果展示墙')
     expect(wrapper.text()).toContain('真实学生作品暂不公开')
   })
+
+  it('presents focused 3-minute compare mode when entered with mode=compare, and expands full 6-step workbench on demand', async () => {
+    await router.push('/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation')
+    const wrapper = mount(InquiryStudio, {
+      global: {
+        plugins: [router]
+      }
+    })
+
+    // Focused bar is shown instead of the 5-tab hero
+    expect(wrapper.find('.focused-compare-header').exists()).toBe(true)
+    expect(wrapper.findAll('.tab-btn').length).toBe(0)
+    expect(wrapper.text()).toContain('同一场雨，哪种路面积水更严重？')
+
+    // Clicking expand reveals the full 5-tab hub and 6-step workbench
+    const expandBtn = wrapper.find('[data-testid="expand-full-studio-btn"]')
+    expect(expandBtn.exists()).toBe(true)
+    await expandBtn.trigger('click')
+    expect(wrapper.findAll('.tab-btn').length).toBe(5)
+    expect(wrapper.find('.step-nav').exists()).toBe(true)
+  })
 })

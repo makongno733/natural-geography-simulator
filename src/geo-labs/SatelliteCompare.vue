@@ -80,14 +80,14 @@
     <div v-if="mapError || useSampleFallback" class="sat-status-banner" role="status" aria-live="polite">
       <div class="sat-status-text">
         <strong v-if="mapError">⚠️ {{ mapError }}</strong>
-        <strong v-else>🖼 当前正在浏览内置高保真遥感对比示例图（教学示例，已标明来源与日期）</strong>
+        <strong v-else>🖼 当前正在浏览内置标注教学示意图（教学示例素材，非实时 NASA 卫星瓦片）</strong>
         <p>
-          示例图来源说明：依据 <strong>NASA Earth Observatory / MODIS Terra</strong> 公开历史遥感观测特征绘制（地点：{{ place.name }}，对比基准日期：左侧 <strong>{{ dateA }}</strong> vs 右侧 <strong>{{ dateB }}</strong>，许可：NASA Open Data Policy 公有领域开放科学资料）。
+          示例素材说明：当前画布展示的是<strong>内置标注教学示意图</strong>（依据 <strong>NASA Earth Observatory / MODIS Terra</strong> 历史观测特征绘制，区域：{{ place.name }}，对比日期标签：左侧 <strong>{{ dateA }}</strong> vs 右侧 <strong>{{ dateB }}</strong>）。在此模式下生成的证据卡会自动标注为“内置标注教学示意图素材”。
         </p>
       </div>
       <div class="sat-status-actions">
         <button type="button" class="btn-retry-tiles" @click="retryLiveTiles">
-          🔄 重新尝试加载实时瓦片
+          🔄 切回并重新加载实时瓦片
         </button>
         <button v-if="!useSampleFallback" type="button" class="btn-use-sample" @click="useSampleFallback = true">
           使用内置示例图继续对比
@@ -110,11 +110,11 @@
           <path d="M 0 120 Q 220 140 410 210 T 800 280 L 800 450 L 0 450 Z" fill="#234d36" />
           <path d="M 120 220 Q 280 205 420 235 T 710 250 Q 560 285 390 270 T 120 220 Z" fill="#1d4ed8" opacity="0.85" />
           <circle cx="580" cy="120" r="65" fill="#f8fafc" opacity="0.45" />
-          <text x="28" y="76" fill="#e2e8f0" font-size="15" font-weight="bold">
-            左侧时段（{{ dateA }}）· {{ place.name }}
+          <text x="28" y="76" fill="#e2e8f0" font-size="14" font-weight="bold">
+            左侧（{{ dateA }}）· {{ place.shortName }}【教学示意图左幅】
           </text>
-          <text x="28" y="102" fill="#93c5fd" font-size="13">
-            特征：基准期水体范围较窄，主雨带尚未全面覆盖（依据 NASA MODIS Terra 观测示意）
+          <text x="28" y="100" fill="#93c5fd" font-size="12">
+            {{ place.sampleLeftNote }}
           </text>
         </svg>
       </div>
@@ -129,11 +129,11 @@
             <path d="M 0 100 Q 240 130 430 190 T 800 260 L 800 450 L 0 450 Z" fill="#155e37" />
             <path d="M 70 175 Q 290 145 470 190 T 760 225 Q 610 335 380 320 T 70 175 Z" fill="#0284c7" opacity="0.92" />
             <ellipse cx="230" cy="110" rx="85" ry="32" fill="#ffffff" opacity="0.65" />
-            <text x="772" y="76" fill="#f8fafc" font-size="15" font-weight="bold" text-anchor="end">
-              右侧时段（{{ dateB }}）· {{ place.name }}
+            <text x="772" y="76" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="end">
+              右侧（{{ dateB }}）· {{ place.shortName }}【教学示意图右幅】
             </text>
-            <text x="772" y="102" fill="#7dd3fc" font-size="13" text-anchor="end">
-              特征：丰水期水体扩张与局部梅雨锋亮白云团遮挡（依据 NASA MODIS Terra 观测示意）
+            <text x="772" y="100" fill="#7dd3fc" font-size="12" text-anchor="end">
+              {{ place.sampleRightNote }}
             </text>
           </svg>
         </div>
@@ -155,28 +155,60 @@
       />
     </div>
 
-    <!-- 4. 1 分钟遥感比较与证据卡工作台（先点选看到的现象 → 写一句观察 → 预览证据卡 / 复制分享链接 / 带入社区讨论草稿） -->
+    <!-- 4. 1 分钟遥感比较与证据卡工作台（先点选观察方向句式支架 → 写一句观察 → 预览证据卡 / 复制分享链接 / 带入社区讨论草稿） -->
     <section class="sat-observation-workbench" aria-labelledby="sat-workbench-title">
       <div class="wb-head">
         <div>
-          <span class="wb-kicker">⏱ 1 分钟遥感观察记录 · 真实卫星观测证据链</span>
+          <span class="wb-kicker">
+            {{ useSampleFallback ? '⏱ 1 分钟遥感观察记录 · 当前使用内置标注教学示意图素材' : '⏱ 1 分钟遥感观察记录 · 真实卫星观测证据链' }}
+          </span>
           <h2 id="sat-workbench-title">记录你在两期影像中看到的差异，生成可复现观察证据卡</h2>
         </div>
-        <span class="wb-layer-tag">图层：MODIS_Terra_CorrectedReflectance_TrueColor</span>
+        <span class="wb-layer-tag">
+          {{ useSampleFallback ? '素材：内置标注教学示意图（非实时卫星瓦片）' : '图层：MODIS_Terra_CorrectedReflectance_TrueColor' }}
+        </span>
       </div>
 
-      <!-- 第 1 步：快速点选看到的现象（明确标注为参考示例，给学生留出自主观察空间） -->
+      <!-- 切换地点或日期后的旧观察复核提示条（保护用户输入，同时绝不把旧观察自动当成新地点/新日期的事实） -->
+      <div
+        v-if="observationNeedsReview"
+        class="sat-review-alert"
+        data-testid="sat-observation-review-alert"
+        role="alert"
+      >
+        <div class="sat-review-text">
+          <strong>⚠️ 请重新核对你的观察记录：</strong>
+          <span>
+            你已将观测条件切换为 <strong>{{ place.shortName }}（{{ dateA }} vs {{ dateB }}）</strong>，但下方输入框中仍是针对旧条件（<strong>{{ previousContextSummary }}</strong>）填写的观察文字。请对照当前新画面修改或确认，系统不会将旧观察直接当作新日期或新地点的事实。
+          </span>
+        </div>
+        <div class="sat-review-actions">
+          <button
+            type="button"
+            class="btn-confirm-obs"
+            data-testid="confirm-observation-context-btn"
+            @click="confirmObservationForCurrentContext"
+          >
+            ✓ 我已结合新画面核对确认
+          </button>
+          <button type="button" class="btn-clear-obs" @click="clearObservationInput">
+            清空重新填写
+          </button>
+        </div>
+      </div>
+
+      <!-- 第 1 步：观察方向与句式支架（仅提供对应区域的观察方向与填空句式，不自动替学生下结论） -->
       <div class="wb-step">
         <span class="wb-step-label">
-          1. 先拖动上方卷帘对比左右两期影像；如需启发，可点击下方<strong>【参考示例】</strong>填入模板后再按实际画面修改：
+          1. 先拖动上方卷帘对比 <strong>{{ place.shortName }}</strong> 左右两期画面；可点击下方<strong>【观察方向与句式模板】</strong>填入填空支架，再根据实际画面把 <code>[填写...]</code> 补充完整：
         </span>
-        <div class="wb-chip-row" role="group" aria-label="遥感观察参考示例选择">
+        <div class="wb-chip-row" role="group" aria-label="遥感观察方向与句式模板选择">
           <button
-            v-for="item in observationPresets"
+            v-for="item in currentPlaceTemplates"
             :key="item.key"
             type="button"
-            :class="['wb-chip', { active: selectedPhenomenonKey === item.key && isUsingExample }]"
-            @click="selectPhenomenon(item)"
+            :class="['wb-chip', { active: selectedPhenomenonKey === item.key && isUsingTemplate }]"
+            @click="applyObservationTemplate(item)"
           >
             {{ item.label }}
           </button>
@@ -194,9 +226,10 @@
       <!-- 第 2 步：一句话观察与一键生成预览/带入社区 -->
       <div class="wb-step">
         <label class="wb-step-label" for="sat-observation-input">
-          2. 用你自己的话记录一处观察发现（私人草稿仅保存在本机或带入发帖框，不会塞入公开分享链接）：
-          <span v-if="isUsingExample" class="wb-example-pill">当前为参考示例，请结合实际画面核对修改</span>
-          <span v-else-if="userObservation.trim()" class="wb-user-pill">✓ 已记录你的个人观察</span>
+          2. 用你自己的话记录一处观察发现（未填写前不会自动生成具体结论；私人草稿仅保存在本机或带入发帖框）：
+          <span v-if="observationNeedsReview" class="wb-review-pill">⚠️ 地点或日期已变更，请核对确认</span>
+          <span v-else-if="hasUnfilledPlaceholders" class="wb-example-pill">请将句式模板中的 [填写...] 替换为你在画面中看到的现象</span>
+          <span v-else-if="userObservation.trim()" class="wb-user-pill">✓ 已记录你对当前画面的观察</span>
         </label>
         <div class="wb-input-row">
           <input
@@ -204,7 +237,7 @@
             v-model="userObservation"
             type="text"
             maxlength="240"
-            :placeholder="`请拖动卷帘观察 ${place.shortName}（${dateA} vs ${dateB}）的无云窗口，写下你看到的水体、云系或植被变化…`"
+            :placeholder="`请拖动卷帘观察 ${place.shortName}（${dateA} vs ${dateB}）的无云窗口，写下你实际看到的变化（或点选上方句式模板填空）…`"
             @input="onUserObservationInput"
           />
           <button type="button" class="btn-preview-evidence" @click="showEvidencePreview = true">
@@ -217,13 +250,17 @@
       </div>
 
       <!-- 第 3 步：结构化遥感观察证据卡预览与可复现分享链接 -->
-      <div v-if="showEvidencePreview" id="sat-evidence-card" class="sat-evidence-card" role="region" aria-label="真实卫星观察证据卡预览">
+      <div v-if="showEvidencePreview" id="sat-evidence-card" class="sat-evidence-card" role="region" aria-label="卫星遥感观察证据卡预览">
         <div class="sec-head">
           <div class="sec-badges">
-            <span class="sec-badge-main">🛰 真实卫星遥感观察证据卡</span>
-            <span class="sec-badge-real">真实卫星观测 · NASA MODIS Terra</span>
-            <span v-if="!userObservation.trim() || isUsingExample" class="sec-badge-example">
-              含示例描述 · 欢迎填写你的观察
+            <span class="sec-badge-main">
+              {{ useSampleFallback ? '🖼 内置标注教学示意图观察证据卡' : '🛰 真实卫星遥感观察证据卡' }}
+            </span>
+            <span :class="useSampleFallback ? 'sec-badge-sample' : 'sec-badge-real'">
+              {{ useSampleFallback ? '当前使用内置标注教学示意图素材 · 非实时卫星瓦片' : '真实卫星观测 · NASA MODIS Terra' }}
+            </span>
+            <span v-if="!hasConfirmedObservation" class="sec-badge-example">
+              {{ observationNeedsReview ? '旧观察待重新确认' : '尚未填写具体观察结论' }}
             </span>
           </div>
           <span class="sec-status">{{ copyStatus || '✓ 公开链接仅含可复现参数，私人草稿已分离保护' }}</span>
@@ -233,7 +270,7 @@
 
         <dl class="sec-grid">
           <div>
-            <dt>遥感图层与来源</dt>
+            <dt>图层与素材来源</dt>
             <dd>{{ evidenceCardData.modelName }}</dd>
           </div>
           <div>
@@ -242,17 +279,17 @@
           </div>
           <div>
             <dt>左侧基准期 ({{ dateA }})</dt>
-            <dd>{{ place.name }}（{{ place.coordText }}）· MODIS 真彩色校正反射率</dd>
+            <dd>{{ place.name }}（{{ place.coordText }}）· {{ useSampleFallback ? '内置标注教学示意图左幅' : 'MODIS 真彩色校正反射率' }}</dd>
           </div>
           <div>
             <dt>右侧对比期 ({{ dateB }})</dt>
-            <dd>同坐标相隔对比 · 当前卷帘位置 {{ split }}% · 分辨率 250m–1km</dd>
+            <dd>同坐标对比 · 当前卷帘位置 {{ split }}% · {{ useSampleFallback ? '内置标注教学示意图右幅' : '分辨率 250m–1km' }}</dd>
           </div>
           <div class="full-span">
             <dt>
-              {{ userObservation.trim() && !isUsingExample ? '我的观察记录（将随草稿带入社区）' : '观察描述（当前展示参考示例，可在上方输入框改为你的观察）' }}
+              {{ hasConfirmedObservation ? '我的观察记录（将随草稿带入社区）' : '观察记录状态（需由观察者根据画面填写后生成）' }}
             </dt>
-            <dd>{{ evidenceCardData.facts }}</dd>
+            <dd data-testid="sat-evidence-facts">{{ evidenceCardData.facts }}</dd>
           </div>
           <div class="full-span sec-limit">
             <dt>云层遮挡与适用边界说明</dt>
@@ -297,8 +334,8 @@
         </div>
         <div class="sat-meta-item">
           <span class="meta-kicker">🛰 遥感图层（就地解释）</span>
-          <strong>NASA MODIS Terra 真彩色校正反射率</strong>
-          <small>中分辨率成像光谱仪（红/绿/蓝可见光波段合成，直观反映云系、水体、植被与积雪）</small>
+          <strong>{{ useSampleFallback ? '内置标注教学示意图（离线示例素材）' : 'NASA MODIS Terra 真彩色校正反射率' }}</strong>
+          <small>{{ useSampleFallback ? '依据 MODIS 历史观测特征绘制的教学示意图，可随时点击上方按钮切回 NASA 实时卫星瓦片' : '中分辨率成像光谱仪（红/绿/蓝可见光波段合成，直观反映云系、水体、植被与积雪）' }}</small>
         </div>
         <div class="sat-meta-item">
           <span class="meta-kicker">📏 空间与时间分辨率</span>
@@ -337,7 +374,7 @@
       :change="pedagogy.change"
       :mechanism="pedagogy.mechanism"
       :limitations="pedagogy.limitations"
-      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第二章', section: '第一节' }"
+      :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第六章', section: '第四节' }"
       practice-link="/practice"
       @reset="split = 50"
     />
@@ -378,31 +415,101 @@ const pedagogy = {
 }
 
 const places = [
-  { id: 'china', name: '中国东部 · 长江中下游湖区与云系', shortName: '中国东部', coordText: '31.0°N, 112.0°E', center: [112, 31], zoom: 4 },
-  { id: 'amazon', name: '亚马孙平原 · 热带雨林与河网', shortName: '亚马孙', coordText: '4.0°S, 62.0°W', center: [-62, -4], zoom: 5 },
-  { id: 'himalaya', name: '喜马拉雅山脉 · 山地与积雪线', shortName: '喜马拉雅', coordText: '28.0°N, 86.9°E', center: [86.9, 28], zoom: 6 }
-]
-
-const observationPresets = [
   {
-    key: 'cloud-water',
-    label: '【参考示例】☁️ 云带移动与无云窗口水体对比',
-    claim: (p, dA, dB) =>
-      `【参考示例】对比 ${p.name}（${p.coordText}）${dA} 与 ${dB} 的 NASA MODIS 真彩色影像：可重点观察亮白对流云带的位置变化，并在无云遮挡窗口内对比湖泊水体边界（受云层遮挡区域需结合地面水文站水位核实）。`
+    id: 'china',
+    name: '中国东部 · 长江中下游湖区与云系',
+    shortName: '中国东部',
+    coordText: '31.0°N, 112.0°E',
+    center: [112, 31],
+    zoom: 4,
+    sampleLeftNote: '示意基准期水体范围与云团分布（非实时瓦片）',
+    sampleRightNote: '示意对比期水体边界与云带位置（非实时瓦片）'
   },
   {
-    key: 'cloud-mask',
-    label: '【参考示例】⚠️ 亮白云团遮挡与地表真实变化辨析',
-    claim: (p, dA, dB) =>
-      `【参考示例】在 ${p.name}（${p.coordText}）${dA} vs ${dB} 卫星对比中，部分区域受亮白色云团遮挡；需先排除云层与轨道缺口干扰，仅在晴空窗口定性对比地表色调差异。`
+    id: 'amazon',
+    name: '亚马孙平原 · 热带雨林与河网',
+    shortName: '亚马孙',
+    coordText: '4.0°S, 62.0°W',
+    center: [-62, -4],
+    zoom: 5,
+    sampleLeftNote: '示意亚马孙主干河道与雨林晴空窗（非实时瓦片）',
+    sampleRightNote: '示意热带对流云团与洪泛河网对比（非实时瓦片）'
   },
   {
-    key: 'seasonal-veg',
-    label: '【参考示例】🌿 季相植被色调与积雪/水网边界',
-    claim: (p, dA, dB) =>
-      `【参考示例】对比 ${p.name}（${p.coordText}）${dA} 与 ${dB} 两期实测影像：可观察晴空区陆表植被绿度或高山积雪线边界的阶段性变化。`
+    id: 'himalaya',
+    name: '喜马拉雅山脉 · 山地与积雪线',
+    shortName: '喜马拉雅',
+    coordText: '28.0°N, 86.9°E',
+    center: [86.9, 28],
+    zoom: 6,
+    sampleLeftNote: '示意山脊积雪覆盖与南北坡河谷（非实时瓦片）',
+    sampleRightNote: '示意高山积雪边界与地形云对比（非实时瓦片）'
   }
 ]
+
+// 按区域提供观察方向与填空句式模板（含 [填写...] 支架，绝不预先替用户生成伪造的确定性结论，也不跨区域混用概念）
+const placeTemplatesMap = {
+  china: [
+    {
+      key: 'cloud-water',
+      label: '📐 句式模板：云带位置与晴空区水体对比',
+      buildTemplate: (p, dA, dB) =>
+        `对比 ${p.shortName}（${dA} vs ${dB}）：左侧画面云层主要位于 [填写方位/范围]，右侧云带 [填写移动或增减情况]；在无云遮挡窗口内，河湖水体边界 [填写你的观察]。`
+    },
+    {
+      key: 'cloud-mask',
+      label: '📐 句式模板：排除云层遮挡与阴影干扰',
+      buildTemplate: (p, dA, dB) =>
+        `在 ${p.shortName}（${dA} vs ${dB}）对比中，[填写区域] 受亮白色云团遮挡无法直接判读地表；仅在晴空窗口内对比可见 [填写地表或水体色调差异]。`
+    },
+    {
+      key: 'seasonal-veg',
+      label: '📐 句式模板：陆表植被绿度与水色变化',
+      buildTemplate: (p, dA, dB) =>
+        `观察 ${p.shortName}（${dA} vs ${dB}）无云区：左侧陆表植被/农田呈 [填写色调]，右侧呈 [填写色调变化]，反映出 [填写你的初步推断]。`
+    }
+  ],
+  amazon: [
+    {
+      key: 'cloud-water',
+      label: '📐 句式模板：雨林干支流河道与洪泛区对比',
+      buildTemplate: (p, dA, dB) =>
+        `对比 ${p.shortName}（${dA} vs ${dB}）无云窗口：亚马孙河主干与支流河道在左侧呈 [填写河宽/水色特征]，右侧 [填写水位/滩涂或泥沙色调变化]。`
+    },
+    {
+      key: 'cloud-mask',
+      label: '📐 句式模板：热带对流积云与轨道缺口辨析',
+      buildTemplate: (p, dA, dB) =>
+        `判读 ${p.shortName}（${dA} vs ${dB}）时，需先排除低纬黑色轨道扫描缺口与爆米花状热带积云遮挡；在有效晴空窗口内观察到 [填写你的发现]。`
+    },
+    {
+      key: 'seasonal-veg',
+      label: '📐 句式模板：热带雨林冠层色调对比',
+      buildTemplate: (p, dA, dB) =>
+        `在 ${p.shortName}（${dA} vs ${dB}）晴空区对比雨林冠层：左侧深绿色林区范围 [填写特征]，右侧 [填写色调或斑块变化]。`
+    }
+  ],
+  himalaya: [
+    {
+      key: 'cloud-water',
+      label: '📐 句式模板：高山积雪线与河谷边界对比',
+      buildTemplate: (p, dA, dB) =>
+        `对比 ${p.shortName}（${dA} vs ${dB}）无云山脊区：左侧白色积雪覆盖范围 [填写特征]，右侧积雪边界 [填写退缩/扩展或持平情况]。`
+    },
+    {
+      key: 'cloud-mask',
+      label: '📐 句式模板：区分固定山脊积雪与移动云团',
+      buildTemplate: (p, dA, dB) =>
+        `在 ${p.shortName}（${dA} vs ${dB}）对比中，沿树枝状山谷固定分布的亮白区为 [填写积雪判断]，而跨山脊改变形状的亮白团块为 [填写云层判断]。`
+    },
+    {
+      key: 'seasonal-veg',
+      label: '📐 句式模板：喜马拉雅南北坡色调差异',
+      buildTemplate: (p, dA, dB) =>
+        `观察 ${p.shortName}（${dA} vs ${dB}）：喜马拉雅北坡高原与南坡河谷色调呈 [填写差异]，两期画面之间 [填写你的观察发现]。`
+    }
+  ]
+}
 
 const placeId = ref('china')
 const dateA = ref('2024-06-01')
@@ -414,9 +521,15 @@ const mapBEl = ref(null)
 const mapError = ref('')
 const useSampleFallback = ref(false)
 const selectedPhenomenonKey = ref('cloud-water')
-// 默认留空，鼓励学生自主观察填写；点击【参考示例】芯片才填入示例文字
+// 默认严格留空，未输入前绝不自动生成具体观察结论
 const userObservation = ref('')
-const isUsingExample = ref(false)
+const isUsingTemplate = ref(false)
+// 记录用户撰写观察时对应的地点与日期上下文；当切换地点或日期时，提示用户重新确认
+const observationContext = ref({
+  placeId: 'china',
+  dateA: '2024-06-01',
+  dateB: '2024-06-15'
+})
 const showEvidencePreview = ref(true)
 const isSharedSession = ref(false)
 const copyStatus = ref('')
@@ -426,35 +539,70 @@ let mapB
 let syncing = false
 
 const place = computed(() => places.find(item => item.id === placeId.value) || places[0])
+const currentPlaceTemplates = computed(() => placeTemplatesMap[placeId.value] || placeTemplatesMap.china)
 
-function selectPhenomenon(item) {
+const hasUnfilledPlaceholders = computed(() => {
+  return /\[填写[^\]]*\]/.test(userObservation.value || '')
+})
+
+const observationNeedsReview = computed(() => {
+  const text = (userObservation.value || '').trim()
+  if (!text) return false
+  const ctx = observationContext.value
+  return (
+    ctx.placeId !== placeId.value ||
+    ctx.dateA !== dateA.value ||
+    ctx.dateB !== dateB.value
+  )
+})
+
+const previousContextSummary = computed(() => {
+  const ctx = observationContext.value
+  const oldPlace = places.find(p => p.id === ctx.placeId) || place.value
+  return `${oldPlace.shortName} · ${ctx.dateA} vs ${ctx.dateB}`
+})
+
+const hasConfirmedObservation = computed(() => {
+  const text = (userObservation.value || '').trim()
+  return Boolean(text && !observationNeedsReview.value && !hasUnfilledPlaceholders.value)
+})
+
+function syncObservationContextToCurrent() {
+  observationContext.value = {
+    placeId: placeId.value,
+    dateA: dateA.value,
+    dateB: dateB.value
+  }
+}
+
+function applyObservationTemplate(item) {
   selectedPhenomenonKey.value = item.key
-  userObservation.value = item.claim(place.value, dateA.value, dateB.value)
-  isUsingExample.value = true
+  userObservation.value = item.buildTemplate(place.value, dateA.value, dateB.value)
+  isUsingTemplate.value = true
+  syncObservationContextToCurrent()
   showEvidencePreview.value = true
   saveSessionState()
 }
 
 function onUserObservationInput() {
-  isUsingExample.value = false
+  isUsingTemplate.value = false
+  syncObservationContextToCurrent()
+  saveSessionState()
+}
+
+function confirmObservationForCurrentContext() {
+  syncObservationContextToCurrent()
   saveSessionState()
 }
 
 function clearObservationInput() {
   userObservation.value = ''
-  isUsingExample.value = false
+  isUsingTemplate.value = false
+  syncObservationContextToCurrent()
   saveSessionState()
 }
 
-const effectiveObservation = computed(() => {
-  if (userObservation.value && userObservation.value.trim()) {
-    return userObservation.value.trim()
-  }
-  const preset = observationPresets.find(p => p.key === selectedPhenomenonKey.value) || observationPresets[0]
-  return preset.claim(place.value, dateA.value, dateB.value)
-})
-
-// 公开可复现链接：严格只编码可复现观测参数（地点、两期日期、卷帘比例、现象分类），与私人草稿彻底分离，确保在手机微信/QQ 中精简可靠（约 115 字符）
+// 公开可复现链接：严格只编码可复现观测参数（地点、两期日期、卷帘比例、观察方向键），与私人草稿彻底分离
 const shareRelativeRoute = computed(() => {
   const params = new URLSearchParams({
     place: placeId.value,
@@ -473,16 +621,49 @@ const shareFullUrl = computed(() => {
   return `${origin}${pathname}#${shareRelativeRoute.value}`
 })
 
-const evidenceCardData = computed(() => ({
-  id: 'ev-satellite-east-asia',
-  title: `${place.value.name}（${dateA.value} vs ${dateB.value}）多时相卫星影像卷帘对比证据`,
-  modelName: 'NASA MODIS Terra Corrected Reflectance (True Color) · NASA GIBS 开放瓦片服务（分辨率 250m–1km）',
-  evidenceType: '真实卫星遥感观测（NASA MODIS Terra 实测影像）',
-  disclaimer: '真实卫星观测 · 需注意云层遮挡与分辨率边界',
-  conditions: `观测区域：${place.value.name}（${place.value.coordText}）· 对比日期：左侧 ${dateA.value} vs 右侧 ${dateB.value} · 卷帘比例 ${split.value}%`,
-  facts: `【真实卫星观测 · NASA MODIS Terra】${effectiveObservation.value}`,
-  limitations: '判读边界：光学遥感无法穿透厚云（亮白团块多为云层遮挡而非地表积雪），低纬相邻轨道间可能存在黑色扫描缺口；定量水体反演需结合去云合成与地面水文站实测水位。'
-}))
+const evidenceCardData = computed(() => {
+  const isSample = useSampleFallback.value
+  const sourcePrefix = isSample
+    ? '【内置标注教学示意图 · 非实时卫星瓦片】'
+    : '【真实卫星观测 · NASA MODIS Terra】'
+
+  const rawText = (userObservation.value || '').trim()
+  let factsText = ''
+  if (!rawText) {
+    factsText =
+      `${sourcePrefix}尚未填写具体观察结论。请先拖动上方卷帘对比 ${place.value.name}（${dateA.value} vs ${dateB.value}）两期画面，在输入框中填写你实际观察到的云系、水体、植被或积雪差异后生成个人观察记录。`
+  } else if (observationNeedsReview.value) {
+    factsText =
+      `${sourcePrefix}⚠️ 观测区域或日期已切换为 ${place.value.name}（${dateA.value} vs ${dateB.value}），原观察草稿对应旧条件（${previousContextSummary.value}）。请先对照新画面核对确认或修改后再作为当前日期/地点的观察记录。`
+  } else if (hasUnfilledPlaceholders.value) {
+    factsText =
+      `${sourcePrefix}（句式模板待补充完整）${rawText} —— 请将方括号 [填写...] 替换为你在画面中核对的具体现象。`
+  } else {
+    factsText = `${sourcePrefix}${rawText}`
+  }
+
+  return {
+    id: 'ev-satellite-east-asia',
+    title: isSample
+      ? `${place.value.name}（${dateA.value} vs ${dateB.value}）多时相遥感对比记录【内置标注教学示意图】`
+      : `${place.value.name}（${dateA.value} vs ${dateB.value}）多时相卫星影像卷帘对比证据`,
+    modelName: isSample
+      ? '内置多时相遥感对比标注教学示意图（基于 NASA MODIS 历史观测特征绘制的教学示例素材，非实时卫星瓦片）'
+      : 'NASA MODIS Terra Corrected Reflectance (True Color) · NASA GIBS 开放瓦片服务（分辨率 250m–1km）',
+    evidenceType: isSample
+      ? '内置标注教学示意图观察记录（教学示例素材，非实时卫星瓦片）'
+      : '真实卫星遥感观测（NASA MODIS Terra 实测影像）',
+    disclaimer: isSample
+      ? '当前使用内置标注教学示意图素材 · 非实时 NASA 卫星瓦片'
+      : '真实卫星观测 · 需注意云层遮挡与分辨率边界',
+    isRealData: !isSample,
+    conditions: `观测区域：${place.value.name}（${place.value.coordText}）· 对比日期：左侧 ${dateA.value} vs 右侧 ${dateB.value} · 卷帘比例 ${split.value}% · 素材模式：${isSample ? '内置标注教学示意图（非实时瓦片）' : 'NASA GIBS 实时卫星瓦片'}`,
+    facts: factsText,
+    limitations: isSample
+      ? '素材与判读边界：当前处于内置标注教学示意图模式（用于离线或网络受限时的卷帘交互演示，非所选日期的实时卫星实测瓦片）；如需对特定日期进行真实遥感判读，请切回 NASA 实时瓦片或前往 NASA Worldview 核查。'
+      : '判读边界：光学遥感无法穿透厚云（亮白团块多为云层遮挡而非地表积雪），低纬相邻轨道间可能存在黑色扫描缺口；定量水体反演需结合去云合成与地面水文站实测水位。'
+  }
+})
 
 const worldviewUrl = computed(() => {
   const [lon, lat] = place.value.center
@@ -504,9 +685,19 @@ const discussRoute = computed(() => ({
 }))
 
 function buildComposePayload() {
-  const obsText = (userObservation.value && userObservation.value.trim())
-    ? userObservation.value.trim()
-    : `（待补充个人观察，参考示例：${effectiveObservation.value}）`
+  const isSample = useSampleFallback.value
+  const rawText = (userObservation.value || '').trim()
+  let obsText = '（尚未填写具体观察，请结合卷帘画面补充你看到的差异）'
+  if (rawText && observationNeedsReview.value) {
+    obsText = `（待结合新条件 ${place.value.shortName} ${dateA.value} vs ${dateB.value} 重新核对；旧条件 ${previousContextSummary.value} 下的草稿：${rawText}）`
+  } else if (rawText) {
+    obsText = rawText
+  }
+
+  const sourceLine = isSample
+    ? '内置多时相遥感对比标注教学示意图（**教学示例素材，非实时 NASA 卫星瓦片**）'
+    : 'NASA MODIS Terra CorrectedReflectance_TrueColor（NASA GIBS 开放瓦片，空间分辨率约 250m–1km，**真实卫星观测**）'
+
   return {
     kind: 'question',
     categoryId: 4,
@@ -514,18 +705,22 @@ function buildComposePayload() {
     body:
       `我在「多时相卫星影像对比」工具中观察了 **${place.value.name}（${place.value.coordText}）**：\n\n` +
       `- **对比日期**：左侧 ${dateA.value} vs 右侧 ${dateB.value}（卷帘位置 ${split.value}%）\n` +
-      `- **遥感图层与来源**：NASA MODIS Terra CorrectedReflectance_TrueColor（NASA GIBS 开放瓦片，空间分辨率约 250m–1km，**真实卫星观测**）\n` +
+      `- **图层与素材来源**：${sourceLine}\n` +
       `- **我看到的差异**：${obsText}\n` +
-      `- **我排除的干扰与适用边界**：光学影像受云层遮挡与轨道扫描缺口影响，定性判读需结合地面水文/气象站点验证。\n` +
+      `- **我排除的干扰与适用边界**：${evidenceCardData.value.limitations}\n` +
       `- **可复现对比链接**：#${shareRelativeRoute.value}\n` +
       `- **我想请教的问题**：这一变化主要受什么季节性大气或水文过程驱动？`,
     linkedExperiment: '',
     evidenceId: 'ev-satellite-east-asia',
     compareUrl: shareRelativeRoute.value,
     evidenceTitle: evidenceCardData.value.title,
+    modelName: evidenceCardData.value.modelName,
+    evidenceType: evidenceCardData.value.evidenceType,
+    disclaimer: evidenceCardData.value.disclaimer,
+    isRealData: evidenceCardData.value.isRealData,
     conditions: evidenceCardData.value.conditions,
     facts: evidenceCardData.value.facts,
-    tagsInput: '遥感判读, MODIS, 多时相对比'
+    tagsInput: isSample ? '遥感教学示意图, 多时相对比' : '遥感判读, MODIS, 多时相对比'
   }
 }
 
@@ -549,7 +744,8 @@ function saveSessionState() {
         split: split.value,
         selectedPhenomenonKey: selectedPhenomenonKey.value,
         userObservation: userObservation.value,
-        isUsingExample: isUsingExample.value
+        isUsingTemplate: isUsingTemplate.value,
+        observationContext: observationContext.value
       })
     )
   } catch {}
@@ -602,9 +798,8 @@ function retryLiveTiles() {
 }
 
 function onPlaceChange() {
-  if (isUsingExample.value) {
-    const preset = observationPresets.find(p => p.key === selectedPhenomenonKey.value) || observationPresets[0]
-    userObservation.value = preset.claim(place.value, dateA.value, dateB.value)
+  if (!userObservation.value || !userObservation.value.trim()) {
+    syncObservationContextToCurrent()
   }
   saveSessionState()
   if (!useSampleFallback.value) {
@@ -631,7 +826,7 @@ function createMap(container, date) {
     maxZoom: 9
   })
   map.on('error', () => {
-    mapError.value = 'NASA GIBS 实时卫星瓦片暂时无法加载（可能受网络限制或所选日期数据缺失），已为你垫底展示标明来源与日期的教学示例图层，你也可点击重试或更换日期。'
+    mapError.value = 'NASA GIBS 实时卫星瓦片暂时无法加载（可能受网络限制或所选日期数据缺失），可点击右侧重试或切换至内置标注教学示意图继续体验卷帘操作。'
   })
   return map
 }
@@ -649,6 +844,9 @@ function renderMaps() {
     mapError.value = '请选择不晚于今天的有效日期。'
     return
   }
+  if (!userObservation.value || !userObservation.value.trim()) {
+    syncObservationContextToCurrent()
+  }
   mapError.value = ''
   saveSessionState()
   mapA?.remove()
@@ -659,7 +857,7 @@ function renderMaps() {
     mapA.on('move', () => sync(mapA, mapB))
     mapB.on('move', () => sync(mapB, mapA))
   } catch {
-    mapError.value = '地图引擎初始化受限，已自动启用内置教学示例图层。'
+    mapError.value = '地图引擎初始化受限，已自动启用内置标注教学示意图。'
     useSampleFallback.value = true
   }
 }
@@ -681,7 +879,10 @@ function initFromQuery() {
       }
       if (saved?.userObservation && !q.obs) {
         userObservation.value = saved.userObservation
-        isUsingExample.value = Boolean(saved.isUsingExample)
+        isUsingTemplate.value = Boolean(saved.isUsingTemplate)
+        if (saved.observationContext) {
+          observationContext.value = saved.observationContext
+        }
       }
     }
   } catch {}
@@ -699,13 +900,17 @@ function initFromQuery() {
     const sp = Number(q.split)
     if (!Number.isNaN(sp)) split.value = Math.max(0, Math.min(100, sp))
   }
-  if (typeof q.phenom === 'string' && observationPresets.some(p => p.key === q.phenom)) {
+  if (typeof q.phenom === 'string') {
     selectedPhenomenonKey.value = q.phenom
   }
-  // 兼容旧版带 ?obs=... 的公开链接；新链接默认留空输入框供学生自己观察填写
+  if (!userObservation.value || !userObservation.value.trim()) {
+    syncObservationContextToCurrent()
+  }
+  // 兼容旧版带 ?obs=... 的公开链接；新链接默认严格留空输入框供学生自己观察填写
   if (typeof q.obs === 'string' && q.obs.trim()) {
     userObservation.value = q.obs.trim()
-    isUsingExample.value = false
+    isUsingTemplate.value = false
+    syncObservationContextToCurrent()
   }
   if (q.shared === '1') {
     isSharedSession.value = true
@@ -714,6 +919,9 @@ function initFromQuery() {
 }
 
 watch([placeId, dateA, dateB, split], () => {
+  if (!userObservation.value || !userObservation.value.trim()) {
+    syncObservationContextToCurrent()
+  }
   saveSessionState()
 })
 
@@ -952,7 +1160,7 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   border-radius: var(--radius-sm);
   margin-bottom: 10px;
 }
-.sat-status-text strong {
+.sat-status-text > strong {
   display: block;
   font-size: 13px;
   color: #92400e;
@@ -1209,6 +1417,62 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   gap: 6px;
   flex-wrap: wrap;
 }
+.sat-review-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fffbeb;
+  border: 1.5px solid #f59e0b;
+  border-radius: 8px;
+}
+.sat-review-text {
+  font-size: 12.5px;
+  color: #78350f;
+  line-height: 1.5;
+  flex: 1 1 360px;
+}
+.sat-review-text strong {
+  color: #92400e;
+}
+.sat-review-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-confirm-obs {
+  background: #d97706;
+  color: #ffffff;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-clear-obs {
+  background: #ffffff;
+  color: #92400e;
+  border: 1px solid #d97706;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.wb-review-pill {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  font-size: 11px;
+  font-weight: 700;
+}
 .sec-badge-main {
   background: #0284c7;
   color: #ffffff;
@@ -1221,6 +1485,15 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   background: #d1fae5;
   color: #065f46;
   border: 1px solid #34d399;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.sec-badge-sample {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;

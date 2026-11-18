@@ -1,22 +1,34 @@
 <template>
   <div class="urban-flood-sim" role="region" aria-label="城市降雨径流与下渗仿真模拟器">
-    <!-- 顶部标题与模型性质声明 -->
+    <!-- 顶部紧凑标题与可折叠模型公式说明（保证手机 390×844 首屏直接看到第 1 步预测与第 2 步并排比较） -->
     <div class="sim-header">
       <div class="sim-title-group">
-        <span class="sim-badge">水循环 · 定性水动力学教学模型（教学仿真，非现场实测）</span>
-        <h3>城市暴雨产流与海绵下渗仿真实验台</h3>
-        <p class="sim-meta-note">
-          教学仿真说明：本实验台采用归一化水文推理公式（Q = C·I·A）与 Horton 下渗简化教学模型，仅用于对比不同下渗条件下的产流趋势（教学仿真，非现场实测）。
-        </p>
-      </div>
-      <div class="sim-actions-top">
-        <button type="button" class="btn-preset" @click="applyPreset('traditional')">标准硬化城区</button>
-        <button type="button" class="btn-preset" @click="applyPreset('sponge')">海绵改造试点</button>
-        <button type="button" class="btn-preset" @click="applyPreset('natural')">天然植被林地</button>
+        <div class="sim-title-inline">
+          <h3>城市暴雨产流与海绵下渗仿真实验台</h3>
+          <span class="sim-badge">教学仿真，非现场实测</span>
+        </div>
+        <details class="sim-formula-details">
+          <summary>📐 模型说明：<code>Q_p = C·I·A_eff·(1+0.05S)</code>（示范汇水区 <code>A ≈ 3.06 km²</code>，换算系数 <code>0.85</code>）· 查看推导与边界 ▾</summary>
+          <div class="formula-details-body">
+            <p>
+              <strong>1. 峰值流量（m³/s）来源：</strong>基于水文推理公式 <code>Q = 0.278 · C · I · A</code>，设定标准教学汇水区面积
+              <code>A ≈ 3.06 km²</code>（单位换算系数 <code>A_eff = 0.278 × 3.06 ≈ 0.85 m³·h/(s·mm)</code>），叠加坡度汇流修正
+              <code>(1 + 0.05·S)</code>。在标准暴雨（<code>I = 50 mm/h</code>、坡度 <code>S = 2°</code>）下：传统硬化路面（<code>C = 0.95</code>）峰值
+              <code>0.95 × 50 × 0.85 × 1.10 ≈ 44.4 m³/s</code>；天然林地（<code>C = 0.25</code>）峰值
+              <code>0.25 × 50 × 0.85 × 1.10 ≈ 11.7 m³/s</code>。
+            </p>
+            <p>
+              <strong>2. 下渗过程简化假设：</strong>传统水泥/沥青与天然林地采用固定经验下渗率（<code>5%</code> 与 <code>75%</code>）；海绵透水铺装采用随累积雨量与垫层容量饱和衰减的简化模型（初值 <code>60%</code>，随孔隙蓄满衰减，稳渗下限 <code>18%</code>；<code>50 mm</code> 雨量、<code>25 mm</code> 容量下为 <code>35%</code>，峰值 <code>30.4 m³/s</code>）。
+            </p>
+            <p>
+              <strong>3. 达峰延缓与适用边界：</strong>各坡度下均以<strong>同坡度传统水泥地面达峰时间</strong>为基准计算洪峰延缓（如 <code>2°</code> 坡度下水泥 <code>6 分钟</code>达峰、林地 <code>36 分钟</code>达峰，相对延缓 <code>+30 分钟</code>；水泥对自身延缓恒为 <code>0 分钟</code>）。积水深度按默认市政管网排水能力 <code>25 mm/h</code> 估算，未计入地下管网顶托与空间降雨不均，不可替代现场实测。
+            </p>
+          </div>
+        </details>
       </div>
     </div>
 
-    <!-- 分享链接还原提示横幅（当通过分享链接打开时自动展示） -->
+    <!-- 分享链接还原提示横幅（仅当别人通过带 shared=1 的分享链接打开时展示） -->
     <div v-if="isSharedSession" class="shared-restore-banner" role="status" aria-live="polite">
       <div class="shared-banner-head">
         <span class="shared-pill">🔗 已从分享链接还原同一次对照观察</span>
@@ -33,7 +45,7 @@
     <section class="quick-compare-box" aria-labelledby="quick-compare-title">
       <div class="qc-top-bar">
         <div>
-          <span class="qc-kicker">⏱ 3 分钟核心对照路径 · 教学仿真，非现场实测</span>
+          <span class="qc-kicker">⏱ 3 分钟核心对照 · 1 预测 → 2 并排比较 → 3 记录解释 → 4 证据卡</span>
           <h4 id="quick-compare-title">同一场雨，哪种路面积水更严重？</h4>
         </div>
         <button type="button" class="btn-reset-standard" @click="resetStandardCompare">
@@ -114,9 +126,18 @@
                 <strong class="cm-val">{{ metricsA.waterDepth }} <small>mm</small></strong>
               </div>
             </div>
-            <p class="compare-risk-line" :style="{ color: metricsA.riskColor }">
-              状态：{{ metricsA.riskLevelName }}（径流系数 {{ metricsA.runoffCoeff }}）
-            </p>
+            <div class="compare-card-foot">
+              <p class="compare-risk-line" :style="{ color: metricsA.riskColor }">
+                {{ metricsA.riskLevelName }}（径流系数 {{ metricsA.runoffCoeff }} · 较硬化延缓 +{{ metricsA.peakDelayMinutes }} 分钟）
+              </p>
+              <button
+                type="button"
+                :class="['btn-focus-stage', { active: surface === surfaceA }]"
+                @click="surface = surfaceA"
+              >
+                {{ surface === surfaceA ? '👁 下方剖面当前展示此地面' : '👁 切换到下方剖面观察' }}
+              </button>
+            </div>
           </div>
 
           <!-- 对照组 B -->
@@ -145,9 +166,18 @@
                 <strong class="cm-val">{{ metricsB.waterDepth }} <small>mm</small></strong>
               </div>
             </div>
-            <p class="compare-risk-line" :style="{ color: metricsB.riskColor }">
-              状态：{{ metricsB.riskLevelName }}（相比 A 峰值相差 <strong>{{ comparisonCard.peakDiff }} m³/s</strong>，削峰 <strong>{{ comparisonCard.relativeReduction }}%</strong>）
-            </p>
+            <div class="compare-card-foot">
+              <p class="compare-risk-line" :style="{ color: metricsB.riskColor }">
+                相比 A 峰值相差 <strong>{{ comparisonCard.peakDiff }} m³/s</strong>（削峰 <strong>{{ comparisonCard.relativeReduction }}%</strong> · 较硬化延缓 <strong>+{{ metricsB.peakDelayMinutes }} 分钟</strong>）
+              </p>
+              <button
+                type="button"
+                :class="['btn-focus-stage', { active: surface === surfaceB }]"
+                @click="surface = surfaceB"
+              >
+                {{ surface === surfaceB ? '👁 下方剖面当前展示此地面' : '👁 切换到下方剖面观察' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -207,7 +237,7 @@
             <dd>
               地表径流峰值 <strong>{{ comparisonCard.groupA.peakDischarge }} m³/s</strong> ·
               下渗率 <strong>{{ comparisonCard.groupA.infiltrationPercent }}%</strong> ·
-              达峰历时 <strong>{{ comparisonCard.groupA.timeToPeak }} 分钟</strong> ·
+              达峰历时 <strong>{{ comparisonCard.groupA.timeToPeak }} 分钟</strong>（较硬化延缓 <strong>+{{ comparisonCard.groupA.peakDelayMinutes }} 分钟</strong>） ·
               估算积水 <strong>{{ comparisonCard.groupA.waterDepth }} mm</strong>
             </dd>
           </div>
@@ -216,7 +246,7 @@
             <dd>
               地表径流峰值 <strong>{{ comparisonCard.groupB.peakDischarge }} m³/s</strong> ·
               下渗率 <strong>{{ comparisonCard.groupB.infiltrationPercent }}%</strong> ·
-              达峰历时 <strong>{{ comparisonCard.groupB.timeToPeak }} 分钟</strong> ·
+              达峰历时 <strong>{{ comparisonCard.groupB.timeToPeak }} 分钟</strong>（较硬化延缓 <strong>+{{ comparisonCard.groupB.peakDelayMinutes }} 分钟</strong>） ·
               估算积水 <strong>{{ comparisonCard.groupB.waterDepth }} mm</strong>
             </dd>
           </div>
@@ -225,8 +255,8 @@
             <dd>{{ comparisonCard.claim }}</dd>
           </div>
           <div class="gec-meta-item full-span gec-limit-box">
-            <dt>适用边界与说明</dt>
-            <dd>{{ comparisonCard.limitations }}（<strong>{{ comparisonCard.disclaimer }}</strong>）</dd>
+            <dt>模型公式与适用边界</dt>
+            <dd>{{ comparisonCard.formulaSummary }} {{ comparisonCard.limitations }}</dd>
           </div>
         </dl>
 
@@ -254,11 +284,40 @@
       </div>
     </section>
 
+    <!-- 下方动画剖面、水文过程线与自定义降雨调节区（附典型场景焦点快捷切换） -->
+    <div class="sim-stage-toolbar">
+      <span class="stage-toolbar-title">🔬 动画剖面与降雨历时过程线（{{ currentFocusGroupLabel }}）</span>
+      <div class="sim-actions-top" role="group" aria-label="典型地表场景预设">
+        <span class="preset-group-label">切换当前剖面与对照预设：</span>
+        <button
+          type="button"
+          :class="['btn-preset', { active: surface === 'concrete' }]"
+          @click="applyPreset('traditional')"
+        >
+          🏢 标准硬化城区
+        </button>
+        <button
+          type="button"
+          :class="['btn-preset', { active: surface === 'sponge' }]"
+          @click="applyPreset('sponge')"
+        >
+          🧱 海绵改造试点
+        </button>
+        <button
+          type="button"
+          :class="['btn-preset', { active: surface === 'vegetation' }]"
+          @click="applyPreset('natural')"
+        >
+          🌲 天然植被林地
+        </button>
+      </div>
+    </div>
+
     <div class="sim-grid">
       <!-- 控制面板 -->
       <div class="sim-controls">
         <fieldset class="control-group">
-          <legend>1. 当前剖面焦点地表材质（点击切换下方动画剖面）</legend>
+          <legend>1. 下方剖面动画与过程线焦点（{{ currentFocusGroupLabel }}）</legend>
           <div class="radio-cards" role="radiogroup" aria-label="地表材质">
             <label
               v-for="s in surfaces"
@@ -472,10 +531,10 @@
         <!-- 水文产流历时折线图 (Hydrograph) -->
         <div class="hydrograph-card">
           <div class="hydro-header">
-            <h4>降雨-地表径流历时过程曲线（教学仿真，非现场实测）</h4>
+            <h4>降雨-地表径流历时过程曲线（{{ currentFocusGroupLabel }}）</h4>
             <div class="hydro-legend">
-              <span class="legend-item"><span class="dot current-dot"></span>当前选中地面 ({{ currentSurfaceName }})</span>
-              <span class="legend-item"><span class="dot ref-dot"></span>水泥基准 ({{ refPeakDischarge }} m³/s)</span>
+              <span class="legend-item"><span class="dot current-dot"></span>当前剖面焦点 ({{ currentSurfaceName }} · {{ calcTimeToPeak }}m达峰)</span>
+              <span class="legend-item"><span class="dot ref-dot"></span>同坡度水泥基准 ({{ refPeakDischarge }} m³/s · {{ refTimeToPeak }}m达峰)</span>
             </div>
           </div>
           <svg viewBox="0 0 500 130" class="hydro-svg" aria-label="水文过程曲线图">
@@ -511,7 +570,7 @@
             </div>
             <div class="metric-item">
               <span class="m-label">产流洪峰延缓</span>
-              <span class="m-val">+{{ Math.max(0, calcTimeToPeak - 8) }} 分钟</span>
+              <span class="m-val" data-testid="peak-delay-val">+{{ calcPeakDelayMinutes }} 分钟</span>
             </div>
             <div class="metric-item highlight">
               <span class="m-label">相对硬化削峰率</span>
@@ -524,10 +583,10 @@
 
     <!-- 探究思考与带着问题去讨论模块 -->
     <div class="inquiry-discussion-box">
-      <div class="discussion-badge">💬 探究思考与讨论 · 教学仿真，非现场实测</div>
+      <div class="discussion-badge">💬 探究思考与讨论</div>
       <h4>思考与讨论：地表铺装如何改变雨水去向？</h4>
       <p class="discussion-prompt">
-        保持雨量相同（例如 50 mm/h 暴雨、60 分钟），把地表从传统水泥/沥青（峰值 44.4 m³/s）改为天然林地草甸（峰值 11.7 m³/s）或海绵透水铺装（峰值 30.4 m³/s）后，地表径流与下渗发生了怎样的变化？在真实城市街区里，还有哪些因素（如地下管网顶托、连续降雨土壤饱和）是当前教学模型未计入的？
+        保持雨量相同（例如 50 mm/h 暴雨、60 分钟、坡度 2°），把地表从传统水泥/沥青（峰值 44.4 m³/s，6 分钟达峰）改为天然林地草甸（峰值 11.7 m³/s，36 分钟达峰，延缓 +30 分钟）或海绵透水铺装（峰值 30.4 m³/s，22 分钟达峰，延缓 +16 分钟）后，地表径流与下渗发生了怎样的变化？在真实城市街区里，还有哪些因素（如地下管网顶托、连续降雨土壤饱和）是当前教学模型未计入的？
       </p>
       <div class="discussion-actions">
         <router-link
@@ -575,7 +634,7 @@ const guessLabelMap = {
   sponge: '海绵透水铺装积水更严重'
 }
 
-const surface = ref('concrete')
+const surface = ref('vegetation')
 const surfaceA = ref('concrete')
 const surfaceB = ref('vegetation')
 const rainIntensity = ref(50) // mm/h
@@ -711,6 +770,19 @@ const comparisonCard = computed(() =>
   })
 )
 
+const currentFocusGroupLabel = computed(() => {
+  if (surface.value === surfaceB.value && surface.value === surfaceA.value) {
+    return `同步展示对照组 A/B：${currentMetrics.value.surfaceName}`
+  }
+  if (surface.value === surfaceB.value) {
+    return `当前展示对照组 B：${currentMetrics.value.surfaceName}`
+  }
+  if (surface.value === surfaceA.value) {
+    return `当前展示对照组 A：${currentMetrics.value.surfaceName}`
+  }
+  return `当前展示：${currentMetrics.value.surfaceName}`
+})
+
 const currentSurfaceName = computed(() => currentMetrics.value.surfaceName)
 const rainLevelName = computed(() => currentMetrics.value.rainLevelName)
 const slopeDesc = computed(() => currentMetrics.value.slopeDesc)
@@ -718,6 +790,8 @@ const calcTotalPrecipitation = computed(() => currentMetrics.value.totalPrecipit
 const calcInfiltrationRatio = computed(() => currentMetrics.value.infiltrationRatio)
 const calcRunoffCoeff = computed(() => currentMetrics.value.runoffCoeff)
 const calcTimeToPeak = computed(() => currentMetrics.value.timeToPeak)
+const refTimeToPeak = computed(() => currentMetrics.value.refTimeToPeak)
+const calcPeakDelayMinutes = computed(() => currentMetrics.value.peakDelayMinutes)
 const calcPeakDischarge = computed(() => currentMetrics.value.peakDischarge)
 const refPeakDischarge = computed(() => currentMetrics.value.refPeakDischarge)
 const calcPeakReductionRate = computed(() => currentMetrics.value.peakReductionRate)
@@ -745,7 +819,7 @@ const currentHydroPath = computed(() => {
 })
 
 const refHydroPath = computed(() => {
-  const x = 40 + (8 / 120) * 440
+  const x = 40 + (refTimeToPeak.value / 120) * 440
   const y = 110 - (refPeakDischarge.value / 110) * 85
   return `M 40 110 Q ${x * 0.7} ${y} ${x} ${y} T 470 108`
 })
@@ -803,8 +877,8 @@ function prepareCommunityDraft() {
       `我在「${c.modelName}」（**${c.disclaimer}**）中进行了控制变量对照实验：\n\n` +
       `【固定实验条件】${c.conditionsText}\n` +
       `我看到：\n` +
-      `- 对照组 A（${mA.surfaceName}）：下渗补给率 ${mA.infiltrationPercent}%，地表径流峰值 ${mA.peakDischarge} m³/s，达峰历时 ${mA.timeToPeak} 分钟，估算积水 ${mA.waterDepth} mm；\n` +
-      `- 对照组 B（${mB.surfaceName}）：下渗补给率 ${mB.infiltrationPercent}%，地表径流峰值 ${mB.peakDischarge} m³/s，达峰历时 ${mB.timeToPeak} 分钟，估算积水 ${mB.waterDepth} mm（相比 A 峰值相差 ${c.peakDiff} m³/s，削峰率 ${c.relativeReduction}%）。\n\n` +
+      `- 对照组 A（${mA.surfaceName}）：下渗补给率 ${mA.infiltrationPercent}%，地表径流峰值 ${mA.peakDischarge} m³/s，达峰历时 ${mA.timeToPeak} 分钟（较同条件硬化延缓 +${mA.peakDelayMinutes} 分钟），估算积水 ${mA.waterDepth} mm；\n` +
+      `- 对照组 B（${mB.surfaceName}）：下渗补给率 ${mB.infiltrationPercent}%，地表径流峰值 ${mB.peakDischarge} m³/s，达峰历时 ${mB.timeToPeak} 分钟（较同条件硬化延缓 +${mB.peakDelayMinutes} 分钟），估算积水 ${mB.waterDepth} mm（相比 A 峰值相差 ${c.peakDiff} m³/s，削峰率 ${c.relativeReduction}%，达峰相差 ${c.peakDelayDiff} 分钟）。\n\n` +
       `我猜 / 我的解释：${c.claim}\n\n` +
       `【适用边界与说明】：${c.limitations}\n` +
       `【可复现对照链接】：#${shareRelativeRoute.value}\n\n` +
@@ -854,13 +928,14 @@ function resetStandardCompare() {
 function fillSampleClaim() {
   const mA = metricsA.value
   const mB = metricsB.value
-  studentClaim.value = `【参考示例】保持 ${mA.rainIntensity} mm/h、${mA.rainDuration} 分钟暴雨不变，${mB.surfaceName}下渗率（${mB.infiltrationPercent}%）远高于${mA.surfaceName}（${mA.infiltrationPercent}%），使地表径流峰值从 ${mA.peakDischarge} m³/s 降至 ${mB.peakDischarge} m³/s。`
+  studentClaim.value = `【参考示例】保持 ${mA.rainIntensity} mm/h、${mA.rainDuration} 分钟暴雨不变，${mB.surfaceName}下渗率（${mB.infiltrationPercent}%）远高于${mA.surfaceName}（${mA.infiltrationPercent}%），使地表径流峰值从 ${mA.peakDischarge} m³/s 降至 ${mB.peakDischarge} m³/s，达峰时间从 ${mA.timeToPeak} 分钟延缓至 ${mB.timeToPeak} 分钟（延缓 +${mB.peakDelayMinutes} 分钟）。`
   saveFloodSessionState()
 }
 
 function syncShareQueryToUrl() {
   try {
-    maybeRouter?.replace?.({ query: { ...(maybeRoute?.query || {}), ...shareQueryObj.value } })
+    const { shared, ...localQuery } = shareQueryObj.value
+    maybeRouter?.replace?.({ query: { ...(maybeRoute?.query || {}), ...localQuery } })
   } catch {}
 }
 
@@ -886,21 +961,23 @@ async function copyShareLink() {
 
 function applyPreset(type) {
   if (type === 'traditional') {
-    surface.value = 'concrete'
     surfaceA.value = 'concrete'
+    surface.value = 'concrete'
     rainIntensity.value = 50
     rainDuration.value = 60
     slope.value = 2
   } else if (type === 'sponge') {
-    surface.value = 'sponge'
+    surfaceA.value = 'concrete'
     surfaceB.value = 'sponge'
+    surface.value = 'sponge'
     rainIntensity.value = 50
     rainDuration.value = 60
     slope.value = 2
     spongeCapacity.value = 25
   } else if (type === 'natural') {
-    surface.value = 'vegetation'
+    surfaceA.value = 'concrete'
     surfaceB.value = 'vegetation'
+    surface.value = 'vegetation'
     rainIntensity.value = 50
     rainDuration.value = 60
     slope.value = 2
@@ -915,6 +992,7 @@ function captureEvidence() {
     evidenceType: URBAN_FLOOD_MODEL_META.evidenceType,
     modelName: URBAN_FLOOD_MODEL_META.modelName,
     disclaimer: URBAN_FLOOD_MODEL_META.disclaimer,
+    formulaSummary: URBAN_FLOOD_MODEL_META.formulaSummary,
     limitations: URBAN_FLOOD_MODEL_META.limitations,
     shareUrl: shareUrl.value,
     params: {
@@ -924,12 +1002,13 @@ function captureEvidence() {
       降雨历时: `${rainDuration.value} 分钟`,
       地表坡度: `${slope.value}°`,
       下渗率设定: `${Math.round(calcInfiltrationRatio.value * 100)}%`,
+      达峰与延缓: `${calcTimeToPeak.value} 分钟（较同条件水泥基准 ${refTimeToPeak.value} 分钟延缓 +${calcPeakDelayMinutes.value} 分钟）`,
       证据类型: '教学仿真，非现场实测'
     },
     observation:
       `【仿真模型计算结果 · 教学仿真，非现场实测】设定总降水量 ${calcTotalPrecipitation.value}mm；` +
-      `当前地面（${currentSurfaceName.value}）产流历时约 ${calcTimeToPeak.value}分钟达峰，估算径流峰值流量 ${calcPeakDischarge.value} m³/s，路面积水估算约 ${calcWaterDepth.value}mm（${riskLevelName.value}），相对水泥硬化路面模型削峰率约 ${calcPeakReductionRate.value}%。` +
-      `并排对照：${c.groupA.surfaceName}峰值 ${c.groupA.peakDischarge} m³/s（下渗率 ${c.groupA.infiltrationPercent}%） vs ${c.groupB.surfaceName}峰值 ${c.groupB.peakDischarge} m³/s（下渗率 ${c.groupB.infiltrationPercent}%，相差 ${c.peakDiff} m³/s）。`,
+      `当前地面（${currentSurfaceName.value}）产流历时约 ${calcTimeToPeak.value}分钟达峰（较同条件硬化基准延缓 +${calcPeakDelayMinutes.value} 分钟），估算径流峰值流量 ${calcPeakDischarge.value} m³/s，路面积水估算约 ${calcWaterDepth.value}mm（${riskLevelName.value}），相对水泥硬化路面模型削峰率约 ${calcPeakReductionRate.value}%。` +
+      `并排对照：${c.groupA.surfaceName}峰值 ${c.groupA.peakDischarge} m³/s（下渗率 ${c.groupA.infiltrationPercent}%，${c.groupA.timeToPeak} 分钟达峰） vs ${c.groupB.surfaceName}峰值 ${c.groupB.peakDischarge} m³/s（下渗率 ${c.groupB.infiltrationPercent}%，${c.groupB.timeToPeak} 分钟达峰，相差 ${c.peakDiff} m³/s，延缓 +${c.groupB.peakDelayMinutes} 分钟）。`,
     inference:
       `【因果推断】${c.claim}（${URBAN_FLOOD_MODEL_META.limitations}）`,
     confidence: 4,
@@ -955,40 +1034,107 @@ function captureEvidence() {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 10px;
   border-bottom: 1px solid #1e293b;
-  padding-bottom: 14px;
+  padding-bottom: 10px;
+}
+
+.sim-title-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .sim-badge {
   display: inline-block;
   font-size: 11px;
-  color: #38bdf8;
-  font-family: ui-monospace, monospace;
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
 }
 
 .sim-title-group h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   color: #f8fafc;
 }
 
-.sim-meta-note {
-  margin: 4px 0 0;
+.sim-stage-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #132238;
+  border: 1px solid #264060;
+  border-radius: 10px;
+}
+
+.stage-toolbar-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.sim-meta-note code,
+.formula-details-body code {
+  background: rgba(56, 189, 248, 0.14);
+  color: #bae6fd;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+}
+
+.sim-formula-details {
+  margin-top: 6px;
+  max-width: 760px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.sim-formula-details summary {
   font-size: 12px;
-  color: #94a3b8;
-  max-width: 680px;
-  line-height: 1.45;
+  font-weight: 600;
+  color: #7dd3fc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.formula-details-body {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formula-details-body p {
+  margin: 0;
 }
 
 .sim-actions-top {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.preset-group-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
 }
 
 .btn-preset {
@@ -1005,6 +1151,12 @@ function captureEvidence() {
 
 .btn-preset:hover {
   background: #334155;
+  color: #ffffff;
+}
+
+.btn-preset.active {
+  background: rgba(2, 132, 199, 0.28);
+  border-color: #38bdf8;
   color: #ffffff;
 }
 
@@ -1273,10 +1425,43 @@ function captureEvidence() {
   color: #cbd5e1;
 }
 
+.compare-card-foot {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .compare-risk-line {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 12px;
   line-height: 1.45;
+  flex: 1 1 200px;
+}
+
+.btn-focus-stage {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-focus-stage:hover {
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.btn-focus-stage.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
+  color: #e0f2fe;
 }
 
 .btn-fill-claim {

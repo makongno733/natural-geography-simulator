@@ -135,7 +135,7 @@
     :mechanism="pedagogy.mechanism"
     :limitations="pedagogy.limitations"
     :real-data-lab="{ title: '黄土高原与南方红壤侵蚀卫星遥感对比', path: '/geo-labs/satellite', desc: '真实卫星影像看水土保持植被恢复' }"
-    :textbook-link="{ grade: '高中', book: '必修第一册', chapter: '第六章', section: '第二节' }"
+    :textbook-link="{ grade: '高中', book: '选择性必修2', chapter: '第二章', section: '第二节' }"
     practice-link="/practice"
     @reset="resetObservation"
   />

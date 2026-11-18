@@ -509,10 +509,10 @@ export const pedagogy = {
     desc: '从地面单点仪器走向卫星全球流场观测',
   },
   textbookLink: {
-    grade: '初中',
-    book: '七年级上册',
-    chapter: '第三章',
-    section: '第一节',
+    grade: '高中',
+    book: '必修第一册',
+    chapter: '第二章',
+    section: '第二节',
   },
 }
 

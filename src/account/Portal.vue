@@ -1,8 +1,8 @@
 <template>
   <div class="portal">
     <header class="header">
-      <a :href="`${siteOrigin}/#/`" class="brand"><span class="mark">◎</span><span>中学地理教学系统<small>ACCOUNT CENTER · 账号中心</small></span></a>
-      <a :href="`${siteOrigin}/#/`" class="back">返回地理课程 →</a>
+      <a :href="`${siteOrigin}/#/`" class="brand"><span class="mark">◎</span><span>地理共同体<small>ACCOUNT CENTER · 账号中心</small></span></a>
+      <a :href="`${siteOrigin}/#/`" class="back">返回地理共同体首页 →</a>
     </header>
     <main><AccountPage /></main>
   </div>

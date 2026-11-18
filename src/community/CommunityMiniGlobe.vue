@@ -36,9 +36,9 @@
             </svg>
           </div>
 
-          <!-- 东亚初始锚点微标签（置于圆形裁剪容器外层，避免窄屏圆弧裁切文字） -->
+          <!-- 东亚初始锚点与实时视角微标签（置于圆形裁剪容器外层，避免窄屏圆弧裁切文字） -->
           <span class="globe-pin-tag" aria-hidden="true">
-            📍 {{ isDragging ? '正在拨动观察方向' : '东亚 · 31°N, 112°E' }}
+            📍 {{ isDragging ? `正在拨动 · ${currentViewLabel}` : currentViewLabel }}
           </span>
         </div>
 
@@ -156,6 +156,7 @@ const activeTaskKey = ref('satellite')
 const ready3d = ref(false)
 const isFallback = ref(false)
 const isDragging = ref(false)
+const currentViewLabel = ref('东亚 · 31°N, 112°E')
 
 const prefersReducedMotion =
   typeof window !== 'undefined' &&
@@ -211,6 +212,9 @@ onMounted(async () => {
       },
       onRotationChange(autoRot) {
         if (!unmounted) rotating.value = autoRot
+      },
+      onViewChange(label) {
+        if (!unmounted && label) currentViewLabel.value = label
       }
     })
     if (!globeInstance && !unmounted) {

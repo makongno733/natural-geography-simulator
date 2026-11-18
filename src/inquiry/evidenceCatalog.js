@@ -11,17 +11,17 @@ export const STANDARD_EVIDENCES = [
     taskTitle: '城市内涝机制与海绵城市方案探究',
     title: '同一场暴雨下不同地表铺装（水泥沥青 vs 天然植被/海绵透水）径流峰值对照证据',
     category: '地表水文动力学仿真',
-    modelName: '城市暴雨产流与海绵下渗仿真模型（归一化推理公式与 Horton 下渗简化教学模型）',
+    modelName: '城市暴雨产流与海绵下渗教学仿真模型（推理公式与调蓄衰减简化模型）',
     evidenceType: '教学仿真对照结果（教学仿真，非现场实测）',
     disclaimer: '教学仿真，非现场实测',
     isRealData: false,
     conditions: '固定降雨强度 50 mm/h（暴雨）· 降雨历时 60 分钟 · 地表坡度 2° · 累积降水量 50 mm',
-    groupA: { label: '对照组 A · 传统水泥/沥青', metric: '径流峰值 44.4 m³/s · 下渗率 5%' },
-    groupB: { label: '对照组 B · 天然林地草甸', metric: '径流峰值 11.7 m³/s · 下渗率 75%' },
+    groupA: { label: '对照组 A · 传统水泥/沥青', metric: '径流峰值 44.4 m³/s · 下渗率 5% · 6 分钟达峰' },
+    groupB: { label: '对照组 B · 天然林地草甸', metric: '径流峰值 11.7 m³/s · 下渗率 75% · 36 分钟达峰（延缓 +30 分钟）' },
     facts:
-      '【教学仿真，非现场实测】在 50 mm/h、60 分钟暴雨（坡度 2°）下：对照组 A「传统水泥/沥青」下渗率 5%（径流系数 0.95），地表径流峰值 44.4 m³/s（6 分钟达峰，积水约 23 mm）；对照组 B「天然林地草甸」下渗率 75%（径流系数 0.25），地表径流峰值 11.7 m³/s（36 分钟达峰，积水 0 mm，相对削峰率 74%）。',
+      '【教学仿真，非现场实测】在 50 mm/h、60 分钟暴雨（坡度 2°）下：对照组 A「传统水泥/沥青」下渗率 5%（径流系数 0.95），地表径流峰值 44.4 m³/s（6 分钟达峰，积水约 23 mm）；对照组 B「天然林地草甸」下渗率 75%（径流系数 0.25），地表径流峰值 11.7 m³/s（36 分钟达峰，较同条件水泥基准延缓 +30 分钟，积水 0 mm，相对削峰率 74%）。',
     limitations:
-      '适用边界：基于匀质汇水区经验参数（Q = C·I·A 教学归一化公式，默认管网排水能力 25 mm/h），用于对比不同下渗条件下的产流趋势；未计入真实城市地下排水管网顶托、空间降雨不均与微地形汇流，不可替代现场实测。',
+      '适用边界：基于 A ≈ 3.06 km² 匀质教学汇水区（换算系数 A_eff = 0.85）与简化下渗/排水参数（默认管网排水能力 25 mm/h）推演不同地表对产流峰值与达峰时间的相对影响；未模拟真实管网复杂顶托与降雨空间不均，不可替代现场实测。',
     route: '/inquiry?task=urban-flood&mode=compare&shared=1&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation'
   },
   {
@@ -46,18 +46,18 @@ export const STANDARD_EVIDENCES = [
   {
     id: 'ev-satellite-east-asia',
     taskId: 'satellite-compare',
-    taskTitle: '东亚季风区多时相真实卫星遥感对比',
-    title: '中国东部（长江中下游 31°N, 112°E）相隔两周 NASA MODIS 真彩色卫星影像卷帘对比记录',
-    category: '真实对地观测遥感影像',
+    taskTitle: '多时相卫星遥感影像卷帘对比',
+    title: '多时相 NASA MODIS 真彩色卫星影像卷帘对比观测记录',
+    category: '对地观测遥感影像对比',
     modelName: 'NASA MODIS Terra Corrected Reflectance (True Color) · NASA GIBS 开放瓦片服务',
     evidenceType: '真实卫星遥感观测（NASA MODIS Terra 实测影像）',
     disclaimer: '真实卫星观测 · 需注意云层遮挡与分辨率边界',
     isRealData: true,
     conditions: '观测区域：中国东部 · 长江中下游湖区与云系（31.0°N, 112.0°E）· 对比日期：2024-06-01 vs 2024-06-15 · 空间分辨率：250m–1km',
-    groupA: { label: '左侧时段 · 2024-06-01', metric: '中国东部 (31°N, 112°E) · 基准期真彩色图层' },
-    groupB: { label: '右侧时段 · 2024-06-15', metric: '相隔 14 天同位置 · 梅雨季云系与水体对比' },
+    groupA: { label: '左侧基准期影像', metric: '基准日期 MODIS 真彩色图层' },
+    groupB: { label: '右侧对比期影像', metric: '同坐标对比日期 MODIS 真彩色图层' },
     facts:
-      '【真实卫星观测 · NASA MODIS Terra】对比同一地点（31.0°N, 112.0°E）2024-06-01 与 2024-06-15 两期真彩色卫星影像：可观察到东亚梅雨锋亮白色云带的位置推移，以及无云窗口内长江中下游湖泊水体与周边植被色调的阶段性差异。',
+      '已记录两期卫星影像的观测区域、对比日期与卷帘位置。请点击下方复现链接打开卷帘画布，在排除云层遮挡与轨道扫描缺口后，结合晴空窗口核对具体的水体、云系、植被或积雪差异。',
     limitations:
       '判读边界：光学遥感无法穿透厚云（亮白团块多为云层遮挡而非地表积雪），低纬度相邻轨道间可能存在黑色扫描缺口；定量水体面积反演需结合去云合成与地面水文站实测水位。',
     route: '/geo-labs/satellite?place=china&dateA=2024-06-01&dateB=2024-06-15&split=50&from=home-globe&shared=1'

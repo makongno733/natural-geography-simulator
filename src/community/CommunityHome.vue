@@ -7,7 +7,7 @@
           <p class="community-hero-badge">地理共同体 · 观察 · 实证 · 讨论</p>
           <h1 id="community-title">从一个真实地理问题，开始对照与讨论</h1>
 
-          <!-- 首屏核心实验直达卡（桌面与 390×844 手机首屏均可一键开始） -->
+          <!-- 首屏核心实验直达卡（桌面与 390×844 手机首屏均可一键开始；首页只讲清问题与行动，具体数值进入实验后探索） -->
           <div class="flagship-compare-card" role="region" aria-label="3分钟城市内涝对照实验入口">
             <div class="flagship-card-body">
               <div class="flagship-card-badges">
@@ -16,7 +16,7 @@
               </div>
               <h2 class="flagship-question">同一场雨，哪种路面积水更严重？</h2>
               <p class="flagship-desc">
-                固定 <strong>50 mm/h</strong> 暴雨、历时 <strong>60 分钟</strong>：并排切换「水泥/沥青（峰值 <strong>44.4 m³/s</strong>）」与「天然植被（<strong>11.7 m³/s</strong>）」，记下一句解释即可生成可复现证据卡。
+                保持同一场暴雨不变，并排切换水泥硬化路面、天然林地与海绵透水铺装，对比产流与下渗差异并生成可复现证据卡。
               </p>
             </div>
             <div class="flagship-card-cta">
@@ -33,36 +33,23 @@
           <form class="community-search baroque-search" role="search" aria-label="搜索社区讨论" @submit.prevent="runSearch">
             <label class="sr-only" for="community-query">搜索社区讨论</label>
             <input id="community-query" v-model="queryInput" type="search" placeholder="搜讨论：输入话题、问题或关键词" maxlength="100" />
-            <button class="baroque-btn baroque-btn-primary" type="submit">搜讨论</button>
+            <button class="baroque-btn baroque-btn-search" type="submit">搜讨论</button>
           </form>
 
-          <div class="community-hero-actions">
-            <a class="baroque-btn baroque-btn-primary" href="#compose" @click.prevent="focusCompose">发起讨论</a>
+          <div class="community-hero-actions" aria-label="次要快捷入口">
+            <a class="baroque-btn hero-secondary-btn" href="#compose" @click.prevent="focusCompose">✍️ 发起讨论</a>
             <button type="button" class="baroque-btn hero-global-search-btn" @click="triggerGlobalSearch">
               🔍 搜全站（实验 / 教材 / 数据）
             </button>
-            <router-link class="baroque-btn" to="/learning">📖 教材课程</router-link>
-            <router-link class="baroque-btn" to="/resources">资源馆</router-link>
-            <router-link class="baroque-btn" to="/groups">找社群</router-link>
-            <router-link v-if="isAdmin" class="baroque-btn" to="/community/manage">社区管理</router-link>
+            <router-link class="baroque-btn hero-secondary-btn" to="/learning">📖 教材课程</router-link>
+            <router-link class="baroque-btn hero-secondary-btn" to="/resources">📚 资源馆</router-link>
+            <router-link class="baroque-btn hero-secondary-btn" to="/groups">👥 找社群</router-link>
+            <router-link v-if="isAdmin" class="baroque-btn hero-secondary-btn" to="/community/manage">社区管理</router-link>
           </div>
         </div>
         <div class="community-hero-right">
           <CommunityMiniGlobe />
         </div>
-      </div>
-    </section>
-
-    <section class="community-wrap" aria-labelledby="fanxing-entry-title">
-      <div class="community-section-heading baroque-frame fanxing-entry">
-        <div>
-          <div class="fanxing-title-row">
-            <h2 id="fanxing-entry-title">繁星计划</h2>
-            <span class="fanxing-preview-badge">课题协作示例预览</span>
-          </div>
-          <p>浏览地理探究协作课题示例，了解研究招募、分工与阶段性成果展示流程（当前为课题示范预览）。</p>
-        </div>
-        <router-link class="baroque-btn" to="/fanxing">浏览课题示例 →</router-link>
       </div>
     </section>
 
@@ -188,6 +175,37 @@
               </div>
             </div>
           </article>
+
+          <!-- 当社区真实帖子较少（如初期 1-3 条）时，主动提供从实验/遥感生成证据卡发起新讨论的共建引导 -->
+          <aside
+            v-if="initialLoaded && !loading && posts.length > 0 && posts.length <= 3 && !searchQuery && !selectedCategory && !kind && !onlySolved"
+            class="early-community-guide baroque-frame"
+            aria-label="社区首批实证讨论共建引导"
+          >
+            <div class="ecg-head">
+              <span class="ecg-badge">🌱 实证讨论共建中 · 当前共 {{ posts.length }} 条公开讨论</span>
+            </div>
+            <p class="ecg-desc">
+              地理共同体倡导<strong>“带着观察证据去提问”</strong>。你可以先完成一次 3 分钟实验或卫星卷帘对比，将生成的结构化证据卡一键带入下方发帖框，成为首批实证话题发起人：
+            </p>
+            <div class="ecg-actions">
+              <router-link
+                to="/inquiry?task=urban-flood&mode=compare&rain=50&duration=60&slope=2&surfaceA=concrete&surfaceB=vegetation"
+                class="baroque-btn baroque-btn-sm baroque-btn-primary"
+              >
+                🌧 做城市内涝对照并带入证据卡 →
+              </router-link>
+              <router-link
+                to="/geo-labs/satellite?place=china&dateA=2024-06-01&dateB=2024-06-15"
+                class="baroque-btn baroque-btn-sm"
+              >
+                🛰 去卫星卷帘记录遥感观察 →
+              </router-link>
+              <a href="#compose" class="baroque-btn baroque-btn-sm" @click.prevent="focusCompose">
+                ✍️ 直接在下方发起新讨论 ↓
+              </a>
+            </div>
+          </aside>
         </div>
 
         <p v-if="error && posts.length" class="community-state community-error" role="alert">{{ error }}</p>
@@ -402,7 +420,7 @@
           <div class="side-link-list">
             <router-link to="/experiments" class="side-exp-link">
               <span>🔬 3D 虚拟地理实验室</span>
-              <small>29 项地理过程三维交互模型</small>
+              <small>{{ catalogStats.summaryText }}</small>
             </router-link>
             <router-link to="/resources" class="side-exp-link">
               <span>📚 开放地理科学数据馆</span>
@@ -420,6 +438,20 @@
         </section>
       </aside>
     </div>
+
+    <!-- 繁星计划（置于真实讨论列表之后，明确标注为课题协作示例预览，避免首次访问者误以为已是正式活跃招募项目） -->
+    <section class="community-wrap" aria-labelledby="fanxing-entry-title">
+      <div class="community-section-heading baroque-frame fanxing-entry">
+        <div>
+          <div class="fanxing-title-row">
+            <h2 id="fanxing-entry-title">繁星计划</h2>
+            <span class="fanxing-preview-badge">课题协作示例预览 · 暂未开放正式招募</span>
+          </div>
+          <p>展示跨校地理探究课题的分工、文献整理与阶段性成果样板（当前为静态课题示范预览，供师生参考课题组织形式）。</p>
+        </div>
+        <router-link class="baroque-btn baroque-btn-sm" to="/fanxing">浏览课题示范样板 →</router-link>
+      </div>
+    </section>
 
     <!-- 地理学前沿热点聚合专栏 -->
     <section class="community-wrap hot-topics-bar baroque-frame" aria-labelledby="hot-topics-title">
@@ -530,8 +562,10 @@ import { mockCategories, mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS, renderGeoScholarlyText } from '../utils/mathFormula.js'
 import { STANDARD_EVIDENCES, getEvidenceById, resolveCommunityEvidence } from '../inquiry/evidenceCatalog.js'
+import { getExperimentCatalogStats } from '../experiments/catalog.js'
 import CommunityMiniGlobe from './CommunityMiniGlobe.vue'
 
+const catalogStats = getExperimentCatalogStats()
 const router = useRouter()
 const route = useRoute()
 const categories = ref([])
@@ -2445,6 +2479,63 @@ onBeforeUnmount(() => {
   margin-top: 8px;
 }
 
+.baroque-btn-search {
+  background: #144d5c;
+  color: #ffffff;
+  border-color: #1c6b7f;
+}
+
+.baroque-btn-search:hover {
+  background: #0f3b47;
+}
+
+.hero-secondary-btn {
+  background: rgba(255, 255, 255, 0.92);
+  color: #0e3846;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.hero-secondary-btn:hover {
+  background: #ffffff;
+  color: #09252e;
+}
+
+.early-community-guide {
+  margin-top: 14px;
+  padding: 16px 18px;
+  background: linear-gradient(145deg, #f4fbf9 0%, #edf6f8 100%);
+  border: 1px dashed rgba(15, 118, 110, 0.45);
+  border-radius: 14px;
+}
+
+.ecg-head {
+  margin-bottom: 6px;
+}
+
+.ecg-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f766e;
+  background: rgba(20, 184, 166, 0.14);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.ecg-desc {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1e3a4c;
+}
+
+.ecg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 @media (max-width: 860px) {
   .community-hero-inner {
     grid-template-columns: 1fr;
@@ -2462,76 +2553,76 @@ onBeforeUnmount(() => {
 
 @media (max-width: 560px) {
   .community-hero {
-    padding: 10px 0 12px;
-    margin-bottom: 12px;
+    padding: 12px 0 14px;
+    margin-bottom: 14px;
     border-radius: 0 0 22px 22px;
   }
   .community-hero-inner {
-    gap: 8px;
+    gap: 10px;
   }
   .community-hero-badge {
     margin-bottom: 4px;
-    font-size: 10px;
+    font-size: 11px;
   }
   .community-hero h1 {
-    font-size: 18.5px;
-    line-height: 1.22;
-    margin: 0 0 6px;
+    font-size: 20px;
+    line-height: 1.25;
+    margin: 0 0 8px;
   }
   .flagship-compare-card {
-    padding: 8px 10px;
-    margin: 0 0 6px;
-    gap: 6px;
+    padding: 10px 12px;
+    margin: 0 0 8px;
+    gap: 8px;
     border-radius: 12px;
   }
   .flagship-card-badges {
-    margin-bottom: 3px;
-    gap: 5px;
+    margin-bottom: 4px;
+    gap: 6px;
   }
   .flagship-tag-main,
   .flagship-tag-sim {
-    font-size: 10px;
-    padding: 1px 7px;
+    font-size: 11px;
+    padding: 2px 8px;
   }
   .flagship-question {
-    font-size: 15px;
-    margin-bottom: 2px;
+    font-size: 16px;
+    margin-bottom: 3px;
   }
   .flagship-desc {
-    font-size: 11.5px;
-    line-height: 1.35;
+    font-size: 12.5px;
+    line-height: 1.48;
   }
   .flagship-card-cta,
   .flagship-start-btn {
     width: 100%;
     text-align: center;
     justify-content: center;
-    padding: 6px 12px;
-    font-size: 12.5px;
-    min-height: 32px;
+    padding: 7px 14px;
+    font-size: 13.5px;
+    min-height: 36px;
   }
   .community-search {
-    margin-bottom: 6px;
-    padding: 3px;
+    margin-bottom: 8px;
+    padding: 4px;
     gap: 6px;
   }
   .community-search input {
-    min-height: 32px;
+    min-height: 34px;
     padding: 0 10px;
-    font-size: 12.5px;
+    font-size: 13px;
   }
   .community-search button {
-    padding: 4px 12px;
-    font-size: 12.5px;
-    min-height: 32px;
+    padding: 5px 12px;
+    font-size: 13px;
+    min-height: 34px;
   }
   .community-hero-actions {
-    gap: 5px;
+    gap: 6px;
   }
   .community-hero-actions .baroque-btn {
-    padding: 4px 9px;
-    font-size: 11.5px;
-    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    min-height: 32px;
   }
 }
 </style>

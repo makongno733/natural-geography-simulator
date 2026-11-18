@@ -2,10 +2,38 @@ import * as THREE from 'three'
 import { SceneActivity } from '../engine/core/SceneActivity.js'
 import earthTextureUrl from '../assets/geo-verified/blue-marble-bathymetry-july-2048.jpg?url'
 
-// 默认初始视角：聚焦东亚与中国季风区（约 31°N, 112°E），与 HomePlanetScene.focusChina 一致
+// 默认初始视角：聚焦东亚与中国季风区（约 31°N, 112°E）
+// 说明：Three.js SphereGeometry 纹理 u=0 对应 -180°W，u=0.5 (phi=PI) 对应 0° 经线，
+// 东经 112°E 对应 phi = PI + (112 * PI / 180) ≈ 5.096 rad；
+// 要使该经线正对 +Z 相机（phi + yaw = 5*PI/2），yaw = 3*PI/2 - lonRad ≈ 2.758 rad。
 export const EAST_ASIA_VIEW = {
-  yaw: 2.42,
-  pitch: 0.48
+  yaw: 2.75,
+  pitch: 0.34
+}
+
+/**
+ * 根据当前地球 yaw 旋转角计算正对相机中心的经度与地理分区标签，确保标签与画面洲陆始终一致
+ */
+export function resolveGlobeRegionLabel(currentYaw = EAST_ASIA_VIEW.yaw) {
+  const rawLonRad = (3 * Math.PI) / 2 - Number(currentYaw || 0)
+  let lonDeg = ((rawLonRad * 180) / Math.PI) % 360
+  if (lonDeg > 180) lonDeg -= 360
+  if (lonDeg <= -180) lonDeg += 360
+
+  if (lonDeg >= 82 && lonDeg <= 142) {
+    return '东亚 · 31°N, 112°E'
+  }
+  const lonText = `${Math.abs(Math.round(lonDeg))}°${lonDeg >= 0 ? 'E' : 'W'}`
+  if (lonDeg > 142 || lonDeg < -135) {
+    return `太平洋视角 · ${lonText}`
+  }
+  if (lonDeg >= -135 && lonDeg <= -30) {
+    return `美洲与东太平洋 · ${lonText}`
+  }
+  if (lonDeg > -30 && lonDeg < 45) {
+    return `欧洲与非洲视角 · ${lonText}`
+  }
+  return `南亚与印度洋 · ${lonText}`
 }
 
 /**
@@ -45,24 +73,24 @@ function createSynopticCloudTexture() {
     ctx.restore()
   }
 
-  // 1. 东亚季风锋面云带与西太平洋气旋云系（对应 31°N, 112°E–140°E 区域）
-  for (let i = 0; i < 42; i++) {
-    const t = i / 42
-    const x = 760 + t * 190 + (rand() - 0.5) * 22
-    const y = 185 - t * 38 + Math.sin(t * 5) * 8
-    drawCloudPuff(x % 1024, y, 26 + rand() * 22, 10 + rand() * 8, 0.36 + rand() * 0.2, -0.25)
+  // 1. 东亚季风锋面云带与西太平洋气旋云系（适度留出中国东部陆地晴空窗，保证东亚海岸线清晰可辨）
+  for (let i = 0; i < 36; i++) {
+    const t = i / 36
+    const x = 835 + t * 145 + (rand() - 0.5) * 18
+    const y = 188 - t * 34 + Math.sin(t * 5) * 7
+    drawCloudPuff(x % 1024, y, 22 + rand() * 18, 8 + rand() * 6, 0.24 + rand() * 0.15, -0.25)
   }
 
-  // 西太平洋气旋螺旋云团示意
-  const cx = 845
-  const cy = 205
+  // 西太平洋气旋螺旋云团示意（位于东经 135°E 以东洋面，不遮挡中国大陆轮廓）
+  const cx = 895
+  const cy = 212
   for (let arm = 0; arm < 3; arm++) {
-    for (let step = 0; step < 18; step++) {
-      const r = 6 + step * 2.4
+    for (let step = 0; step < 16; step++) {
+      const r = 6 + step * 2.2
       const theta = arm * ((Math.PI * 2) / 3) + step * 0.28
       const px = cx + Math.cos(theta) * r
       const py = cy + Math.sin(theta) * r * 0.8
-      drawCloudPuff(px, py, 10 + step * 0.6, 6 + step * 0.4, 0.38 - step * 0.015, theta)
+      drawCloudPuff(px % 1024, py, 9 + step * 0.5, 5 + step * 0.35, 0.32 - step * 0.014, theta)
     }
   }
 
@@ -70,7 +98,7 @@ function createSynopticCloudTexture() {
   for (let i = 0; i < 95; i++) {
     const x = rand() * 1024
     const y = 250 + Math.sin((x / 1024) * Math.PI * 4) * 14 + (rand() - 0.5) * 18
-    drawCloudPuff(x, y, 18 + rand() * 28, 8 + rand() * 10, 0.25 + rand() * 0.22, (rand() - 0.5) * 0.3)
+    drawCloudPuff(x, y, 18 + rand() * 28, 8 + rand() * 10, 0.22 + rand() * 0.18, (rand() - 0.5) * 0.3)
   }
 
   // 3. 南北半球中纬度西风带气旋锋面云带
@@ -78,7 +106,7 @@ function createSynopticCloudTexture() {
     for (let i = 0; i < 85; i++) {
       const x = rand() * 1024
       const y = baseLatY + Math.sin((x / 1024) * Math.PI * 6) * 20 + (rand() - 0.5) * 24
-      drawCloudPuff(x, y, 28 + rand() * 36, 9 + rand() * 11, 0.28 + rand() * 0.24, -0.35)
+      drawCloudPuff(x, y, 28 + rand() * 36, 9 + rand() * 11, 0.22 + rand() * 0.2, -0.35)
     }
   }
 
@@ -98,7 +126,8 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
     onReady = () => {},
     onFallback = () => {},
     onDragChange = () => {},
-    onRotationChange = () => {}
+    onRotationChange = () => {},
+    onViewChange = () => {}
   } = options
 
   if (!container || typeof window === 'undefined') {
@@ -224,33 +253,35 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
   rootGroup.add(atmoMesh)
 
   // 4. 东亚观测点（约 31°N, 112°E · 长江中下游/东亚季风区）脉冲标记环
+  // Three.js SphereGeometry UV 映射：u = (lon + 180) / 360 => phi = PI + lonRad
   const markerGroup = new THREE.Group()
   const latRad = (31 * Math.PI) / 180
   const lonRad = (112 * Math.PI) / 180
+  const phi = Math.PI + lonRad
   const rMarker = radius * 1.022
-  // Three.js SphereGeometry UV 映射关系
-  const mx = -rMarker * Math.cos(latRad) * Math.cos(lonRad)
+  const mx = -rMarker * Math.cos(latRad) * Math.cos(phi)
   const my = rMarker * Math.sin(latRad)
-  const mz = rMarker * Math.cos(latRad) * Math.sin(lonRad)
+  const mz = rMarker * Math.cos(latRad) * Math.sin(phi)
   markerGroup.position.set(mx, my, mz)
   markerGroup.lookAt(mx * 2, my * 2, mz * 2)
 
-  const dotGeo = new THREE.CircleGeometry(0.042, 24)
+  const dotGeo = new THREE.CircleGeometry(0.044, 24)
   const dotMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
   const dotMesh = new THREE.Mesh(dotGeo, dotMat)
 
-  const ringGeo = new THREE.RingGeometry(0.062, 0.092, 32)
+  const ringGeo = new THREE.RingGeometry(0.064, 0.096, 32)
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0xfde047,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.94,
     side: THREE.DoubleSide
   })
   const ringMesh = new THREE.Mesh(ringGeo, ringMat)
   markerGroup.add(dotMesh, ringMesh)
   earthMesh.add(markerGroup)
 
-  // 姿态与交互状态
+  // 姿态与交互状态：baseYaw 为巡航中心，默认围绕东亚（112°E 附近 ±14°）缓慢自转巡航，确保地球始终保持动态生命力且东亚大陆与标签不会失配
+  let baseYaw = EAST_ASIA_VIEW.yaw
   let yaw = EAST_ASIA_VIEW.yaw
   let pitch = EAST_ASIA_VIEW.pitch
   let targetYaw = yaw
@@ -261,6 +292,16 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
   let animFrameId = null
   let isLooping = false
   let pulseClock = 0
+  let cruiseClock = 0
+  let lastViewLabel = ''
+
+  function notifyViewLabel() {
+    const label = resolveGlobeRegionLabel(yaw)
+    if (label !== lastViewLabel) {
+      lastViewLabel = label
+      onViewChange(label, { yaw, pitch })
+    }
+  }
 
   function applyRotation() {
     earthMesh.rotation.y = yaw
@@ -268,6 +309,7 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
     if (cloudMesh) {
       cloudMesh.rotation.x = pitch * 0.92
     }
+    notifyViewLabel()
   }
   applyRotation()
 
@@ -324,6 +366,8 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
     lastY = e.clientY
     targetYaw += dx * 0.0085
     targetPitch = Math.max(-1.05, Math.min(1.05, targetPitch + dy * 0.0065))
+    baseYaw = targetYaw
+    cruiseClock = 0
     yaw = targetYaw
     pitch = targetPitch
     applyRotation()
@@ -370,7 +414,8 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
     pulseClock += dt
 
     if (autoRotating && !isDragging) {
-      targetYaw += dt * 0.16
+      cruiseClock += dt
+      targetYaw = baseYaw + Math.sin(cruiseClock * 0.42) * 0.22
       yaw += (targetYaw - yaw) * 0.18
       pitch += (targetPitch - pitch) * 0.18
       applyRotation()
@@ -381,7 +426,7 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
     }
 
     if (cloudMesh) {
-      cloudMesh.rotation.y = yaw + pulseClock * 0.032
+      cloudMesh.rotation.y = yaw + pulseClock * 0.036
     }
 
     // 东亚观测点呼吸脉冲
@@ -450,6 +495,8 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
       return autoRotating
     },
     resetToEastAsia() {
+      baseYaw = EAST_ASIA_VIEW.yaw
+      cruiseClock = 0
       targetYaw = EAST_ASIA_VIEW.yaw
       targetPitch = EAST_ASIA_VIEW.pitch
       yaw = EAST_ASIA_VIEW.yaw
@@ -464,7 +511,8 @@ export async function mountCommunityMiniGlobe(container, options = {}) {
         isLooping,
         isActive: activity.isActive,
         yaw: Math.round(yaw * 100) / 100,
-        pitch: Math.round(pitch * 100) / 100
+        pitch: Math.round(pitch * 100) / 100,
+        regionLabel: resolveGlobeRegionLabel(yaw)
       }
     },
     dispose() {

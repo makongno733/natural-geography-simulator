@@ -96,8 +96,8 @@
           :to="textbookRoute"
           class="connect-chip chip-textbook"
         >
-          <span class="chip-type">教材小节</span>
-          <span class="chip-title">{{ textbookLink.chapter }} · {{ textbookLink.section }}</span>
+          <span class="chip-type">教材小节 · {{ resolvedTextbookMeta.bookLabel }}</span>
+          <span class="chip-title">{{ resolvedTextbookMeta.sectionLabel }}</span>
           <span class="chip-arrow">→</span>
         </router-link>
 
@@ -126,6 +126,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { grades } from '../../textbook/data/index.js'
 
 const props = defineProps({
   theme: {
@@ -182,6 +183,22 @@ const badgeText = computed(() => {
     systems: '🌐 综合地理系统模拟',
   }
   return map[props.theme] || '🌐 地理教学模型'
+})
+
+const resolvedTextbookMeta = computed(() => {
+  if (!props.textbookLink) {
+    return { bookLabel: '', sectionLabel: '' }
+  }
+  const { grade = '高中', book = '必修第一册', chapter = '', section = '' } = props.textbookLink
+  const g = grades.find(x => x.id === grade)
+  const b = g?.books.find(x => x.id === book)
+  const c = b?.chapters.find(x => x.id === chapter)
+  const s = c?.sections.find(x => x.id === section)
+  const bookLabel = `${grade}${book}`
+  const sectionLabel = s?.title
+    ? `${chapter} · ${section}《${s.title}》`
+    : `${chapter} · ${section}`
+  return { bookLabel, sectionLabel }
 })
 
 const textbookRoute = computed(() => {

@@ -42,6 +42,18 @@ export function listExperiments() {
   return experiments
 }
 
+export function getExperimentCatalogStats() {
+  const total = experiments.length
+  const interactive3dCount = experiments.filter(item => item.kind === '3d').length
+  const tutorialCount = experiments.filter(item => item.kind === 'tutorial').length
+  return {
+    total,
+    interactive3dCount,
+    tutorialCount,
+    summaryText: `${total} 个实验与模型（${interactive3dCount} 个三维交互模型 · ${tutorialCount} 个动手实验教程）`
+  }
+}
+
 export function getExperiment(id) {
   return experiments.find(item => item.id === id) || null
 }

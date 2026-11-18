@@ -1,7 +1,7 @@
 <template>
-  <div class="student-workbench" role="main" aria-label="学生地理探究工作台">
-    <!-- 顶部状态栏与操作栏 -->
-    <div class="workbench-bar">
+  <div class="student-workbench" :class="{ 'is-focused-compare': isCompactCompareView }" role="main" aria-label="学生地理探究工作台">
+    <!-- 顶部状态栏与操作栏（聚焦 3 分钟实验视图下默认收起） -->
+    <div v-if="!isCompactCompareView" class="workbench-bar">
       <div class="bar-left">
         <span class="task-badge">{{ task.fieldName }}</span>
         <h2 class="task-title">{{ task.title }}</h2>
@@ -49,13 +49,13 @@
     </div>
 
     <!-- 课标与教学目标指引条 -->
-    <div class="standards-banner">
+    <div v-if="!isCompactCompareView" class="standards-banner">
       <span class="banner-kicker">🎯 课标契合点：</span>
       <p>{{ task.standardsAlignment[draft.gradeLevel] || task.standardsAlignment['高中'] }}</p>
     </div>
 
     <!-- 探究步骤导航标签 (Stepper) -->
-    <nav class="step-nav" aria-label="探究阶段导航">
+    <nav v-if="!isCompactCompareView" class="step-nav" aria-label="探究阶段导航">
       <button
         v-for="st in steps"
         :key="st.num"
@@ -187,8 +187,8 @@
     </section>
 
     <!-- 步骤三：动手仿真与证据链 -->
-    <section v-show="currentStep === 3" class="step-panel" aria-labelledby="step3-heading">
-      <div class="panel-intro">
+    <section v-show="currentStep === 3" class="step-panel" :class="{ 'compact-step-panel': isCompactCompareView }" aria-labelledby="step3-heading">
+      <div v-if="!isCompactCompareView" class="panel-intro">
         <span class="step-tag">第 3 步 · 动手仿真与实证记录（教学仿真，非现场实测）</span>
         <h3 id="step3-heading">在交互模型中生成对比证据</h3>
         <p class="intro-desc">
@@ -202,8 +202,9 @@
         @capture="onCaptureEvidence"
       />
 
-      <!-- 科学证据卡列表 -->
+      <!-- 科学证据卡列表（3分钟专注视图下仅在已捕获多组卡片后展示，完整工作台始终展示） -->
       <EvidenceCardList
+        v-if="!isCompactCompareView || (draft.evidenceCards && draft.evidenceCards.length > 0)"
         :cards="draft.evidenceCards"
         @remove="onRemoveCard"
         @update="onUpdateCard"
@@ -211,11 +212,11 @@
 
       <!-- 渐进式展开：完成第一个对照结果后，逐步进入变量设计、反例质证与完整报告/教师量规 -->
       <div class="step-footer-actions" style="flex-wrap: wrap; gap: 10px">
-        <button type="button" class="btn-prev" @click="currentStep = 2">← 补充变量设计（第 2 步）</button>
-        <button type="button" class="btn-next" @click="currentStep = 4">
+        <button type="button" class="btn-prev" @click="goToFullWorkbenchStep(2)">← 补充变量设计（第 2 步）</button>
+        <button type="button" class="btn-next" @click="goToFullWorkbenchStep(4)">
           下一步：因果解释与反例边界（第 4 步）→
         </button>
-        <button type="button" class="btn-prev" @click="currentStep = 6">
+        <button type="button" class="btn-prev" @click="goToFullWorkbenchStep(6)">
           直接查看完整报告与评价量规（第 6 步）→
         </button>
       </div>
@@ -427,8 +428,14 @@ const props = defineProps({
   task: {
     type: Object,
     required: true
+  },
+  focusedCompare: {
+    type: Boolean,
+    default: false
   }
 })
+
+const emit = defineEmits(['expand-full-workbench'])
 
 let maybeRoute = null
 try {
@@ -448,6 +455,15 @@ function resolveInitialStep(q) {
 const currentStep = ref(resolveInitialStep(maybeRoute?.query))
 const newControlledInput = ref('')
 const studentSelfScores = ref({})
+
+const isCompactCompareView = computed(() => {
+  return Boolean(props.focusedCompare && currentStep.value === 3)
+})
+
+function goToFullWorkbenchStep(stepNum) {
+  currentStep.value = stepNum
+  emit('expand-full-workbench')
+}
 
 if (maybeRoute) {
   watch(

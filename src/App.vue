@@ -6,15 +6,15 @@
     <header class="app-header">
       <div class="header-inner">
         <!-- 账号中心环境与主站的品牌链接 -->
-        <a v-if="isAccountHost" :href="`${siteOrigin}/#/`" class="brand" aria-label="返回地理教学系统">
+        <a v-if="isAccountHost" :href="`${siteOrigin}/#/`" class="brand" aria-label="返回地理共同体首页">
           <BrandMark />
           <div class="brand-text">
-            <span class="brand-name">中学地理教学系统</span>
-            <span class="brand-sub">账号服务</span>
+            <span class="brand-name">地理共同体</span>
+            <span class="brand-sub">账号中心</span>
           </div>
         </a>
 
-        <router-link v-else to="/" class="brand" aria-label="中学地理教学系统首页" @click="onBrandClick">
+        <router-link v-else to="/" class="brand" aria-label="地理共同体首页" @click="onBrandClick">
           <BrandMark ref="brandMark" />
           <div class="brand-text">
             <span class="brand-name">地理共同体</span>

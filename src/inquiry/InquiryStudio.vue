@@ -1,10 +1,41 @@
 <template>
   <div class="inquiry-studio-hub" role="main">
-    <!-- 探究中心顶部大导航 Hero -->
-    <header class="hub-hero">
+    <!-- 聚焦 3 分钟快速实验顶栏（当从首页“开始 3 分钟实验”或分享链接 mode=compare 进入时展示，避免首次进入被 5 个顶栏 Tab 与 6 步工作台淹没） -->
+    <header v-if="isFocusedCompareMode" class="focused-compare-header" aria-label="3分钟快速对照实验导航栏">
+      <div class="wide-container focused-compare-bar">
+        <div class="focused-bar-left">
+          <router-link to="/community" class="btn-back-community">← 返回首页</router-link>
+          <span class="focused-mode-pill">⏱ 3 分钟对照实验</span>
+          <strong class="focused-task-title">{{ activeTask.shortTitle }}：猜想 → 并排比较 → 解释 → 证据卡</strong>
+        </div>
+        <div class="focused-bar-right">
+          <button
+            type="button"
+            class="btn-expand-full-studio"
+            data-testid="expand-full-studio-btn"
+            @click="expandFullStudio"
+          >
+            🧭 展开完整 6 步探究工作台与教师量规 ▾
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 探究中心顶部大导航 Hero（完整工作台模式） -->
+    <header v-else class="hub-hero">
       <div class="wide-container">
         <div class="hero-content">
-          <p class="hero-kicker">地理创新探究中心</p>
+          <div class="hero-kicker-row">
+            <p class="hero-kicker">地理创新探究中心</p>
+            <button
+              v-if="hasCompareQuery && fullStudioExpanded"
+              type="button"
+              class="btn-collapse-to-compare"
+              @click="fullStudioExpanded = false"
+            >
+              ⏱ 收起为 3 分钟专注实验视图 ▴
+            </button>
+          </div>
           <h1 class="hero-title">从一张图、一个模型，<br>走向一个完整的科学解释。</h1>
           <p class="hero-lead">
             为什么同一场雨，有的路口积水，有的没有？先选两种地面，在模型里给它们相同的雨量，比较流走的水有多少。记下你看到的差别，再说它能支持什么解释。<br>
@@ -69,11 +100,11 @@
     </header>
 
     <!-- 主工作区容器 -->
-    <main class="wide-container hub-main-body">
+    <main class="wide-container hub-main-body" :class="{ 'is-focused-main': isFocusedCompareMode }">
       <!-- 1. 学生探究工作台 -->
       <section v-if="activeTab === 'workbench'" class="tab-view" aria-label="学生探究工作台">
-        <!-- 课题快捷切换条 -->
-        <div class="task-selector-strip">
+        <!-- 课题快捷切换条（仅在完整工作台模式下显示） -->
+        <div v-if="!isFocusedCompareMode" class="task-selector-strip">
           <span class="strip-label">当前探究课题：</span>
           <div class="task-pill-group">
             <button
@@ -93,7 +124,12 @@
           </button>
         </div>
 
-        <StudentWorkbench v-if="inquiryState.storageReady" :task="activeTask" />
+        <StudentWorkbench
+          v-if="inquiryState.storageReady"
+          :task="activeTask"
+          :focused-compare="isFocusedCompareMode"
+          @expand-full-workbench="expandFullStudio"
+        />
         <p v-else role="status">正在读取当前账号的本机探究草稿…</p>
       </section>
 
@@ -183,12 +219,30 @@ const router = maybeRouter || { replace: () => {} }
 const tasks = INQUIRY_TASKS
 const activeTab = ref('workbench')
 const currentTaskId = ref('urban-flood')
+const fullStudioExpanded = ref(false)
+
+const hasCompareQuery = computed(() => {
+  const q = route?.query || {}
+  return Boolean(
+    !q.tab &&
+    (q.mode === 'compare' || q.shared === '1' || q.surfaceA || q.surfaceB)
+  )
+})
+
+const isFocusedCompareMode = computed(() => {
+  return hasCompareQuery.value && !fullStudioExpanded.value && activeTab.value === 'workbench'
+})
+
+function expandFullStudio() {
+  fullStudioExpanded.value = true
+}
 
 onMounted(() => {
   initInquiryStore()
   // 支持 URL 参数同步 tab 与 task
   if (route?.query?.tab) {
     activeTab.value = route.query.tab
+    fullStudioExpanded.value = true
   }
   if (route?.query?.task && tasks.some(t => t.id === route.query.task)) {
     currentTaskId.value = route.query.task
@@ -199,7 +253,12 @@ onMounted(() => {
 if (maybeRoute) {
   watch(() => route.query, (q) => {
     if (!q) return
-    if (q.tab) activeTab.value = q.tab
+    if (q.tab) {
+      activeTab.value = q.tab
+      fullStudioExpanded.value = true
+    } else if (!q.mode && !q.shared && !q.surfaceA && !q.surfaceB) {
+      fullStudioExpanded.value = false
+    }
     if (q.task && tasks.some(t => t.id === q.task)) {
       currentTaskId.value = q.task
       inquiryState.activeTaskId = q.task
@@ -244,6 +303,93 @@ function loadExemplary() {
 .wide-container {
   width: min(100% - 48px, 1200px);
   margin-inline: auto;
+}
+
+.focused-compare-header {
+  background: #0f2735;
+  color: #f8fafc;
+  border-bottom: 1px solid #1e3a4c;
+  padding: 12px 0;
+}
+
+.focused-compare-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.focused-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-back-community {
+  display: inline-flex;
+  align-items: center;
+  color: #bae6fd;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(186, 230, 253, 0.25);
+}
+
+.btn-back-community:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.focused-mode-pill {
+  background: rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.focused-task-title {
+  font-size: 14px;
+  color: #f1f5f9;
+}
+
+.btn-expand-full-studio,
+.btn-collapse-to-compare {
+  background: rgba(14, 165, 233, 0.18);
+  color: #e0f2fe;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-expand-full-studio:hover,
+.btn-collapse-to-compare:hover {
+  background: rgba(14, 165, 233, 0.32);
+  color: #ffffff;
+}
+
+.hero-kicker-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.hero-kicker-row .hero-kicker {
+  margin: 0;
 }
 
 .hub-hero {

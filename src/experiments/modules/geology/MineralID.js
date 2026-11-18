@@ -400,9 +400,9 @@ export const pedagogy = {
   },
   textbookLink: {
     grade: '高中',
-    book: '必修第一册',
-    chapter: '第一章',
-    section: '第四节',
+    book: '选择性必修1',
+    chapter: '第二章',
+    section: '第一节',
   },
 }
 

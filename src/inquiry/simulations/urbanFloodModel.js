@@ -4,11 +4,13 @@
  */
 
 export const URBAN_FLOOD_MODEL_META = {
-  modelName: '城市暴雨产流与海绵下渗仿真模型（归一化推理公式与 Horton 下渗简化教学模型）',
+  modelName: '城市暴雨产流与海绵下渗教学仿真模型（推理公式与调蓄衰减简化模型）',
   evidenceType: '教学仿真对照结果（教学仿真，非现场实测）',
   disclaimer: '教学仿真，非现场实测',
+  formulaSummary:
+    'Q_p = C · I · A_eff · (1 + 0.05·S)，其中换算系数 A_eff = 0.85 m³·h/(s·mm)（对应标准教学汇水区面积 A ≈ 3.06 km²，由 0.278 × 3.06 换算为 m³/s），S 为坡度（°）；传统硬化与林地采用固定经验下渗率（5% 与 75%），海绵铺装采用随累积雨量与蓄水容量饱和衰减的简化下渗率（60% 基准，最低 18%），管网默认排水能力 25 mm/h。',
   limitations:
-    '适用边界：基于匀质汇水区经验参数（Q = C·I·A 归一化公式，默认管网排水能力 25 mm/h）推演不同下渗条件下的产流趋势；未计入真实城市地下管网复杂顶托、空间降雨不均与局部微地形汇水，不可替代现场水文实测。'
+    '适用边界：基于 A ≈ 3.06 km² 匀质教学汇水区（A_eff = 0.85）与简化下渗/排水参数（管网排水能力 25 mm/h）推演不同地表对产流峰值与达峰时间的相对影响；未模拟真实管网复杂顶托、降雨空间不均与完整 Horton 微分过程，不可替代现场水文实测。'
 }
 
 export const URBAN_FLOOD_SURFACES = [
@@ -70,6 +72,8 @@ export function computeUrbanFloodMetrics({
   const baseTime = validSurface === 'concrete' ? 8 : validSurface === 'sponge' ? 24 : 38
   const slopePenalty = (S - 1) * 2
   const timeToPeak = Math.max(5, Math.round(baseTime - slopePenalty))
+  const refTimeToPeak = Math.max(5, Math.round(8 - slopePenalty))
+  const peakDelayMinutes = Math.max(0, timeToPeak - refTimeToPeak)
 
   const peakRaw = (runoffCoeff * I * 0.85) * (1 + S * 0.05)
   const peakDischarge = Math.round(peakRaw * 10) / 10
@@ -119,7 +123,8 @@ export function computeUrbanFloodMetrics({
     runoffDepth: Math.round(runoffTotal * 10) / 10,
     infiltrationDepth: Math.round((totalPrecipitation * infiltrationRatio) * 10) / 10,
     timeToPeak,
-    peakDelayMinutes: Math.max(0, timeToPeak - 8),
+    refTimeToPeak,
+    peakDelayMinutes,
     peakDischarge,
     refPeakDischarge,
     peakReductionRate,
@@ -146,6 +151,7 @@ export function buildComparisonEvidenceCard({
   const mB = computeUrbanFloodMetrics({ surface: surfaceB, rainIntensity, rainDuration, slope, spongeCapacity })
 
   const peakDiff = Math.round(Math.abs(mA.peakDischarge - mB.peakDischarge) * 10) / 10
+  const peakDelayDiff = Math.abs(mB.timeToPeak - mA.timeToPeak)
   const higherSurface = mA.peakDischarge >= mB.peakDischarge ? mA : mB
   const lowerSurface = mA.peakDischarge >= mB.peakDischarge ? mB : mA
   const relativeReduction = higherSurface.peakDischarge > 0
@@ -153,7 +159,7 @@ export function buildComparisonEvidenceCard({
     : 0
 
   const defaultClaim =
-    `保持降雨强度 ${mA.rainIntensity} mm/h、历时 ${mA.rainDuration} 分钟、坡度 ${mA.slope}° 不变，将地面从「${mA.surfaceName}」切换为「${mB.surfaceName}」后，下渗补给率由 ${mA.infiltrationPercent}% 变为 ${mB.infiltrationPercent}%，地表径流峰值由 ${mA.peakDischarge} m³/s 变为 ${mB.peakDischarge} m³/s（相差 ${peakDiff} m³/s，削峰 ${relativeReduction}%），说明增加地面透水与土壤蓄水能显著削减并延缓暴雨洪峰。`
+    `保持降雨强度 ${mA.rainIntensity} mm/h、历时 ${mA.rainDuration} 分钟、坡度 ${mA.slope}° 不变，将地面从「${mA.surfaceName}」切换为「${mB.surfaceName}」后，下渗补给率由 ${mA.infiltrationPercent}% 变为 ${mB.infiltrationPercent}%，地表径流峰值由 ${mA.peakDischarge} m³/s 变为 ${mB.peakDischarge} m³/s（相差 ${peakDiff} m³/s，削峰 ${relativeReduction}%），达峰时间由 ${mA.timeToPeak} 分钟变为 ${mB.timeToPeak} 分钟（相差 ${peakDelayDiff} 分钟），说明增加地面透水与土壤蓄水能显著削减并延缓暴雨洪峰。`
 
   const finalClaim = (typeof claim === 'string' && claim.trim()) ? claim.trim().slice(0, 300) : defaultClaim
 
@@ -162,11 +168,13 @@ export function buildComparisonEvidenceCard({
     modelName: URBAN_FLOOD_MODEL_META.modelName,
     evidenceType: URBAN_FLOOD_MODEL_META.evidenceType,
     disclaimer: URBAN_FLOOD_MODEL_META.disclaimer,
+    formulaSummary: URBAN_FLOOD_MODEL_META.formulaSummary,
     limitations: URBAN_FLOOD_MODEL_META.limitations,
     conditionsText: `降雨强度 ${mA.rainIntensity} mm/h（${mA.rainLevelName}）· 降雨历时 ${mA.rainDuration} 分钟 · 地表坡度 ${mA.slope}°（${mA.slopeDesc}）· 累积雨量 ${mA.totalPrecipitation} mm`,
     groupA: mA,
     groupB: mB,
     peakDiff,
+    peakDelayDiff,
     relativeReduction,
     guess,
     claim: finalClaim,
@@ -174,10 +182,10 @@ export function buildComparisonEvidenceCard({
       模型名称: '城市暴雨产流与海绵下渗教学仿真模型',
       证据类型: URBAN_FLOOD_MODEL_META.evidenceType,
       固定条件: `${mA.rainIntensity} mm/h · ${mA.rainDuration} 分钟 · 坡度 ${mA.slope}°`,
-      [`对照组A（${mA.surfaceName}）`]: `径流峰值 ${mA.peakDischarge} m³/s · 下渗率 ${mA.infiltrationPercent}% · 达峰 ${mA.timeToPeak} 分钟 · 积水 ${mA.waterDepth} mm`,
-      [`对照组B（${mB.surfaceName}）`]: `径流峰值 ${mB.peakDischarge} m³/s · 下渗率 ${mB.infiltrationPercent}% · 达峰 ${mB.timeToPeak} 分钟 · 积水 ${mB.waterDepth} mm`
+      [`对照组A（${mA.surfaceName}）`]: `径流峰值 ${mA.peakDischarge} m³/s · 下渗率 ${mA.infiltrationPercent}% · 达峰 ${mA.timeToPeak} 分钟（较同条件硬化延缓 +${mA.peakDelayMinutes} 分钟） · 积水 ${mA.waterDepth} mm`,
+      [`对照组B（${mB.surfaceName}）`]: `径流峰值 ${mB.peakDischarge} m³/s · 下渗率 ${mB.infiltrationPercent}% · 达峰 ${mB.timeToPeak} 分钟（较同条件硬化延缓 +${mB.peakDelayMinutes} 分钟） · 积水 ${mB.waterDepth} mm`
     },
-    observation: `【教学仿真，非现场实测】固定降雨强度 ${mA.rainIntensity} mm/h、历时 ${mA.rainDuration} 分钟（总降水量 ${mA.totalPrecipitation} mm）、坡度 ${mA.slope}°：对照组 A「${mA.surfaceName}」下渗率 ${mA.infiltrationPercent}%，地表径流峰值 ${mA.peakDischarge} m³/s（${mA.timeToPeak} 分钟达峰，估算积水 ${mA.waterDepth} mm）；对照组 B「${mB.surfaceName}」下渗率 ${mB.infiltrationPercent}%，地表径流峰值 ${mB.peakDischarge} m³/s（${mB.timeToPeak} 分钟达峰，估算积水 ${mB.waterDepth} mm）。两组径流峰值相差 ${peakDiff} m³/s（相对削峰率 ${relativeReduction}%）。`,
+    observation: `【教学仿真，非现场实测】固定降雨强度 ${mA.rainIntensity} mm/h、历时 ${mA.rainDuration} 分钟（总降水量 ${mA.totalPrecipitation} mm）、坡度 ${mA.slope}°：对照组 A「${mA.surfaceName}」下渗率 ${mA.infiltrationPercent}%，地表径流峰值 ${mA.peakDischarge} m³/s（${mA.timeToPeak} 分钟达峰，较同条件硬化基准延缓 +${mA.peakDelayMinutes} 分钟，估算积水 ${mA.waterDepth} mm）；对照组 B「${mB.surfaceName}」下渗率 ${mB.infiltrationPercent}%，地表径流峰值 ${mB.peakDischarge} m³/s（${mB.timeToPeak} 分钟达峰，较同条件硬化基准延缓 +${mB.peakDelayMinutes} 分钟，估算积水 ${mB.waterDepth} mm）。两组径流峰值相差 ${peakDiff} m³/s（相对削峰率 ${relativeReduction}%），达峰时间相差 ${peakDelayDiff} 分钟。`,
     inference: `【我的解释】${finalClaim}（${URBAN_FLOOD_MODEL_META.limitations}）`,
     confidence: 4,
     source: `${URBAN_FLOOD_MODEL_META.modelName}（${URBAN_FLOOD_MODEL_META.disclaimer}）`,

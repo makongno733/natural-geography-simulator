@@ -152,7 +152,7 @@
     :mechanism="pedagogy.mechanism"
     :limitations="pedagogy.limitations"
     :real-data-lab="{ title: 'NASA 卫星热带气旋云系旋涡观测', path: '/geo-labs/satellite', desc: '真实台风逆时针旋转螺旋雨带' }"
-    :textbook-link="{ grade: '高中', book: '选择性必修1', chapter: '第三章', section: '第一节' }"
+    :textbook-link="{ grade: '高中', book: '选择性必修1', chapter: '第三章', section: '第二节' }"
     practice-link="/practice"
     @reset="resetObservation"
   />

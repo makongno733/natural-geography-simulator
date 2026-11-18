@@ -32,8 +32,8 @@
     <SpatialAnalysisTool />
     </section>
     <section id="model-index" class="section" aria-labelledby="models-title">
-      <h2 id="models-title">全部 {{ experiments.length }} 个实验与模型</h2>
-      <p class="index-intro">按主题查找站内已有内容，包含交互模型与动手教程。每个实验页还提供关联教材与相关实验。</p>
+      <h2 id="models-title">全部 {{ catalogStats.total }} 个实验与模型</h2>
+      <p class="index-intro">按主题查找站内已有内容：共 {{ catalogStats.interactive3dCount }} 个三维交互模型与 {{ catalogStats.tutorialCount }} 个动手实验教程。每个实验页还提供关联教材与相关实验。</p>
       <div class="model-groups">
         <section v-for="group in groups" :key="group.id" class="model-group" :aria-labelledby="`group-${group.id}`">
           <div class="group-heading"><h3 :id="`group-${group.id}`">{{ group.label }}</h3><span>{{ group.models.length }} 个</span></div>
@@ -49,10 +49,11 @@
   </section>
 </template>
 <script setup>
-import { listExperiments, getExperiment } from '../experiments/catalog.js'
+import { listExperiments, getExperiment, getExperimentCatalogStats } from '../experiments/catalog.js'
 import SpatialAnalysisTool from './SpatialAnalysisTool.vue'
 
 const experiments = listExperiments()
+const catalogStats = getExperimentCatalogStats()
 const groups = [
   ['systems', '地球与人地系统'], ['meteorology', '大气与气候'],
   ['hydrology', '水循环与流水'], ['geology', '地质与地貌'],
