@@ -15,6 +15,7 @@ WORKDIR /app
 ENV NODE_ENV=production ACCOUNT_BIND=0.0.0.0 ACCOUNT_PORT=4100 ACCOUNT_DIST_PATH=/app/dist-account
 COPY --from=build --chown=node:node /app/package.json ./package.json
 COPY --from=build --chown=node:node /app/server ./server
+COPY --from=build --chown=node:node /app/src/fanxing/catalog.js ./src/fanxing/catalog.js
 COPY --from=build --chown=node:node /app/dist-account ./dist-account
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 RUN mkdir -p /var/lib/geo-account && chown node:node /var/lib/geo-account
