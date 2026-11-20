@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.mjs'
 import { database } from './database.mjs'
-import { allowedOrigins, mailReady } from './config.mjs'
+import { allowedOrigins, mailReady, requireEmailVerification } from './config.mjs'
 import { answerLessonQuestion } from './lesson-ai.mjs'
 import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 import { setupInquiryRoutes } from './inquiry.mjs'
@@ -83,7 +83,14 @@ app.get('/api/health', (_req, res) => {
     res.status(503).json({ status: 'error', db: 'unavailable' })
   }
 })
-app.get('/api/config', (_req, res) => res.json({ email: mailReady, ai: Boolean(process.env.DEEPSEEK_API_KEY) }))
+app.get('/api/config', (_req, res) => res.json({
+  email: true,
+  smtpReady: mailReady,
+  requireEmailVerification,
+  ai: Boolean(process.env.DEEPSEEK_API_KEY),
+  authProvider: 'Better Auth',
+  authProviderUrl: 'https://better-auth.com/'
+}))
 app.get('/api/geo-events', async (_req, res) => {
   res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   res.json(await getGeoEvents())

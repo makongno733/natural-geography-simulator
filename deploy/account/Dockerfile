@@ -21,4 +21,4 @@ RUN mkdir -p /var/lib/geo-account && chown node:node /var/lib/geo-account
 USER node
 EXPOSE 4100
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:4100/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
-CMD ["node", "server/index.mjs"]
+CMD ["sh", "-c", "node server/migrate.mjs && node server/index.mjs"]

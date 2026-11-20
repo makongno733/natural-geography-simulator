@@ -145,6 +145,7 @@
     <div v-if="!isAccountHost" class="site-legal-links" aria-label="网站合规、反馈与联系信息">
       <a href="./privacy.html">隐私政策</a>
       <a href="./terms.html">服务条款</a>
+      <a href="https://better-auth.com/" target="_blank" rel="noopener noreferrer">🔐 Better Auth 认证</a>
       <router-link to="/?compose=1&kind=question#compose">💬 问题反馈与内容纠错</router-link>
       <a href="mailto:makongno733@gmail.com?subject=%E3%80%90%E5%9C%B0%E7%90%86%E5%85%B1%E5%90%8C%E4%BD%93%E5%86%85%E5%AE%B9%E4%B8%BE%E6%8A%A5%E4%B8%8E%E5%8F%8D%E9%A6%88%E3%80%91">
         ✉ 违规举报与联系站主 (makongno733@gmail.com)
@@ -185,8 +186,7 @@ const guideTourRef = ref(null)
 
 const loginHref = computed(() => {
   const returnPath = route.fullPath && route.fullPath !== '/account' ? route.fullPath : '/'
-  const base = accountOrigin || ''
-  return `${base}/#/account?redirect=${encodeURIComponent(returnPath)}`
+  return `#/account?redirect=${encodeURIComponent(returnPath)}`
 })
 
 function rememberReturnPath() {

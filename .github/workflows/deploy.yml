@@ -17,6 +17,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+        env:
+          VITE_SITE_ORIGIN: https://geo.kongnoma279.com
+          VITE_ACCOUNT_ORIGIN: https://account.kongnoma279.com
       - name: Point the GitHub Pages mirror to the canonical community
         run: |
           cp deploy/github-pages-redirect.html dist/index.html

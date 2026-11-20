@@ -645,8 +645,7 @@ function triggerGlobalSearch() {
 }
 
 const loginComposeHref = computed(() => {
-  const base = accountOrigin || ''
-  return `${base}/#/account?redirect=${encodeURIComponent('/?compose=1#compose')}`
+  return `#/account?redirect=${encodeURIComponent('/?compose=1#compose')}`
 })
 
 function saveDraftToStorage() {

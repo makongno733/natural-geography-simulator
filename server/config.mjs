@@ -18,3 +18,23 @@ if (isProduction && (!authOrigin.startsWith('https://') || !siteOrigin.startsWit
 }
 
 export const mailReady = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.MAIL_FROM)
+export const requireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true' && mailReady
+
+function resolveSharedCookieDomain(urlA, urlB) {
+  try {
+    const hostA = new URL(urlA).hostname
+    const hostB = new URL(urlB).hostname
+    if (hostA === 'localhost' || hostB === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostA)) return ''
+    if (hostA === hostB) return hostA
+    const partsA = hostA.split('.')
+    const partsB = hostB.split('.')
+    if (partsA.length >= 2 && partsB.length >= 2) {
+      const rootA = partsA.slice(-2).join('.')
+      const rootB = partsB.slice(-2).join('.')
+      if (rootA === rootB) return `.${rootA}`
+    }
+  } catch {}
+  return ''
+}
+
+export const sharedCookieDomain = resolveSharedCookieDomain(authOrigin, siteOrigin)
