@@ -15,6 +15,7 @@ const { migrateFanxing, setupFanxingRoutes } = await import('../server/fanxing.m
 
 function createTestHarness() {
   const routes = new Map()
+  const sentEmails = []
   let currentUser = null
   let originAllowed = true
 
@@ -34,9 +35,13 @@ function createTestHarness() {
     req.accountUser = currentUser
     next()
   }
+  const mailSender = async ({ to, subject, text }) => {
+    sentEmails.push({ to, subject, text })
+    return true
+  }
 
   setupCommunityRoutes(app, { requireOrigin, requireUser, optionalUser })
-  setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUser })
+  setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUser, mailSender })
 
   function matchRoute(method, url) {
     const [pathname, search = ''] = url.split('?')
@@ -83,7 +88,7 @@ function createTestHarness() {
     }
   }
 
-  return { call }
+  return { call, sentEmails }
 }
 
 describe('Fanxing Research Application, Admin Review, Literature & Discussion-to-Project Workflow', () => {
@@ -140,10 +145,13 @@ describe('Fanxing Research Application, Admin Review, Literature & Discussion-to
     })
     expect(applyRes.status).toBe(201)
     expect(applyRes.payload.status).toBe('pending')
+    expect(applyRes.payload.adminNotified).toBe(true)
     expect(applyRes.payload.application.status).toBe('pending')
     expect(applyRes.payload.application.motivation).toContain('潘安湖')
     // 未审核通过前不暴露内部协作群号
     expect(applyRes.payload.application.collabChannel).toBeNull()
+    // 管理员邮箱收到新申请通知
+    expect(harness.sentEmails.some(m => m.to === 'admin@geo.edu.cn' && m.subject.includes('新科研申请'))).toBe(true)
   })
 
   it('3. allows admin to inspect pending application and approve it with QQ group & review note, unlocking collaboration channel for applicant', async () => {
@@ -172,6 +180,14 @@ describe('Fanxing Research Application, Admin Review, Literature & Discussion-to
     })
     expect(approveRes.status).toBe(200)
     expect(approveRes.payload.status).toBe('approved')
+    expect(approveRes.payload.emailNotified).toBe(true)
+    expect(approveRes.payload.notificationStatus).toBe('email_sent')
+    // 申请人注册邮箱收到含解锁 QQ 群与起步指南的审核通过通知邮件
+    expect(
+      harness.sentEmails.some(
+        m => m.to === 'student@geo.edu.cn' && m.subject.includes('审核通过') && m.text.includes('865432109')
+      )
+    ).toBe(true)
 
     // 申请人再次查询课题详情与个人申请列表时，自动看到已通过状态与解锁的 QQ 群
     const detailRes = await harness.call('GET', '/api/fanxing/projects/xuzhou-land-cover', { user: student })

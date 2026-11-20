@@ -1,4 +1,6 @@
 import { database } from './database.mjs'
+import { sendSystemMail } from './auth.mjs'
+import { siteOrigin } from './config.mjs'
 import { CURATED_GEO_PAPERS, INITIAL_FANXING_PROJECTS, searchCrossrefLiterature } from '../src/fanxing/catalog.js'
 
 const clean = (value, max) =>
@@ -69,6 +71,14 @@ export function migrateFanxing() {
     CREATE INDEX IF NOT EXISTS fanxing_app_user ON fanxing_application(user_id, updated_at DESC);
   `)
 
+  const appCols = database.prepare('PRAGMA table_info(fanxing_application)').all().map(c => c.name)
+  if (!appCols.includes('notified_at')) {
+    database.exec('ALTER TABLE fanxing_application ADD COLUMN notified_at TEXT DEFAULT NULL;')
+  }
+  if (!appCols.includes('notification_status')) {
+    database.exec("ALTER TABLE fanxing_application ADD COLUMN notification_status TEXT NOT NULL DEFAULT 'in_app';")
+  }
+
   const now = new Date().toISOString()
   const upsertProject = database.prepare(`
     INSERT OR IGNORE INTO fanxing_project (
@@ -135,7 +145,8 @@ function formatProjectRow(row, { currentUserId = null, callerIsAdmin = false } =
         SELECT id, project_id AS projectId, user_id AS userId, applicant_name AS applicantName,
                applicant_contact AS applicantContact, motivation, experience,
                preferred_task AS preferredTask, weekly_time AS weeklyTime,
-               status, review_note AS reviewNote, created_at AS createdAt, updated_at AS updatedAt
+               status, review_note AS reviewNote, notified_at AS notifiedAt,
+               notification_status AS notificationStatus, created_at AS createdAt, updated_at AS updatedAt
         FROM fanxing_application
         WHERE project_id = ? AND user_id = ?
       `)
@@ -144,6 +155,8 @@ function formatProjectRow(row, { currentUserId = null, callerIsAdmin = false } =
       const canSeeCollab = appRow.status === 'approved' || callerIsAdmin || row.creator_id === currentUserId
       myApplication = {
         ...appRow,
+        notifiedAt: appRow.notifiedAt || null,
+        notificationStatus: appRow.notificationStatus || 'in_app',
         collabChannel: canSeeCollab
           ? {
               qqGroup: row.collab_qq_group || '',
@@ -183,7 +196,10 @@ function formatProjectRow(row, { currentUserId = null, callerIsAdmin = false } =
   }
 }
 
-export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUser = (_req, _res, next) => next() }) {
+export function setupFanxingRoutes(
+  app,
+  { requireOrigin, requireUser, optionalUser = (_req, _res, next) => next(), mailSender = sendSystemMail }
+) {
   // 1. 获取所有繁星课题列表
   app.get('/api/fanxing/projects', optionalUser, (req, res) => {
     const currentUserId = req.accountUser?.id || null
@@ -240,8 +256,8 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
     })
   })
 
-  // 3. 提交或更新科研课题参与申请（真实写入 SQLite fanxing_application 表）
-  app.post('/api/fanxing/projects/:id/apply', requireOrigin, requireUser, (req, res) => {
+  // 3. 提交或更新科研课题参与申请（真实写入 SQLite fanxing_application 表，并向管理员发送通知邮件）
+  app.post('/api/fanxing/projects/:id/apply', requireOrigin, requireUser, async (req, res) => {
     const projectId = clean(req.params.id, 80)
     if (!projectId) return res.status(404).json({ error: '课题不存在' })
     const projectRow = database
@@ -310,6 +326,33 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
         )
     }
 
+    // 异步/安全通知管理员有新科研申请
+    let adminNotified = false
+    try {
+      const adminRows = database
+        .prepare("SELECT u.email FROM user_role r JOIN user u ON u.id = r.user_id WHERE r.role = 'admin'")
+        .all()
+      const adminEmails = [...new Set(adminRows.map(r => r.email).filter(Boolean))]
+      if (process.env.ADMIN_NOTIFY_EMAIL) adminEmails.push(process.env.ADMIN_NOTIFY_EMAIL)
+      for (const adminEmail of adminEmails) {
+        const sent = await mailSender({
+          to: adminEmail,
+          subject: `【繁星计划新科研申请】${req.accountUser.name || '新申请人'} 申请参与「${projectRow.title}」`,
+          text:
+            `收到新的繁星计划科研课题参与申请：\n\n` +
+            `申请课题：${projectRow.title} (${projectId})\n` +
+            `申请人：${req.accountUser.name || '地理探索者'} (${req.accountUser.email || ''})\n` +
+            `预留联系：${applicantContact || '未填写'}\n` +
+            `认领微任务：${preferredTask}\n` +
+            `每周可投入：${weeklyTime}\n` +
+            `参与动机：${motivation}\n` +
+            `相关经验：${experience}\n\n` +
+            `请前往管理后台审核并开放协作群号：${siteOrigin}/#/community/admin`
+        })
+        if (sent) adminNotified = true
+      }
+    } catch {}
+
     const updatedProject = formatProjectRow(projectRow, {
       currentUserId: req.accountUser.id,
       callerIsAdmin: isAdmin(req.accountUser.id)
@@ -317,6 +360,7 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
 
     res.status(201).json({
       status: 'pending',
+      adminNotified,
       application: updatedProject.myApplication
     })
   })
@@ -494,6 +538,7 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
                a.applicant_name AS applicantName, a.applicant_contact AS applicantContact,
                a.motivation, a.experience, a.preferred_task AS preferredTask,
                a.weekly_time AS weeklyTime, a.status, a.review_note AS reviewNote,
+               a.notified_at AS notifiedAt, a.notification_status AS notificationStatus,
                a.created_at AS createdAt, a.updated_at AS updatedAt,
                p.title AS projectTitle, p.collab_qq_group AS collabQqGroup,
                u.email AS applicantEmail
@@ -507,8 +552,8 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
     res.json({ applications: rows })
   })
 
-  // 7. 管理员后台：审核通过或拒绝课题申请，并可附带入群口令/联系方式说明
-  app.post('/api/fanxing/moderation/applications/:id', requireOrigin, requireUser, (req, res) => {
+  // 7. 管理员后台：审核通过或拒绝课题申请，附带入群口令/联系方式说明，并向申请人发送审核结果通知邮件
+  app.post('/api/fanxing/moderation/applications/:id', requireOrigin, requireUser, async (req, res) => {
     if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
     const id = positiveId(req.params.id)
     const action = req.body?.action
@@ -519,7 +564,7 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
     if (!appRow) return res.status(404).json({ error: '申请记录不存在' })
 
     const nextStatus = action === 'approve' ? 'approved' : 'rejected'
-    const reviewNote = typeof req.body?.reviewNote === 'string'
+    const reviewNote = typeof req.body?.reviewNote === 'string' && req.body.reviewNote.trim()
       ? req.body.reviewNote.trim().slice(0, 400)
       : nextStatus === 'approved'
         ? '审核已通过！欢迎按课题起步指南开展首项微任务，并在社区关联讨论区提交观察记录。'
@@ -543,7 +588,48 @@ export function setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUs
       }
     })()
 
-    res.json({ id, status: nextStatus, reviewNote })
+    const projectRow = database.prepare('SELECT * FROM fanxing_project WHERE id = ?').get(appRow.project_id)
+    const applicantUser = database.prepare('SELECT email, name FROM user WHERE id = ?').get(appRow.user_id)
+
+    let emailNotified = false
+    if (applicantUser?.email && projectRow) {
+      const subject =
+        nextStatus === 'approved'
+          ? `【繁星计划审核通过】欢迎加入「${projectRow.title}」科研课题组`
+          : `【繁星计划申请进度更新】关于「${projectRow.title}」的审核反馈`
+
+      const text =
+        nextStatus === 'approved'
+          ? `${applicantUser.name || appRow.applicant_name}，你好！\n\n` +
+            `你申请参与的地理共同体繁星计划课题「${projectRow.title}」已通过审核！\n\n` +
+            `• 认领微任务：${appRow.preferred_task}\n` +
+            `• 管理员审核留言：${reviewNote}\n` +
+            `• 课题协作 QQ 群 / 联系渠道：${projectRow.collab_qq_group}\n` +
+            `• 课题对接说明：${projectRow.collab_contact}\n\n` +
+            `【新手起步指南】\n${projectRow.onboarding_guide}\n\n` +
+            `你随时可以打开课题主页查看协作指引并提交首份观察记录：\n${siteOrigin}/#/fanxing/${projectRow.id}`
+          : `${applicantUser.name || appRow.applicant_name}，你好！\n\n` +
+            `感谢你申请参与繁星计划课题「${projectRow.title}」。\n` +
+            `当前审核状态：暂未通过\n` +
+            `管理员反馈：${reviewNote}\n\n` +
+            `你可以补充信息后重新提交申请，或浏览其他开放课题：\n${siteOrigin}/#/fanxing/${projectRow.id}`
+
+      emailNotified = Boolean(await mailSender({ to: applicantUser.email, subject, text }))
+    }
+
+    const notificationStatus = emailNotified ? 'email_sent' : 'in_app'
+    database
+      .prepare('UPDATE fanxing_application SET notified_at = ?, notification_status = ? WHERE id = ?')
+      .run(now, notificationStatus, id)
+
+    res.json({
+      id,
+      status: nextStatus,
+      reviewNote,
+      emailNotified,
+      notificationStatus,
+      notifiedAt: now
+    })
   })
 
   // 8. 学术文献检索接口（代理 Crossref REST API 并带精选回退）

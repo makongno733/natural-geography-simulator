@@ -28,9 +28,14 @@
               <small v-if="app.applicantEmail">（注册邮箱：{{ app.applicantEmail }}）</small>
               <small v-if="app.applicantContact"> · 预留联系：{{ app.applicantContact }}</small>
             </div>
-            <span class="status-badge" :class="`status-${app.status}`">
-              {{ app.status === 'approved' ? '✅ 已通过' : app.status === 'rejected' ? '❌ 已拒绝' : '⏳ 待审核' }}
-            </span>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <span v-if="app.notificationStatus === 'email_sent'" class="status-badge status-approved" title="已通过 Resend 发送邮件通知">
+                ✉ 已发邮件通知
+              </span>
+              <span class="status-badge" :class="`status-${app.status}`">
+                {{ app.status === 'approved' ? '✅ 已通过' : app.status === 'rejected' ? '❌ 已拒绝' : '⏳ 待审核' }}
+              </span>
+            </div>
           </div>
 
           <p class="app-project-line">
@@ -216,7 +221,7 @@ async function moderateFanxingApplication(id, action) {
   notice.value = ''
   try {
     const input = reviewInputs[id] || {}
-    await apiRequest(`/api/fanxing/moderation/applications/${id}`, {
+    const res = await apiRequest(`/api/fanxing/moderation/applications/${id}`, {
       method: 'POST',
       body: JSON.stringify({
         action,
@@ -224,7 +229,10 @@ async function moderateFanxingApplication(id, action) {
         collabQqGroup: input.collabQqGroup
       })
     })
-    notice.value = action === 'approve' ? `申请 #${id} 已通过，已向申请人开放协作渠道与群号。` : `申请 #${id} 已更新为未通过。`
+    const mailHint = res?.emailNotified ? '（已同步发送邮件通知至申请人注册邮箱）' : '（站内通知与群号解锁已生效）'
+    notice.value = action === 'approve'
+      ? `申请 #${id} 已通过，已向申请人开放协作渠道与群号${mailHint}。`
+      : `申请 #${id} 已更新为未通过${mailHint}。`
     await refresh()
   } catch (cause) {
     error.value = cause.message

@@ -10,6 +10,22 @@ const mailer = mailReady ? nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 }) : null
 
+export async function sendSystemMail({ to, subject, text }) {
+  if (!mailReady || !mailer || !to || !subject || !text) return false
+  try {
+    await mailer.sendMail({
+      from: process.env.MAIL_FROM,
+      to,
+      subject,
+      text
+    })
+    return true
+  } catch (error) {
+    console.error('System email send failed:', error?.message || error)
+    return false
+  }
+}
+
 export const auth = betterAuth({
   baseURL: authOrigin,
   secret: process.env.BETTER_AUTH_SECRET,

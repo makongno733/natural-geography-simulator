@@ -1,17 +1,19 @@
 import { database, migrateInquirySystem } from './database.mjs'
 import { logAudit } from './inquiry.mjs'
 
-const [userId, email] = process.argv.slice(2)
-if (!userId || !email) {
-  console.error('Usage: node server/provision-inquiry-admin.mjs <existing-user-id> <matching-email>')
+const args = process.argv.slice(2).filter(Boolean)
+if (args.length === 0) {
+  console.error('Usage: node server/provision-inquiry-admin.mjs <email> OR <existing-user-id> <matching-email>')
   process.exit(2)
 }
 
 migrateInquirySystem()
-const user = database.prepare('SELECT id, email FROM user WHERE id = ? AND lower(email) = lower(?)').get(userId, email)
-if (!user) throw new Error('No existing account matches both user ID and email')
-const existing = database.prepare("SELECT user_id FROM user_role WHERE role = 'admin' LIMIT 1").get()
-if (existing) throw new Error('An inquiry administrator already exists; use the existing administrator account')
+const user = args.length === 1
+  ? database.prepare('SELECT id, email FROM user WHERE lower(email) = lower(?)').get(args[0])
+  : database.prepare('SELECT id, email FROM user WHERE id = ? AND lower(email) = lower(?)').get(args[0], args[1])
+if (!user) throw new Error('No existing account matches the provided user ID / email')
+const existing = database.prepare("SELECT user_id FROM user_role WHERE role = 'admin' AND user_id != ? LIMIT 1").get(user.id)
+if (existing && args.length > 1) throw new Error('An inquiry administrator already exists; use the existing administrator account')
 
 database.transaction(() => {
   const now = new Date().toISOString()
