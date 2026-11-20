@@ -276,9 +276,10 @@ async function forgotPassword() {
   busy.value = true
   error.value = ''
   try {
+    const resetBase = (typeof window !== 'undefined' && window.location?.origin) || siteOrigin || accountOrigin
     const result = await authClient.requestPasswordReset({
       email: email.value,
-      redirectTo: `${accountOrigin}/?mode=reset#/account`
+      redirectTo: `${resetBase}/?mode=reset#/account`
     })
     if (result.error) throw result.error
     message.value = '如果此邮箱已注册，请查看密码重设邮件。'
@@ -290,13 +291,14 @@ async function forgotPassword() {
 }
 
 async function resetPassword() {
-  const token = new URLSearchParams(window.location.search).get('token')
+  const hashQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : ''
+  const token = new URLSearchParams(window.location.search).get('token') || new URLSearchParams(hashQuery).get('token')
   if (!token) { error.value = '重设链接无效'; return }
   busy.value = true
   try {
     const result = await authClient.resetPassword({ newPassword: password.value, token })
     if (result.error) throw result.error
-    history.replaceState(null, '', `${accountOrigin}/#/account`)
+    history.replaceState(null, '', `${window.location.pathname || '/'}#/account`)
     password.value = ''
     mode.value = 'signin'
     message.value = '密码已更新，请重新登录。'
