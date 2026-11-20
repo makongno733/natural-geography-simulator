@@ -82,6 +82,7 @@ const routes = [
   { path: '/community/post/:id', name: 'community-post', component: CommunityPost },
   { path: '/community/user/:id', name: 'user-profile', component: UserProfile },
   { path: '/community/manage', name: 'community-manage', component: CommunityAdmin },
+  { path: '/community/admin', name: 'community-admin-legacy', redirect: '/community/manage' },
   { path: '/learning', name: 'learning', component: TextbookHome },
   { path: '/inquiry', name: 'inquiry', component: InquiryStudio },
   { path: '/practice', name: 'practice', component: GeographyPractice },

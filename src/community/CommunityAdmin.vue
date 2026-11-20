@@ -288,27 +288,43 @@ onMounted(() => { void refresh().catch(cause => { error.value = cause.message })
 
 <style scoped>
 .admin-top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.community-back {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid #475569;
+  background: #f8fafc;
+  color: #0c3960;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.community-back:hover {
+  background: #e2effb;
+  border-color: #0f3d68;
+}
 .section-head-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.count-badge { font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #e7f1f8; color: #164e78; }
-.admin-sub-note { font-size: 13.5px; color: #546578; margin: 4px 0 14px; }
+.count-badge { font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #dcebf7; color: #0b2e59; border: 1px solid #3b719f; }
+.admin-sub-note { font-size: 13.5px; color: #334155; margin: 4px 0 14px; }
 .row-top-line { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
 .app-project-line { font-size: 14px; color: #1e293b; margin: 6px 0; }
 .review-controls {
   margin-top: 10px;
   padding: 12px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #94a3b8;
   border-radius: 10px;
   display: grid;
   gap: 8px;
 }
-.inline-field { display: grid; gap: 4px; font-size: 12.5px; font-weight: 600; color: #334155; }
-.inline-field input { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; font-size: 13px; }
+.inline-field { display: grid; gap: 4px; font-size: 12.5px; font-weight: 700; color: #1e293b; }
+.inline-field input { padding: 7px 10px; border: 1.5px solid #64748b; border-radius: 6px; font: inherit; font-size: 13px; }
 .action-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-.btn-approve { background: #145a32; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-.btn-reject { background: #922b21; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn-approve { background: #145a32; color: #ffffff !important; border: 1.5px solid #0b3b1e; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; }
+.btn-reject { background: #922b21; color: #ffffff !important; border: 1.5px solid #641e16; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; }
 .status-badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
-.status-approved { background: #d4efdf; color: #145a32; }
-.status-pending { background: #fcf3cf; color: #7e5109; }
-.status-rejected { background: #fadbd8; color: #922b21; }
+.status-approved { background: #d4efdf; color: #145a32; border: 1px solid #27ae60; }
+.status-pending { background: #fcf3cf; color: #7e5109; border: 1px solid #d4ac0d; }
+.status-rejected { background: #fadbd8; color: #922b21; border: 1px solid #c0392b; }
 </style>

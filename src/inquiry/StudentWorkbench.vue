@@ -707,26 +707,26 @@ function exportHtml() {
 
 .btn-tool {
   background: #f8fafc;
-  color: #334155;
-  border: 1px solid #cbd5e1;
+  color: #0f233e;
+  border: 1.5px solid #475569;
   border-radius: 6px;
   padding: 6px 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-tool:hover {
   background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  border-color: #0369a1;
+  color: #0c3960;
 }
 
 .btn-submit {
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
-  border: 0;
+  border: 1.5px solid #072138;
   border-radius: 6px;
   padding: 6px 16px;
   font-size: 12px;
@@ -736,7 +736,7 @@ function exportHtml() {
 }
 
 .btn-submit:hover {
-  background: #0369a1;
+  background: #075985;
 }
 
 .btn-submit.is-submitted {
@@ -1063,19 +1063,19 @@ function exportHtml() {
 }
 
 .btn-prev {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #475569;
+  background: #f8fafc;
+  border: 1.5px solid #475569;
+  color: #0f233e;
   padding: 8px 18px;
   border-radius: 6px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .btn-next {
-  background: #0284c7;
-  border: 0;
+  background: #0369a1;
+  border: 1.5px solid #072138;
   color: #ffffff;
   padding: 8px 20px;
   border-radius: 6px;
@@ -1096,20 +1096,20 @@ function exportHtml() {
 .btn-big-export,
 .btn-big-print {
   background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  color: #1e293b;
+  border: 1.5px solid #475569;
+  color: #0f233e;
   padding: 12px 20px;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .btn-big-submit {
   flex: 1;
   min-width: 240px;
-  background: #0284c7;
-  border: 0;
+  background: #0369a1;
+  border: 1.5px solid #072138;
   color: #ffffff;
   padding: 12px 24px;
   border-radius: 8px;

@@ -1,11 +1,39 @@
 /**
  * 繁星计划（Fanxing Citizen Science & Collaborative Geography Research）
  * 融合 GitHub 开源项目架构：
- * - hotosm/tasking-manager (BSD-2-Clause): 微任务拆解与角色进度管理
- * - zooniverse/Panoptes (Apache-2.0): 公众科学课题阶段、新手起步指南与贡献记录
- * - CrossRef/rest-api-doc (MIT / CC0): 真实学术文献 DOI 检索与核验
- * - CenterForOpenScience/osf.io (Apache-2.0): 课题、文献、开放数据集与社区实证讨论双向关联
+ * - hotosm/tasking-manager (BSD-2-Clause): 微任务拆解与角色分工
+ * - zooniverse/Panoptes (Apache-2.0): 公众科学课题阶段与新手起步指南
+ * - CrossRef/rest-api-doc (MIT / CC0): 真实学术出版物 DOI 元数据检索
+ * - CenterForOpenScience/osf.io (Apache-2.0): 课题、文献、开放数据集与社区实证讨论关联
  */
+
+export function normalizeAndValidateDoi(raw) {
+  const str = String(raw || '')
+    .trim()
+    .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '')
+    .trim()
+  if (!str) return null
+  return /^10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+$/i.test(str) ? str : null
+}
+
+const CROSSREF_TYPE_LABELS = {
+  'journal-article': '期刊论文',
+  'book-chapter': '图书章节',
+  book: '学术专著',
+  monograph: '学术专著',
+  'edited-book': '编著 / 论文集',
+  'reference-book': '工具书 / 参考书',
+  'proceedings-article': '会议论文',
+  'posted-content': '预印本 / 网络首发',
+  dataset: '科学数据集',
+  report: '研究报告',
+  erratum: '勘误 / 更正'
+}
+
+export function mapCrossrefWorkType(rawType) {
+  const key = String(rawType || '').trim().toLowerCase()
+  return CROSSREF_TYPE_LABELS[key] || 'DOI 注册出版物'
+}
 
 export const INITIAL_FANXING_PROJECTS = [
   {
@@ -27,24 +55,21 @@ export const INITIAL_FANXING_PROJECTS = [
         title: '潘安湖与九里湖塌陷区水体扩张边界多时相样点核查',
         role: '样点核查助手',
         difficulty: '入门 · 零基础可参与',
-        targetCount: 30,
-        completedCount: 18
+        plannedTarget: '规划任务：30 组抽样网格目视判读'
       },
       {
         id: 'xz-task-2',
         title: '城乡交错带建设用地与耕地转换不确定像元复核',
         role: '遥感复核助手',
         difficulty: '进阶 · 熟悉假彩色合成',
-        targetCount: 20,
-        completedCount: 9
+        plannedTarget: '规划任务：20 处存疑边界交叉复核'
       },
       {
         id: 'xz-task-3',
         title: 'CLCD 30m 土地覆盖数据集分类精度与季节误差文献摘录',
         role: '文献整理助手',
         difficulty: '入门 · 适合文献阅读',
-        targetCount: 10,
-        completedCount: 6
+        plannedTarget: '规划任务：整理 3 篇相关文献的方法与误差说明'
       }
     ],
     papers: [
@@ -55,7 +80,9 @@ export const INITIAL_FANXING_PROJECTS = [
         journal: 'Earth System Science Data (ESSD)',
         doi: '10.5194/essd-13-3907-2021',
         url: 'https://doi.org/10.5194/essd-13-3907-2021',
-        note: '真实开源数据集与论文（CC BY 4.0）：提供中国 1990—2019 年 30m 分辨率逐年土地覆盖分类方法与验证基准。'
+        workType: 'journal-article',
+        workTypeLabel: '期刊论文',
+        note: '精选参考论文与开源数据集（CC BY 4.0）：提供中国 1990—2019 年 30m 分辨率逐年土地覆盖分类方法与验证基准。'
       },
       {
         title: 'Fifty years of Landsat science and impacts',
@@ -64,7 +91,9 @@ export const INITIAL_FANXING_PROJECTS = [
         journal: 'Remote Sensing of Environment',
         doi: '10.1016/j.rse.2022.113195',
         url: 'https://doi.org/10.1016/j.rse.2022.113195',
-        note: '真实同行评议综述：系统梳理 Landsat 卫星半个世纪以来在地表覆盖监测与长时间序列变化检测中的科学规范。'
+        workType: 'journal-article',
+        workTypeLabel: '期刊论文',
+        note: '精选参考综述：系统梳理 Landsat 卫星半个世纪以来在地表覆盖监测与长时间序列变化检测中的科学规范。'
       }
     ],
     datasets: [
@@ -99,24 +128,21 @@ export const INITIAL_FANXING_PROJECTS = [
         title: '城市蓝绿空间“降温阈值（TVoE）”经典文献数据表摘录',
         role: '文献整理助手',
         difficulty: '入门 · 欢迎新手',
-        targetCount: 15,
-        completedCount: 11
+        plannedTarget: '规划任务：摘录 15 篇城市蓝绿空间降温文献的控制变量表'
       },
       {
         id: 'ch-task-2',
         title: '典型城市公园与邻近高密度街区多环缓冲区温差曲线抽样',
         role: '空间数据分析助手',
         difficulty: '进阶 · 熟悉缓冲区概念',
-        targetCount: 20,
-        completedCount: 8
+        plannedTarget: '规划任务：20 组公园与邻近街区缓冲区温差对比'
       },
       {
         id: 'ch-task-3',
         title: '基于 3D 热力环流实验室模拟绿地-建成区局地微风道并生成证据卡',
         role: '实验建模助手',
         difficulty: '入门 · 站内 3D 实验直接操作',
-        targetCount: 25,
-        completedCount: 14
+        plannedTarget: '规划任务：完成昼夜绿地-建成区风向对照并提交证据卡'
       }
     ],
     papers: [
@@ -127,7 +153,9 @@ export const INITIAL_FANXING_PROJECTS = [
         journal: 'Quarterly Journal of the Royal Meteorological Society',
         doi: '10.1002/qj.49710845502',
         url: 'https://doi.org/10.1002/qj.49710845502',
-        note: '城市气候学奠基性论文：从地表能量平衡方程阐明城市热岛效应形成的物理机制。'
+        workType: 'journal-article',
+        workTypeLabel: '期刊论文',
+        note: '城市气候学经典奠基文献：从地表能量平衡方程阐明城市热岛效应形成的物理机制。'
       },
       {
         title: 'Critical review on the cooling effect of urban blue-green space: A threshold-size perspective',
@@ -136,7 +164,9 @@ export const INITIAL_FANXING_PROJECTS = [
         journal: 'Urban Forestry & Urban Greening',
         doi: '10.1016/j.ufug.2020.126630',
         url: 'https://doi.org/10.1016/j.ufug.2020.126630',
-        note: '真实同行评议综述：提出城市蓝绿空间降温效率阈值（Threshold Value of Efficiency）框架与跨气候带对比方法。'
+        workType: 'journal-article',
+        workTypeLabel: '期刊论文',
+        note: '精选参考综述：提出城市蓝绿空间降温效率阈值（Threshold Value of Efficiency）框架与跨气候带对比方法。'
       }
     ],
     datasets: [
@@ -171,35 +201,34 @@ export const INITIAL_FANXING_PROJECTS = [
         title: '标准暴雨（50mm/h）与特大暴雨（100mm/h）下三种下垫面洪峰延缓对照实验',
         role: '水文模拟助手',
         difficulty: '入门 · 站内模拟器 3 分钟完成',
-        targetCount: 40,
-        completedCount: 27
+        plannedTarget: '规划任务：完成不同雨强与下垫面对照并提交可复现证据卡'
       },
       {
         id: 'sc-task-2',
         title: '坡度（0.5°–8°）对下渗累积量与峰值流量敏感性的正交测试',
         role: '参数率定助手',
         difficulty: '进阶 · 适合定量探究',
-        targetCount: 20,
-        completedCount: 12
+        plannedTarget: '规划任务：20 组不同坡度与历时参数组合测试'
       },
       {
         id: 'sc-task-3',
         title: '海绵城市低影响开发（LID）实测径流系数与模型假设边界核查',
         role: '文献互校助手',
         difficulty: '入门 · 文献阅读与对比',
-        targetCount: 15,
-        completedCount: 9
+        plannedTarget: '规划任务：核对公开发表文献中的实测径流系数范围'
       }
     ],
     papers: [
       {
         title: 'Opportunities and challenges of the Sponge City construction related to urban water issues in China',
-        authors: 'Jun Xia,iyu Zhang, Chesheng Zhan et al.',
+        authors: 'Jun Xia, Yuyu Zhang, Chesheng Zhan et al.',
         year: 2017,
         journal: 'Science China Earth Sciences (中国科学: 地球科学)',
         doi: '10.1007/s11430-016-0111-8',
         url: 'https://doi.org/10.1007/s11430-016-0111-8',
-        note: '夏军院士团队综述：系统阐述中国海绵城市建设的水文学基础、城市内涝成因与低影响开发（LID）评估方法。'
+        workType: 'journal-article',
+        workTypeLabel: '期刊论文',
+        note: '精选参考综述：系统阐述中国海绵城市建设的水文学基础、城市内涝成因与低影响开发（LID）评估方法。'
       },
       {
         title: 'SUDS, LID, BMPs, WSUD and more – The evolution and application of terminology surrounding urban drainage',
@@ -208,7 +237,9 @@ export const INITIAL_FANXING_PROJECTS = [
         journal: 'Urban Water Journal',
         doi: '10.1080/1573062X.2014.916314',
         url: 'https://doi.org/10.1080/1573062X.2014.916314',
-        note: '国际城市雨洪管理经典文献：厘清低影响开发（LID）与可持续城市排水系统的水文过程与设计准则。'
+        workType: 'journal-article',
+        workTypeLabel: '期刊论文',
+        note: '城市雨洪管理经典文献：厘清低影响开发（LID）与可持续城市排水系统的水文过程与设计准则。'
       }
     ],
     datasets: [
@@ -222,7 +253,7 @@ export const INITIAL_FANXING_PROJECTS = [
 ]
 
 /**
- * 精选地学前沿真实 DOI 论文库（当离线或首次打开文献检索时立即可看、可核验）
+ * 精选课题参考 DOI 文献库（固定经典文献目录，非自动更新流）
  */
 export const CURATED_GEO_PAPERS = [
   {
@@ -232,8 +263,11 @@ export const CURATED_GEO_PAPERS = [
     year: 2021,
     journal: 'Earth System Science Data',
     url: 'https://doi.org/10.5194/essd-13-3907-2021',
+    workType: 'journal-article',
+    workTypeLabel: '期刊论文（精选文献）',
     topic: '遥感与土地覆盖',
-    projectId: 'xuzhou-land-cover'
+    projectId: 'xuzhou-land-cover',
+    isCurated: true
   },
   {
     doi: '10.1016/j.ufug.2020.126630',
@@ -242,8 +276,11 @@ export const CURATED_GEO_PAPERS = [
     year: 2020,
     journal: 'Urban Forestry & Urban Greening',
     url: 'https://doi.org/10.1016/j.ufug.2020.126630',
+    workType: 'journal-article',
+    workTypeLabel: '期刊论文（精选文献）',
     topic: '城市热岛与蓝绿空间',
-    projectId: 'city-heat'
+    projectId: 'city-heat',
+    isCurated: true
   },
   {
     doi: '10.1007/s11430-016-0111-8',
@@ -252,8 +289,11 @@ export const CURATED_GEO_PAPERS = [
     year: 2017,
     journal: 'Science China Earth Sciences',
     url: 'https://doi.org/10.1007/s11430-016-0111-8',
+    workType: 'journal-article',
+    workTypeLabel: '期刊论文（精选文献）',
     topic: '城市内涝与海绵城市',
-    projectId: 'sponge-city-runoff'
+    projectId: 'sponge-city-runoff',
+    isCurated: true
   },
   {
     doi: '10.1016/j.rse.2022.113195',
@@ -262,20 +302,48 @@ export const CURATED_GEO_PAPERS = [
     year: 2022,
     journal: 'Remote Sensing of Environment',
     url: 'https://doi.org/10.1016/j.rse.2022.113195',
+    workType: 'journal-article',
+    workTypeLabel: '期刊论文（精选文献）',
     topic: '卫星遥感半世纪综述',
-    projectId: 'xuzhou-land-cover'
+    projectId: 'xuzhou-land-cover',
+    isCurated: true
   }
 ]
 
 /**
- * 调用开源 Crossref REST API (https://github.com/CrossRef/rest-api-doc) 实时检索真实 DOI 学术论文
- * 支持浏览器直连（CORS *）与服务端调用
+ * 调用开源 Crossref REST API (https://github.com/CrossRef/rest-api-doc) 实时检索 DOI 出版物元数据
+ * 真实反映文献类型（期刊论文/图书章节/会议论文/勘误等）、作者、年份与出版物名称，不将 DOI 等同于已人工审核
  */
-export async function searchCrossrefLiterature(query, { rows = 6, fetchImpl = fetch, signal } = {}) {
+export async function searchCrossrefLiterature(
+  query,
+  { rows = 6, sort = 'relevance', fromYear = null, onlyJournalArticles = false, fetchImpl = fetch, signal } = {}
+) {
   const cleanQuery = String(query || '').trim()
   if (!cleanQuery) return CURATED_GEO_PAPERS
 
-  const url = `https://api.crossref.org/works?query=${encodeURIComponent(cleanQuery)}&rows=${rows}&select=DOI,title,author,published,container-title,URL`
+  const params = new URLSearchParams({
+    query: cleanQuery,
+    rows: String(rows),
+    select: 'DOI,title,author,published,published-print,published-online,container-title,URL,type'
+  })
+
+  if (sort === 'newest') {
+    params.set('sort', 'published')
+    params.set('order', 'desc')
+  }
+
+  const filters = []
+  if (fromYear && /^\d{4}$/.test(String(fromYear))) {
+    filters.push(`from-pub-date:${fromYear}-01-01`)
+  }
+  if (onlyJournalArticles) {
+    filters.push('type:journal-article')
+  }
+  if (filters.length) {
+    params.set('filter', filters.join(','))
+  }
+
+  const url = `https://api.crossref.org/works?${params.toString()}`
   const response = await fetchImpl(url, {
     signal: signal || (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(7000) : undefined),
     headers: { Accept: 'application/json' }
@@ -286,28 +354,45 @@ export async function searchCrossrefLiterature(query, { rows = 6, fetchImpl = fe
 
   return items
     .map(item => {
-      const doi = String(item?.DOI || '').trim()
-      const title = Array.isArray(item?.title) && item.title[0] ? String(item.title[0]).replace(/<[^>]+>/g, '').trim() : ''
+      const doi = normalizeAndValidateDoi(item?.DOI)
+      const title = Array.isArray(item?.title) && item.title[0]
+        ? String(item.title[0]).replace(/<[^>]+>/g, '').trim()
+        : ''
       if (!doi || !title) return null
-      const authors = Array.isArray(item?.author)
+
+      const authors = Array.isArray(item?.author) && item.author.length
         ? item.author
-            .slice(0, 3)
+            .slice(0, 4)
             .map(a => [a.given, a.family].filter(Boolean).join(' ') || a.name || '')
             .filter(Boolean)
             .join(', ')
-        : '作者见原文'
-      const year = item?.published?.['date-parts']?.[0]?.[0] || null
+        : '原元数据未列出作者（请点击 DOI 核对）'
+
+      const dateParts =
+        item?.published?.['date-parts']?.[0] ||
+        item?.['published-print']?.['date-parts']?.[0] ||
+        item?.['published-online']?.['date-parts']?.[0] ||
+        []
+      const year = Number.isFinite(dateParts[0]) ? dateParts[0] : null
+
       const journal = Array.isArray(item?.['container-title']) && item['container-title'][0]
         ? String(item['container-title'][0]).trim()
-        : '学术期刊/会议录'
+        : '来源出版物见 DOI 页'
+
+      const workType = String(item?.type || 'unknown').toLowerCase()
+      const workTypeLabel = mapCrossrefWorkType(workType)
+
       return {
         doi,
         title,
-        authors: authors || '作者见原文',
+        authors,
         year,
         journal,
+        workType,
+        workTypeLabel,
         url: `https://doi.org/${doi}`,
-        source: 'Crossref DOI'
+        source: 'Crossref 实时检索',
+        isCurated: false
       }
     })
     .filter(Boolean)

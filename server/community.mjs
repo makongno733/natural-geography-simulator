@@ -13,7 +13,19 @@ const initialCategories = [
   ['life', '地理生活', '野外实习、摄影、旅行与见闻']
 ]
 
+function ensureTableColumns(tableName, definitions) {
+  const existing = new Set(
+    database.prepare(`PRAGMA table_info(${tableName})`).all().map(col => col.name)
+  )
+  for (const [colName, colDef] of definitions) {
+    if (!existing.has(colName)) {
+      database.exec(`ALTER TABLE ${tableName} ADD COLUMN ${colName} ${colDef};`)
+    }
+  }
+}
+
 export function migrateCommunity() {
+  // 1. 先创建基础表结构（不在列补齐前创建依赖新列的索引，防止旧库升级中途因缺列中断）
   database.exec(`
     CREATE TABLE IF NOT EXISTS community_category (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,9 +46,6 @@ export function migrateCommunity() {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
-    CREATE INDEX IF NOT EXISTS community_post_feed ON community_post(status, created_at DESC);
-    CREATE INDEX IF NOT EXISTS community_post_category ON community_post(category_id, status, created_at DESC);
-    CREATE INDEX IF NOT EXISTS community_post_author ON community_post(author_id, created_at DESC);
     CREATE TABLE IF NOT EXISTS community_reply (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       post_id INTEGER NOT NULL REFERENCES community_post(id),
@@ -46,8 +55,6 @@ export function migrateCommunity() {
       status TEXT NOT NULL DEFAULT 'published' CHECK(status IN ('published', 'hidden')),
       created_at TEXT NOT NULL
     );
-    CREATE INDEX IF NOT EXISTS community_reply_post ON community_reply(post_id, created_at);
-    CREATE INDEX IF NOT EXISTS community_reply_post_status ON community_reply(post_id, status);
     CREATE TABLE IF NOT EXISTS community_report (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       reporter_id TEXT NOT NULL REFERENCES user(id),
@@ -60,7 +67,140 @@ export function migrateCommunity() {
       resolved_by TEXT REFERENCES user(id),
       CHECK((post_id IS NOT NULL) != (reply_id IS NOT NULL))
     );
+    CREATE TABLE IF NOT EXISTS community_post_like (
+      post_id INTEGER NOT NULL REFERENCES community_post(id),
+      user_id TEXT NOT NULL REFERENCES user(id),
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (post_id, user_id)
+    );
+    CREATE TABLE IF NOT EXISTS community_post_bookmark (
+      post_id INTEGER NOT NULL REFERENCES community_post(id),
+      user_id TEXT NOT NULL REFERENCES user(id),
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (post_id, user_id)
+    );
+    CREATE TABLE IF NOT EXISTS user_profile (
+      user_id TEXT PRIMARY KEY REFERENCES user(id),
+      title TEXT NOT NULL DEFAULT '',
+      bio TEXT NOT NULL DEFAULT '',
+      institution TEXT NOT NULL DEFAULT '',
+      location TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS community_group (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      qq_number TEXT NOT NULL,
+      description TEXT NOT NULL,
+      tags TEXT NOT NULL DEFAULT '[]',
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS community_hot_topic (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      stats TEXT NOT NULL,
+      tag TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS community_resource (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      format TEXT NOT NULL,
+      scale TEXT NOT NULL,
+      description TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      license TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS geo_topic_sync (
+      source TEXT PRIMARY KEY,
+      fetched_at TEXT NOT NULL
+    );
+  `)
+
+  // 2. 幂等补齐所有旧表可能缺失的列（兼容任意历史版本的生产 SQLite 数据库）
+  ensureTableColumns('community_category', [
+    ['description', "TEXT NOT NULL DEFAULT ''"],
+    ['sort_order', 'INTEGER NOT NULL DEFAULT 0'],
+    ['active', 'INTEGER NOT NULL DEFAULT 1']
+  ])
+
+  ensureTableColumns('community_post', [
+    ['status', "TEXT NOT NULL DEFAULT 'published'"],
+    ['created_at', "TEXT NOT NULL DEFAULT ''"],
+    ['updated_at', "TEXT NOT NULL DEFAULT ''"],
+    ['accepted_reply_id', 'INTEGER REFERENCES community_reply(id)'],
+    ['tags', "TEXT NOT NULL DEFAULT '[]'"],
+    ['linked_experiment', 'TEXT DEFAULT NULL'],
+    ['evidence_card', 'TEXT DEFAULT NULL'],
+    ['compare_url', 'TEXT DEFAULT NULL'],
+    ['evidence_title', 'TEXT DEFAULT NULL'],
+    ['evidence_conditions', 'TEXT DEFAULT NULL'],
+    ['evidence_facts', 'TEXT DEFAULT NULL'],
+    ['linked_project_id', 'TEXT DEFAULT NULL'],
+    ['paper_doi', 'TEXT DEFAULT NULL'],
+    ['paper_title', 'TEXT DEFAULT NULL']
+  ])
+
+  ensureTableColumns('community_reply', [
+    ['parent_id', 'INTEGER REFERENCES community_reply(id)'],
+    ['status', "TEXT NOT NULL DEFAULT 'published'"],
+    ['created_at', "TEXT NOT NULL DEFAULT ''"]
+  ])
+
+  ensureTableColumns('community_report', [
+    ['status', "TEXT NOT NULL DEFAULT 'open'"],
+    ['created_at', "TEXT NOT NULL DEFAULT ''"],
+    ['resolved_at', 'TEXT'],
+    ['resolved_by', 'TEXT REFERENCES user(id)']
+  ])
+
+  ensureTableColumns('community_group', [
+    ['tags', "TEXT NOT NULL DEFAULT '[]'"],
+    ['sort_order', 'INTEGER NOT NULL DEFAULT 0'],
+    ['status', "TEXT NOT NULL DEFAULT 'pending'"],
+    ['submitted_by', 'TEXT REFERENCES user(id)'],
+    ['authorization_note', "TEXT NOT NULL DEFAULT ''"],
+    ['created_at', "TEXT NOT NULL DEFAULT ''"]
+  ])
+
+  ensureTableColumns('community_resource', [
+    ['sort_order', 'INTEGER NOT NULL DEFAULT 0'],
+    ['status', "TEXT NOT NULL DEFAULT 'approved'"],
+    ['submitted_by', 'TEXT REFERENCES user(id)'],
+    ['created_at', "TEXT NOT NULL DEFAULT ''"]
+  ])
+
+  ensureTableColumns('community_hot_topic', [
+    ['external_id', 'TEXT'],
+    ['source_url', 'TEXT'],
+    ['occurred_at', 'TEXT'],
+    ['fetched_at', 'TEXT'],
+    ['post_id', 'INTEGER REFERENCES community_post(id)']
+  ])
+
+  ensureTableColumns('geo_topic_sync', [
+    ['attempted_at', 'TEXT'],
+    ['status', "TEXT NOT NULL DEFAULT 'unknown'"],
+    ['record_count', 'INTEGER NOT NULL DEFAULT 0']
+  ])
+
+  // 3. 所有列确保存在后，创建索引与全文检索虚拟表/触发器
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS community_post_feed ON community_post(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS community_post_category ON community_post(category_id, status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS community_post_author ON community_post(author_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS community_reply_post ON community_reply(post_id, created_at);
+    CREATE INDEX IF NOT EXISTS community_reply_post_status ON community_reply(post_id, status);
     CREATE INDEX IF NOT EXISTS community_report_status ON community_report(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS community_like_user ON community_post_like(user_id);
+    CREATE INDEX IF NOT EXISTS community_bookmark_user ON community_post_bookmark(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS community_hot_topic_external ON community_hot_topic(external_id);
+
     CREATE VIRTUAL TABLE IF NOT EXISTS community_post_fts USING fts5(title, body, tokenize='trigram');
     CREATE TRIGGER IF NOT EXISTS community_post_fts_insert AFTER INSERT ON community_post BEGIN
       INSERT INTO community_post_fts(rowid, title, body) VALUES (new.id, new.title, new.body);
@@ -74,148 +214,7 @@ export function migrateCommunity() {
     END;
   `)
 
-  // 幂等升级 community_post 表字段（加法迁移，保证绝不损坏老数据）
-  const columns = database.prepare("PRAGMA table_info(community_post)").all().map(c => c.name)
-  if (!columns.includes('accepted_reply_id')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN accepted_reply_id INTEGER REFERENCES community_reply(id);")
-  }
-  if (!columns.includes('tags')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';")
-  }
-  if (!columns.includes('linked_experiment')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN linked_experiment TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('evidence_card')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN evidence_card TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('compare_url')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN compare_url TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('evidence_title')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN evidence_title TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('evidence_conditions')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN evidence_conditions TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('evidence_facts')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN evidence_facts TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('linked_project_id')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN linked_project_id TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('paper_doi')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN paper_doi TEXT DEFAULT NULL;")
-  }
-  if (!columns.includes('paper_title')) {
-    database.exec("ALTER TABLE community_post ADD COLUMN paper_title TEXT DEFAULT NULL;")
-  }
-
-  // 扩展表：点赞、收藏、用户资料、学术交流社群、热点讨论、资源共享库
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS community_post_like (
-      post_id INTEGER NOT NULL REFERENCES community_post(id),
-      user_id TEXT NOT NULL REFERENCES user(id),
-      created_at TEXT NOT NULL,
-      PRIMARY KEY (post_id, user_id)
-    );
-    CREATE INDEX IF NOT EXISTS community_like_user ON community_post_like(user_id);
-
-    CREATE TABLE IF NOT EXISTS community_post_bookmark (
-      post_id INTEGER NOT NULL REFERENCES community_post(id),
-      user_id TEXT NOT NULL REFERENCES user(id),
-      created_at TEXT NOT NULL,
-      PRIMARY KEY (post_id, user_id)
-    );
-    CREATE INDEX IF NOT EXISTS community_bookmark_user ON community_post_bookmark(user_id);
-
-    CREATE TABLE IF NOT EXISTS user_profile (
-      user_id TEXT PRIMARY KEY REFERENCES user(id),
-      title TEXT NOT NULL DEFAULT '',
-      bio TEXT NOT NULL DEFAULT '',
-      institution TEXT NOT NULL DEFAULT '',
-      location TEXT NOT NULL DEFAULT '',
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS community_group (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      category TEXT NOT NULL,
-      qq_number TEXT NOT NULL,
-      description TEXT NOT NULL,
-      tags TEXT NOT NULL DEFAULT '[]',
-      sort_order INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS community_hot_topic (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      category TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      stats TEXT NOT NULL,
-      tag TEXT NOT NULL,
-      sort_order INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS community_resource (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      category TEXT NOT NULL,
-      format TEXT NOT NULL,
-      scale TEXT NOT NULL,
-      description TEXT NOT NULL,
-      source_url TEXT NOT NULL,
-      license TEXT NOT NULL,
-      sort_order INTEGER NOT NULL DEFAULT 0
-    );
-  `)
-
-  // 加法升级 community_group 表支持公开授权审核流
-  const groupCols = database.prepare("PRAGMA table_info(community_group)").all().map(c => c.name)
-  if (!groupCols.includes('status')) {
-    database.exec("ALTER TABLE community_group ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';")
-  }
-  if (!groupCols.includes('submitted_by')) {
-    database.exec("ALTER TABLE community_group ADD COLUMN submitted_by TEXT REFERENCES user(id);")
-  }
-  if (!groupCols.includes('authorization_note')) {
-    database.exec("ALTER TABLE community_group ADD COLUMN authorization_note TEXT NOT NULL DEFAULT '';")
-  }
-  if (!groupCols.includes('created_at')) {
-    database.exec("ALTER TABLE community_group ADD COLUMN created_at TEXT NOT NULL DEFAULT '';")
-  }
-
-  const resCols = database.prepare("PRAGMA table_info(community_resource)").all().map(c => c.name)
-  if (!resCols.includes('status')) {
-    database.exec("ALTER TABLE community_resource ADD COLUMN status TEXT NOT NULL DEFAULT 'approved';")
-  }
-  if (!resCols.includes('submitted_by')) {
-    database.exec("ALTER TABLE community_resource ADD COLUMN submitted_by TEXT REFERENCES user(id);")
-  }
-  if (!resCols.includes('created_at')) {
-    database.exec("ALTER TABLE community_resource ADD COLUMN created_at TEXT NOT NULL DEFAULT '';")
-  }
-
-  const topicColumns = database.prepare('PRAGMA table_info(community_hot_topic)').all().map(column => column.name)
-  for (const [name, definition] of [
-    ['external_id', 'TEXT'], ['source_url', 'TEXT'], ['occurred_at', 'TEXT'],
-    ['fetched_at', 'TEXT'], ['post_id', 'INTEGER REFERENCES community_post(id)']
-  ]) {
-    if (!topicColumns.includes(name)) database.exec(`ALTER TABLE community_hot_topic ADD COLUMN ${name} ${definition}`)
-  }
-  database.exec(`
-    CREATE UNIQUE INDEX IF NOT EXISTS community_hot_topic_external ON community_hot_topic(external_id);
-    CREATE TABLE IF NOT EXISTS geo_topic_sync (source TEXT PRIMARY KEY, fetched_at TEXT NOT NULL);
-  `)
-  const syncColumns = database.prepare('PRAGMA table_info(geo_topic_sync)').all().map(column => column.name)
-  for (const [name, definition] of [
-    ['attempted_at', 'TEXT'], ['status', "TEXT NOT NULL DEFAULT 'unknown'"],
-    ['record_count', 'INTEGER NOT NULL DEFAULT 0']
-  ]) {
-    if (!syncColumns.includes(name)) database.exec(`ALTER TABLE geo_topic_sync ADD COLUMN ${name} ${definition}`)
-  }
-
-  // 预置默认分类
+  // 4. 预置默认分类
   const seedCat = database.prepare('INSERT OR IGNORE INTO community_category (slug, name, description, sort_order) VALUES (?, ?, ?, ?)')
   database.transaction(() => initialCategories.forEach(([slug, name, description], index) => seedCat.run(slug, name, description, index)))()
 
@@ -300,7 +299,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
   })
 
   // 3. 帖子列表（支持搜索、标签筛选、分类筛选、类型筛选、排序）
-  app.get('/api/community/posts', optionalUser, (req, res) => {
+  app.get('/api/community/posts', optionalUser, (req, res, next) => {
     const query = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
     const categoryId = req.query.category ? positiveId(req.query.category) : null
     if (req.query.category && !categoryId) return res.status(400).json({ error: '无效分区' })
@@ -360,8 +359,13 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
         liked: Boolean(p.liked)
       }))
       res.json({ posts, page })
-    } catch {
-      res.status(400).json({ error: '搜索词无法检索，请换一个关键词' })
+    } catch (error) {
+      const msg = String(error?.message || '')
+      if (query.length >= 3 && /fts5|syntax error|malformed MATCH/i.test(msg) && !/no such column|no such table/i.test(msg)) {
+        return res.status(400).json({ error: '搜索词无法检索，请换一个关键词' })
+      }
+      if (typeof next === 'function') return next(error)
+      res.status(500).json({ error: '讨论列表暂时无法读取' })
     }
   })
 

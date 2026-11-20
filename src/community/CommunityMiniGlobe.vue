@@ -413,9 +413,9 @@ onBeforeUnmount(() => {
 }
 
 .globe-ctrl-btn {
-  background: rgba(15, 39, 66, 0.75);
-  color: #e0f2fe;
-  border: 1px solid rgba(125, 211, 252, 0.35);
+  background-color: #0b2236;
+  color: #f0f9ff;
+  border: 1.5px solid #60a5fa;
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
@@ -427,17 +427,17 @@ onBeforeUnmount(() => {
 }
 
 .globe-ctrl-btn:hover {
-  background: rgba(2, 132, 199, 0.45);
-  border-color: #7dd3fc;
+  background-color: #0369a1;
+  border-color: #bae6fd;
 }
 
 .globe-fallback-pill {
   font-size: 11.5px;
-  color: #bae6fd;
-  background: rgba(15, 39, 66, 0.72);
+  color: #f0f9ff;
+  background-color: #0b2236;
   padding: 3px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(125, 211, 252, 0.35);
+  border: 1.5px solid #60a5fa;
   white-space: nowrap;
 }
 
@@ -456,9 +456,9 @@ onBeforeUnmount(() => {
 }
 
 .globe-tab-btn {
-  background: rgba(7, 29, 39, 0.6);
-  color: #bae6fd;
-  border: 1px solid rgba(125, 211, 252, 0.25);
+  background-color: #0b2236;
+  color: #e2f1ff;
+  border: 1.5px solid #60a5fa;
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
@@ -468,9 +468,14 @@ onBeforeUnmount(() => {
 }
 
 .globe-tab-btn.active {
-  background: rgba(2, 132, 199, 0.38);
+  background-color: #0369a1;
   color: #ffffff;
-  border-color: #38bdf8;
+  border: 2px solid #bae6fd;
+  box-shadow: inset 0 -2px 0 #fde047;
+}
+
+.globe-tab-btn.active::before {
+  content: "✓ ";
 }
 
 .globe-task-content {
@@ -494,20 +499,20 @@ onBeforeUnmount(() => {
 }
 
 .globe-nature-badge.is-real-data {
-  background: rgba(16, 185, 129, 0.22);
-  color: #a7f3d0;
-  border: 1px solid rgba(16, 185, 129, 0.45);
+  background-color: #064e3b;
+  color: #d1fae5;
+  border: 1px solid #34d399;
 }
 
 .globe-nature-badge.is-simulation {
-  background: rgba(245, 158, 11, 0.22);
-  color: #fde68a;
-  border: 1px solid rgba(245, 158, 11, 0.45);
+  background-color: #78350f;
+  color: #fef3c7;
+  border: 1px solid #fbbf24;
 }
 
 .globe-coord-label {
   font-size: 11.5px;
-  color: #93c5fd;
+  color: #bae6fd;
   font-family: ui-monospace, monospace;
 }
 
@@ -523,7 +528,7 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.5;
-  color: #cbd5e1;
+  color: #e2e8f0;
 }
 
 .globe-cta-row {
@@ -534,14 +539,15 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0284c7, #0d9488);
+  background-color: #0369a1;
+  background-image: linear-gradient(135deg, #0369a1, #0f766e);
   color: #ffffff;
   text-decoration: none;
   font-size: 13px;
   font-weight: 800;
   padding: 7px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(125, 211, 252, 0.55);
+  border: 1.5px solid #bae6fd;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }

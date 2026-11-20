@@ -1,7 +1,12 @@
 import { database } from './database.mjs'
 import { sendSystemMail } from './auth.mjs'
 import { siteOrigin } from './config.mjs'
-import { CURATED_GEO_PAPERS, INITIAL_FANXING_PROJECTS, searchCrossrefLiterature } from '../src/fanxing/catalog.js'
+import {
+  CURATED_GEO_PAPERS,
+  INITIAL_FANXING_PROJECTS,
+  normalizeAndValidateDoi,
+  searchCrossrefLiterature
+} from '../src/fanxing/catalog.js'
 
 const clean = (value, max) =>
   typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null
@@ -21,6 +26,17 @@ function safeParseJson(raw, fallback = []) {
   } catch {
     return fallback
   }
+}
+
+function sanitizeTasks(rawTasks) {
+  const list = Array.isArray(rawTasks) ? rawTasks : []
+  return list.map(t => ({
+    id: t.id || 'task-1',
+    title: t.title || '',
+    role: t.role || '课题协作者',
+    difficulty: t.difficulty || '入门 · 开放参与',
+    plannedTarget: t.plannedTarget || (t.targetCount ? `规划任务量：${t.targetCount} 份记录` : '规划任务：按课题指南提交观察或文献记录')
+  }))
 }
 
 export function migrateFanxing() {
@@ -80,7 +96,7 @@ export function migrateFanxing() {
   }
 
   const now = new Date().toISOString()
-  const upsertProject = database.prepare(`
+  const insertProject = database.prepare(`
     INSERT OR IGNORE INTO fanxing_project (
       id, title, field, phase, status, question, method, role, commitment, task,
       linked_lab_url, linked_lab_title, tasks_json, papers_json, datasets_json,
@@ -91,10 +107,17 @@ export function migrateFanxing() {
       @collabQqGroup, @collabContact, @onboardingGuide, @now, @now
     )
   `)
+  const syncSeededMeta = database.prepare(`
+    UPDATE fanxing_project
+    SET tasks_json = @tasksJson, papers_json = @papersJson
+    WHERE id = @id AND creator_id IS NULL
+  `)
 
   database.transaction(() => {
     for (const proj of INITIAL_FANXING_PROJECTS) {
-      upsertProject.run({
+      const tasksJson = JSON.stringify(sanitizeTasks(proj.tasks || []))
+      const papersJson = JSON.stringify(proj.papers || [])
+      insertProject.run({
         id: proj.id,
         title: proj.title,
         field: proj.field,
@@ -107,17 +130,19 @@ export function migrateFanxing() {
         task: proj.task,
         linkedLabUrl: proj.linkedLabUrl || '',
         linkedLabTitle: proj.linkedLabTitle || '',
-        tasksJson: JSON.stringify(proj.tasks || []),
-        papersJson: JSON.stringify(proj.papers || []),
+        tasksJson,
+        papersJson,
         datasetsJson: JSON.stringify(proj.datasets || []),
         collabQqGroup: process.env.FANXING_DEFAULT_QQ_GROUP || '请查看管理员审核留言或站内社区社群导航（/#/groups）',
         collabContact: '课题协调组（审核通过后可直接在课题关联讨论区提交第 1 份样点/文献记录，或按审核留言入群对接）',
         onboardingGuide:
           `1. 阅读本课题下方附带的真实 DOI 参考文献与研究方法；\n` +
           `2. 点击「打开课题配套实验室」完成首轮观察或文献摘录，生成可复现证据卡；\n` +
-          `3. 点击「围绕本课题发布讨论/提交阶段记录」，系统会自动挂载本课题标识并计入你的个人学术主页科研贡献。`,
+          `3. 点击「围绕本课题发布讨论/提交阶段记录」，系统会自动挂载本课题标识。`,
         now
       })
+      // 同步清理旧库中预设课题可能残留的虚构 completedCount
+      syncSeededMeta.run({ id: proj.id, tasksJson, papersJson })
     }
   })()
 }
@@ -134,8 +159,8 @@ function formatProjectRow(row, { currentUserId = null, callerIsAdmin = false } =
   let linkedDiscussionsCount = 0
   try {
     linkedDiscussionsCount = database
-      .prepare("SELECT COUNT(*) AS n FROM community_post WHERE linked_project_id = ? AND status = 'published'")
-      .get(row.id)?.n || 0
+      .prepare("SELECT COUNT(*) AS n FROM community_post WHERE (linked_project_id = ? OR id = ?) AND status = 'published'")
+      .get(row.id, row.source_post_id || -1)?.n || 0
   } catch {}
 
   let myApplication = null
@@ -182,7 +207,7 @@ function formatProjectRow(row, { currentUserId = null, callerIsAdmin = false } =
     task: row.task,
     linkedLabUrl: row.linked_lab_url || '',
     linkedLabTitle: row.linked_lab_title || '',
-    tasks: safeParseJson(row.tasks_json, []),
+    tasks: sanitizeTasks(safeParseJson(row.tasks_json, [])),
     papers: safeParseJson(row.papers_json, []),
     datasets: safeParseJson(row.datasets_json, []),
     sourcePostId: row.source_post_id || null,
@@ -211,7 +236,7 @@ export function setupFanxingRoutes(
     res.json({ projects })
   })
 
-  // 2. 获取单个课题详情（含关联社区讨论、已通过协作者名单、当前用户申请状态及解锁后的联系渠道）
+  // 2. 获取单个课题详情
   app.get('/api/fanxing/projects/:id', optionalUser, (req, res) => {
     const id = clean(req.params.id, 80)
     if (!id) return res.status(404).json({ error: '课题不存在' })
@@ -256,7 +281,7 @@ export function setupFanxingRoutes(
     })
   })
 
-  // 3. 提交或更新科研课题参与申请（真实写入 SQLite fanxing_application 表，并向管理员发送通知邮件）
+  // 3. 提交或更新科研课题参与申请（真实写入 SQLite，防重复发信，并向管理员发送通知邮件）
   app.post('/api/fanxing/projects/:id/apply', requireOrigin, requireUser, async (req, res) => {
     const projectId = clean(req.params.id, 80)
     if (!projectId) return res.status(404).json({ error: '课题不存在' })
@@ -278,7 +303,7 @@ export function setupFanxingRoutes(
     }
 
     const existing = database
-      .prepare('SELECT id, status FROM fanxing_application WHERE project_id = ? AND user_id = ?')
+      .prepare('SELECT * FROM fanxing_application WHERE project_id = ? AND user_id = ?')
       .get(projectId, req.accountUser.id)
 
     const now = new Date().toISOString()
@@ -286,6 +311,28 @@ export function setupFanxingRoutes(
       if (existing.status === 'approved') {
         return res.status(409).json({ error: '你的申请已审核通过，无需重复提交' })
       }
+      // 60 秒内相同内容防抖：不重复发送管理员邮件
+      const isRecentDuplicate =
+        existing.status === 'pending' &&
+        existing.motivation === motivation &&
+        existing.experience === experience &&
+        existing.preferred_task === preferredTask &&
+        existing.weekly_time === weeklyTime &&
+        Date.now() - Date.parse(existing.updated_at || '') < 60_000
+
+      if (isRecentDuplicate) {
+        const updatedProject = formatProjectRow(projectRow, {
+          currentUserId: req.accountUser.id,
+          callerIsAdmin: isAdmin(req.accountUser.id)
+        })
+        return res.status(200).json({
+          status: 'pending',
+          deduplicated: true,
+          adminNotified: false,
+          application: updatedProject.myApplication
+        })
+      }
+
       database
         .prepare(`
           UPDATE fanxing_application
@@ -326,7 +373,7 @@ export function setupFanxingRoutes(
         )
     }
 
-    // 异步/安全通知管理员有新科研申请
+    // 异步/安全通知管理员有新科研申请（邮件失败不影响申请保存）
     let adminNotified = false
     try {
       const adminRows = database
@@ -347,7 +394,7 @@ export function setupFanxingRoutes(
             `每周可投入：${weeklyTime}\n` +
             `参与动机：${motivation}\n` +
             `相关经验：${experience}\n\n` +
-            `请前往管理后台审核并开放协作群号：${siteOrigin}/#/community/admin`
+            `请前往管理后台审核并开放协作群号：${siteOrigin}/#/community/manage`
         })
         if (sent) adminNotified = true
       }
@@ -369,10 +416,11 @@ export function setupFanxingRoutes(
   app.get('/api/fanxing/my-applications', requireUser, (req, res) => {
     const rows = database
       .prepare(`
-        SELECT a.id, a.project_id AS projectId, a.applicant_name AS applicantName,
+        SELECT a.id, a.project_id AS projectId, a.user_id AS userId, a.applicant_name AS applicantName,
                a.applicant_contact AS applicantContact, a.motivation, a.experience,
                a.preferred_task AS preferredTask, a.weekly_time AS weeklyTime,
-               a.status, a.review_note AS reviewNote, a.created_at AS createdAt, a.updated_at AS updatedAt,
+               a.status, a.review_note AS reviewNote, a.notified_at AS notifiedAt,
+               a.notification_status AS notificationStatus, a.created_at AS createdAt, a.updated_at AS updatedAt,
                p.title AS projectTitle, p.field AS projectField, p.phase AS projectPhase,
                p.collab_qq_group AS collabQqGroup, p.collab_contact AS collabContact,
                p.onboarding_guide AS onboardingGuide
@@ -385,6 +433,7 @@ export function setupFanxingRoutes(
 
     const applications = rows.map(r => ({
       id: r.id,
+      userId: r.userId,
       projectId: r.projectId,
       projectTitle: r.projectTitle,
       projectField: r.projectField,
@@ -397,6 +446,8 @@ export function setupFanxingRoutes(
       weeklyTime: r.weeklyTime,
       status: r.status,
       reviewNote: r.reviewNote,
+      notifiedAt: r.notifiedAt || null,
+      notificationStatus: r.notificationStatus || 'in_app',
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       collabChannel:
@@ -413,7 +464,7 @@ export function setupFanxingRoutes(
     res.json({ applications })
   })
 
-  // 5. 发起新课题 / 将社区讨论转化为繁星课题并招募协作者
+  // 5. 发起新课题 / 引用公开社区讨论发起课题
   app.post('/api/fanxing/projects', requireOrigin, requireUser, (req, res) => {
     const title = clean(req.body?.title, 100)
     const field = clean(req.body?.field, 40) || '地理综合探究'
@@ -425,13 +476,42 @@ export function setupFanxingRoutes(
     const task = clean(req.body?.task, 400)
     const collabQqGroup = typeof req.body?.collabQqGroup === 'string' ? req.body.collabQqGroup.trim().slice(0, 80) : ''
     const collabContact = typeof req.body?.collabContact === 'string' ? req.body.collabContact.trim().slice(0, 160) : ''
-    const sourcePostId = req.body?.sourcePostId ? positiveId(req.body.sourcePostId) : null
-    const paperDoi = typeof req.body?.paperDoi === 'string' ? req.body.paperDoi.trim().slice(0, 120) : ''
-    const paperTitle = typeof req.body?.paperTitle === 'string' ? req.body.paperTitle.trim().slice(0, 200) : ''
 
     if (!title || !question || !method || !task) {
       return res.status(400).json({ error: '请完整填写课题名称、研究问题、研究方法与首项协作任务' })
     }
+
+    // 校验引用的来源帖子是否存在且为公开状态，且禁止越权篡改他人帖子的关联字段
+    let sourcePost = null
+    let sourcePostId = null
+    if (req.body?.sourcePostId !== undefined && req.body?.sourcePostId !== null && req.body?.sourcePostId !== '') {
+      sourcePostId = positiveId(req.body.sourcePostId)
+      if (!sourcePostId) {
+        return res.status(400).json({ error: '引用的来源讨论 ID 无效' })
+      }
+      sourcePost = database
+        .prepare("SELECT id, author_id, status FROM community_post WHERE id = ? AND status = 'published'")
+        .get(sourcePostId)
+      if (!sourcePost) {
+        return res.status(404).json({ error: '引用的来源讨论不存在或未公开' })
+      }
+    }
+
+    // 严格校验 DOI 格式，绝不伪造论文作者或发表年份
+    const rawDoi = typeof req.body?.paperDoi === 'string' ? req.body.paperDoi.trim() : ''
+    let validatedDoi = null
+    if (rawDoi) {
+      validatedDoi = normalizeAndValidateDoi(rawDoi)
+      if (!validatedDoi) {
+        return res.status(400).json({ error: 'DOI 格式无效，应以 10.xxxx/ 开头（例如 10.5194/essd-13-3907-2021）' })
+      }
+    }
+    const paperTitle = typeof req.body?.paperTitle === 'string' ? req.body.paperTitle.trim().slice(0, 200) : ''
+    const paperAuthors = typeof req.body?.paperAuthors === 'string' ? req.body.paperAuthors.trim().slice(0, 160) : ''
+    const paperJournal = typeof req.body?.paperJournal === 'string' ? req.body.paperJournal.trim().slice(0, 120) : ''
+    const paperYear = Number.isInteger(Number(req.body?.paperYear)) && Number(req.body.paperYear) >= 1900 && Number(req.body.paperYear) <= 2100
+      ? Number(req.body.paperYear)
+      : null
 
     const recent = database
       .prepare('SELECT COUNT(*) AS n FROM fanxing_project WHERE creator_id = ? AND created_at > ?')
@@ -449,24 +529,34 @@ export function setupFanxingRoutes(
         title: task,
         role,
         difficulty: '入门 · 开放协作',
-        targetCount: 15,
-        completedCount: 1
+        plannedTarget: '规划任务：开放认领与阶段观察记录提交'
       }
     ]
 
-    const papers = paperDoi
-      ? [
+    let papers = []
+    if (validatedDoi) {
+      const knownCurated = CURATED_GEO_PAPERS.find(p => p.doi.toLowerCase() === validatedDoi.toLowerCase())
+      if (knownCurated) {
+        papers = [knownCurated]
+      } else {
+        papers = [
           {
-            title: paperTitle || `关联参考文献 (${paperDoi})`,
-            authors: req.accountUser.name || '课题发起人推荐',
-            year: new Date().getFullYear(),
-            journal: 'DOI 核验文献',
-            doi: paperDoi.replace(/^https?:\/\/doi\.org\//i, ''),
-            url: paperDoi.startsWith('http') ? paperDoi : `https://doi.org/${paperDoi}`,
-            note: '由课题发起人关联的参考论文。'
+            title: paperTitle || `DOI 关联文献 (${validatedDoi})`,
+            authors: paperAuthors || '请点击 DOI 链接至原出版页核对作者',
+            year: paperYear,
+            journal: paperJournal || 'DOI 注册出版物（待核对原出版信息）',
+            workType: 'unknown',
+            workTypeLabel: 'DOI 关联出版物',
+            doi: validatedDoi,
+            url: `https://doi.org/${validatedDoi}`,
+            note: '由课题发起人提供的 DOI 文献线索，请点击链接至原出版平台核对全文与同行评议状态。'
           }
         ]
-      : []
+      }
+    }
+
+    const canUpdateSourcePost =
+      sourcePost && (sourcePost.author_id === req.accountUser.id || isAdmin(req.accountUser.id))
 
     database.transaction(() => {
       database
@@ -500,7 +590,6 @@ export function setupFanxingRoutes(
           now
         )
 
-      // 发起人自动成为首位已通过成员
       database
         .prepare(`
           INSERT OR IGNORE INTO fanxing_application (
@@ -511,7 +600,8 @@ export function setupFanxingRoutes(
         `)
         .run(id, req.accountUser.id, req.accountUser.name || '课题发起人', collabContact, task, req.accountUser.id, now, now)
 
-      if (sourcePostId) {
+      // 仅当发起人是原讨论作者本人或管理员时，才在原帖上回写 linked_project_id；他人引用仅保存在新课题的 source_post_id
+      if (canUpdateSourcePost) {
         try {
           database
             .prepare('UPDATE community_post SET linked_project_id = ? WHERE id = ?')
@@ -525,7 +615,8 @@ export function setupFanxingRoutes(
       project: formatProjectRow(createdRow, {
         currentUserId: req.accountUser.id,
         callerIsAdmin: isAdmin(req.accountUser.id)
-      })
+      }),
+      sourcePostLinked: Boolean(canUpdateSourcePost)
     })
   })
 
@@ -552,7 +643,7 @@ export function setupFanxingRoutes(
     res.json({ applications: rows })
   })
 
-  // 7. 管理员后台：审核通过或拒绝课题申请，附带入群口令/联系方式说明，并向申请人发送审核结果通知邮件
+  // 7. 管理员后台：审核通过或拒绝课题申请，幂等防重复发信，并向申请人发送审核结果通知邮件
   app.post('/api/fanxing/moderation/applications/:id', requireOrigin, requireUser, async (req, res) => {
     if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
     const id = positiveId(req.params.id)
@@ -570,6 +661,22 @@ export function setupFanxingRoutes(
         ? '审核已通过！欢迎按课题起步指南开展首项微任务，并在社区关联讨论区提交观察记录。'
         : '感谢申请，当前阶段名额或任务方向暂不匹配，欢迎先在社区参与公开讨论。'
     const collabQqGroup = typeof req.body?.collabQqGroup === 'string' ? req.body.collabQqGroup.trim().slice(0, 80) : ''
+
+    const currentProjectRow = database.prepare('SELECT * FROM fanxing_project WHERE id = ?').get(appRow.project_id)
+
+    // 幂等保护：若已处于相同审核状态、审核意见相同、群号未变且邮件已发送过，则不重复发邮件
+    const sameGroup = !collabQqGroup || collabQqGroup === (currentProjectRow?.collab_qq_group || '')
+    if (appRow.status === nextStatus && appRow.review_note === reviewNote && sameGroup && appRow.notification_status === 'email_sent') {
+      return res.json({
+        id,
+        status: nextStatus,
+        reviewNote,
+        emailNotified: false,
+        deduplicated: true,
+        notificationStatus: appRow.notification_status,
+        notifiedAt: appRow.notified_at
+      })
+    }
 
     const now = new Date().toISOString()
     database.transaction(() => {
@@ -614,7 +721,11 @@ export function setupFanxingRoutes(
             `管理员反馈：${reviewNote}\n\n` +
             `你可以补充信息后重新提交申请，或浏览其他开放课题：\n${siteOrigin}/#/fanxing/${projectRow.id}`
 
-      emailNotified = Boolean(await mailSender({ to: applicantUser.email, subject, text }))
+      try {
+        emailNotified = Boolean(await mailSender({ to: applicantUser.email, subject, text }))
+      } catch {
+        emailNotified = false
+      }
     }
 
     const notificationStatus = emailNotified ? 'email_sent' : 'in_app'
@@ -632,24 +743,28 @@ export function setupFanxingRoutes(
     })
   })
 
-  // 8. 学术文献检索接口（代理 Crossref REST API 并带精选回退）
+  // 8. 学术文献检索接口（代理 Crossref REST API，支持排序与年份过滤，并带精选回退）
   app.get('/api/fanxing/literature', async (req, res) => {
     const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 120) : ''
+    const sort = req.query.sort === 'newest' ? 'newest' : 'relevance'
+    const fromYear = typeof req.query.fromYear === 'string' && /^\d{4}$/.test(req.query.fromYear) ? req.query.fromYear : null
+    const onlyJournalArticles = req.query.onlyJournal === '1'
     if (!q) {
-      return res.json({ papers: CURATED_GEO_PAPERS, source: 'curated-doi-catalog' })
+      return res.json({ papers: CURATED_GEO_PAPERS, source: 'curated-doi-catalog', sort })
     }
     try {
-      const papers = await searchCrossrefLiterature(q, { rows: 6 })
-      res.json({ papers: papers.length ? papers : CURATED_GEO_PAPERS, source: 'crossref-api', query: q })
+      const papers = await searchCrossrefLiterature(q, { rows: 6, sort, fromYear, onlyJournalArticles })
+      res.json({ papers, source: 'crossref-api', query: q, sort, fromYear })
     } catch {
       const kw = q.toLowerCase()
       const filtered = CURATED_GEO_PAPERS.filter(
         p => p.title.toLowerCase().includes(kw) || p.topic.toLowerCase().includes(kw) || p.authors.toLowerCase().includes(kw)
       )
       res.json({
-        papers: filtered.length ? filtered : CURATED_GEO_PAPERS,
+        papers: filtered,
         source: 'curated-fallback',
-        query: q
+        query: q,
+        sort
       })
     }
   })

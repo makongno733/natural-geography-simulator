@@ -422,47 +422,48 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
-  background: var(--surface);
-  border: 1px solid var(--baroque-border-gold);
+  background: #f1f7fc;
+  border: 1.5px solid #3b719f;
   border-radius: var(--radius-sm);
-  color: var(--geo-ocean);
+  color: #0c3960;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   margin: 0 4px;
   transition: all 0.18s ease;
 }
 
 .nav-search-trigger:hover {
-  background: var(--geo-ocean-surface);
-  border-color: var(--baroque-bronze);
-  box-shadow: 0 2px 8px rgba(197, 160, 89, 0.2);
+  background: #e1effb;
+  border-color: #1a446c;
+  box-shadow: 0 2px 8px rgba(26, 68, 108, 0.2);
 }
 
 .nav-kbd {
   font-family: ui-monospace, monospace;
   font-size: 11px;
-  background: #f1f5f9;
-  border: 1px solid var(--border);
+  background: #ffffff;
+  border: 1px solid #64748b;
   border-radius: 3px;
   padding: 1px 4px;
-  color: var(--text-muted);
+  color: #1e293b;
+  font-weight: 700;
 }
 
 .is-dark-nav .nav-search-trigger {
-  background: rgba(255, 255, 255, 0.08);
+  background: #132e48;
   color: #f7f9fa;
-  border-color: rgba(197, 160, 89, 0.4);
+  border-color: #60a5fa;
 }
 
 .nav-link.active {
-  color: var(--geo-ocean-deep);
-  font-weight: 600;
-  background: var(--geo-ocean-surface);
+  color: #072138;
+  font-weight: 700;
+  background: #dcebf7;
 }
 .is-dark-nav .nav-link.active {
   color: #ffffff;
-  background: rgba(160, 194, 171, 0.18);
+  background: #1b3d5c;
 }
 
 .nav-link.active::after {
@@ -471,8 +472,8 @@ onBeforeUnmount(() => {
   bottom: 0;
   left: 10px;
   right: 10px;
-  height: 2px;
-  background: var(--geo-ocean);
+  height: 2.5px;
+  background: #0f3d68;
   border-radius: 2px;
 }
 .is-dark-nav .nav-link.active::after {
@@ -488,23 +489,25 @@ onBeforeUnmount(() => {
 
 .nav-account-btn {
   margin-left: 8px;
-  background: var(--geo-ocean-mist);
-  border: 1px solid var(--border);
-  color: var(--geo-ocean);
+  background: #0f3d68;
+  border: 1.5px solid #08233d;
+  color: #ffffff !important;
+  font-weight: 700;
   font-size: 13px;
 }
 .is-dark-nav .nav-account-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(90, 130, 180, 0.24);
-  color: #c9d1d9;
+  background: #1d4ed8;
+  border-color: #60a5fa;
+  color: #ffffff !important;
 }
 .nav-account-btn:hover {
-  background: var(--geo-ocean-surface);
-  border-color: var(--border-strong);
+  background: #164e82;
+  border-color: #08233d;
+  color: #ffffff !important;
 }
 .is-dark-nav .nav-account-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: #2563eb;
+  color: #ffffff !important;
 }
 
 .app-main {
@@ -628,19 +631,21 @@ onBeforeUnmount(() => {
 }
 
 .tour-relaunch-btn {
-  background: transparent;
-  border: 1px dashed var(--baroque-border-gold);
+  background: #f7f0df;
+  border: 1.5px solid #8a6d38;
   border-radius: var(--radius-pill);
   padding: 3px 10px;
   font-size: 11.5px;
-  color: var(--baroque-bronze);
+  color: #5c3f09;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .tour-relaunch-btn:hover {
-  background: rgba(197, 160, 89, 0.12);
-  border-color: var(--baroque-bronze);
+  background: #efe2c4;
+  border-color: #6e4f12;
+  color: #3d2804;
 }
 
 @media (max-width: 1100px) {

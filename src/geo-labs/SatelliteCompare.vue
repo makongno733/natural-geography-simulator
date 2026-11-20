@@ -992,17 +992,18 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
 .back,
 .back-globe {
   font-size: 13px;
-  color: var(--geo-ocean);
+  color: #0c3960;
   font-weight: 700;
   text-decoration: none;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
+  background: #f1f7fc;
+  border: 1.5px solid #475569;
 }
 .back:hover,
 .back-globe:hover {
-  background: var(--geo-ocean-surface);
+  background: #dcebf7;
+  border-color: #0f3d68;
 }
 .sat-layer-badge {
   font-size: 11.5px;
@@ -1084,10 +1085,10 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
 .btn-update-map {
   min-height: 34px;
   padding: 0 14px;
-  border: 0;
+  border: 1.5px solid #092540;
   border-radius: var(--radius-pill);
-  background: var(--geo-ocean);
-  color: white;
+  background: #0f3d68;
+  color: #ffffff;
   cursor: pointer;
   font-size: 12.5px;
   font-weight: 700;
@@ -1095,13 +1096,13 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
 .btn-toggle-sample {
   min-height: 34px;
   padding: 0 12px;
-  border: 1px solid var(--border);
+  border: 1.5px solid #475569;
   border-radius: var(--radius-pill);
-  background: var(--bg-soft);
-  color: var(--geo-ocean-deep);
+  background: #f8fafc;
+  color: #0f233e;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* 卷帘点按与键盘工具栏 */
@@ -1120,7 +1121,7 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
 }
 .curtain-label kbd {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid #64748b;
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 11px;
@@ -1134,17 +1135,20 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   min-height: 30px;
   padding: 3px 9px;
   border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--geo-ocean-deep);
+  border: 1.5px solid #475569;
+  background: #ffffff;
+  color: #0f233e;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .curtain-btn.active {
-  background: var(--geo-ocean);
+  background: #0f3d68;
   color: #ffffff;
-  border-color: var(--geo-ocean);
+  border: 2px solid #072138;
+}
+.curtain-btn.active::before {
+  content: "✓ ";
 }
 
 /* 失败恢复与示例状态条 */
@@ -1342,19 +1346,22 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
 .wb-chip {
   padding: 7px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-soft);
-  color: var(--geo-ocean-deep);
+  border: 1.5px solid #475569;
+  background: #f8fafc;
+  color: #0f233e;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .wb-chip.active {
   background: #e0f2fe;
-  border-color: #0284c7;
-  color: #0369a1;
-  font-weight: 700;
+  border: 2px solid #0369a1;
+  color: #072138;
+  font-weight: 800;
+}
+.wb-chip.active::before {
+  content: "✓ ";
 }
 .wb-input-row {
   display: flex;
@@ -1366,7 +1373,7 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   min-height: 38px;
   padding: 0 12px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1.5px solid #475569;
   font-size: 13px;
   color: var(--text);
   background: var(--surface);
@@ -1375,9 +1382,9 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   min-height: 38px;
   padding: 0 14px;
   border-radius: 8px;
-  border: 1px solid #0284c7;
-  background: #f0f9ff;
-  color: #0369a1;
+  border: 1.5px solid #0369a1;
+  background: #e0f2fe;
+  color: #072138;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1389,7 +1396,8 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   min-height: 38px;
   padding: 0 16px;
   border-radius: 8px;
-  background: var(--geo-ocean);
+  background: #0f3d68;
+  border: 1.5px solid #08233d;
   color: #ffffff;
   text-decoration: none;
   font-size: 13px;
@@ -1571,8 +1579,8 @@ onBeforeUnmount(() => { mapA?.remove(); mapB?.remove() })
   min-height: 36px;
   padding: 0 14px;
   border-radius: 6px;
-  border: 1px solid #0284c7;
-  background: #0284c7;
+  border: 1.5px solid #072138;
+  background: #0369a1;
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 700;

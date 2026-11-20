@@ -5,6 +5,7 @@ import { accountEnabled, apiRequest, authClient } from '../account/client.js'
 import {
   CURATED_GEO_PAPERS,
   INITIAL_FANXING_PROJECTS,
+  normalizeAndValidateDoi,
   searchCrossrefLiterature
 } from './catalog.js'
 import { toast } from '../utils/toast.js'
@@ -27,6 +28,7 @@ const showingForm = ref(false)
 const submitting = ref(false)
 const submitError = ref('')
 const submitNotice = ref('')
+const hasUnsentDraft = ref(false)
 
 const appForm = reactive({
   motivation: '',
@@ -36,7 +38,7 @@ const appForm = reactive({
   applicantContact: ''
 })
 
-// 发起新课题 / 将社区讨论转化为课题
+// 发起新课题 / 引用社区讨论发起课题
 const showProposeModal = ref(false)
 const proposing = ref(false)
 const proposeError = ref('')
@@ -56,47 +58,80 @@ const proposeForm = reactive({
   sourcePostId: null
 })
 
-// Crossref 实时开放学术文献检索
+// Crossref 实时开放学术文献检索（区分精选目录、实时检索与离线回退，支持日期排序与期刊筛选）
 const litQuery = ref('')
+const litSort = ref('relevance')
+const litFromYear = ref('')
+const litOnlyJournal = ref(false)
 const litPapers = ref([...CURATED_GEO_PAPERS])
 const litLoading = ref(false)
-const litSource = ref('精选核验 DOI 文献库')
+const litSourceMode = ref('curated') // 'curated' | 'crossref' | 'offline'
 
-const LOCAL_APPS_KEY = 'geo_fanxing_applications_v1'
-const LOCAL_PROJECTS_KEY = 'geo_fanxing_custom_projects_v1'
-
-function loadLocalApps() {
-  try {
-    const raw = localStorage.getItem(LOCAL_APPS_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
+const litSourceLabel = computed(() => {
+  if (litSourceMode.value === 'crossref') {
+    return 'Crossref 实时检索结果（api.crossref.org · 包含期刊论文、图书章节与会议录等，请点击 DOI 至原出版页核实同行评议状态）'
   }
-}
+  if (litSourceMode.value === 'offline') {
+    return '离线回退（Crossref 暂不可达，当前仅从站内精选参考论文目录中匹配）'
+  }
+  return '精选课题参考论文目录（内置已核对 DOI 的经典地学与遥感文献，非自动更新流）'
+})
 
-function saveLocalApp(projectId, appObj) {
+// 清理旧版可能跨账号残留的缓存键，且仅按当前登录用户 ID 隔离保存尚未发送的表单输入草稿（绝不缓存审核状态或内部 QQ 群）
+const LEGACY_APPS_KEY = 'geo_fanxing_applications_v1'
+const LEGACY_PROJECTS_KEY = 'geo_fanxing_custom_projects_v1'
+
+function purgeLegacyCaches() {
   try {
-    const all = loadLocalApps()
-    all[projectId] = appObj
-    localStorage.setItem(LOCAL_APPS_KEY, JSON.stringify(all))
+    localStorage.removeItem(LEGACY_APPS_KEY)
+    localStorage.removeItem(LEGACY_PROJECTS_KEY)
   } catch {}
 }
 
-function loadLocalProjects() {
+function getDraftStorageKey(projectId) {
+  const uid = user.value?.id || 'guest'
+  return `geo_fanxing_draft_v2_${uid}_${projectId}`
+}
+
+function loadFormDraft(projectId) {
+  if (!projectId) return null
   try {
-    const raw = localStorage.getItem(LOCAL_PROJECTS_KEY)
-    return raw ? JSON.parse(raw) : []
+    const raw = localStorage.getItem(getDraftStorageKey(projectId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    if (user.value?.id && parsed.userId && parsed.userId !== user.value.id) return null
+    return parsed
   } catch {
-    return []
+    return null
   }
 }
 
-function saveLocalProject(proj) {
+function saveFormDraft(projectId) {
+  if (!projectId) return
   try {
-    const list = loadLocalProjects()
-    list.unshift(proj)
-    localStorage.setItem(LOCAL_PROJECTS_KEY, JSON.stringify(list))
+    localStorage.setItem(
+      getDraftStorageKey(projectId),
+      JSON.stringify({
+        userId: user.value?.id || null,
+        motivation: appForm.motivation,
+        experience: appForm.experience,
+        preferredTask: appForm.preferredTask,
+        weeklyTime: appForm.weeklyTime,
+        applicantContact: appForm.applicantContact,
+        savedAt: new Date().toISOString()
+      })
+    )
+    hasUnsentDraft.value = true
   } catch {}
+}
+
+function clearFormDraft(projectId) {
+  if (!projectId) return
+  try {
+    localStorage.removeItem(getDraftStorageKey(projectId))
+  } catch {}
+  hasUnsentDraft.value = false
 }
 
 const currentProject = computed(() => {
@@ -108,14 +143,18 @@ const currentProject = computed(() => {
   return projects.value.find(item => item.id === targetId) || null
 })
 
+// 严格以服务器确认的当前登录用户身份为准展示申请状态与已解锁群号；未登录或跨账号绝不读取任何缓存状态
 const currentApplication = computed(() => {
+  if (!user.value?.id) return null
   const proj = currentProject.value
   if (!proj) return null
-  if (proj.myApplication) return proj.myApplication
-  const fromList = myApplications.value.find(a => a.projectId === proj.id)
-  if (fromList) return fromList
-  const localAll = loadLocalApps()
-  return localAll[proj.id] || null
+  if (proj.myApplication && (!proj.myApplication.userId || proj.myApplication.userId === user.value.id)) {
+    return proj.myApplication
+  }
+  const fromList = myApplications.value.find(
+    a => a.projectId === proj.id && (!a.userId || a.userId === user.value.id)
+  )
+  return fromList || null
 })
 
 const results = computed(() => {
@@ -134,25 +173,26 @@ async function loadProjectsCatalog() {
     if (accountEnabled) {
       const res = await apiRequest('/api/fanxing/projects')
       if (Array.isArray(res?.projects) && res.projects.length) {
-        projects.value = res.projects
-        if (user.value) {
+        projects.value = res.projects.map(p => ({
+          ...p,
+          myApplication: user.value?.id && p.myApplication && (!p.myApplication.userId || p.myApplication.userId === user.value.id)
+            ? p.myApplication
+            : null
+        }))
+        if (user.value?.id) {
           const myRes = await apiRequest('/api/fanxing/my-applications').catch(() => null)
-          if (Array.isArray(myRes?.applications)) {
-            myApplications.value = myRes.applications
-          }
+          myApplications.value = Array.isArray(myRes?.applications)
+            ? myRes.applications.filter(a => !a.userId || a.userId === user.value.id)
+            : []
+        } else {
+          myApplications.value = []
         }
         return
       }
     }
   } catch {
-    // 若远端容器尚未升级 /api/fanxing/*，合并内置真实文献课题与本地提案
-    const custom = loadLocalProjects()
-    const localApps = loadLocalApps()
-    projects.value = [...custom, ...INITIAL_FANXING_PROJECTS].map(p => ({
-      ...p,
-      myApplication: localApps[p.id] || null
-    }))
-    myApplications.value = Object.values(localApps)
+    projects.value = INITIAL_FANXING_PROJECTS.map(p => ({ ...p, myApplication: null }))
+    myApplications.value = []
   } finally {
     loading.value = false
   }
@@ -172,24 +212,26 @@ async function loadProjectDetail(id) {
     if (accountEnabled) {
       const res = await apiRequest(`/api/fanxing/projects/${encodeURIComponent(id)}`)
       if (res?.project) {
-        projectDetail.value = res.project
+        const verifiedApp =
+          user.value?.id &&
+          res.project.myApplication &&
+          (!res.project.myApplication.userId || res.project.myApplication.userId === user.value.id)
+            ? res.project.myApplication
+            : null
+        projectDetail.value = {
+          ...res.project,
+          myApplication: verifiedApp
+        }
         collaborators.value = Array.isArray(res.collaborators) ? res.collaborators : []
         linkedPosts.value = Array.isArray(res.linkedPosts) ? res.linkedPosts : []
-        prefillFormFromProject(res.project)
+        prefillFormFromProject(projectDetail.value)
         return
       }
     }
   } catch {
-    // 回退到目录数据，并从社区接口检索关联了该课题标签的真实帖子
     const fallback = projects.value.find(p => p.id === id) || INITIAL_FANXING_PROJECTS.find(p => p.id === id) || null
-    projectDetail.value = fallback
-    prefillFormFromProject(fallback)
-    try {
-      if (accountEnabled && fallback) {
-        const postRes = await apiRequest(`/api/community/posts?q=${encodeURIComponent(fallback.title.slice(0, 8))}`)
-        linkedPosts.value = Array.isArray(postRes?.posts) ? postRes.posts.slice(0, 6) : []
-      }
-    } catch {}
+    projectDetail.value = fallback ? { ...fallback, myApplication: null } : null
+    prefillFormFromProject(projectDetail.value)
   } finally {
     detailLoading.value = false
   }
@@ -197,19 +239,29 @@ async function loadProjectDetail(id) {
 
 function prefillFormFromProject(proj) {
   if (!proj) return
-  const existing = proj.myApplication || currentApplication.value
-  if (existing) {
+  const existing = currentApplication.value
+  const draft = loadFormDraft(proj.id)
+  if (draft && (draft.motivation || draft.experience)) {
+    appForm.motivation = draft.motivation || ''
+    appForm.experience = draft.experience || ''
+    appForm.preferredTask = draft.preferredTask || (proj.tasks?.[0]?.title || proj.task || '')
+    appForm.weeklyTime = draft.weeklyTime || ''
+    appForm.applicantContact = draft.applicantContact || user.value?.email || ''
+    hasUnsentDraft.value = true
+  } else if (existing) {
     appForm.motivation = existing.motivation || ''
     appForm.experience = existing.experience || ''
     appForm.preferredTask = existing.preferredTask || (proj.tasks?.[0]?.title || proj.task || '')
     appForm.weeklyTime = existing.weeklyTime || '1–2 小时'
     appForm.applicantContact = existing.applicantContact || ''
+    hasUnsentDraft.value = false
   } else {
     appForm.motivation = ''
     appForm.experience = ''
     appForm.preferredTask = proj.tasks?.[0]?.title || proj.task || ''
     appForm.weeklyTime = ''
     appForm.applicantContact = user.value?.email || ''
+    hasUnsentDraft.value = false
   }
 }
 
@@ -228,8 +280,11 @@ async function submitApplication() {
     submitError.value = '请填写参与动机并选择每周可投入时间。'
     return
   }
+  // 先保存为当前用户的本地草稿，防止跳转登录或网络异常丢失输入
+  saveFormDraft(proj.id)
+
   if (!user.value && accountEnabled) {
-    toast.info('请先登录账号，以便保存你的课题申请并接收审核结果。')
+    toast.info('已为你暂存填写的申请草稿，请先登录账号再正式提交至服务器。')
     window.location.href = `#/account?redirect=${encodeURIComponent(route.fullPath)}`
     return
   }
@@ -251,38 +306,22 @@ async function submitApplication() {
       method: 'POST',
       body: JSON.stringify(payload)
     })
+    clearFormDraft(proj.id)
     if (projectDetail.value) {
       projectDetail.value = {
         ...projectDetail.value,
         myApplication: res.application
       }
     }
-    saveLocalApp(proj.id, res.application)
     showingForm.value = false
-    submitNotice.value = '申请已提交至服务器后台！当前状态为「待审核」，管理员审核通过后将在此页自动为你解锁课题协作 QQ 群与起步指南。'
-    toast.success('课题申请已提交至后台！')
+    submitNotice.value = '✓ 服务器已确认接收你的申请！当前状态为「待审核」，管理员审核通过后将发送通知并在此页自动解锁课题协作 QQ 群与起步指南。'
+    toast.success('课题申请已成功发送至后台！')
     await loadProjectsCatalog()
   } catch (err) {
-    // 若后端容器尚未重启到含 /api/fanxing 的镜像，保存在本机并提示
-    const fallbackApp = {
-      id: Date.now(),
-      projectId: proj.id,
-      projectTitle: proj.title,
-      applicantName: user.value?.name || '当前访客',
-      ...payload,
-      status: 'pending',
-      reviewNote: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    saveLocalApp(proj.id, fallbackApp)
-    if (projectDetail.value) {
-      projectDetail.value = { ...projectDetail.value, myApplication: fallbackApp }
-    }
-    showingForm.value = false
-    submitNotice.value = err?.status === 404
-      ? '你的申请已记录（当前云端账号容器待执行更新脚本同步 /api/fanxing 接口）。你也可以直接点击下方「围绕本课题发布讨论」在社区提交首份观察。'
-      : (err.message || '申请已保存。')
+    // 严格遵守：服务器请求失败时绝不伪造 pending 待审核状态，保持表单开启并明确标示为“本地草稿 · 尚未发送”
+    showingForm.value = true
+    hasUnsentDraft.value = true
+    submitError.value = `申请尚未发送成功（填写内容已保存在当前浏览器的本地草稿，管理员尚未收到）。原因：${err.message || '服务器暂未响应'}。请点击下方「重新发送申请」重试。`
   } finally {
     submitting.value = false
   }
@@ -293,25 +332,32 @@ async function runLiteratureSearch() {
   try {
     const q = litQuery.value.trim()
     if (!q) {
-      litPapers.value = [...CURATED_GEO_PAPERS]
-      litSource.value = '精选核验 DOI 文献库'
+      let list = [...CURATED_GEO_PAPERS]
+      if (litFromYear.value && /^\d{4}$/.test(litFromYear.value)) {
+        const minY = Number(litFromYear.value)
+        list = list.filter(p => (p.year || 0) >= minY)
+      }
+      if (litSort.value === 'newest') {
+        list.sort((a, b) => (b.year || 0) - (a.year || 0))
+      }
+      litPapers.value = list
+      litSourceMode.value = 'curated'
       return
     }
-    // 优先浏览器直连 Crossref 公共学术 API (https://api.crossref.org/works，支持 CORS *)
-    const papers = await searchCrossrefLiterature(q, { rows: 6 })
-    if (papers.length) {
-      litPapers.value = papers
-      litSource.value = 'Crossref 开放学术检索 (api.crossref.org · 真实 DOI)'
-      return
-    }
-    litPapers.value = []
-    litSource.value = 'Crossref 开放学术检索'
+    const papers = await searchCrossrefLiterature(q, {
+      rows: 6,
+      sort: litSort.value,
+      fromYear: litFromYear.value || null,
+      onlyJournalArticles: litOnlyJournal.value
+    })
+    litPapers.value = papers
+    litSourceMode.value = 'crossref'
   } catch {
     const kw = litQuery.value.trim().toLowerCase()
     litPapers.value = CURATED_GEO_PAPERS.filter(
       p => p.title.toLowerCase().includes(kw) || p.topic.toLowerCase().includes(kw)
     )
-    litSource.value = '内置核验 DOI 文献库（离线回退）'
+    litSourceMode.value = 'offline'
   } finally {
     litLoading.value = false
   }
@@ -321,7 +367,7 @@ function discussProjectInCommunity(proj) {
   if (!proj) return
   const draftPayload = {
     kind: 'discussion',
-    categoryId: 7, // 学术研究分区
+    categoryId: 7,
     title: `【繁星课题协作 · ${proj.title}】阶段观察与文献笔记`,
     body:
       `【关联繁星课题】${proj.title}（#/${proj.id}）\n` +
@@ -353,16 +399,17 @@ function discussPaperInCommunity(paper) {
     categoryId: 7,
     title: `【文献研读】${paper.title.slice(0, 75)}`,
     body:
-      `【论文标题】${paper.title}\n` +
-      `【作者与年份】${paper.authors} (${paper.year || '近年'})\n` +
-      `【发表期刊】${paper.journal}\n` +
+      `【文献标题】${paper.title}\n` +
+      `【文献类型】${paper.workTypeLabel || 'DOI 注册出版物'}\n` +
+      `【作者与年份】${paper.authors} (${paper.year || '年份见原文'})\n` +
+      `【来源出版物】${paper.journal}\n` +
       `【DOI 核验链接】https://doi.org/${paper.doi}\n\n` +
       `【研究方法与核心结论摘录】：\n\n` +
       `【结合本站实验或区域案例的思考】：`,
     linkedProject: paper.projectId || '',
     paperDoi: paper.doi,
     paperTitle: paper.title,
-    tagsInput: `文献研读, DOI论文, ${paper.topic || '地理学前沿'}`
+    tagsInput: `文献研读, DOI文献, ${paper.topic || '地理学研究'}`
   }
   try {
     sessionStorage.setItem('geo_pending_compose_payload', JSON.stringify(draftPayload))
@@ -382,6 +429,7 @@ function openProposeWithPaper(paper) {
   proposeForm.paperDoi = paper?.doi || ''
   proposeForm.paperTitle = paper?.title || ''
   proposeForm.sourcePostId = null
+  proposeError.value = ''
   showProposeModal.value = true
 }
 
@@ -390,6 +438,15 @@ async function submitNewProject() {
     proposeError.value = '请完整填写课题名称、研究问题、研究方法与首项协作微任务。'
     return
   }
+  if (proposeForm.paperDoi.trim()) {
+    const validDoi = normalizeAndValidateDoi(proposeForm.paperDoi)
+    if (!validDoi) {
+      proposeError.value = '关联参考文献的 DOI 格式无效，应以 10.xxxx/ 开头（例如 10.5194/essd-13-3907-2021）。'
+      return
+    }
+    proposeForm.paperDoi = validDoi
+  }
+
   if (!user.value && accountEnabled) {
     toast.info('请先登录账号后再发起新课题草案。')
     window.location.href = `#/account?redirect=${encodeURIComponent(route.fullPath)}`
@@ -409,49 +466,8 @@ async function submitNewProject() {
       await router.push(`/fanxing/${res.project.id}`)
     }
   } catch (err) {
-    if (err?.status === 404) {
-      const localProj = {
-        id: `fx-local-${Date.now().toString(36)}`,
-        title: proposeForm.title.trim(),
-        field: proposeForm.field,
-        phase: proposeForm.phase,
-        status: 'recruiting',
-        question: proposeForm.question.trim(),
-        method: proposeForm.method.trim(),
-        role: proposeForm.role.trim(),
-        commitment: proposeForm.commitment.trim(),
-        task: proposeForm.task.trim(),
-        tasks: [
-          {
-            id: 'local-t1',
-            title: proposeForm.task.trim(),
-            role: proposeForm.role.trim(),
-            difficulty: '入门 · 开放协作',
-            targetCount: 15,
-            completedCount: 1
-          }
-        ],
-        papers: proposeForm.paperDoi
-          ? [
-              {
-                title: proposeForm.paperTitle || proposeForm.paperDoi,
-                authors: user.value?.name || '课题发起人',
-                year: new Date().getFullYear(),
-                journal: 'DOI 核验文献',
-                doi: proposeForm.paperDoi,
-                url: `https://doi.org/${proposeForm.paperDoi.replace(/^https?:\/\/doi\.org\//i, '')}`
-              }
-            ]
-          : [],
-        datasets: []
-      }
-      saveLocalProject(localProj)
-      showProposeModal.value = false
-      await loadProjectsCatalog()
-      await router.push(`/fanxing/${localProj.id}`)
-    } else {
-      proposeError.value = err.message || '创建课题失败，请稍后重试。'
-    }
+    // 严格遵守：创建课题失败时不伪造本地成功，保留弹窗内草稿并提示重试
+    proposeError.value = `课题尚未发布成功（你填写的草案仍保留在当前表单中）。原因：${err.message || '服务器暂未响应'}。请核对后点击重试。`
   } finally {
     proposing.value = false
   }
@@ -463,10 +479,11 @@ function checkProposeFromQuery() {
     proposeForm.title = typeof q.title === 'string' ? q.title : ''
     proposeForm.question = typeof q.question === 'string' ? q.question : ''
     proposeForm.method = typeof q.method === 'string' ? q.method : ''
-    proposeForm.task = typeof q.task === 'string' ? q.task : '核查讨论中的关键证据卡并补充 2 篇相关 DOI 文献对比'
+    proposeForm.task = typeof q.task === 'string' ? q.task : '核查讨论中的关键证据卡并补充相关 DOI 文献对比'
     proposeForm.paperDoi = typeof q.paperDoi === 'string' ? q.paperDoi : ''
     proposeForm.paperTitle = typeof q.paperTitle === 'string' ? q.paperTitle : ''
     proposeForm.sourcePostId = q.fromPost ? Number(q.fromPost) || null : null
+    proposeError.value = ''
     showProposeModal.value = true
   }
 }
@@ -484,6 +501,7 @@ watch(
 watch(() => route.query, checkProposeFromQuery)
 
 onMounted(async () => {
+  purgeLegacyCaches()
   if (accountEnabled) {
     const session = await authClient.getSession().catch(() => null)
     user.value = session?.data?.user || null
@@ -508,7 +526,7 @@ onMounted(async () => {
           ← {{ route.params.id ? '返回繁星课题大厅' : '返回地理共同体首页' }}
         </router-link>
         <div class="hero-top-actions">
-          <router-link v-if="isAdmin" to="/community/admin" class="hero-admin-link">
+          <router-link v-if="isAdmin" to="/community/manage" class="hero-admin-link">
             🛡 课题申请管理后台 →
           </router-link>
           <button type="button" class="hero-propose-btn" @click="showProposeModal = true">
@@ -517,8 +535,8 @@ onMounted(async () => {
         </div>
       </div>
 
-      <p class="tag">
-        🌟 繁星计划 · 开放地理科研协作（融合 HOT Tasking Manager 微任务与 Crossref DOI 文献架构）
+      <p class="hero-tag">
+        🌟 繁星计划 · 开放地理科研协作（融合 HOT Tasking Manager 微任务与 Crossref DOI 文献检索）
       </p>
       <h1>{{ currentProject?.title || (route.params.id ? '课题未找到' : '繁星计划 · 地理科研协作大厅') }}</h1>
       <p class="hero-lead">
@@ -526,12 +544,12 @@ onMounted(async () => {
           currentProject?.question ||
           (route.params.id
             ? '返回课题大厅浏览其他正在招募的地理探究课题。'
-            : '浏览课题与真实 DOI 文献 → 提交参与申请 → 管理员审核通过后解锁专属协作群与起步指南 → 结合站内 3D 与遥感实验室开展微任务。')
+            : '浏览课题与 DOI 参考文献 → 提交参与申请 → 管理员审核通过后解锁专属协作群与起步指南 → 结合站内 3D 与遥感实验室开展微任务。')
         }}
       </p>
 
       <div class="workflow-steps" aria-label="繁星计划科研参与流程">
-        <span>① 浏览课题与 DOI 文献</span>
+        <span>① 浏览课题与参考文献</span>
         <span aria-hidden="true">→</span>
         <span>② 填写动机/经验/任务并提交申请</span>
         <span aria-hidden="true">→</span>
@@ -546,7 +564,7 @@ onMounted(async () => {
     <!-- 单个课题详情页 -->
     <template v-if="currentProject">
       <div class="detail">
-        <!-- 左侧：课题研究方法、微任务进度、真实 DOI 文献库、关联社区讨论 -->
+        <!-- 左侧：课题研究方法、规划微任务、真实 DOI 文献库、关联社区讨论 -->
         <div class="detail-main-col">
           <section class="panel">
             <div class="panel-head-row">
@@ -571,13 +589,17 @@ onMounted(async () => {
             </div>
           </section>
 
-          <!-- 微任务拆解（参考 GitHub hotosm/tasking-manager 开源协同任务架构） -->
+          <!-- 微任务拆解（仅展示规划分工与服务器真实入组/讨论计数，不预设虚构完成数量） -->
           <section class="panel" aria-labelledby="microtasks-heading">
             <div class="panel-head-row">
-              <h2 id="microtasks-heading">📋 课题微任务拆解与当前进度</h2>
-              <small class="muted-note">参考 HOT Tasking Manager 开源微任务模式</small>
+              <h2 id="microtasks-heading">📋 课题规划微任务与分工说明</h2>
+              <span class="real-activity-badge">
+                已入组协作者 {{ collaborators.length || currentProject.approvedCount || 0 }} 人 · 已关联讨论 {{ linkedPosts.length || currentProject.linkedDiscussionsCount || 0 }} 篇
+              </span>
             </div>
-            <p class="panel-sub">你可以选择下面任意一项具体微任务申请加入，无需一开始独自承担整篇论文：</p>
+            <p class="panel-sub">
+              参考 HOT Tasking Manager 开源微任务模式拆解。你可以选择下面任意一项规划微任务申请加入，实际产出以下方关联讨论区公开发布的观察记录为准：
+            </p>
 
             <div v-if="currentProject.tasks && currentProject.tasks.length" class="task-list">
               <article v-for="t in currentProject.tasks" :key="t.id" class="task-item">
@@ -585,37 +607,32 @@ onMounted(async () => {
                   <strong>{{ t.title }}</strong>
                   <span class="task-role-badge">{{ t.role }} · {{ t.difficulty }}</span>
                 </div>
-                <div class="task-progress-row">
-                  <div class="task-progress-bar">
-                    <div
-                      class="task-progress-fill"
-                      :style="{ width: `${Math.min(100, Math.round(((t.completedCount || 0) / (t.targetCount || 10)) * 100))}%` }"
-                    ></div>
-                  </div>
-                  <span class="task-progress-num">
-                    已完成 {{ t.completedCount || 0 }} / {{ t.targetCount || 10 }} 份样点或记录
-                  </span>
-                </div>
+                <p class="task-planned-target">
+                  📌 {{ t.plannedTarget || '规划任务：按课题指南提交可复现观察证据卡或文献摘录' }}
+                </p>
               </article>
             </div>
             <p v-else>{{ currentProject.task }}</p>
           </section>
 
-          <!-- 真实参考文献与开放数据集（区分真实已发表论文与本站探究计划） -->
+          <!-- 课题参考文献与开放数据集 -->
           <section class="panel" aria-labelledby="papers-heading">
             <div class="panel-head-row">
-              <h2 id="papers-heading">📚 课题真实参考文献与开放数据源</h2>
-              <span class="verified-badge">✓ 真实 DOI 已核验</span>
+              <h2 id="papers-heading">📚 课题参考文献与开放数据源</h2>
+              <span class="verified-badge">✓ DOI 来源链接可核对</span>
             </div>
             <p class="panel-sub">
-              以下为本课题依据的<strong>已公开发表同行评议论文与官方开放科学数据集</strong>（点击 DOI 可直接跳转国际 DOI 基金会官方原文页核验）：
+              以下为本课题参考的<strong>公开发表学术文献与官方开放科学数据集</strong>（点击 DOI 可跳转国际 DOI 基金会对应出版物页面核对原文）：
             </p>
 
             <div v-if="currentProject.papers && currentProject.papers.length" class="papers-list">
               <article v-for="paper in currentProject.papers" :key="paper.doi || paper.title" class="paper-card">
                 <div class="paper-meta-top">
-                  <span class="paper-type-tag">已发表学术论文</span>
-                  <span class="paper-journal">{{ paper.journal }} ({{ paper.year }})</span>
+                  <span class="paper-type-tag">{{ paper.workTypeLabel || '期刊论文' }}</span>
+                  <span class="paper-journal">
+                    {{ paper.journal }}
+                    <template v-if="paper.year">({{ paper.year }})</template>
+                  </span>
                 </div>
                 <h3>{{ paper.title }}</h3>
                 <p class="paper-authors">作者：{{ paper.authors }}</p>
@@ -627,21 +644,21 @@ onMounted(async () => {
                     rel="noopener noreferrer"
                     class="doi-link"
                   >
-                    🔗 核验原文 DOI: {{ paper.doi }} ↗
+                    🔗 核对 DOI: {{ paper.doi }} ↗
                   </a>
                   <button type="button" class="text-action-btn" @click="discussPaperInCommunity(paper)">
-                    💬 围绕该论文发帖讨论 →
+                    💬 围绕该文献发帖讨论 →
                   </button>
                 </div>
               </article>
             </div>
-            <p v-else class="muted-note">本课题暂无预置文献，可使用下方 Crossref 检索工具添加。</p>
+            <p v-else class="muted-note">本课题暂无预置文献，可在繁星大厅使用 Crossref 检索工具查找。</p>
 
             <div v-if="currentProject.datasets && currentProject.datasets.length" class="datasets-block">
               <h3>🛰 关联开放科学数据集</h3>
               <ul class="dataset-list">
                 <li v-for="ds in currentProject.datasets" :key="ds.name">
-                  <a :href="ds.url" target="_blank" rel="noopener noreferrer">{{ ds.name }} ↗</a>
+                  <a :href="ds.url" target="_blank" rel="noopener noreferrer" class="dataset-link">{{ ds.name }} ↗</a>
                   <small class="ds-license">许可协议：{{ ds.license }}</small>
                 </li>
               </ul>
@@ -660,7 +677,7 @@ onMounted(async () => {
                 ✍️ 围绕本课题发布讨论 / 提交观察记录 →
               </button>
             </div>
-            <p class="panel-sub">任何成员发布的关联讨论、遥感判读与实验证据卡都会汇总于此，公开可查：</p>
+            <p class="panel-sub">成员发布的关联讨论、遥感判读与实验证据卡都会汇总于此，公开可查：</p>
 
             <div v-if="linkedPosts.length" class="linked-posts-list">
               <router-link
@@ -698,21 +715,29 @@ onMounted(async () => {
             </p>
 
             <p v-if="submitNotice" class="app-notice" role="status">{{ submitNotice }}</p>
-            <p v-if="submitError" class="app-error" role="alert">{{ submitError }}</p>
+            <div v-if="submitError" class="app-error" role="alert">
+              <p style="margin: 0 0 8px">{{ submitError }}</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+                <span class="draft-status-pill">📝 本地草稿 · 尚未发送至服务器</span>
+                <button type="button" class="baroque-btn baroque-btn-sm baroque-btn-primary" :disabled="submitting" @click="submitApplication">
+                  🔄 重新发送申请
+                </button>
+              </div>
+            </div>
 
-            <!-- 状态 1：当前用户已提交申请 -->
+            <!-- 状态 1：服务器已确认的当前登录用户申请记录 -->
             <div v-if="currentApplication && !showingForm" class="my-app-status-card" :class="`status-${currentApplication.status}`">
               <div class="status-header">
-                <span class="status-label">我的申请状态：</span>
+                <span class="status-label">我的申请状态（服务器已确认）：</span>
                 <strong v-if="currentApplication.status === 'approved'" class="badge-approved">✅ 审核已通过</strong>
                 <strong v-else-if="currentApplication.status === 'rejected'" class="badge-rejected">❌ 暂未通过</strong>
-                <strong v-else class="badge-pending">⏳ 待管理员审核</strong>
+                <strong v-else class="badge-pending">⏳ 已提交 · 待管理员审核</strong>
               </div>
 
               <dl class="app-summary-dl">
                 <div>
                   <dt>申请人</dt>
-                  <dd>{{ currentApplication.applicantName || user?.name || '我' }}</dd>
+                  <dd>{{ currentApplication.applicantName || user?.name }}</dd>
                 </div>
                 <div>
                   <dt>认领任务</dt>
@@ -728,21 +753,21 @@ onMounted(async () => {
                 </div>
               </dl>
 
-              <!-- 审核通过后自动解锁的联系方式、QQ群与起步说明 -->
-              <div v-if="currentApplication.status === 'approved'" class="unlocked-collab-box">
+              <!-- 审核通过后自动解锁的联系方式、QQ群与起步说明（仅服务器确认 approved 时显示） -->
+              <div v-if="currentApplication.status === 'approved' && currentApplication.collabChannel" class="unlocked-collab-box">
                 <h3>🎉 协作通道已为你解锁</h3>
                 <p v-if="currentApplication.reviewNote" class="review-note-box">
                   <strong>管理员审核意见：</strong>{{ currentApplication.reviewNote }}
                 </p>
                 <div class="channel-item">
                   <span>💬 课题组联系渠道 / QQ 群：</span>
-                  <strong>{{ currentApplication.collabChannel?.qqGroup || '请见审核留言或社区社群导航（/#/groups）' }}</strong>
+                  <strong>{{ currentApplication.collabChannel.qqGroup || '请见审核留言或社区社群导航（/#/groups）' }}</strong>
                 </div>
-                <div v-if="currentApplication.collabChannel?.contact" class="channel-item">
+                <div v-if="currentApplication.collabChannel.contact" class="channel-item">
                   <span>📮 课题对接说明：</span>
                   <span>{{ currentApplication.collabChannel.contact }}</span>
                 </div>
-                <div v-if="currentApplication.collabChannel?.onboardingGuide" class="onboarding-guide">
+                <div v-if="currentApplication.collabChannel.onboardingGuide" class="onboarding-guide">
                   <strong>🚀 新手起步三步曲：</strong>
                   <pre>{{ currentApplication.collabChannel.onboardingGuide }}</pre>
                 </div>
@@ -758,7 +783,7 @@ onMounted(async () => {
               <!-- 待审核提示 -->
               <div v-else-if="currentApplication.status === 'pending'" class="pending-help-box">
                 <p>
-                  你的申请已保存到后台数据库。管理员会在<strong>「社区管理 → 繁星课题申请审核」</strong>中看到你的申请与课题信息；审核通过后，本卡片会自动显示课题 QQ 群与起步说明。
+                  你的申请已保存到服务器后台数据库。管理员会在<strong>「社区管理 → 繁星课题申请审核」</strong>中审核；通过后将发邮件通知你并在此卡片自动显示课题 QQ 群与起步说明。
                 </p>
                 <button type="button" class="text-action-btn" @click="openApplyForm">
                   ✏️ 修改我的申请信息
@@ -778,9 +803,13 @@ onMounted(async () => {
 
             <!-- 状态 2：填写申请表单（含动机、相关经验、希望承担的任务、可投入时间、联系方式） -->
             <form v-else-if="showingForm" class="apply-form" @submit.prevent="submitApplication">
+              <div v-if="hasUnsentDraft" class="draft-banner" role="status">
+                <span>📝 当前内容为<strong>本地草稿（尚未发送至服务器）</strong>，请点击下方按钮正式提交。</span>
+              </div>
+
               <label>
                 1. 希望承担的具体任务
-                <select v-model="appForm.preferredTask" required>
+                <select v-model="appForm.preferredTask" required @change="saveFormDraft(currentProject.id)">
                   <option
                     v-for="t in (currentProject.tasks?.length ? currentProject.tasks : [{ id: 'default', title: currentProject.task }])"
                     :key="t.id"
@@ -795,10 +824,11 @@ onMounted(async () => {
                 2. 参与动机（为什么想研究这个问题？）
                 <textarea
                   v-model="appForm.motivation"
-                  placeholder="例如：我对遥感影像判读和城市土地覆盖变化很感兴趣，希望能协助完成 20 个样点的目视核查……"
+                  placeholder="例如：我对遥感影像判读和城市土地覆盖变化很感兴趣，希望能协助完成抽样网格的目视核查……"
                   required
                   maxlength="500"
                   rows="3"
+                  @input="saveFormDraft(currentProject.id)"
                 />
               </label>
 
@@ -810,12 +840,13 @@ onMounted(async () => {
                   required
                   maxlength="500"
                   rows="2"
+                  @input="saveFormDraft(currentProject.id)"
                 />
               </label>
 
               <label>
                 4. 每周可投入时间
-                <select v-model="appForm.weeklyTime" required>
+                <select v-model="appForm.weeklyTime" required @change="saveFormDraft(currentProject.id)">
                   <option value="" disabled>请选择每周可投入时间</option>
                   <option value="1 小时以内">1 小时以内</option>
                   <option value="1–2 小时">1–2 小时</option>
@@ -831,6 +862,7 @@ onMounted(async () => {
                   type="text"
                   maxlength="100"
                   placeholder="例如：邮箱 / QQ 号 / 微信号"
+                  @input="saveFormDraft(currentProject.id)"
                 />
               </label>
 
@@ -840,7 +872,7 @@ onMounted(async () => {
                   class="baroque-btn baroque-btn-primary"
                   :disabled="submitting || !appForm.motivation.trim() || !appForm.weeklyTime"
                 >
-                  {{ submitting ? '正在提交至后台…' : '提交课题申请（保存至后台待审核）' }}
+                  {{ submitting ? '正在发送至服务器…' : '提交课题申请（发送至后台审核）' }}
                 </button>
                 <button type="button" class="baroque-btn" @click="showingForm = false">取消</button>
               </div>
@@ -848,14 +880,17 @@ onMounted(async () => {
 
             <!-- 状态 3：初始申请按钮 -->
             <div v-else class="initial-apply-cta">
+              <div v-if="hasUnsentDraft" class="draft-banner" style="margin-bottom: 10px">
+                <span>📝 你有一份<strong>尚未发送的本地申请草稿</strong>。</span>
+              </div>
               <button class="baroque-btn baroque-btn-primary full-width-btn" type="button" @click="openApplyForm">
-                ✍️ 填写并提交科研参与申请
+                {{ hasUnsentDraft ? '✍️ 继续编辑并发送申请草稿' : '✍️ 填写并提交科研参与申请' }}
               </button>
               <p class="cta-sub-note">
                 {{
                   user
-                    ? `当前以「${user.name}」身份申请，提交后可在本页及个人主页随时查看审核结果。`
-                    : '提示：点击填写后需登录账号提交，以便后台记录申请人并向你反馈审核结果。'
+                    ? `当前以「${user.name}」身份申请，服务器确认接收后可在本页及个人主页查看审核进度。`
+                    : '提示：点击可先填写草稿，正式提交时需登录账号，以便服务器记录申请人并向你发送审核结果。'
                 }}
               </p>
             </div>
@@ -870,7 +905,7 @@ onMounted(async () => {
                 <small>{{ c.preferredTask }}</small>
               </li>
             </ul>
-            <p v-else class="muted-note">目前课题正在招募首批协作者，审核通过后你的名字与承担任务将展示在此。</p>
+            <p v-else class="muted-note">目前课题正在招募协作者，审核通过后成员昵称与认领任务将展示在此。</p>
           </section>
         </aside>
       </div>
@@ -878,8 +913,8 @@ onMounted(async () => {
 
     <!-- 课题大厅列表页 -->
     <template v-else-if="!route.params.id">
-      <!-- 如果当前用户已有提交过的课题申请，在顶部醒目展示审核进度与解锁的群号 -->
-      <section v-if="myApplications.length" class="my-apps-overview panel" aria-labelledby="my-apps-heading">
+      <!-- 仅当当前用户已登录且服务器返回了该用户的真实申请记录时展示 -->
+      <section v-if="user && myApplications.length" class="my-apps-overview panel" aria-labelledby="my-apps-heading">
         <h2 id="my-apps-heading">📬 我的繁星课题申请与审核结果</h2>
         <div class="my-apps-grid">
           <article v-for="app in myApplications" :key="app.projectId" class="my-app-mini-card">
@@ -905,7 +940,7 @@ onMounted(async () => {
         <div class="catalog-header">
           <div>
             <h2 id="fanxing-catalog">正在招募的地理科研课题</h2>
-            <p class="muted-note">每个课题均配有明确的研究问题、微任务拆解、站内配套实验室与真实可核验的 DOI 参考文献。</p>
+            <p class="muted-note">每个课题均配有明确的研究问题、规划微任务、站内配套实验室与可核对的 DOI 参考文献。</p>
           </div>
           <label class="search">
             <span class="sr-only">搜索课题</span>
@@ -919,7 +954,7 @@ onMounted(async () => {
           <article v-for="item in results" :key="item.id" class="panel project-card">
             <div class="card-top-badges">
               <span class="tag">{{ item.field }} · {{ item.phase }}</span>
-              <span v-if="item.myApplication" class="my-app-pill" :class="`st-${item.myApplication.status}`">
+              <span v-if="user && item.myApplication" class="my-app-pill" :class="`st-${item.myApplication.status}`">
                 {{
                   item.myApplication.status === 'approved'
                     ? '✓ 已加入课题组'
@@ -938,7 +973,7 @@ onMounted(async () => {
             <div class="card-meta-stats">
               <span>👤 招募：{{ item.role }}</span>
               <span>⏱ {{ item.commitment }}</span>
-              <span>📚 {{ item.papers?.length || 2 }} 篇真实 DOI 文献</span>
+              <span>📚 {{ item.papers?.length || 2 }} 篇参考 DOI 文献</span>
             </div>
 
             <div class="card-actions">
@@ -953,14 +988,14 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- 开放学术文献实时检索专栏（集成 GitHub CrossRef/rest-api-doc 公共 DOI 检索接口） -->
+      <!-- 开放学术文献实时检索专栏（区分精选目录、Crossref 实时检索与文献类型，支持按时间排序和筛选） -->
       <section class="literature-hub panel" aria-labelledby="lit-hub-heading">
         <div class="lit-hub-header">
           <div>
-            <p class="tag">📖 开放学术文献与前沿方法检索（Crossref REST API · 真实 DOI 核验）</p>
-            <h2 id="lit-hub-heading">检索全球地理学同行评议论文并发起讨论</h2>
+            <p class="tag">📖 开放学术文献检索（Crossref DOI 元数据接口）</p>
+            <h2 id="lit-hub-heading">检索地理学 DOI 出版物并发起讨论</h2>
             <p class="muted-note">
-              接入国际 DOI 基金会 Crossref 开放学术元数据接口（<code>api.crossref.org/works</code>）。输入中英文地理关键词即可实时检索真实发表的期刊论文，一键带入社区发起学术讨论或转化为繁星课题草案。
+              接入 Crossref 开放学术元数据接口（<code>api.crossref.org/works</code>）。<strong>提示：</strong>拥有 DOI 仅代表该出版物已在国际 DOI 系统注册（包含期刊论文、图书章节、会议论文或更正声明等），不代表本站已人工复核其同行评议质量，请点击 DOI 链接至原出版平台核实。
             </p>
           </div>
         </div>
@@ -970,44 +1005,81 @@ onMounted(async () => {
             v-model.trim="litQuery"
             type="search"
             placeholder="输入中英文研究关键词，例如：城市热岛 遥感 / urban flood sponge city / land cover change…"
-            aria-label="检索 Crossref 地理学术论文"
+            aria-label="检索 Crossref 地理学术文献"
           />
+          <select v-model="litSort" aria-label="文献排序方式" class="lit-filter-select" @change="runLiteratureSearch">
+            <option value="relevance">按相关度排序</option>
+            <option value="newest">按发表时间（最新优先）</option>
+          </select>
+          <select v-model="litFromYear" aria-label="发表年份范围" class="lit-filter-select" @change="runLiteratureSearch">
+            <option value="">全部发表年份</option>
+            <option value="2023">2023 年以来</option>
+            <option value="2020">2020 年以来</option>
+            <option value="2015">2015 年以来</option>
+          </select>
+          <label class="lit-checkbox-label">
+            <input v-model="litOnlyJournal" type="checkbox" @change="runLiteratureSearch" />
+            <span>仅看期刊论文</span>
+          </label>
           <button type="submit" class="baroque-btn baroque-btn-primary" :disabled="litLoading">
-            {{ litLoading ? '检索 Crossref 中…' : '🔍 检索真实 DOI 论文' }}
+            {{ litLoading ? '检索 Crossref 中…' : '🔍 检索 DOI 文献' }}
           </button>
           <button
-            v-if="litQuery"
+            v-if="litQuery || litFromYear || litOnlyJournal || litSort !== 'relevance'"
             type="button"
             class="baroque-btn"
-            @click="litQuery = ''; runLiteratureSearch()"
+            @click="litQuery = ''; litFromYear = ''; litOnlyJournal = false; litSort = 'relevance'; runLiteratureSearch()"
           >
-            重置为精选文献
+            重置为精选文献目录
           </button>
         </form>
 
         <div class="lit-quick-tags">
           <span>快捷检索方向：</span>
-          <button type="button" class="chip-btn" @click="litQuery = 'urban heat island green space remote sensing'; runLiteratureSearch()">
+          <button
+            type="button"
+            class="chip-btn"
+            :class="{ active: litQuery === 'urban heat island green space remote sensing' }"
+            @click="litQuery = 'urban heat island green space remote sensing'; runLiteratureSearch()"
+          >
             城市绿地降温与热岛
           </button>
-          <button type="button" class="chip-btn" @click="litQuery = 'sponge city urban flood runoff'; runLiteratureSearch()">
+          <button
+            type="button"
+            class="chip-btn"
+            :class="{ active: litQuery === 'sponge city urban flood runoff' }"
+            @click="litQuery = 'sponge city urban flood runoff'; runLiteratureSearch()"
+          >
             海绵城市与内涝径流
           </button>
-          <button type="button" class="chip-btn" @click="litQuery = 'China land cover change Landsat'; runLiteratureSearch()">
+          <button
+            type="button"
+            class="chip-btn"
+            :class="{ active: litQuery === 'China land cover change Landsat' }"
+            @click="litQuery = 'China land cover change Landsat'; runLiteratureSearch()"
+          >
             中国土地覆盖遥感演变
           </button>
-          <button type="button" class="chip-btn" @click="litQuery = '城市热岛 遥感'; runLiteratureSearch()">
+          <button
+            type="button"
+            class="chip-btn"
+            :class="{ active: litQuery === '城市热岛 遥感' }"
+            @click="litQuery = '城市热岛 遥感'; runLiteratureSearch()"
+          >
             中文：城市热岛与遥感
           </button>
         </div>
 
-        <p class="lit-source-indicator">当前文献来源：<strong>{{ litSource }}</strong></p>
+        <p class="lit-source-indicator">当前展示模式：<strong>{{ litSourceLabel }}</strong></p>
 
         <div v-if="litPapers.length" class="lit-grid">
           <article v-for="paper in litPapers" :key="paper.doi" class="paper-card">
             <div class="paper-meta-top">
-              <span class="paper-type-tag">{{ paper.topic || '同行评议文献' }}</span>
-              <span class="paper-journal">{{ paper.journal }} <template v-if="paper.year">({{ paper.year }})</template></span>
+              <span class="paper-type-tag">{{ paper.workTypeLabel || 'DOI 注册出版物' }}</span>
+              <span class="paper-journal">
+                {{ paper.journal }}
+                <template v-if="paper.year">({{ paper.year }})</template>
+              </span>
             </div>
             <h3>{{ paper.title }}</h3>
             <p class="paper-authors">作者：{{ paper.authors }}</p>
@@ -1024,19 +1096,19 @@ onMounted(async () => {
             </div>
           </article>
         </div>
-        <p v-else class="muted-note">未检索到匹配的 DOI 文献，请尝试更通用的英文或中文学科关键词。</p>
+        <p v-else class="muted-note">未检索到符合筛选条件的 DOI 文献，请尝试放宽年份限制或更换关键词。</p>
       </section>
     </template>
 
-    <!-- 发起新课题 / 将社区讨论转化为繁星课题弹窗 -->
+    <!-- 发起新课题 / 引用社区讨论发起繁星课题弹窗 -->
     <div v-if="showProposeModal" class="modal-overlay" role="dialog" aria-modal="true" @click.self="showProposeModal = false">
       <div class="modal-card panel">
         <div class="modal-head">
-          <h2>{{ proposeForm.sourcePostId ? `🌟 将社区讨论 #${proposeForm.sourcePostId} 转化为繁星课题` : '🌟 发起新的繁星科研协作课题' }}</h2>
-          <button type="button" class="close-btn" @click="showProposeModal = false">×</button>
+          <h2>{{ proposeForm.sourcePostId ? `🌟 引用社区讨论 #${proposeForm.sourcePostId} 发起繁星课题` : '🌟 发起新的繁星科研协作课题' }}</h2>
+          <button type="button" class="close-btn" aria-label="关闭弹窗" @click="showProposeModal = false">×</button>
         </div>
         <p class="muted-note">
-          把你的地理问题、观察发现或论文读后感拆解为同伴可参与的微任务，招募跨校协作者共同完成数据核查与实证分析。
+          把你的地理问题、观察发现或文献读后感拆解为同伴可参与的微任务，招募协作者共同完成数据核查与实证分析。
         </p>
 
         <form class="propose-form" @submit.prevent="submitNewProject">
@@ -1079,7 +1151,7 @@ onMounted(async () => {
 
           <div class="form-grid-2">
             <label>
-              关联参考文献 DOI（选填）
+              关联参考文献 DOI（选填，需符合 10.xxxx/... 标准格式）
               <input v-model.trim="proposeForm.paperDoi" maxlength="100" placeholder="例如：10.5194/essd-13-3907-2021" />
             </label>
             <label>
@@ -1088,11 +1160,13 @@ onMounted(async () => {
             </label>
           </div>
 
-          <p v-if="proposeError" class="app-error" role="alert">{{ proposeError }}</p>
+          <div v-if="proposeError" class="app-error" role="alert">
+            <p style="margin: 0">{{ proposeError }}</p>
+          </div>
 
           <div class="form-btn-row">
             <button type="submit" class="baroque-btn baroque-btn-primary" :disabled="proposing">
-              {{ proposing ? '正在创建课题…' : '正式发布课题并开放招募 ✦' }}
+              {{ proposing ? '正在发送至服务器…' : '正式发布课题并开放招募 ✦' }}
             </button>
             <button type="button" class="baroque-btn" @click="showProposeModal = false">取消</button>
           </div>
@@ -1108,8 +1182,9 @@ onMounted(async () => {
   padding: clamp(24px, 4.5vw, 48px);
   border-radius: 22px;
   color: #fff8e9;
-  background: radial-gradient(ellipse at 82% 15%, #35526b, transparent 55%), #142536;
-  border: 1px solid rgba(197, 160, 89, 0.35);
+  background-color: #142536;
+  background-image: radial-gradient(ellipse at 82% 15%, #35526b, transparent 55%);
+  border: 1.5px solid #8a6d38;
 }
 .fanxing-hero-top {
   display: flex;
@@ -1121,38 +1196,80 @@ onMounted(async () => {
 }
 .hero-top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .hero-admin-link, .hero-propose-btn {
-  padding: 6px 14px;
+  min-height: 38px;
+  padding: 7px 16px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 .hero-admin-link {
-  background: rgba(197, 160, 89, 0.2);
-  color: #f6dfa4;
-  border: 1px solid rgba(197, 160, 89, 0.45);
+  background-color: #1e3750;
+  color: #ffebb8;
+  border: 1.5px solid #d4af63;
+}
+.hero-admin-link:hover {
+  background-color: #284766;
+  color: #ffffff;
 }
 .hero-propose-btn {
-  background: #c5a059;
-  color: #102030;
-  border: none;
+  background-color: #e6be6a;
+  color: #0d1d2c;
+  border: 1.5px solid #f8dfa5;
+  font-weight: 800;
 }
-.fanxing-hero h1 { color: inherit; margin: 10px 0 12px; font-size: clamp(28px, 4.5vw, 46px); }
-.hero-lead { max-width: 52rem; line-height: 1.7; color: #dbe5f0; margin-bottom: 18px; }
-.back { color: #f6dfa4; text-decoration: none; font-weight: 600; }
+.hero-propose-btn:hover {
+  background-color: #f3ce7e;
+}
+.fanxing-hero h1 { color: #ffffff; margin: 10px 0 12px; font-size: clamp(28px, 4.5vw, 46px); }
+.hero-lead { max-width: 52rem; line-height: 1.7; color: #e2ecf5; margin-bottom: 18px; }
+.back {
+  color: #ffebb8;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(246, 223, 164, 0.45);
+}
+.back:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
 .workflow-steps {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(10, 22, 36, 0.55);
-  border: 1px solid rgba(197, 160, 89, 0.28);
+  background-color: #0c1824;
+  border: 1px solid #7d6639;
   border-radius: 12px;
   font-size: 13px;
-  color: #e9dec7;
+  color: #f3ead8;
+  font-weight: 600;
 }
-.tag { font-size: .86rem; font-weight: 700; color: #c5a059; margin: 0; }
+.hero-tag {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffebb8;
+  margin: 0;
+}
+
+/* 浅底卡片上的分类标签：深棕金文字配暖米底，对比度 > 7.5:1 (符合 WCAG AAA) */
+.tag {
+  display: inline-block;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #5c3f09;
+  background-color: #f7f0df;
+  border: 1px solid #b58d3d;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin: 0;
+}
 
 .catalog, .detail, .literature-hub, .my-apps-overview { margin-top: 28px; }
 .detail { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(320px, 1fr); gap: 22px; align-items: start; }
@@ -1160,13 +1277,13 @@ onMounted(async () => {
 
 .panel {
   padding: clamp(18px, 2.6vw, 28px);
-  border: 1px solid #d5cab8;
+  border: 1.5px solid #94a3b8;
   border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 39, 66, 0.05);
+  background-color: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 39, 66, 0.06);
 }
-.panel h2, .panel h3 { margin: 0 0 10px; color: #142536; }
-.panel p { line-height: 1.7; color: #2b3a4a; }
+.panel h2, .panel h3 { margin: 0 0 10px; color: #0f233e; }
+.panel p { line-height: 1.7; color: #1e293b; }
 .panel-head-row {
   display: flex;
   justify-content: space-between;
@@ -1175,24 +1292,25 @@ onMounted(async () => {
   gap: 10px;
   margin-bottom: 10px;
 }
-.panel-sub { font-size: 14px; color: #546578; margin-top: 0; }
-.muted-note { font-size: 13.5px; color: #5c6d7e; }
+.panel-sub { font-size: 14px; color: #334155; margin-top: 0; }
+.muted-note { font-size: 13.5px; color: #334155; }
 
 .highlight-question {
   font-size: 17px;
-  font-weight: 650;
-  color: #12314d;
+  font-weight: 700;
+  color: #0f2742;
   padding: 12px 16px;
-  background: #f4f8fb;
-  border-left: 4px solid #1e5b8a;
+  background-color: #eef5fa;
+  border: 1px solid #7aa6c9;
+  border-left: 4px solid #164e78;
   border-radius: 8px;
 }
 
 .linked-lab-callout {
   margin-top: 16px;
   padding: 14px 16px;
-  background: #f8f5ec;
-  border: 1px solid #d8c398;
+  background-color: #f8f5ec;
+  border: 1.5px solid #9a7b3e;
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
@@ -1201,12 +1319,22 @@ onMounted(async () => {
   gap: 12px;
 }
 
+.real-activity-badge {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f3d68;
+  background-color: #e6f2fb;
+  border: 1px solid #6b9ec7;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
 .task-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 .task-item {
   padding: 14px 16px;
-  border: 1px solid #e2dcd0;
+  border: 1px solid #94a3b8;
   border-radius: 12px;
-  background: #faf9f6;
+  background-color: #f8fafc;
 }
 .task-item-top {
   display: flex;
@@ -1214,42 +1342,40 @@ onMounted(async () => {
   align-items: flex-start;
   gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .task-role-badge {
   font-size: 12px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: #e7f1f8;
-  color: #164e78;
+  background-color: #e0f0fb;
+  color: #0c3b60;
+  border: 1px solid #6499c4;
+  font-weight: 700;
+}
+.task-planned-target {
+  margin: 4px 0 0;
+  font-size: 13px;
   font-weight: 600;
+  color: #334155;
 }
-.task-progress-row { display: flex; align-items: center; gap: 12px; }
-.task-progress-bar {
-  flex: 1;
-  height: 8px;
-  background: #e4e8ec;
-  border-radius: 999px;
-  overflow: hidden;
-}
-.task-progress-fill { height: 100%; background: linear-gradient(90deg, #1d6396, #c5a059); }
-.task-progress-num { font-size: 12px; color: #58697a; white-space: nowrap; }
 
 .verified-badge {
   font-size: 12px;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 999px;
-  background: #def7e5;
-  color: #145a32;
+  background-color: #dcfce7;
+  color: #14532d;
+  border: 1px solid #4ade80;
 }
 .papers-list, .lit-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
 .lit-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 .paper-card {
   padding: 16px 18px;
-  border: 1px solid #dfd7c8;
+  border: 1.5px solid #94a3b8;
   border-radius: 12px;
-  background: #fcfbf9;
+  background-color: #fcfbf9;
 }
 .paper-meta-top {
   display: flex;
@@ -1260,116 +1386,145 @@ onMounted(async () => {
   margin-bottom: 6px;
 }
 .paper-type-tag {
-  background: #142536;
-  color: #f6dfa4;
+  background-color: #142536;
+  color: #ffebb8;
   padding: 2px 8px;
   border-radius: 4px;
-  font-weight: 600;
+  font-weight: 700;
 }
-.paper-journal { color: #546678; font-weight: 600; }
-.paper-card h3 { font-size: 15.5px; margin: 4px 0 6px; line-height: 1.45; }
-.paper-authors { font-size: 13px; color: #4c5d6e; margin: 0 0 6px; }
-.paper-note { font-size: 13px; color: #36495c; background: #f2f5f8; padding: 8px 10px; border-radius: 8px; margin: 6px 0; }
+.paper-journal { color: #334155; font-weight: 700; }
+.paper-card h3 { font-size: 15.5px; margin: 4px 0 6px; line-height: 1.45; color: #0f233e; }
+.paper-authors { font-size: 13px; color: #334155; margin: 0 0 6px; }
+.paper-note { font-size: 13px; color: #1e293b; background-color: #eef3f7; padding: 8px 10px; border-radius: 8px; margin: 6px 0; }
 .paper-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed #e1d9ca;
+  padding-top: 10px;
+  border-top: 1px dashed #94a3b8;
 }
-.doi-link {
+.doi-link, .dataset-link {
   font-size: 12.5px;
   font-family: ui-monospace, SFMono-Regular, monospace;
-  color: #145388;
-  font-weight: 600;
-  text-decoration: none;
-}
-.doi-link:hover { text-decoration: underline; }
-.text-action-btn {
-  background: none;
-  border: none;
-  color: #8a6421;
+  color: #0b4a7d;
   font-weight: 700;
-  font-size: 13px;
+  text-decoration: underline;
+}
+.text-action-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background-color: #eef5fb;
+  border: 1.5px solid #3b719f;
+  color: #0c3960;
+  font-weight: 700;
+  font-size: 12.5px;
   cursor: pointer;
-  padding: 0;
   text-decoration: none;
 }
-.text-action-btn:hover { text-decoration: underline; }
+.text-action-btn:hover {
+  background-color: #d9eaf8;
+  border-color: #164e78;
+  color: #082642;
+}
 
-.datasets-block { margin-top: 18px; padding-top: 14px; border-top: 1px solid #e6dfd2; }
+.datasets-block { margin-top: 18px; padding-top: 14px; border-top: 1px solid #cbd5e1; }
 .dataset-list { margin: 8px 0 0; padding-left: 18px; }
 .dataset-list li { margin-bottom: 6px; font-size: 14px; }
-.ds-license { margin-left: 10px; color: #64748b; }
+.ds-license { margin-left: 10px; color: #334155; font-weight: 600; }
 
 .linked-posts-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .linked-post-item {
   display: block;
   padding: 12px 16px;
-  border: 1px solid #e2dcd0;
+  border: 1.5px solid #94a3b8;
   border-radius: 10px;
   text-decoration: none;
   color: inherit;
-  background: #faf9f6;
+  background-color: #f8fafc;
 }
-.linked-post-item:hover { border-color: #c5a059; }
+.linked-post-item:hover { border-color: #164e78; background-color: #f1f7fc; }
 .lp-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .lp-kind {
   font-size: 11.5px;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
-  background: #e7f1f8;
-  color: #164e78;
+  background-color: #e0f0fb;
+  color: #0c3b60;
   font-weight: 700;
 }
-.lp-excerpt { font-size: 13.5px; color: #4b5c6e; margin: 4px 0; }
-.lp-meta { font-size: 12px; color: #687788; display: flex; gap: 8px; flex-wrap: wrap; }
+.lp-excerpt { font-size: 13.5px; color: #334155; margin: 4px 0; }
+.lp-meta { font-size: 12px; color: #475569; display: flex; gap: 8px; flex-wrap: wrap; font-weight: 600; }
 
 /* 申请卡片与解锁区域 */
 .first-task-box {
   padding: 10px 14px;
-  background: #f8f5ec;
+  background-color: #f8f5ec;
   border-radius: 10px;
-  border: 1px solid #e3d3b2;
+  border: 1px solid #b59553;
   font-size: 13.5px;
 }
 .app-notice {
   padding: 12px 14px;
-  background: #e9f7ef;
-  border: 1px solid #a9dfbf;
-  color: #145a32;
+  background-color: #e9f7ef;
+  border: 1.5px solid #2e8b57;
+  color: #14532d;
   border-radius: 10px;
   font-size: 13.5px;
+  font-weight: 600;
 }
 .app-error {
-  padding: 10px 14px;
-  background: #fdf2e9;
-  border: 1px solid #f5b7b1;
-  color: #922b21;
+  padding: 12px 14px;
+  background-color: #fdf2e9;
+  border: 1.5px solid #c0392b;
+  color: #7f1d1d;
   border-radius: 10px;
   font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.draft-banner {
+  padding: 10px 12px;
+  background-color: #fef3c7;
+  border: 1.5px solid #b45309;
+  color: #78350f;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.draft-status-pill {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background-color: #fef3c7;
+  color: #78350f;
+  border: 1px solid #b45309;
 }
 .my-app-status-card {
   margin-top: 14px;
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid #d5cab8;
-  background: #faf9f5;
+  border: 1.5px solid #94a3b8;
+  background-color: #f8fafc;
 }
 .status-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 10px;
-  border-bottom: 1px solid #e5dec9;
+  border-bottom: 1px solid #cbd5e1;
   margin-bottom: 10px;
 }
-.badge-approved { color: #145a32; background: #d4efdf; padding: 3px 10px; border-radius: 999px; font-size: 13px; }
-.badge-pending { color: #7e5109; background: #fcf3cf; padding: 3px 10px; border-radius: 999px; font-size: 13px; }
-.badge-rejected { color: #922b21; background: #fadbd8; padding: 3px 10px; border-radius: 999px; font-size: 13px; }
+.badge-approved { color: #14532d; background-color: #dcfce7; border: 1px solid #22c55e; padding: 3px 10px; border-radius: 999px; font-size: 13px; }
+.badge-pending { color: #78350f; background-color: #fef3c7; border: 1px solid #d97706; padding: 3px 10px; border-radius: 999px; font-size: 13px; }
+.badge-rejected { color: #7f1d1d; background-color: #fee2e2; border: 1px solid #ef4444; padding: 3px 10px; border-radius: 999px; font-size: 13px; }
 
 .app-summary-dl {
   display: grid;
@@ -1378,26 +1533,27 @@ onMounted(async () => {
   margin: 0 0 12px;
 }
 .app-summary-dl div { display: flex; gap: 8px; }
-.app-summary-dl dt { color: #64748b; min-width: 68px; font-weight: 600; }
-.app-summary-dl dd { margin: 0; color: #1e293b; }
+.app-summary-dl dt { color: #334155; min-width: 68px; font-weight: 700; }
+.app-summary-dl dd { margin: 0; color: #0f172a; }
 
 .unlocked-collab-box {
   margin-top: 12px;
   padding: 14px;
-  background: #eef9f2;
-  border: 1px solid #82e0aa;
+  background-color: #eef9f2;
+  border: 1.5px solid #2e8b57;
   border-radius: 10px;
 }
-.unlocked-collab-box h3 { font-size: 16px; color: #145a32; margin: 0 0 8px; }
-.channel-item { font-size: 13.5px; margin-bottom: 6px; }
+.unlocked-collab-box h3 { font-size: 16px; color: #14532d; margin: 0 0 8px; }
+.channel-item { font-size: 13.5px; margin-bottom: 6px; color: #0f172a; }
 .onboarding-guide pre {
   white-space: pre-wrap;
   font-family: inherit;
   font-size: 13px;
-  background: #ffffff;
+  background-color: #ffffff;
+  color: #0f172a;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid #c8e6c9;
+  border: 1px solid #68b888;
   margin: 6px 0 12px;
 }
 
@@ -1405,24 +1561,24 @@ onMounted(async () => {
   display: grid;
   gap: 6px;
   margin-bottom: 14px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13.5px;
-  color: #1e293b;
+  color: #0f233e;
 }
 input, textarea, select {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #94a3b8;
+  border: 1.5px solid #64748b;
   border-radius: 8px;
   padding: 10px 12px;
   font: inherit;
   font-size: 14px;
-  background: #fff;
-  color: #1e293b;
+  background-color: #ffffff;
+  color: #0f172a;
 }
 .form-btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .full-width-btn { width: 100%; justify-content: center; }
-.cta-sub-note { font-size: 12.5px; color: #64748b; margin-top: 8px; }
+.cta-sub-note { font-size: 12.5px; color: #334155; margin-top: 8px; }
 
 .collab-list { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
 .collab-list li {
@@ -1431,7 +1587,8 @@ input, textarea, select {
   align-items: center;
   font-size: 13.5px;
   padding: 6px 10px;
-  background: #f8fafc;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
 }
 
@@ -1451,15 +1608,16 @@ input, textarea, select {
 .recruiting-pill, .status-recruiting {
   font-size: 12px;
   font-weight: 700;
-  color: #145a32;
-  background: #def7e5;
+  color: #14532d;
+  background-color: #dcfce7;
+  border: 1px solid #22c55e;
   padding: 3px 10px;
   border-radius: 999px;
 }
 .my-app-pill { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
-.st-approved { background: #d4efdf; color: #145a32; }
-.st-pending { background: #fcf3cf; color: #7e5109; }
-.st-rejected { background: #fadbd8; color: #922b21; }
+.st-approved { background-color: #dcfce7; color: #14532d; border: 1px solid #22c55e; }
+.st-pending { background-color: #fef3c7; color: #78350f; border: 1px solid #d97706; }
+.st-rejected { background-color: #fee2e2; color: #7f1d1d; border: 1px solid #ef4444; }
 
 .card-question, .card-task { font-size: 14px; margin: 6px 0; }
 .card-meta-stats {
@@ -1467,10 +1625,11 @@ input, textarea, select {
   flex-wrap: wrap;
   gap: 10px;
   font-size: 12.5px;
-  color: #475569;
+  color: #334155;
+  font-weight: 600;
   margin: 12px 0 16px;
   padding-top: 10px;
-  border-top: 1px solid #ece6da;
+  border-top: 1px solid #cbd5e1;
 }
 .card-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
@@ -1478,36 +1637,72 @@ input, textarea, select {
 .my-apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-top: 12px; }
 .my-app-mini-card {
   padding: 14px 16px;
-  border: 1px solid #dfd7c8;
+  border: 1.5px solid #94a3b8;
   border-radius: 12px;
-  background: #fcfbf8;
+  background-color: #fcfbf8;
 }
 .mini-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .mini-status { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 .mini-task { font-size: 13px; margin: 4px 0; }
-.mini-unlocked { font-size: 13px; color: #145a32; background: #eafaf1; padding: 8px 10px; border-radius: 8px; margin: 6px 0; }
+.mini-unlocked { font-size: 13px; color: #14532d; background-color: #eafaf1; border: 1px solid #4ade80; padding: 8px 10px; border-radius: 8px; margin: 6px 0; }
 
 /* Crossref 文献检索中心 */
-.lit-search-bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 10px; }
-.lit-search-bar input { flex: 1; min-width: 240px; }
-.lit-quick-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: #475569; margin-bottom: 10px; }
+.lit-search-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 14px 0 10px; }
+.lit-search-bar input[type="search"] { flex: 1; min-width: 240px; }
+.lit-filter-select { width: auto; min-width: 150px; }
+.lit-checkbox-label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin: 0 !important;
+  padding: 8px 12px;
+  border: 1.5px solid #64748b;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f233e;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lit-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+.lit-quick-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: #334155; font-weight: 600; margin-bottom: 10px; }
 .chip-btn {
-  padding: 4px 10px;
+  min-height: 34px;
+  padding: 5px 12px;
   border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
+  border: 1.5px solid #64748b;
+  background-color: #f8fafc;
+  color: #0f233e;
   font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
 }
-.chip-btn:hover { border-color: #c5a059; background: #fffdf7; }
-.lit-source-indicator { font-size: 13px; color: #475569; margin: 4px 0 12px; }
+.chip-btn:hover {
+  border-color: #0f3d68;
+  background-color: #e6f0fa;
+}
+.chip-btn.active {
+  background-color: #0f2742;
+  border-color: #0f2742;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 39, 66, 0.25);
+}
+.chip-btn.active::before {
+  content: "✓ ";
+}
+.lit-source-indicator { font-size: 13px; color: #334155; margin: 4px 0 12px; }
 
 /* 弹窗 */
 .modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(10, 22, 36, 0.65);
+  background-color: rgba(10, 22, 36, 0.72);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -1516,7 +1711,17 @@ input, textarea, select {
 }
 .modal-card { width: min(680px, 100%); max-height: 90vh; overflow-y: auto; }
 .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.close-btn { background: none; border: none; font-size: 26px; cursor: pointer; color: #64748b; }
+.close-btn {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #64748b;
+  background-color: #f8fafc;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #0f233e;
+}
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 @media (max-width: 820px) {

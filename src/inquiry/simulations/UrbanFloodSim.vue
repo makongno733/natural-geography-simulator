@@ -1139,12 +1139,12 @@ function captureEvidence() {
 
 .btn-preset {
   background: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
+  color: #e2e8f0;
+  border: 1.5px solid #64748b;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1155,9 +1155,13 @@ function captureEvidence() {
 }
 
 .btn-preset.active {
-  background: rgba(2, 132, 199, 0.28);
-  border-color: #38bdf8;
+  background: #0369a1;
+  border: 2px solid #bae6fd;
   color: #ffffff;
+}
+
+.btn-preset.active::before {
+  content: "✓ ";
 }
 
 /* 分享还原提示条 */
@@ -1239,12 +1243,12 @@ function captureEvidence() {
 
 .btn-reset-standard {
   background: #1e293b;
-  color: #93c5fd;
-  border: 1px solid #334155;
+  color: #e0f2fe;
+  border: 1.5px solid #60a5fa;
   border-radius: 6px;
   padding: 6px 10px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -1277,20 +1281,20 @@ function captureEvidence() {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
   font-size: 12px;
   font-weight: 800;
 }
 
 .locked-cond-tag {
-  background: rgba(56, 189, 248, 0.14);
-  color: #bae6fd;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: #0c4a6e;
+  color: #e0f2fe;
+  border: 1px solid #38bdf8;
   border-radius: 6px;
   padding: 2px 8px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .guess-btn-group {
@@ -1301,25 +1305,29 @@ function captureEvidence() {
 
 .guess-btn {
   background: #1e293b;
-  color: #e2e8f0;
-  border: 1px solid #334155;
+  color: #f1f5f9;
+  border: 1.5px solid #64748b;
   border-radius: 8px;
   padding: 8px 14px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   min-height: 40px;
   transition: all 0.15s ease;
 }
 
 .guess-btn:hover {
-  border-color: #38bdf8;
+  border-color: #7dd3fc;
 }
 
 .guess-btn.active {
-  background: rgba(2, 132, 199, 0.28);
-  border-color: #38bdf8;
+  background: #0369a1;
+  border: 2px solid #bae6fd;
   color: #ffffff;
+}
+
+.guess-btn.active::before {
+  content: "✓ ";
 }
 
 .guess-feedback {
@@ -1443,36 +1451,36 @@ function captureEvidence() {
 
 .btn-focus-stage {
   background: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
+  color: #e2e8f0;
+  border: 1.5px solid #64748b;
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .btn-focus-stage:hover {
-  border-color: #38bdf8;
+  border-color: #7dd3fc;
   color: #ffffff;
 }
 
 .btn-focus-stage.active {
-  background: rgba(56, 189, 248, 0.18);
-  border-color: #38bdf8;
-  color: #e0f2fe;
+  background: #0369a1;
+  border: 2px solid #bae6fd;
+  color: #ffffff;
 }
 
 .btn-fill-claim {
   margin-left: auto;
   background: #1e293b;
-  color: #bae6fd;
-  border: 1px solid #334155;
+  color: #e0f2fe;
+  border: 1.5px solid #60a5fa;
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -1487,16 +1495,17 @@ function captureEvidence() {
   min-height: 40px;
   background: #0f172a;
   color: #f8fafc;
-  border: 1px solid #334155;
+  border: 1.5px solid #64748b;
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-generate-evidence {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
+  background-color: #0369a1;
+  background-image: linear-gradient(135deg, #0369a1, #075985);
   color: #ffffff;
-  border: 0;
+  border: 1.5px solid #bae6fd;
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 13.5px;
@@ -1645,7 +1654,8 @@ function captureEvidence() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #0284c7;
+  background: #0369a1;
+  border: 1.5px solid #bae6fd;
   color: #ffffff;
   text-decoration: none;
   border-radius: 6px;
@@ -1955,7 +1965,8 @@ input[type="range"] {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0284c7;
+  background: #0369a1;
+  border: 1.5px solid #bae6fd;
   color: #ffffff;
   font-size: 13.5px;
   font-weight: 700;

@@ -271,4 +271,93 @@ describe('Fanxing Research Application, Admin Review, Literature & Discussion-to
     const publicRes = await harness.call('GET', '/api/community/resources')
     expect(publicRes.payload.resources.some(r => r.title.includes('CLCD'))).toBe(true)
   })
+
+  it('6. prevents non-author from overwriting source post linked_project_id, rejects nonexistent sourcePostId, rejects invalid DOI, and does not fabricate task completedCount or author/year metadata', async () => {
+    const otherUser = { id: 'other-user-2', name: '李同学', email: 'li@geo.edu.cn' }
+    database.prepare('INSERT OR IGNORE INTO user (id, name, email) VALUES (?, ?, ?)').run(otherUser.id, otherUser.name, otherUser.email)
+
+    // 张同学发布原帖，关联 xuzhou-land-cover
+    const authorPost = await harness.call('POST', '/api/community/posts', {
+      user: student,
+      body: {
+        categoryId: 7,
+        kind: 'discussion',
+        title: '张同学的原始讨论帖',
+        body: '这篇讨论属于张同学，其他用户以此发起新课题时不应覆盖本帖的 linked_project_id。',
+        linkedProject: 'xuzhou-land-cover'
+      }
+    })
+    expect(authorPost.status).toBe(201)
+    const authorPostId = authorPost.payload.id
+
+    // 1) 不存在的 sourcePostId 应被 404 拒绝
+    const missingSourceRes = await harness.call('POST', '/api/fanxing/projects', {
+      user: otherUser,
+      body: {
+        title: '引用不存在帖子的课题',
+        question: '测试不存在的 sourcePostId 是否被拦截？',
+        method: '对照检验法',
+        task: '完成 5 个样点核查',
+        sourcePostId: 999999
+      }
+    })
+    expect(missingSourceRes.status).toBe(404)
+
+    // 2) 非法 DOI 应被 400 拒绝
+    const badDoiRes = await harness.call('POST', '/api/fanxing/projects', {
+      user: otherUser,
+      body: {
+        title: '包含非法DOI的课题',
+        question: '测试非法 DOI 格式是否被拦截？',
+        method: '对照检验法',
+        task: '完成 5 个样点核查',
+        paperDoi: 'not-a-valid-doi',
+        paperTitle: '某篇论文'
+      }
+    })
+    expect(badDoiRes.status).toBe(400)
+
+    // 3) 李同学引用张同学的帖子发起新课题：课题可创建并记录 sourcePostId，但不得篡改张同学原帖的 linked_project_id；也不得伪造 completedCount=1 或把发起人当论文作者
+    const otherConvertRes = await harness.call('POST', '/api/fanxing/projects', {
+      user: otherUser,
+      body: {
+        title: '李同学衍生的新课题',
+        question: '在张同学讨论基础上延伸的新研究问题是什么？',
+        method: '遥感影像对比',
+        task: '核查 10 个新样点',
+        sourcePostId: authorPostId,
+        paperDoi: '10.1038/s41586-023-06000-1',
+        paperTitle: 'A verified DOI paper without author metadata provided'
+      }
+    })
+    expect(otherConvertRes.status).toBe(201)
+    expect(otherConvertRes.payload.sourcePostLinked).toBe(false)
+    const createdProj = otherConvertRes.payload.project
+    expect(createdProj.tasks[0].completedCount).toBeUndefined()
+    expect(createdProj.papers[0].authors).toBe('请点击 DOI 链接至原出版页核对作者')
+    expect(createdProj.papers[0].year).toBeNull()
+
+    // 检查张同学原帖的 linked_project_id 仍保持为 xuzhou-land-cover
+    const rowAfter = database.prepare('SELECT linked_project_id FROM community_post WHERE id = ?').get(authorPostId)
+    expect(rowAfter.linked_project_id).toBe('xuzhou-land-cover')
+  })
+
+  it('7. prevents duplicate moderation emails when admin clicks approve repeatedly', async () => {
+    const modList = await harness.call('GET', '/api/fanxing/moderation/applications', { user: admin })
+    const appItem = modList.payload.applications.find(a => a.userId === student.id && a.projectId === 'xuzhou-land-cover')
+    const emailCountBefore = harness.sentEmails.length
+
+    // 重复提交相同状态的审核通过请求，不应再次发送邮件
+    const repeatApprove = await harness.call('POST', `/api/fanxing/moderation/applications/${appItem.id}`, {
+      user: admin,
+      body: {
+        action: 'approve',
+        reviewNote: appItem.reviewNote,
+        collabQqGroup: appItem.collabQqGroup
+      }
+    })
+    expect(repeatApprove.status).toBe(200)
+    expect(repeatApprove.payload.deduplicated).toBe(true)
+    expect(harness.sentEmails.length).toBe(emailCountBefore)
+  })
 })

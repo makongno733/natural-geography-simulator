@@ -5,16 +5,28 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${REPO_ROOT}"
 
-echo "=== [1/5] 拉取最新 main 分支代码 ==="
-git fetch origin main
-git checkout main
-git pull --ff-only origin main
+STAMP="$(date +%Y%m%d-%H%M%S)"
 
-echo "=== [2/5] 对活动容器内的 SQLite 数据库执行在线备份 ==="
+echo "=== [1/6] 检查源码目录状态 ==="
+if [ -d "${REPO_ROOT}/.git" ]; then
+  echo "检测到 Git 仓库，拉取最新 origin/main..."
+  git fetch origin main
+  git checkout main
+  git pull --ff-only origin main
+else
+  echo "当前目录 (${REPO_ROOT}) 非 Git 仓库，直接使用当前已同步的目录文件构建。"
+fi
+
+echo "=== [2/6] 保存当前镜像回退标签 ==="
+if docker image inspect geo-account:0.1.0 >/dev/null 2>&1; then
+  docker tag geo-account:0.1.0 "geo-account:pre-${STAMP}"
+  echo "已保留旧镜像回退标签: geo-account:pre-${STAMP}"
+fi
+
+echo "=== [3/6] 对活动容器内的 SQLite 数据库执行在线一致性备份 ==="
 BACKUP_DIR="/opt/geo-account-backups"
 mkdir -p "${BACKUP_DIR}"
 chmod 700 "${BACKUP_DIR}"
-STAMP="$(date +%Y%m%d-%H%M%S)"
 if docker compose -f deploy/account/compose.yaml ps --status running | grep -q account; then
   docker compose -f deploy/account/compose.yaml exec -T account node -e '
     import("better-sqlite3").then(async ({ default: Database }) => {
@@ -30,18 +42,21 @@ if docker compose -f deploy/account/compose.yaml ps --status running | grep -q a
   CONTAINER_ID="$(docker compose -f deploy/account/compose.yaml ps -q account)"
   docker cp "${CONTAINER_ID}:/tmp/account-pre-update.sqlite" "${BACKUP_DIR}/account-${STAMP}.sqlite"
   chmod 600 "${BACKUP_DIR}/account-${STAMP}.sqlite"
-  echo "已保存安全备份: ${BACKUP_DIR}/account-${STAMP}.sqlite"
+  echo "已保存并通过完整性校验的备份: ${BACKUP_DIR}/account-${STAMP}.sqlite"
 fi
 
-echo "=== [3/5] 构建最新 Better Auth 账号服务镜像 ==="
+echo "=== [4/6] 构建最新账号与社区服务镜像（含 dist-account 与 src/fanxing/catalog.js） ==="
 docker compose -f deploy/account/compose.yaml build account
 
-echo "=== [4/5] 执行数据库幂等迁移并重启账号容器 ==="
+echo "=== [5/6] 执行数据库幂等迁移并重启账号容器 ==="
 docker compose -f deploy/account/compose.yaml run --rm --no-deps account node server/migrate.mjs
 docker compose -f deploy/account/compose.yaml up -d account
 
-echo "=== [5/5] 核验本地 127.0.0.1:4100 健康状态与 Better Auth 配置 ==="
-sleep 2
-curl -fsS http://127.0.0.1:4100/api/health && echo ""
-curl -fsS http://127.0.0.1:4100/api/config && echo ""
-echo "=== 账号服务更新完成 ==="
+echo "=== [6/6] 核验本地 127.0.0.1:4100 核心接口 ==="
+sleep 3
+for ep in "/api/health" "/api/config" "/api/community/posts" "/api/community/resources" "/api/fanxing/projects"; do
+  echo "-> 检查 ${ep}"
+  curl -fsS "http://127.0.0.1:4100${ep}" | head -c 240
+  echo ""
+done
+echo "=== 账号服务更新与接口核验完成（回退镜像: geo-account:pre-${STAMP}） ==="

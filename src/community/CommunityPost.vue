@@ -956,17 +956,19 @@ onBeforeUnmount(() => stream?.close())
 }
 
 .baroque-reply-trigger {
-  border: 0;
-  background: transparent;
-  color: var(--geo-ocean);
+  border: 1.5px solid #475569;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #0c3960;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 10px;
 }
 
 .baroque-reply-trigger:hover {
-  text-decoration: underline;
+  background: #e2effb;
+  border-color: #0f3d68;
 }
 
 /* 回复表单 */

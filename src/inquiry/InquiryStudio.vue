@@ -330,25 +330,25 @@ function loadExemplary() {
 .btn-back-community {
   display: inline-flex;
   align-items: center;
-  color: #bae6fd;
+  color: #f0f9ff;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
   padding: 5px 10px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(186, 230, 253, 0.25);
+  background-color: #16364d;
+  border: 1.5px solid #7dd3fc;
 }
 
 .btn-back-community:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background-color: #1e4b6b;
   color: #ffffff;
 }
 
 .focused-mode-pill {
-  background: rgba(56, 189, 248, 0.2);
-  color: #7dd3fc;
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  background-color: #0369a1;
+  color: #ffffff;
+  border: 1px solid #7dd3fc;
   font-size: 12px;
   font-weight: 700;
   padding: 3px 9px;
@@ -362,9 +362,9 @@ function loadExemplary() {
 
 .btn-expand-full-studio,
 .btn-collapse-to-compare {
-  background: rgba(14, 165, 233, 0.18);
-  color: #e0f2fe;
-  border: 1px solid rgba(56, 189, 248, 0.45);
+  background-color: #0369a1;
+  color: #ffffff;
+  border: 1.5px solid #bae6fd;
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 12.5px;
@@ -375,7 +375,7 @@ function loadExemplary() {
 
 .btn-expand-full-studio:hover,
 .btn-collapse-to-compare:hover {
-  background: rgba(14, 165, 233, 0.32);
+  background-color: #0284c7;
   color: #ffffff;
 }
 
@@ -438,9 +438,9 @@ function loadExemplary() {
   align-items: flex-start;
   padding: 10px 18px;
   background: #143547;
-  border: 1px solid #234e66;
+  border: 1.5px solid #60a5fa;
   border-radius: 8px;
-  color: #cbd5e1;
+  color: #e2e8f0;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -451,10 +451,10 @@ function loadExemplary() {
 }
 
 .tab-btn.active {
-  background: #0284c7;
-  border-color: #38bdf8;
+  background: #0369a1;
+  border: 2px solid #bae6fd;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35), inset 0 -3px 0 #fde047;
 }
 
 .tab-badge {
@@ -523,7 +523,7 @@ function loadExemplary() {
   flex-direction: column;
   padding: 6px 14px;
   background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #475569;
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
@@ -532,12 +532,12 @@ function loadExemplary() {
 
 .task-pill:hover {
   background: #eff6ff;
-  border-color: #93c5fd;
+  border-color: #0369a1;
 }
 
 .task-pill.active {
-  background: #0284c7;
-  border-color: #0284c7;
+  background: #0369a1;
+  border: 2px solid #072138;
   color: #ffffff;
 }
 
@@ -668,9 +668,9 @@ function loadExemplary() {
 
 .btn-start-inquiry {
   width: 100%;
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
-  border: 0;
+  border: 1.5px solid #072138;
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 14px;
@@ -680,7 +680,7 @@ function loadExemplary() {
 }
 
 .btn-start-inquiry:hover {
-  background: #0369a1;
+  background: #075985;
 }
 
 @media (max-width: 640px) {

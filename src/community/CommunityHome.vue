@@ -496,26 +496,26 @@
         </router-link>
       </div>
 
-      <!-- 主页直达的前沿研究论文与方法卡片（支持实时检索 Crossref DOI 并一键发起讨论） -->
+      <!-- 主页直达的精选课题参考论文卡片（明确标注为精选经典参考目录，支持前往繁星大厅实时检索 Crossref DOI） -->
       <div class="hot-topics-bar baroque-frame" style="margin-top: 16px">
         <div class="hot-topics-header">
           <span class="baroque-corner-ornament">📖</span>
-          <h3>前沿地理研究论文与方法（Crossref DOI 实时核验）</h3>
-          <span class="hot-topics-subtitle">真实同行评议期刊论文 · 点击 DOI 可跳转官方原文，或一键带入社区讨论</span>
-          <router-link class="baroque-btn baroque-btn-sm" to="/fanxing">检索更多 DOI 论文 →</router-link>
+          <h3>精选课题参考论文与开放文献检索（DOI 来源核验）</h3>
+          <span class="hot-topics-subtitle">内置课题精选参考文献目录 · 点击可核对 DOI 原文，或前往繁星大厅实时检索 Crossref</span>
+          <router-link class="baroque-btn baroque-btn-sm" to="/fanxing">打开 Crossref 实时文献检索 →</router-link>
         </div>
         <div class="hot-topics-grid" style="margin-top: 12px">
           <article v-for="paper in homeFeaturedPapers" :key="paper.doi" class="hot-topic-card">
             <div class="topic-card-badges">
-              <span class="topic-tag">{{ paper.topic }}</span>
+              <span class="topic-tag">{{ paper.workTypeLabel || '期刊论文（精选文献）' }}</span>
               <span class="topic-origin-badge">{{ paper.journal }} ({{ paper.year }})</span>
             </div>
             <h4>{{ paper.title }}</h4>
-            <p class="topic-clean-summary">作者：{{ paper.authors }} · DOI: {{ paper.doi }}</p>
+            <p class="topic-clean-summary">作者：{{ paper.authors }} · 关联方向：{{ paper.topic }} · DOI: {{ paper.doi }}</p>
             <div class="topic-foot">
-              <a :href="paper.url" target="_blank" rel="noopener noreferrer">核验 DOI 原文 ↗</a>
+              <a :href="paper.url" target="_blank" rel="noopener noreferrer">核对 DOI 原文 ↗</a>
               <button type="button" class="topic-link" @click="prefillComposeFromPaper(paper)">
-                带着论文去讨论 →
+                带着文献去讨论 →
               </button>
             </div>
           </article>
@@ -1509,18 +1509,19 @@ onBeforeUnmount(() => {
 }
 
 .flagship-tag-main {
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
+  border: 1px solid #bae6fd;
 }
 
 .flagship-tag-sim {
-  background: rgba(245, 158, 11, 0.22);
-  color: #fde68a;
-  border: 1px solid rgba(245, 158, 11, 0.48);
+  background: #78350f;
+  color: #fef3c7;
+  border: 1px solid #fbbf24;
   font-size: 11.5px;
   font-weight: 700;
   padding: 2px 8px;
@@ -1539,7 +1540,7 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: #dbeafe;
+  color: #f0f9ff;
 }
 
 .flagship-start-btn {
@@ -1547,13 +1548,16 @@ onBeforeUnmount(() => {
   font-weight: 800;
   padding: 10px 18px;
   font-size: 14px;
-  background: linear-gradient(135deg, #0284c7, #0f766e);
-  border-color: #38bdf8;
+  background-color: #0369a1;
+  background-image: linear-gradient(135deg, #0369a1, #0f766e);
+  border: 1.5px solid #bae6fd;
   color: #ffffff;
 }
 
 .hero-global-search-btn {
-  border-color: rgba(163, 233, 221, 0.45);
+  background-color: #ffffff;
+  color: #0b2236;
+  border: 1.5px solid #bae6fd;
 }
 
 /* 发帖实时预览与失败重试 */
@@ -2138,15 +2142,21 @@ onBeforeUnmount(() => {
 
 .topic-summary-toggle {
   align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--geo-ocean);
+  padding: 4px 10px;
+  border: 1.5px solid #475569;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f233e;
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   margin-bottom: 10px;
+}
+
+.topic-summary-toggle:hover {
+  background: #e2effb;
+  border-color: #0f3d68;
 }
 
 .topic-summary-detail {
@@ -2179,12 +2189,18 @@ onBeforeUnmount(() => {
 }
 
 .topic-link {
-  color: var(--geo-ocean);
+  color: #0c3960;
   font-weight: 700;
-  background: transparent;
-  border: 0;
-  padding: 0;
+  background: #f1f7fc;
+  border: 1.5px solid #3b719f;
+  border-radius: 6px;
+  padding: 4px 10px;
   cursor: pointer;
+}
+
+.topic-link:hover {
+  background: #dcebf7;
+  border-color: #0f3d68;
 }
 
 /* 社区主体布局 */
@@ -2208,37 +2224,45 @@ onBeforeUnmount(() => {
 .baroque-filter-btn {
   padding: 7px 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-muted);
+  border: 1.5px solid #475569;
+  background: #ffffff;
+  color: #1e293b;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--geo-btn-transition);
 }
 
 .baroque-filter-btn.active {
-  background: var(--geo-ocean);
+  background: #0f3d68;
   color: #ffffff;
-  border-color: var(--geo-ocean);
+  border: 2px solid #072138;
   box-shadow: var(--geo-btn-primary-shadow);
+}
+
+.baroque-filter-btn.active::before {
+  content: "✓ ";
 }
 
 .baroque-sort-btn {
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-faint);
+  border: 1.5px solid #64748b;
+  background: #ffffff;
+  color: #1e293b;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .baroque-sort-btn.active {
-  color: var(--geo-ocean);
-  background: var(--geo-ocean-surface);
-  border-color: var(--border);
+  color: #ffffff;
+  background: #0f3d68;
+  border: 2px solid #072138;
+}
+
+.baroque-sort-btn.active::before {
+  content: "✓ ";
 }
 
 /* 帖子卡片 */
@@ -2427,21 +2451,22 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: var(--bg-soft);
+  border: 1.5px solid #64748b;
+  background: #f8fafc;
   cursor: pointer;
   text-align: left;
   transition: var(--geo-btn-transition);
 }
 
 .baroque-cat-btn:hover {
-  background: var(--geo-ocean-surface);
-  border-color: var(--border);
+  background: #e2effb;
+  border-color: #0f3d68;
 }
 
 .baroque-cat-btn.active {
-  background: var(--geo-ocean-surface);
-  border-color: var(--geo-ocean);
+  background: #dcebf7;
+  border: 2px solid #0f3d68;
+  box-shadow: inset 4px 0 0 #0f3d68;
 }
 
 .cat-left {
@@ -2499,7 +2524,7 @@ onBeforeUnmount(() => {
 .group-mini-item span {
   font-size: 11px;
   font-family: ui-monospace, SFMono-Regular, monospace;
-  color: #c5a059;
+  color: #6e4f12;
   font-weight: 700;
 }
 
@@ -2604,14 +2629,15 @@ onBeforeUnmount(() => {
 }
 
 .hero-secondary-btn {
-  background: rgba(255, 255, 255, 0.92);
-  color: #0e3846;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  background-color: #ffffff;
+  color: #0b2236;
+  border: 1.5px solid #bae6fd;
+  font-weight: 700;
 }
 
 .hero-secondary-btn:hover {
-  background: #ffffff;
-  color: #09252e;
+  background-color: #e2effb;
+  color: #071322;
 }
 
 .early-community-guide {

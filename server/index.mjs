@@ -5,12 +5,12 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.mjs'
-import { database } from './database.mjs'
+import { database, migrateComments, migrateGeoEvents, migrateInquirySystem } from './database.mjs'
 import { allowedOrigins, mailReady, requireEmailVerification } from './config.mjs'
 import { answerLessonQuestion } from './lesson-ai.mjs'
 import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 import { setupInquiryRoutes } from './inquiry.mjs'
-import { setupCommunityRoutes } from './community.mjs'
+import { migrateCommunity, setupCommunityRoutes } from './community.mjs'
 import { migrateFanxing, setupFanxingRoutes } from './fanxing.mjs'
 import { startHotTopicSync } from './hot-topics.mjs'
 
@@ -150,7 +150,13 @@ app.delete('/api/comments/:id', requireOrigin, requireUser, (req, res) => {
   res.status(204).end()
 })
 
-try { migrateFanxing() } catch {}
+// 启动时显式执行全部加法迁移（确保即使容器 CMD 为 node server/index.mjs 也能补齐所有旧表新列）
+migrateComments()
+migrateGeoEvents()
+migrateInquirySystem()
+migrateCommunity()
+migrateFanxing()
+
 setupInquiryRoutes(app, { requireOrigin, requireUser })
 setupCommunityRoutes(app, { requireOrigin, requireUser, optionalUser })
 setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUser })

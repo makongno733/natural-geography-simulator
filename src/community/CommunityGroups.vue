@@ -224,7 +224,8 @@ onMounted(loadGroups)
 .groups-hero {
   padding: 44px 36px;
   margin-bottom: 28px;
-  background: radial-gradient(circle at 80% 20%, #15273f 0%, #0d1a2d 60%, #08111e 100%);
+  background-color: #0d1a2d;
+  background-image: radial-gradient(circle at 80% 20%, #15273f 0%, #0d1a2d 60%, #08111e 100%);
   color: #f5f3ec;
   border-radius: var(--radius-box);
   border: 1px solid rgba(197, 160, 89, 0.35);
@@ -263,26 +264,31 @@ onMounted(loadGroups)
 
 .baroque-tab {
   padding: 8px 18px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  border: 1.5px solid #475569;
   border-radius: var(--radius-pill);
-  color: var(--text-muted);
+  color: #1e293b;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s var(--geo-flow-ease);
 }
 
 .baroque-tab:hover {
-  border-color: var(--baroque-bronze);
-  color: var(--text);
+  border-color: #0f3d68;
+  background: #f1f7fc;
+  color: #071322;
 }
 
 .baroque-tab.active {
-  background: var(--geo-ocean-deep);
-  border-color: var(--baroque-bronze);
-  color: #f5f3ec;
+  background: #0f2742;
+  border: 2px solid #071322;
+  color: #ffffff;
   box-shadow: 0 2px 8px rgba(15, 39, 66, 0.18);
+}
+
+.baroque-tab.active::before {
+  content: "✓ ";
 }
 
 .groups-grid {

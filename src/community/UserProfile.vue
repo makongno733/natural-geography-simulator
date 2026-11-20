@@ -58,8 +58,8 @@
               <span class="stat-label">获得赞同</span>
             </div>
             <div class="stat-box">
-              <span class="stat-num highlight-stat">{{ profileData.stats?.projectsJoinedCount ?? (fanxingProjects.length || 0) }}</span>
-              <span class="stat-label">科研课题协作</span>
+              <span class="stat-num highlight-stat">{{ profileData.stats?.projectsJoinedCount ?? 0 }}</span>
+              <span class="stat-label">已加入课题</span>
             </div>
           </div>
         </div>
@@ -90,10 +90,10 @@
         </form>
       </section>
 
-      <!-- 繁星计划科研课题参与及申请进度（本人可见全部审核状态与解锁的QQ群，访客可见已通过课题贡献） -->
+      <!-- 繁星计划科研课题参与及申请进度（本人可见全部审核状态与解锁的QQ群，访客可见已加入课题记录） -->
       <section class="profile-posts-section">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px">
-          <h3 class="posts-heading" style="margin: 0">🌟 繁星计划科研课题协作与贡献</h3>
+          <h3 class="posts-heading" style="margin: 0">🌟 繁星计划课题申请与参与记录</h3>
           <router-link to="/fanxing" class="baroque-btn baroque-btn-sm">前往繁星课题大厅 →</router-link>
         </div>
         <div v-if="fanxingProjects.length" class="profile-posts-list">
@@ -360,7 +360,7 @@ onMounted(async () => {
 }
 
 .highlight-stat {
-  color: #c5a059;
+  color: #0b4a7d;
 }
 
 .stat-label {
