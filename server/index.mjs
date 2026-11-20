@@ -11,6 +11,7 @@ import { answerLessonQuestion } from './lesson-ai.mjs'
 import { getGeoEvents, startGeoEventSync } from './geo-events.mjs'
 import { setupInquiryRoutes } from './inquiry.mjs'
 import { setupCommunityRoutes } from './community.mjs'
+import { migrateFanxing, setupFanxingRoutes } from './fanxing.mjs'
 import { startHotTopicSync } from './hot-topics.mjs'
 
 const app = express()
@@ -149,8 +150,10 @@ app.delete('/api/comments/:id', requireOrigin, requireUser, (req, res) => {
   res.status(204).end()
 })
 
+try { migrateFanxing() } catch {}
 setupInquiryRoutes(app, { requireOrigin, requireUser })
 setupCommunityRoutes(app, { requireOrigin, requireUser, optionalUser })
+setupFanxingRoutes(app, { requireOrigin, requireUser, optionalUser })
 
 app.get('/api/*splat', (_req, res) => res.status(404).json({ error: '接口不存在' }))
 app.use(express.static(distPath, { index: false }))

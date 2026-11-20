@@ -100,6 +100,15 @@ export function migrateCommunity() {
   if (!columns.includes('evidence_facts')) {
     database.exec("ALTER TABLE community_post ADD COLUMN evidence_facts TEXT DEFAULT NULL;")
   }
+  if (!columns.includes('linked_project_id')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN linked_project_id TEXT DEFAULT NULL;")
+  }
+  if (!columns.includes('paper_doi')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN paper_doi TEXT DEFAULT NULL;")
+  }
+  if (!columns.includes('paper_title')) {
+    database.exec("ALTER TABLE community_post ADD COLUMN paper_title TEXT DEFAULT NULL;")
+  }
 
   // 扩展表：点赞、收藏、用户资料、学术交流社群、热点讨论、资源共享库
   database.exec(`
@@ -174,6 +183,17 @@ export function migrateCommunity() {
   }
   if (!groupCols.includes('created_at')) {
     database.exec("ALTER TABLE community_group ADD COLUMN created_at TEXT NOT NULL DEFAULT '';")
+  }
+
+  const resCols = database.prepare("PRAGMA table_info(community_resource)").all().map(c => c.name)
+  if (!resCols.includes('status')) {
+    database.exec("ALTER TABLE community_resource ADD COLUMN status TEXT NOT NULL DEFAULT 'approved';")
+  }
+  if (!resCols.includes('submitted_by')) {
+    database.exec("ALTER TABLE community_resource ADD COLUMN submitted_by TEXT REFERENCES user(id);")
+  }
+  if (!resCols.includes('created_at')) {
+    database.exec("ALTER TABLE community_resource ADD COLUMN created_at TEXT NOT NULL DEFAULT '';")
   }
 
   const topicColumns = database.prepare('PRAGMA table_info(community_hot_topic)').all().map(column => column.name)
@@ -295,6 +315,10 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     if (categoryId) { clauses.push('p.category_id = ?'); params.push(categoryId) }
     if (kind) { clauses.push('p.kind = ?'); params.push(kind) }
     if (tag) { clauses.push('p.tags LIKE ?'); params.push(`%"${tag}"%`) }
+    if (typeof req.query.project === 'string' && req.query.project.trim()) {
+      clauses.push('p.linked_project_id = ?')
+      params.push(req.query.project.trim().slice(0, 80))
+    }
     if (req.query.hasAccepted === '1') {
       clauses.push("p.kind = 'question'")
       clauses.push("EXISTS (SELECT 1 FROM community_reply accepted WHERE accepted.id = p.accepted_reply_id AND accepted.post_id = p.id AND accepted.status = 'published')")
@@ -317,6 +341,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const sql = `SELECT p.id, p.kind, p.title, substr(p.body, 1, 160) AS excerpt,
       p.created_at AS createdAt, p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
       p.compare_url AS compareUrl, p.evidence_title AS evidenceTitle, p.evidence_conditions AS conditions, p.evidence_facts AS facts,
+      p.linked_project_id AS linkedProject, p.paper_doi AS paperDoi, p.paper_title AS paperTitle,
       p.accepted_reply_id AS acceptedReplyId, c.name AS category, c.id AS categoryId, u.name AS author, p.author_id AS authorId,
       (SELECT substr(r.body, 1, 140) FROM community_reply r WHERE r.id = p.accepted_reply_id AND r.post_id = p.id AND r.status = 'published') AS acceptedAnswerExcerpt,
       (SELECT COUNT(*) FROM community_reply r WHERE r.post_id = p.id AND r.status = 'published') AS replyCount,
@@ -349,6 +374,7 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const post = database.prepare(`SELECT p.id, p.author_id AS authorId, p.category_id AS categoryId, p.kind, p.title, p.body,
       p.tags, p.linked_experiment AS linkedExperiment, p.evidence_card AS evidenceId,
       p.compare_url AS compareUrl, p.evidence_title AS evidenceTitle, p.evidence_conditions AS conditions, p.evidence_facts AS facts,
+      p.linked_project_id AS linkedProject, p.paper_doi AS paperDoi, p.paper_title AS paperTitle,
       p.accepted_reply_id AS acceptedReplyId,
       p.created_at AS createdAt, c.name AS category, u.name AS author,
       (SELECT COUNT(*) FROM community_post_like l WHERE l.post_id = p.id) AS likeCount,
@@ -398,6 +424,13 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
     const evidenceTitle = typeof req.body?.evidenceTitle === 'string' ? clean(req.body.evidenceTitle, 160) : null
     const evidenceConditions = typeof req.body?.conditions === 'string' ? clean(req.body.conditions, 300) : null
     const evidenceFacts = typeof req.body?.facts === 'string' ? clean(req.body.facts, 500) : null
+    const linkedProject = typeof req.body?.linkedProject === 'string' && req.body.linkedProject.trim().length <= 80
+      ? req.body.linkedProject.trim()
+      : null
+    const paperDoi = typeof req.body?.paperDoi === 'string' && req.body.paperDoi.trim().length <= 120
+      ? req.body.paperDoi.trim().replace(/^https?:\/\/doi\.org\//i, '')
+      : null
+    const paperTitle = typeof req.body?.paperTitle === 'string' ? clean(req.body.paperTitle, 200) : null
 
     if (!title || !body || !categoryId || !kind) return res.status(400).json({ error: '请完整填写标题、内容、分区和类型' })
     if (!database.prepare('SELECT 1 FROM community_category WHERE id = ? AND active = 1').get(categoryId)) return res.status(400).json({ error: '分区不存在' })
@@ -417,9 +450,9 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
     const now = new Date().toISOString()
     const result = database.prepare(
-      `INSERT INTO community_post (author_id, category_id, kind, title, body, tags, linked_experiment, evidence_card, compare_url, evidence_title, evidence_conditions, evidence_facts, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(req.accountUser.id, categoryId, kind, title, body, tags, linkedExperiment, evidenceCard, compareUrl, evidenceTitle, evidenceConditions, evidenceFacts, now, now)
+      `INSERT INTO community_post (author_id, category_id, kind, title, body, tags, linked_experiment, evidence_card, compare_url, evidence_title, evidence_conditions, evidence_facts, linked_project_id, paper_doi, paper_title, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(req.accountUser.id, categoryId, kind, title, body, tags, linkedExperiment, evidenceCard, compareUrl, evidenceTitle, evidenceConditions, evidenceFacts, linkedProject, paperDoi, paperTitle, now, now)
 
     announce('post', result.lastInsertRowid)
     res.status(201).json({ id: result.lastInsertRowid })
@@ -585,9 +618,29 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
       JOIN community_post p ON p.id = l.post_id
       WHERE p.author_id = ?`).get(userId).n
 
-    const recentPosts = database.prepare(`SELECT p.id, p.kind, p.title, p.created_at AS createdAt, c.name AS category
+    const recentPosts = database.prepare(`SELECT p.id, p.kind, p.title, p.created_at AS createdAt, c.name AS category,
+      p.linked_project_id AS linkedProject, p.paper_doi AS paperDoi
       FROM community_post p JOIN community_category c ON c.id = p.category_id
       WHERE p.author_id = ? AND p.status = 'published' ORDER BY p.created_at DESC LIMIT 10`).all(userId)
+
+    let projectsJoinedCount = 0
+    let fanxingParticipations = []
+    try {
+      projectsJoinedCount = database.prepare("SELECT COUNT(*) AS n FROM fanxing_application WHERE user_id = ? AND status = 'approved'").get(userId)?.n || 0
+      fanxingParticipations = database.prepare(`
+        SELECT a.project_id AS projectId, a.preferred_task AS preferredTask, a.status,
+               a.updated_at AS updatedAt, p.title AS projectTitle, p.field AS projectField, p.phase AS projectPhase
+        FROM fanxing_application a
+        JOIN fanxing_project p ON p.id = a.project_id
+        WHERE a.user_id = ? AND a.status = 'approved'
+        ORDER BY a.updated_at DESC LIMIT 10
+      `).all(userId)
+    } catch {}
+
+    let resourcesContributedCount = 0
+    try {
+      resourcesContributedCount = database.prepare("SELECT COUNT(*) AS n FROM community_resource WHERE submitted_by = ? AND status = 'approved'").get(userId)?.n || 0
+    } catch {}
 
     res.json({
       user: {
@@ -598,9 +651,12 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
       stats: {
         postsCount,
         acceptedAnswersCount,
-        likesReceived
+        likesReceived,
+        projectsJoinedCount,
+        resourcesContributedCount
       },
-      recentPosts
+      recentPosts,
+      fanxingParticipations
     })
   })
 
@@ -757,8 +813,53 @@ export function setupCommunityRoutes(app, { requireOrigin, requireUser, optional
 
   // 15. 地理数据与学术资源开放共享
   app.get('/api/community/resources', (_req, res) => {
-    const resources = database.prepare('SELECT id, title, category, format, scale, description, source_url AS sourceUrl, license FROM community_resource ORDER BY sort_order, id').all()
+    const resources = database.prepare("SELECT id, title, category, format, scale, description, source_url AS sourceUrl, license FROM community_resource WHERE status = 'approved' ORDER BY sort_order, id").all()
     res.json({ resources })
+  })
+
+  app.post('/api/community/resources/submit', requireOrigin, requireUser, (req, res) => {
+    const title = clean(req.body?.title, 100)
+    const category = clean(req.body?.category, 40)
+    const format = clean(req.body?.format, 60) || 'GeoTIFF / CSV / Web'
+    const scale = clean(req.body?.scale, 60) || '全球或区域尺度'
+    const description = clean(req.body?.description, 300)
+    const sourceUrl = typeof req.body?.sourceUrl === 'string' ? req.body.sourceUrl.trim() : ''
+    const license = clean(req.body?.license, 100)
+
+    if (!title || !category || !description || !license || !/^https?:\/\/\S+$/i.test(sourceUrl) || sourceUrl.length > 300) {
+      return res.status(400).json({ error: '请完整填写资源名称、分类、描述、开放许可协议及有效的 https 源地址' })
+    }
+
+    const now = new Date().toISOString()
+    const result = database.prepare(`
+      INSERT INTO community_resource (title, category, format, scale, description, source_url, license, status, submitted_by, created_at, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 100)
+    `).run(title, category, format, scale, description, sourceUrl, license, req.accountUser.id, now)
+
+    res.status(201).json({ id: result.lastInsertRowid, status: 'pending' })
+  })
+
+  app.get('/api/community/moderation/resources', requireUser, (req, res) => {
+    if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
+    const resources = database.prepare(`
+      SELECT r.id, r.title, r.category, r.format, r.scale, r.description,
+             r.source_url AS sourceUrl, r.license, r.status, r.created_at AS createdAt,
+             u.name AS submittedByAuthor
+      FROM community_resource r LEFT JOIN user u ON u.id = r.submitted_by
+      ORDER BY CASE r.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, r.id DESC
+    `).all()
+    res.json({ resources })
+  })
+
+  app.post('/api/community/moderation/resources/:id', requireOrigin, requireUser, (req, res) => {
+    if (!isAdmin(req.accountUser.id)) return res.status(403).json({ error: '没有管理权限' })
+    const id = positiveId(req.params.id)
+    const action = req.body?.action
+    if (!id || !['approve', 'reject'].includes(action)) return res.status(400).json({ error: '无效审核操作' })
+    const status = action === 'approve' ? 'approved' : 'rejected'
+    const result = database.prepare("UPDATE community_resource SET status = ? WHERE id = ?").run(status, id)
+    if (result.changes === 0) return res.status(404).json({ error: '资源不存在' })
+    res.json({ id, status })
   })
 
   // 16. 举报与审核处理

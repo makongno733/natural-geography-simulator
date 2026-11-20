@@ -57,6 +57,10 @@
               <span class="stat-num">{{ profileData.stats?.likesReceived ?? 0 }}</span>
               <span class="stat-label">获得赞同</span>
             </div>
+            <div class="stat-box">
+              <span class="stat-num highlight-stat">{{ profileData.stats?.projectsJoinedCount ?? (fanxingProjects.length || 0) }}</span>
+              <span class="stat-label">科研课题协作</span>
+            </div>
           </div>
         </div>
       </header>
@@ -84,6 +88,44 @@
             <button class="baroque-btn" type="button" @click="isEditing = false">取消</button>
           </div>
         </form>
+      </section>
+
+      <!-- 繁星计划科研课题参与及申请进度（本人可见全部审核状态与解锁的QQ群，访客可见已通过课题贡献） -->
+      <section class="profile-posts-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px">
+          <h3 class="posts-heading" style="margin: 0">🌟 繁星计划科研课题协作与贡献</h3>
+          <router-link to="/fanxing" class="baroque-btn baroque-btn-sm">前往繁星课题大厅 →</router-link>
+        </div>
+        <div v-if="fanxingProjects.length" class="profile-posts-list">
+          <router-link
+            v-for="fp in fanxingProjects"
+            :key="fp.projectId"
+            :to="`/fanxing/${fp.projectId}`"
+            class="profile-post-card baroque-frame"
+          >
+            <div class="post-header-line">
+              <span class="post-kind-tag" :class="fp.status === 'approved' ? 'kind-discussion' : 'kind-question'">
+                {{ fp.status === 'approved' ? '✅ 已加入课题组' : fp.status === 'rejected' ? '❌ 未通过' : '⏳ 待管理员审核' }}
+              </span>
+              <span class="post-cat-name">{{ fp.projectField || '地理科研协作' }} · {{ fp.projectPhase || '进行中' }}</span>
+              <span class="post-time">{{ formatDate(fp.updatedAt || fp.createdAt) }}</span>
+            </div>
+            <h4>{{ fp.projectTitle || fp.projectId }}</h4>
+            <p style="margin: 4px 0 0; font-size: 13.5px; color: #475569">
+              <strong>承担微任务：</strong>{{ fp.preferredTask }}
+            </p>
+            <p
+              v-if="fp.status === 'approved' && fp.collabChannel"
+              style="margin: 8px 0 0; padding: 8px 12px; background: #eef9f2; border: 1px solid #82e0aa; border-radius: 8px; font-size: 13px; color: #145a32"
+            >
+              🎉 <strong>已解锁课题协作渠道：</strong>{{ fp.collabChannel.qqGroup }}
+              <span v-if="fp.reviewNote"> · 审核意见：{{ fp.reviewNote }}</span>
+            </p>
+          </router-link>
+        </div>
+        <p v-else class="community-state">
+          尚未参与繁星科研课题。可前往 <router-link to="/fanxing">繁星课题大厅</router-link> 浏览课题与 DOI 文献并申请加入。
+        </p>
       </section>
 
       <!-- 学者成果专栏 -->
@@ -138,6 +180,14 @@ const profilePosts = computed(() => {
   return Array.isArray(profileData.value?.recentPosts) ? profileData.value.recentPosts : []
 })
 
+const myFanxingApplications = ref([])
+const fanxingProjects = computed(() => {
+  if (isMe.value && myFanxingApplications.value.length) {
+    return myFanxingApplications.value
+  }
+  return Array.isArray(profileData.value?.fanxingParticipations) ? profileData.value.fanxingParticipations : []
+})
+
 const formatDate = value => {
   try {
     return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value))
@@ -157,6 +207,12 @@ async function loadProfile() {
     editForm.bio = res.user?.bio || ''
     editForm.institution = res.user?.institution || ''
     editForm.location = res.user?.location || ''
+    if (currentUser.value && currentUser.value.id === res.user?.id) {
+      const myAppsRes = await apiRequest('/api/fanxing/my-applications').catch(() => null)
+      if (Array.isArray(myAppsRes?.applications)) {
+        myFanxingApplications.value = myAppsRes.applications
+      }
+    }
   } catch {
     error.value = '个人主页暂时无法载入，请稍后重试。'
   } finally {

@@ -166,7 +166,26 @@
           </router-link>
         </div>
 
-        <!-- 帖子操作工具栏：点赞、收藏 -->
+        <!-- 关联的繁星计划科研课题或学术论文 DOI -->
+        <div v-if="post.linkedProject || post.paperDoi" class="linked-experiment-box baroque-frame" style="margin-top: 14px; background: #fcfbf7">
+          <div class="exp-box-left">
+            <span class="exp-box-badge">🌟 关联繁星课题与学术文献</span>
+            <h4 v-if="post.linkedProject">本讨论隶属繁星计划课题：{{ post.linkedProject }}</h4>
+            <h4 v-else-if="post.paperTitle">关联学术论文：{{ post.paperTitle }}</h4>
+            <p v-if="post.paperDoi">
+              参考论文 DOI：<a :href="`https://doi.org/${post.paperDoi}`" target="_blank" rel="noopener noreferrer">https://doi.org/{{ post.paperDoi }} ↗</a>
+            </p>
+          </div>
+          <router-link
+            v-if="post.linkedProject"
+            :to="`/fanxing/${post.linkedProject}`"
+            class="baroque-btn baroque-btn-primary exp-box-btn"
+          >
+            查看课题详情与申请加入 →
+          </router-link>
+        </div>
+
+        <!-- 帖子操作工具栏：点赞、收藏、转化为繁星科研课题 -->
         <div class="detail-interaction-bar">
           <button
             type="button"
@@ -182,6 +201,23 @@
           >
             {{ post.bookmarked ? '🔖 已收藏' : '📑 收藏' }} ({{ post.bookmarkCount || 0 }})
           </button>
+          <router-link
+            :to="{
+              path: '/fanxing',
+              query: {
+                propose: '1',
+                fromPost: String(post.id),
+                title: post.title.replace(/^【[^】]+】/, '').trim().slice(0, 60),
+                question: post.title,
+                method: (post.body || '').slice(0, 320),
+                paperDoi: post.paperDoi || ''
+              }
+            }"
+            class="baroque-btn baroque-btn-sm"
+            style="margin-left: auto"
+          >
+            🌟 将本讨论转化为繁星课题 / 招募协作者 →
+          </router-link>
         </div>
       </article>
 

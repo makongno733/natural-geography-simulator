@@ -155,6 +155,30 @@
               </div>
             </div>
 
+            <!-- 关联繁星课题或学术论文 DOI 徽章 -->
+            <div v-if="post.linkedProject || post.paperDoi" class="post-tags-row" style="margin-top: 8px">
+              <router-link
+                v-if="post.linkedProject"
+                :to="`/fanxing/${post.linkedProject}`"
+                class="post-tag-item"
+                style="background: #fef3c7; color: #92400e; text-decoration: none; font-weight: 700"
+                @click.stop
+              >
+                🌟 关联繁星课题：{{ getFanxingProjectTitle(post.linkedProject) }} ↗
+              </router-link>
+              <a
+                v-if="post.paperDoi"
+                :href="`https://doi.org/${post.paperDoi}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="post-tag-item"
+                style="background: #e0f2fe; color: #075985; text-decoration: none; font-weight: 600"
+                @click.stop
+              >
+                📄 关联论文 DOI: {{ post.paperDoi }} ↗
+              </a>
+            </div>
+
             <!-- 标签列表 -->
             <div v-if="post.tags && post.tags.length" class="post-tags-row">
               <span v-for="t in post.tags" :key="t" class="post-tag-item" @click.stop="filterByTag(t)">#{{ t }}</span>
@@ -305,6 +329,20 @@
               </label>
             </div>
 
+            <div class="community-form-row">
+              <label>关联繁星计划科研课题 (可选)
+                <select v-model="draft.linkedProject">
+                  <option value="">不关联特定科研课题</option>
+                  <option v-for="fp in fanxingCatalogList" :key="fp.id" :value="fp.id">
+                    🌟 {{ fp.title }} ({{ fp.phase }})
+                  </option>
+                </select>
+              </label>
+              <label>关联学术论文 DOI (可选，如 10.5194/essd-13-3907-2021)
+                <input v-model.trim="draft.paperDoi" maxlength="100" placeholder="输入论文 DOI 编号，发布后自动生成 doi.org 核验链接" />
+              </label>
+            </div>
+
             <!-- 讨论发帖预览：当挂载了探究证据卡时，清晰展示模型名称、条件、结果、证据类型、适用边界与「教学仿真／真实观测」说明 -->
             <div v-if="selectedEvidenceCard" class="compose-evidence-preview" role="region" aria-label="已附带的科学证据卡预览">
               <div class="cep-head">
@@ -439,17 +477,49 @@
       </aside>
     </div>
 
-    <!-- 繁星计划（置于真实讨论列表之后，明确标注为课题协作示例预览，避免首次访问者误以为已是正式活跃招募项目） -->
+    <!-- 繁星计划科研协作与开放学术文献检索（主页直接展示在研课题、最新同行评议 DOI 论文与研究方法） -->
     <section class="community-wrap" aria-labelledby="fanxing-entry-title">
       <div class="community-section-heading baroque-frame fanxing-entry">
         <div>
           <div class="fanxing-title-row">
-            <h2 id="fanxing-entry-title">繁星计划</h2>
-            <span class="fanxing-preview-badge">课题协作示例预览 · 暂未开放正式招募</span>
+            <h2 id="fanxing-entry-title">🌟 繁星计划 · 地理科研协作与前沿论文</h2>
+            <span class="fanxing-preview-badge" style="background: #def7e5; color: #145a32; border-color: #82e0aa">
+              🟢 在线申请、后台审核与 Crossref 真实 DOI 文献已开放
+            </span>
           </div>
-          <p>展示跨校地理探究课题的分工、文献整理与阶段性成果样板（当前为静态课题示范预览，供师生参考课题组织形式）。</p>
+          <p>
+            融合 <strong>HOT Tasking Manager</strong> 开源微任务模式与 <strong>Crossref DOI</strong> 开放学术检索：浏览课题与真实论文 → 提交参与申请（动机/经验/任务/时间） → 管理员后台审核通过后自动解锁专属课题 QQ 群与起步指南。
+          </p>
         </div>
-        <router-link class="baroque-btn baroque-btn-sm" to="/fanxing">浏览课题示范样板 →</router-link>
+        <router-link class="baroque-btn baroque-btn-sm baroque-btn-primary" to="/fanxing">
+          进入繁星课题大厅与申请 →
+        </router-link>
+      </div>
+
+      <!-- 主页直达的前沿研究论文与方法卡片（支持实时检索 Crossref DOI 并一键发起讨论） -->
+      <div class="hot-topics-bar baroque-frame" style="margin-top: 16px">
+        <div class="hot-topics-header">
+          <span class="baroque-corner-ornament">📖</span>
+          <h3>前沿地理研究论文与方法（Crossref DOI 实时核验）</h3>
+          <span class="hot-topics-subtitle">真实同行评议期刊论文 · 点击 DOI 可跳转官方原文，或一键带入社区讨论</span>
+          <router-link class="baroque-btn baroque-btn-sm" to="/fanxing">检索更多 DOI 论文 →</router-link>
+        </div>
+        <div class="hot-topics-grid" style="margin-top: 12px">
+          <article v-for="paper in homeFeaturedPapers" :key="paper.doi" class="hot-topic-card">
+            <div class="topic-card-badges">
+              <span class="topic-tag">{{ paper.topic }}</span>
+              <span class="topic-origin-badge">{{ paper.journal }} ({{ paper.year }})</span>
+            </div>
+            <h4>{{ paper.title }}</h4>
+            <p class="topic-clean-summary">作者：{{ paper.authors }} · DOI: {{ paper.doi }}</p>
+            <div class="topic-foot">
+              <a :href="paper.url" target="_blank" rel="noopener noreferrer">核验 DOI 原文 ↗</a>
+              <button type="button" class="topic-link" @click="prefillComposeFromPaper(paper)">
+                带着论文去讨论 →
+              </button>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -563,7 +633,17 @@ import { toast } from '../utils/toast.js'
 import { GEO_FORMULA_PRESETS, renderGeoScholarlyText } from '../utils/mathFormula.js'
 import { STANDARD_EVIDENCES, getEvidenceById, resolveCommunityEvidence } from '../inquiry/evidenceCatalog.js'
 import { getExperimentCatalogStats } from '../experiments/catalog.js'
+import { CURATED_GEO_PAPERS, INITIAL_FANXING_PROJECTS } from '../fanxing/catalog.js'
 import CommunityMiniGlobe from './CommunityMiniGlobe.vue'
+
+const fanxingCatalogList = ref([...INITIAL_FANXING_PROJECTS])
+const homeFeaturedPapers = ref([...CURATED_GEO_PAPERS])
+
+function getFanxingProjectTitle(projectId) {
+  if (!projectId) return ''
+  const found = fanxingCatalogList.value.find(p => p.id === projectId)
+  return found ? found.title : projectId
+}
 
 const catalogStats = getExperimentCatalogStats()
 const router = useRouter()
@@ -616,7 +696,10 @@ const draft = reactive({
   compareUrl: '',
   evidenceTitle: '',
   conditions: '',
-  facts: ''
+  facts: '',
+  linkedProject: '',
+  paperDoi: '',
+  paperTitle: ''
 })
 
 const selectedEvidenceCard = computed(() =>
@@ -703,8 +786,31 @@ function clearDraft() {
   draft.evidenceTitle = ''
   draft.conditions = ''
   draft.facts = ''
+  draft.linkedProject = ''
+  draft.paperDoi = ''
+  draft.paperTitle = ''
   draftSavedHint.value = ''
   try { localStorage.removeItem(DRAFT_STORAGE_KEY) } catch {}
+}
+
+function prefillComposeFromPaper(paper) {
+  if (!paper) return
+  draft.kind = 'discussion'
+  draft.categoryId = 7
+  draft.title = `【文献研读】${paper.title.slice(0, 75)}`
+  draft.body =
+    `【论文标题】${paper.title}\n` +
+    `【作者与年份】${paper.authors} (${paper.year || '近年'})\n` +
+    `【发表期刊】${paper.journal}\n` +
+    `【DOI 核验链接】https://doi.org/${paper.doi}\n\n` +
+    `【研究方法与核心结论摘录】：\n\n` +
+    `【我的思考或结合本站实验的讨论】：`
+  draft.linkedProject = paper.projectId || ''
+  draft.paperDoi = paper.doi || ''
+  draft.paperTitle = paper.title || ''
+  tagsInput.value = `文献研读, DOI论文, ${paper.topic || '地理学前沿'}`
+  saveDraftToStorage()
+  focusCompose()
 }
 
 function applyStudentScaffold() {
@@ -1124,6 +1230,9 @@ function applyRouteQueryParams() {
           if (pending.evidenceTitle !== undefined) draft.evidenceTitle = pending.evidenceTitle
           if (pending.conditions !== undefined) draft.conditions = pending.conditions
           if (pending.facts !== undefined) draft.facts = pending.facts
+          if (pending.linkedProject !== undefined) draft.linkedProject = pending.linkedProject
+          if (pending.paperDoi !== undefined) draft.paperDoi = pending.paperDoi
+          if (pending.paperTitle !== undefined) draft.paperTitle = pending.paperTitle
           if (pending.tagsInput !== undefined) tagsInput.value = pending.tagsInput
         }
       }
@@ -1131,6 +1240,12 @@ function applyRouteQueryParams() {
   }
 
   // 2. 兼容显式 URL 参数与精简可复现参数
+  if (typeof q.linkedProject === 'string' && q.linkedProject.trim()) {
+    draft.linkedProject = q.linkedProject.trim()
+  }
+  if (typeof q.paperDoi === 'string' && q.paperDoi.trim()) {
+    draft.paperDoi = q.paperDoi.trim()
+  }
   if (typeof q.title === 'string' && q.title.trim()) {
     draft.title = q.title.trim()
   }

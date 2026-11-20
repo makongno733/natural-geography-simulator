@@ -2,6 +2,11 @@
   "name": "atmosphere-structure-teaching-system",
   "private": true,
   "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/makongno733/natural-geography-simulator.git"
+  },
   "description": "用于演示大气垂直结构、行星风带、季风洋流与海气耦合的交互式教学系统。",
   "author": "kongnoma",
   "packageManager": "pnpm@10.33.3",

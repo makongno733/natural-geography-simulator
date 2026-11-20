@@ -109,13 +109,81 @@
         </div>
       </article>
     </div>
+
+    <!-- 开放地理数据与研究方法共建推荐入口 -->
+    <section class="resource-register-cta baroque-frame" style="margin-top: 40px; padding: 28px 32px; background: #fbf9f3; border: 1px solid #d5c39c; border-radius: 16px; text-align: center">
+      <h3 style="margin: 0 0 8px; font-size: 20px; color: #142536">📤 推荐开放地学数据集、开源软件或研究方法</h3>
+      <p style="margin: 0 auto 18px; max-width: 640px; color: #475569; font-size: 14.5px; line-height: 1.6">
+        欢迎推荐具有明确开放科学许可（如 CC BY 4.0、MIT、NASA/USGS Open Data）的地理数据集、遥感反演代码或公开教学资源。管理员核实来源与许可协议后将收录至开放资源馆。
+      </p>
+      <button class="baroque-btn baroque-btn-primary" type="button" @click="showSubmitModal = true">
+        + 推荐开放地学资源入库 ✍
+      </button>
+    </section>
+
+    <div
+      v-if="showSubmitModal"
+      style="position: fixed; inset: 0; z-index: 9999; background: rgba(7, 19, 34, 0.65); display: flex; align-items: center; justify-content: center; padding: 20px"
+      role="dialog"
+      aria-modal="true"
+      @click.self="showSubmitModal = false"
+    >
+      <div class="baroque-frame" style="width: 100%; max-width: 560px; background: #fff; border-radius: 16px; padding: 26px 30px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px">
+          <h3 style="margin: 0; font-size: 20px; color: #142536">推荐开放地理科学数据或方法</h3>
+          <button type="button" style="background: none; border: none; font-size: 24px; cursor: pointer" @click="showSubmitModal = false">×</button>
+        </div>
+        <form style="display: grid; gap: 12px" @submit.prevent="submitResourceRecommendation">
+          <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+            资源 / 数据集名称
+            <input v-model.trim="resForm.title" required maxlength="100" placeholder="例如：武汉大学 CLCD 30m 中国年度土地覆盖数据集" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px" />
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+            <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+              学科分类
+              <input v-model.trim="resForm.category" required maxlength="40" placeholder="例如：对地观测卫星遥感 / 开放代码" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px" />
+            </label>
+            <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+              数据格式
+              <input v-model.trim="resForm.format" required maxlength="50" placeholder="例如：GeoTIFF / NetCDF / GitHub" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px" />
+            </label>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+            <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+              空间尺度 / 分辨率
+              <input v-model.trim="resForm.scale" required maxlength="60" placeholder="例如：全国 30m / 全球 0.25°" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px" />
+            </label>
+            <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+              开放许可协议 (必填)
+              <input v-model.trim="resForm.license" required maxlength="80" placeholder="例如：CC BY 4.0 / MIT / Public Domain" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px" />
+            </label>
+          </div>
+          <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+            官方源地址 / DOI 链接 (https://)
+            <input v-model.trim="resForm.sourceUrl" type="url" required maxlength="280" placeholder="https://doi.org/... 或官方开放数据主页" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px" />
+          </label>
+          <label style="display: grid; gap: 4px; font-size: 13px; font-weight: 600">
+            科学用途与简介
+            <textarea v-model.trim="resForm.description" required rows="3" maxlength="280" placeholder="简要说明该数据集或研究方法包含的核心变量、时间跨度与适用研究场景……" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit" />
+          </label>
+          <p v-if="submitError" class="community-state community-error" style="margin: 0">{{ submitError }}</p>
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px">
+            <button type="button" class="baroque-btn" @click="showSubmitModal = false">取消</button>
+            <button type="submit" class="baroque-btn baroque-btn-primary" :disabled="submitting">
+              {{ submitting ? '提交中…' : '递交资源审核 ✦' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { apiRequest } from '../account/client.js'
 import { mockResources } from './mockData.js'
+import { toast } from '../utils/toast.js'
 
 const resources = ref([])
 const loading = ref(false)
@@ -123,6 +191,43 @@ const error = ref('')
 const usingFallbackCatalog = ref(false)
 const filterKeyword = ref('')
 const selectedCategory = ref('全部')
+const showSubmitModal = ref(false)
+const submitting = ref(false)
+const submitError = ref('')
+
+const resForm = reactive({
+  title: '',
+  category: '',
+  format: '',
+  scale: '',
+  license: '',
+  sourceUrl: '',
+  description: ''
+})
+
+async function submitResourceRecommendation() {
+  submitting.value = true
+  submitError.value = ''
+  try {
+    await apiRequest('/api/community/resources/submit', {
+      method: 'POST',
+      body: JSON.stringify(resForm)
+    })
+    toast.success('开放资源推荐已提交！管理员核实许可协议后将公开收录。')
+    showSubmitModal.value = false
+    resForm.title = ''
+    resForm.category = ''
+    resForm.format = ''
+    resForm.scale = ''
+    resForm.license = ''
+    resForm.sourceUrl = ''
+    resForm.description = ''
+  } catch (err) {
+    submitError.value = err.message || '提交失败，请先登录账号后重试。'
+  } finally {
+    submitting.value = false
+  }
+}
 
 const resourceCategories = computed(() => {
   const set = new Set(['全部'])
@@ -153,7 +258,10 @@ async function loadResources() {
   try {
     const res = await apiRequest('/api/community/resources')
     if (!Array.isArray(res?.resources)) throw new Error('资源数据格式错误')
-    resources.value = res.resources.length ? res.resources : mockResources
+    const remoteList = res.resources
+    const existingUrls = new Set(remoteList.map(r => r.sourceUrl))
+    const merged = [...remoteList, ...mockResources.filter(m => !existingUrls.has(m.sourceUrl))]
+    resources.value = merged
     usingFallbackCatalog.value = false
   } catch {
     resources.value = mockResources
