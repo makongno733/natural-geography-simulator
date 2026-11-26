@@ -233,7 +233,8 @@
           </div>
 
           <h3 class="result-item-title">
-            <router-link :to="item.route">{{ item.title }}</router-link>
+            <a v-if="item.sourceUrl" :href="item.sourceUrl" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+            <router-link v-else :to="item.route">{{ item.title }}</router-link>
           </h3>
 
           <p class="result-item-desc">{{ item.desc }}</p>

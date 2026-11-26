@@ -33,6 +33,7 @@ it('keeps real events searchable when the community endpoint fails and opens the
   wrapper = render(); await flushPromises()
   expect(wrapper.text()).toContain('近期地理事件1')
   expect(wrapper.find(`a[href="${event.sourceUrl}"]`).attributes('rel')).toContain('noopener')
+  expect(wrapper.find(`h3 a[href="${event.sourceUrl}"]`).text()).toContain('Alaska')
   expect(wrapper.text()).not.toContain('未找到与')
 })
 it('ignores stale results when the query is cleared during pending requests', async () => {
