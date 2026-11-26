@@ -273,3 +273,30 @@ describe('community request lifecycle', () => {
     delete window.__FORCE_GLOBE_FALLBACK__
   })
 })
+
+
+describe('production search sources', () => {
+  it('does not fall back to demo posts on a successful empty search', async () => {
+    wrapper = mountCommunity(); await flushPromises()
+    vi.useFakeTimers()
+    apiRequest.mockResolvedValue({ posts: [] })
+    await wrapper.find('#community-query').setValue('DEM')
+    await vi.advanceTimersByTimeAsync(250); await flushPromises()
+    expect(wrapper.find('.wiki-suggestions-dropdown').text()).not.toContain('伪河网处理')
+    apiRequest.mockRejectedValue(new Error('offline'))
+    await wrapper.find('#community-query').setValue('水文连通性')
+    await vi.advanceTimersByTimeAsync(250); await flushPromises()
+    expect(wrapper.find('.wiki-suggestions-dropdown').text()).not.toContain('伪河网处理')
+  })
+  it('offers monitoring events for their displayed region tags and opens the real source', async () => {
+    apiRequest.mockImplementation(async path => path.includes('/hot-topics') ? { topics: [{ id: 1,
+      title: 'M4.2 地震 · Alaska', tag: '地震', sourceUrl: 'https://earthquake.usgs.gov/earthquakes/eventpage/abc' }] } : { posts: [], categories: [] })
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    wrapper = mountCommunity(); await flushPromises()
+    await wrapper.find('#community-query').setValue('阿拉斯加')
+    const option = wrapper.find('.wiki-suggestion-item')
+    expect(option.text()).toContain('Alaska')
+    await option.trigger('mousedown')
+    expect(open).toHaveBeenCalledWith('https://earthquake.usgs.gov/earthquakes/eventpage/abc', '_blank', 'noopener,noreferrer')
+  })
+})

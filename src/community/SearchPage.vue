@@ -14,7 +14,7 @@
           <h1>全站地理知识、社区讨论与科研检索</h1>
         </div>
         <div class="search-scope-note">
-          覆盖：社区讨论 · 29 项 3D 实验 · 教材章节 · 繁星科研课题与 DOI 文献 · 开放数据资源
+          覆盖：社区讨论 · 29 项 3D 实验 · 教材章节 · 繁星科研课题与 DOI 文献 · 开放数据资源 · 近期地理事件
         </div>
       </div>
 
@@ -79,6 +79,8 @@
       </div>
     </header>
 
+    <p v-if="eventsLoading" role="status">正在检索近期地理事件……</p>
+    <p v-if="eventsFailed" role="status">近期事件暂时无法读取，<button type="button" @click="fetchEvents(activeQuery)">重试事件检索</button></p>
     <!-- 维基百科式「精确词条匹配 / 最佳直达入口」卡片 -->
     <section
       v-if="exactMatches.length && activeQuery"
@@ -100,7 +102,8 @@
               <span class="result-cat-label">{{ item.category }}</span>
             </div>
             <h2 class="exact-card-title">
-              <router-link :to="item.route">{{ item.title }}</router-link>
+              <a v-if="item.sourceUrl" :href="item.sourceUrl" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+            <router-link v-else :to="item.route">{{ item.title }}</router-link>
             </h2>
             <p class="exact-card-desc">{{ item.desc }}</p>
             <div v-if="item.tags && item.tags.length" class="result-tags-row">
@@ -116,7 +119,8 @@
             </div>
           </div>
           <div class="exact-card-cta">
-            <router-link :to="item.route" class="direct-enter-btn">
+            <a v-if="item.sourceUrl" :href="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="direct-enter-btn">查看原始监测记录 ↗</a>
+            <router-link v-else :to="item.route" class="direct-enter-btn">
               直接进入词条 / 实验 →
             </router-link>
           </div>
@@ -193,7 +197,7 @@
         </div>
       </div>
 
-      <div v-if="!communityLoading && !filteredResults.length" class="empty-results-box" role="status">
+      <div v-if="!communityLoading && !eventsLoading && !filteredResults.length" class="empty-results-box" role="status">
         <h3>未找到与“{{ activeQuery }}”匹配的{{ currentTabLabel }}结果</h3>
         <p>建议检查拼写、尝试更简短的地理学科核心词（如“热力环流”、“内涝”、“DEM”、“太阳高度”），或切换到“全部类型”查看。</p>
         <div class="empty-actions">
@@ -246,7 +250,8 @@
                 #{{ t }}
               </button>
             </div>
-            <router-link :to="item.route" class="result-open-link">
+            <a v-if="item.sourceUrl" :href="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="result-open-link">查看原始监测记录 ↗</a>
+            <router-link v-else :to="item.route" class="result-open-link">
               打开查阅 →
             </router-link>
           </div>
@@ -264,7 +269,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   queryGlobalGeography,
@@ -277,7 +282,7 @@ import {
 } from '../utils/globalSearchIndex.js'
 import { derivePostTags } from '../utils/topicTags.js'
 import { accountEnabled, apiRequest } from '../account/client.js'
-import { mockPosts } from '../community/mockData.js'
+import { searchEventTopics } from '../utils/liveSearch.js'
 import { activeDesignTheme } from '../utils/designTheme.js'
 
 const route = useRoute()
@@ -307,23 +312,6 @@ const recommendedQueries = [
   '背斜为什么变成山谷',
   'ERA5'
 ]
-
-function searchLocalPosts(rawQuery) {
-  const q = normalizeSearchQuery(rawQuery).toLowerCase()
-  if (!q) return []
-  let localStored = []
-  try {
-    const raw = localStorage.getItem('local_community_posts')
-    if (raw) localStored = JSON.parse(raw)
-  } catch {}
-  const pool = [...localStored, ...mockPosts]
-  return pool
-    .filter(p => {
-      const hay = `${p.title || ''} ${p.body || ''} ${p.categoryName || ''} ${(p.tags || []).join(' ')}`.toLowerCase()
-      return hay.includes(q)
-    })
-    .map(p => mapPostToSearchResult(p))
-}
 
 function mapPostToSearchResult(post) {
   const derived = derivePostTags(post).map(t => t.label)
@@ -355,7 +343,8 @@ async function fetchCommunityPosts(rawQuery) {
   }
 
   if (!accountEnabled) {
-    communityPosts.value = searchLocalPosts(q)
+    communityFailed.value = true
+    communityNotice.value = '社区服务未配置，以下仅展示其他可检索内容。'
     return
   }
 
@@ -364,22 +353,37 @@ async function fetchCommunityPosts(rawQuery) {
     const res = await apiRequest(`/api/community/posts?${new URLSearchParams({ q })}`, { timeout: 6500 })
     if (version !== fetchVersion) return
     const remotePosts = Array.isArray(res?.posts) ? res.posts.map(p => mapPostToSearchResult(p)) : []
-    // 同时补充本地离线精选讨论中匹配但不重复的帖子，确保代表性讨论随时可查
-    const localMatches = searchLocalPosts(q)
-    const seenIds = new Set(remotePosts.map(r => r.id))
-    communityPosts.value = [...remotePosts, ...localMatches.filter(l => !seenIds.has(l.id))]
+    communityPosts.value = remotePosts
   } catch {
     if (version !== fetchVersion) return
     communityFailed.value = true
-    const fallbackMatches = searchLocalPosts(q)
-    communityPosts.value = fallbackMatches
-    communityNotice.value = fallbackMatches.length
-      ? '云端社区检索暂未响应，已为您匹配本地学术社区讨论库。'
-      : '云端社区检索暂未响应，以下展示教学、实验、繁星课题与开放资源结果。'
+    communityNotice.value = '云端社区检索暂未响应，以下仅展示其他可检索内容。'
   } finally {
     if (version === fetchVersion) {
       communityLoading.value = false
     }
+  }
+}
+
+const eventResults = ref([])
+const eventsLoading = ref(false)
+const eventsFailed = ref(false)
+let eventVersion = 0
+async function fetchEvents(q) {
+  const version = ++eventVersion
+  eventResults.value = []
+  eventsFailed.value = false
+  eventsLoading.value = false
+  if (!q || !accountEnabled) return
+  eventsLoading.value = true
+  try {
+    const response = await apiRequest('/api/community/hot-topics', { timeout: 6500 })
+    if (!Array.isArray(response?.topics)) throw new Error('Invalid event response')
+    if (version === eventVersion) eventResults.value = searchEventTopics(response.topics, q)
+  } catch {
+    if (version === eventVersion) eventsFailed.value = true
+  } finally {
+    if (version === eventVersion) eventsLoading.value = false
   }
 }
 
@@ -391,7 +395,7 @@ const staticResults = computed(() => {
 const allCombinedResults = computed(() => {
   if (!activeQuery.value) return []
   // 精确匹配优先置顶，其次按社区讨论与实验/教材/课题综合呈现
-  const merged = [...staticResults.value, ...communityPosts.value]
+  const merged = [...staticResults.value, ...communityPosts.value, ...eventResults.value]
   return merged.sort((a, b) => {
     if (Boolean(a.exactMatch) !== Boolean(b.exactMatch)) {
       return a.exactMatch ? -1 : 1
@@ -410,6 +414,7 @@ const typeTabs = computed(() => {
   return [
     { key: 'all', label: '全部结果', count: all.length },
     { key: 'community', label: '社区讨论', count: countBy('community') },
+    { key: 'event', label: '近期地理事件', count: countBy('event') },
     { key: 'experiment', label: '地理实验室', count: countBy('experiment') },
     { key: 'curriculum', label: '教材与知识库', count: countBy('curriculum') },
     { key: 'inquiry', label: '真实数据与探究', count: countBy('inquiry') },
@@ -436,11 +441,12 @@ function syncFromRoute() {
   const q = normalizeSearchQuery(typeof route.query.q === 'string' ? route.query.q : typeof route.query.tag === 'string' ? route.query.tag : '')
   const type = typeof route.query.type === 'string' ? route.query.type : 'all'
   inputKeyword.value = q
-  activeType.value = ['all', 'community', 'experiment', 'curriculum', 'inquiry', 'fanxing', 'resource'].includes(type) ? type : 'all'
+  activeType.value = ['all', 'event', 'community', 'experiment', 'curriculum', 'inquiry', 'fanxing', 'resource'].includes(type) ? type : 'all'
   visibleCount.value = 20
   if (q !== activeQuery.value) {
     activeQuery.value = q
     void fetchCommunityPosts(q)
+    void fetchEvents(q)
   }
 }
 
@@ -484,7 +490,7 @@ function setTypeFilter(typeKey) {
 
 function clearKeyword() {
   inputKeyword.value = ''
-  activeQuery.value = ''
+  // Let the route watcher invalidate pending requests and clear all result sources.
   communityPosts.value = []
   router.push({
     path: '/search',
@@ -506,6 +512,10 @@ watch(() => [route.query.q, route.query.tag, route.query.type], syncFromRoute)
 
 onMounted(() => {
   syncFromRoute()
+})
+onBeforeUnmount(() => {
+  fetchVersion += 1
+  eventVersion += 1
 })
 </script>
 

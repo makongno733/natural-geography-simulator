@@ -131,7 +131,7 @@ describe('Structured Homepage Topic Tag Derivation', () => {
     }
     const fireTags = deriveHotTopicTags(unknownPlaceEvent)
     expect(fireTags.some(t => t.dimension === 'region')).toBe(false)
-    expect(fireTags.map(t => t.label)).toContain('NASA卫星遥感监测')
+    expect(fireTags.map(t => t.label)).toContain('NASA EONET事件记录')
   })
 
   it('derives discipline, dataset/method, and verified region tags for curated DOI papers', () => {

@@ -69,18 +69,18 @@ const VERIFIED_REGION_RULES = [
   { pattern: /Solomon Islands|所罗门群岛/i, tag: '所罗门群岛', belt: '环太平洋地震带' },
   { pattern: /Papua New Guinea|巴布亚新几内亚/i, tag: '巴布亚新几内亚', belt: '环太平洋地震带' },
   { pattern: /New Zealand|新西兰/i, tag: '新西兰', belt: '西南太平洋' },
-  { pattern: /Philippines|菲律宾|Man-yi|万宜/i, tag: '菲律宾及西北太平洋', belt: '西北太平洋' },
+  { pattern: /Philippines|菲律宾/i, tag: '菲律宾', belt: '西北太平洋' },
   { pattern: /Indonesia|印度尼西亚/i, tag: '印度尼西亚', belt: '巽他弧构造带' },
   { pattern: /Vanuatu|瓦努阿图/i, tag: '瓦努阿图', belt: '西南太平洋' },
   { pattern: /Japan|日本/i, tag: '日本列岛', belt: '西北太平洋' },
-  { pattern: /Tonga|汤加/i, tag: '汤加海沟区', belt: '西南太平洋' },
+  { pattern: /Tonga|汤加/i, tag: '汤加', belt: '西南太平洋' },
   { pattern: /Fiji|斐济/i, tag: '斐济群岛', belt: '西南太平洋' },
-  { pattern: /Chile|智利/i, tag: '智利沿岸', belt: '安第斯俯冲带' },
-  { pattern: /Peru|秘鲁/i, tag: '秘鲁沿岸', belt: '东太平洋沿岸' },
+  { pattern: /Chile|智利/i, tag: '智利', belt: '安第斯俯冲带' },
+  { pattern: /Peru|秘鲁/i, tag: '秘鲁', belt: '东太平洋沿岸' },
   { pattern: /Mexico|墨西哥/i, tag: '墨西哥', belt: '中美洲构造带' },
   { pattern: /Kamchatka|勘察加/i, tag: '勘察加半岛', belt: '西北太平洋' },
   { pattern: /Alaska|阿拉斯加/i, tag: '阿拉斯加', belt: '北太平洋构造带' },
-  { pattern: /California|加利福尼亚/i, tag: '美国加州', belt: '北美西海岸' },
+  { pattern: /California|加利福尼亚|,\s*CA\b/i, tag: '美国加州', belt: '北美西海岸' },
   { pattern: /Hawaii|夏威夷/i, tag: '夏威夷群岛', belt: '中太平洋热点' },
   { pattern: /Iceland|冰岛/i, tag: '冰岛', belt: '大西洋中脊' },
   { pattern: /Taiwan|中国台湾/i, tag: '中国台湾', belt: '西太平洋岛弧' },
@@ -88,7 +88,8 @@ const VERIFIED_REGION_RULES = [
   { pattern: /徐州|潘安湖|九里湖/i, tag: '徐州转型区', belt: null },
   { pattern: /江淮|长江中下游|鄱阳湖|洞庭湖|长三角/i, tag: '长江中下游', belt: null },
   { pattern: /黄土高原|渭河/i, tag: '黄土高原', belt: null },
-  { pattern: /北京|华北/i, tag: '华北平原', belt: null }
+  { pattern: /北京(?!时间)/i, tag: '北京', belt: null },
+  { pattern: /华北/i, tag: '华北地区', belt: null }
 ]
 
 /**
@@ -200,7 +201,8 @@ export function derivePostTags(post = {}) {
 export function deriveHotTopicTags(topic = {}) {
   const rawList = []
   const rawCategory = String(topic.tag || topic.category || '自然地理事件').trim()
-  const titleAndSummary = `${topic.title || ''} ${topic.summary || ''}`
+  // Generated summaries contain display timezones and discussion prompts, not verified locations.
+  const placeText = `${topic.title || ''} ${topic.location || ''} ${topic.place || ''}`
 
   // (a) 事件类型与学科方向
   const mapped = EVENT_DISCIPLINE_MAP[rawCategory]
@@ -223,11 +225,8 @@ export function deriveHotTopicTags(topic = {}) {
   }
 
   for (const rule of VERIFIED_REGION_RULES) {
-    if (rule.pattern.test(titleAndSummary)) {
+    if (rule.pattern.test(placeText)) {
       rawList.push({ label: rule.tag, query: rule.tag, dimension: 'region' })
-      if (rule.belt) {
-        rawList.push({ label: rule.belt, query: rawCategory, dimension: 'region' })
-      }
       break
     }
   }
@@ -235,8 +234,8 @@ export function deriveHotTopicTags(topic = {}) {
   // (c) 观测与数据来源方法
   const isUsgs = String(topic.sourceUrl || '').includes('usgs.gov') || String(topic.id || '').includes('usgs')
   rawList.push({
-    label: isUsgs ? 'USGS地震台网测报' : 'NASA卫星遥感监测',
-    query: isUsgs ? '地震' : '遥感',
+    label: isUsgs ? 'USGS地震台网测报' : 'NASA EONET事件记录',
+    query: isUsgs ? '地震' : 'NASA EONET',
     dimension: 'method'
   })
 

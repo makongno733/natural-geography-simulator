@@ -789,6 +789,7 @@ import {
   isExactTitleOrConceptMatch
 } from '../utils/globalSearchIndex.js'
 import { DESIGN_THEMES, activeDesignTheme } from '../utils/designTheme.js'
+import { searchEventTopics } from '../utils/liveSearch.js'
 
 const currentSchemeInfo = computed(() => {
   return DESIGN_THEMES.find(s => s.id === activeDesignTheme.value) || DESIGN_THEMES[1]
@@ -842,7 +843,7 @@ const normalizedLiveQuery = computed(() => normalizeSearchQuery(queryInput.value
 const liveSuggestions = computed(() => {
   const q = normalizedLiveQuery.value
   if (!q) return []
-  const staticHits = queryGlobalGeography(q, { limit: 6 })
+  const staticHits = [...queryGlobalGeography(q, { limit: 6 }), ...searchEventTopics(hotTopics.value, q).slice(0, 3)]
   const seenRoutes = new Set(staticHits.map(s => s.route))
   const commHits = liveCommunitySuggestions.value.filter(c => !seenRoutes.has(c.route)).slice(0, 3)
   const merged = [...staticHits, ...commHits]
@@ -901,11 +902,12 @@ function onQueryInputChange() {
       route: `/community/post/${p.id}`
     }))
 
-  if (!accountEnabled || isDemoMode.value) {
-    liveCommunitySuggestions.value = localMatches
+  if (isDemoMode.value) {
+    liveCommunitySuggestions.value = localMatches.map(item => ({ ...item, type: '演示讨论', category: '离线演示（非真实社区记录）' }))
     return
   }
 
+  if (!accountEnabled) return
   liveCommunityLoading.value = true
   liveSearchTimer = setTimeout(async () => {
     try {
@@ -922,10 +924,10 @@ function onQueryInputChange() {
         exactMatch: isExactTitleOrConceptMatch(p, q),
         route: `/community/post/${p.id}`
       }))
-      liveCommunitySuggestions.value = remoteHits.length ? remoteHits : localMatches
+      liveCommunitySuggestions.value = remoteHits
     } catch {
       if (version === liveSearchVersion) {
-        liveCommunitySuggestions.value = localMatches
+        liveCommunitySuggestions.value = []
       }
     } finally {
       if (version === liveSearchVersion) {
@@ -950,9 +952,8 @@ function moveSuggestionHighlight(step) {
 
 function selectSuggestionItem(item) {
   closeSearchDropdown()
-  if (item?.route) {
-    router.push(item.route)
-  }
+  if (item?.sourceUrl) window.open(item.sourceUrl, '_blank', 'noopener,noreferrer')
+  else if (item?.route) router.push(item.route)
 }
 
 function onSearchEnterKey() {
