@@ -95,6 +95,28 @@ function auditBody(body, file, pointer, report) {
         message: '同一行出现重复模板句'
       })
     }
+
+    if (/概念界定[—-]成因机制[—-]案例验证[—-]应用迁移|区域背景[—-]关键变量[—-]变化机制[—-]地理效应[—-]应用启示/.test(l)) {
+      pushIssue(report, {
+        level: 'high',
+        type: 'mechanical_template_placeholder',
+        file,
+        pointer,
+        line: idx + 1,
+        message: `存在机械教案模板套话：${l.slice(0, 48)}`
+      })
+    }
+
+    if (/^(?:-\s*)+##\s+/.test(l) || /##\s*教学设计导读\s+##\s*教学设计导读/.test(l)) {
+      pushIssue(report, {
+        level: 'high',
+        type: 'nested_or_inline_duplicate_heading',
+        file,
+        pointer,
+        line: idx + 1,
+        message: `存在列表嵌套标题或同行重复标题：${l.slice(0, 48)}`
+      })
+    }
   })
 
   // 2) 连续重复标题

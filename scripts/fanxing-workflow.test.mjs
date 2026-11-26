@@ -360,4 +360,44 @@ describe('Fanxing Research Application, Admin Review, Literature & Discussion-to
     expect(repeatApprove.payload.deduplicated).toBe(true)
     expect(harness.sentEmails.length).toBe(emailCountBefore)
   })
+
+  it('8. Q03: changing only applicantContact within 60 seconds persists the updated contact instead of being ignored as duplicate', async () => {
+    const contactUser = {
+      id: 'contact-edit-user',
+      name: '王同学',
+      email: 'wang@example.test',
+    }
+    database.prepare('INSERT OR REPLACE INTO user (id, name, email) VALUES (?, ?, ?)')
+      .run(contactUser.id, contactUser.name, contactUser.email)
+
+    const first = await harness.call('POST', '/api/fanxing/projects/xuzhou-land-cover/apply', {
+      user: contactUser,
+      body: {
+        motivation: '参与徐州遥感样本核查',
+        experience: '遥感基础',
+        preferredTask: '样点核查',
+        weeklyTime: '1–2 小时',
+        applicantContact: 'contact-A',
+      },
+    })
+    expect(first.status).toBe(201)
+
+    const second = await harness.call('POST', '/api/fanxing/projects/xuzhou-land-cover/apply', {
+      user: contactUser,
+      body: {
+        motivation: '参与徐州遥感样本核查',
+        experience: '遥感基础',
+        preferredTask: '样点核查',
+        weeklyTime: '1–2 小时',
+        applicantContact: 'contact-B',
+      },
+    })
+    expect(second.status).toBe(201)
+    expect(second.payload.deduplicated).not.toBe(true)
+
+    const saved = database
+      .prepare('SELECT applicant_contact FROM fanxing_application WHERE project_id = ? AND user_id = ?')
+      .get('xuzhou-land-cover', contactUser.id)
+    expect(saved.applicant_contact).toBe('contact-B')
+  })
 })

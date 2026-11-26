@@ -18,7 +18,7 @@
 
     <div class="experiment-load-actions">
       <button v-if="status === 'error'" type="button" data-retry-experiment @click="$emit('retry')">重新加载实验</button>
-      <a data-back-experiments href="/experiments">返回实验室</a>
+      <a data-back-experiments href="#/experiments">返回实验室</a>
     </div>
   </section>
 </template>

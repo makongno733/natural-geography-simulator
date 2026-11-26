@@ -436,17 +436,27 @@ function getLocalDemoPosts() {
   }
 }
 
+let postLoadVersion = 0
+
 async function loadPost() {
+  const requestedId = String(route.params.id ?? '')
+  const currentVersion = ++postLoadVersion
   loading.value = true
   error.value = ''
   try {
-    const result = await apiRequest(`/api/community/posts/${route.params.id}`)
+    const result = await apiRequest(`/api/community/posts/${requestedId}`)
+    if (currentVersion !== postLoadVersion || String(route.params.id ?? '') !== requestedId) {
+      return
+    }
     post.value = result.post
     replies.value = result.replies
     isDemoMode.value = false
     return
   } catch {
-    const targetId = Number(route.params.id)
+    if (currentVersion !== postLoadVersion || String(route.params.id ?? '') !== requestedId) {
+      return
+    }
+    const targetId = Number(requestedId)
     const localPosts = getLocalDemoPosts()
     const all = [...localPosts, ...mockPosts]
     const matched = all.find(p => p.id === targetId)
@@ -501,7 +511,9 @@ async function loadPost() {
       error.value = '未找到该篇学术探讨，可能已被移除或地址不正确。'
     }
   } finally {
-    loading.value = false
+    if (currentVersion === postLoadVersion && String(route.params.id ?? '') === requestedId) {
+      loading.value = false
+    }
   }
 }
 

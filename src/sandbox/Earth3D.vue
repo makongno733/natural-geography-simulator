@@ -111,13 +111,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { BaseScene } from '../engine/core/BaseScene.js'
 import { EarthInteriorModule } from '../engine/modules/EarthInteriorModule.js'
 import { CelestialSphereModule } from '../engine/modules/CelestialSphereModule.js'
 import { SolarSystemModule } from '../engine/modules/SolarSystemModule.js'
 import { PostProcessing } from '../engine/effects/PostProcessing.js'
 import ModelPedagogyPanel from '../experiments/components/ModelPedagogyPanel.vue'
+
+const route = useRoute()
 
 const pedagogy = {
   observe: [
@@ -244,13 +247,33 @@ function setZoom(level) {
   engine.cameraRig.controls.update()
 }
 
+function resolveRequestedMode(rawMode) {
+  const m = String(rawMode || '').trim()
+  if (m === 'professional' || m === 'celestial') return 'professional'
+  if (m === 'deepspace') return 'deepspace'
+  return 'simple'
+}
+
 onMounted(async () => {
   await nextTick()
   if (!containerRef.value) return
   engine = new BaseScene(containerRef.value, { bg: 0x0a0a1a, mode: 'simple' })
   postFx = new PostProcessing(engine.renderManager)
-  engine.loadModule(EarthInteriorModule, { mode: 'simple' })
+  const initialMode = resolveRequestedMode(route.query?.mode)
+  if (initialMode !== 'simple') {
+    switchMode(initialMode)
+  } else {
+    engine.loadModule(EarthInteriorModule, { mode: 'simple' })
+  }
   window.addEventListener('resize', () => engine.resize())
+})
+
+watch(() => route.query?.mode, (nextMode) => {
+  if (!engine) return
+  const target = resolveRequestedMode(nextMode)
+  if (target !== mode.value) {
+    switchMode(target)
+  }
 })
 
 function switchMode(m) {

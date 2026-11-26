@@ -318,6 +318,8 @@ export function setupFanxingRoutes(
         existing.experience === experience &&
         existing.preferred_task === preferredTask &&
         existing.weekly_time === weeklyTime &&
+        (existing.applicant_contact || '') === applicantContact &&
+        (existing.applicant_name || '') === (req.accountUser.name || '地理探索者') &&
         Date.now() - Date.parse(existing.updated_at || '') < 60_000
 
       if (isRecentDuplicate) {

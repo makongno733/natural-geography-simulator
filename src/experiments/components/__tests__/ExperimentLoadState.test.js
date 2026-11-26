@@ -21,6 +21,6 @@ describe('ExperimentLoadState', () => {
     const wrapper = mount(ExperimentLoadState, { props: { status } })
 
     expect(wrapper.get(selector).attributes('role')).toBe('status')
-    expect(wrapper.get('[data-back-experiments]').attributes('href')).toBe('/experiments')
+    expect(wrapper.get('[data-back-experiments]').attributes('href')).toBe('#/experiments')
   })
 })

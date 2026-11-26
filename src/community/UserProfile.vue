@@ -196,12 +196,19 @@ const formatDate = value => {
   }
 }
 
+let profileLoadVersion = 0
+
 async function loadProfile() {
+  const requestedId = String(route.params.id ?? '')
+  const currentVersion = ++profileLoadVersion
   loading.value = true
   error.value = ''
   profileData.value = null
   try {
-    const res = await apiRequest(`/api/community/users/${route.params.id}`)
+    const res = await apiRequest(`/api/community/users/${requestedId}`)
+    if (currentVersion !== profileLoadVersion || String(route.params.id ?? '') !== requestedId) {
+      return
+    }
     profileData.value = res
     editForm.title = res.user?.title || ''
     editForm.bio = res.user?.bio || ''
@@ -209,14 +216,22 @@ async function loadProfile() {
     editForm.location = res.user?.location || ''
     if (currentUser.value && currentUser.value.id === res.user?.id) {
       const myAppsRes = await apiRequest('/api/fanxing/my-applications').catch(() => null)
+      if (currentVersion !== profileLoadVersion || String(route.params.id ?? '') !== requestedId) {
+        return
+      }
       if (Array.isArray(myAppsRes?.applications)) {
         myFanxingApplications.value = myAppsRes.applications
       }
     }
   } catch {
+    if (currentVersion !== profileLoadVersion || String(route.params.id ?? '') !== requestedId) {
+      return
+    }
     error.value = '个人主页暂时无法载入，请稍后重试。'
   } finally {
-    loading.value = false
+    if (currentVersion === profileLoadVersion && String(route.params.id ?? '') === requestedId) {
+      loading.value = false
+    }
   }
 }
 

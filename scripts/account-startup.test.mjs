@@ -77,6 +77,36 @@ it('direct index startup upgrades an existing database, preserves data, and dete
   await expect(verifyDeployment({ origin })).rejects.toThrow('HTTP 503')
 }, 25000)
 
+it('Q05: permitted 6000-character Chinese post reaches authentication instead of failing at JSON body limit, and malformed JSON returns 400', async () => {
+  const env = environment()
+  const { origin } = await start(env)
+
+  const longPostRes = await fetch(`${origin}/api/community/posts`, {
+    method: 'POST',
+    headers: {
+      origin: 'http://127.0.0.1:4173',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: '六千汉字长度回归验证',
+      body: '地'.repeat(6000),
+      categoryId: 1,
+      kind: 'discussion',
+    }),
+  })
+  expect(longPostRes.status).toBe(401)
+
+  const malformedRes = await fetch(`${origin}/api/community/posts`, {
+    method: 'POST',
+    headers: {
+      origin: 'http://127.0.0.1:4173',
+      'content-type': 'application/json',
+    },
+    body: '{"bad":',
+  })
+  expect(malformedRes.status).toBe(400)
+}, 25000)
+
 it('never starts listening on a failed migration and rolls back application schema changes', async () => {
   const env = environment()
   const db = new Database(env.ACCOUNT_DB_PATH)

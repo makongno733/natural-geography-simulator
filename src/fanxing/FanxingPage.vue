@@ -198,8 +198,12 @@ async function loadProjectsCatalog() {
   }
 }
 
+let projectDetailLoadVersion = 0
+
 async function loadProjectDetail(id) {
-  if (!id) {
+  const requestedId = String(id ?? '')
+  const currentVersion = ++projectDetailLoadVersion
+  if (!requestedId) {
     projectDetail.value = null
     collaborators.value = []
     linkedPosts.value = []
@@ -210,7 +214,10 @@ async function loadProjectDetail(id) {
   submitNotice.value = ''
   try {
     if (accountEnabled) {
-      const res = await apiRequest(`/api/fanxing/projects/${encodeURIComponent(id)}`)
+      const res = await apiRequest(`/api/fanxing/projects/${encodeURIComponent(requestedId)}`)
+      if (currentVersion !== projectDetailLoadVersion || String(route.params.id ?? '') !== requestedId) {
+        return
+      }
       if (res?.project) {
         const verifiedApp =
           user.value?.id &&
@@ -229,11 +236,16 @@ async function loadProjectDetail(id) {
       }
     }
   } catch {
-    const fallback = projects.value.find(p => p.id === id) || INITIAL_FANXING_PROJECTS.find(p => p.id === id) || null
+    if (currentVersion !== projectDetailLoadVersion || String(route.params.id ?? '') !== requestedId) {
+      return
+    }
+    const fallback = projects.value.find(p => p.id === requestedId) || INITIAL_FANXING_PROJECTS.find(p => p.id === requestedId) || null
     projectDetail.value = fallback ? { ...fallback, myApplication: null } : null
     prefillFormFromProject(projectDetail.value)
   } finally {
-    detailLoading.value = false
+    if (currentVersion === projectDetailLoadVersion && String(route.params.id ?? '') === requestedId) {
+      detailLoading.value = false
+    }
   }
 }
 

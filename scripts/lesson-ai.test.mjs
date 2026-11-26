@@ -41,4 +41,16 @@ describe('课程助手回答范围', () => {
       .toBe('')
     expect(formatCourseContext({ routeName: 'community-post', params: { id: '1' }, routePath: '泄露密钥' })).toBe('')
   })
+
+  it('Q08: assistant corpus contains clean section knowledge without cross-section bleed or 4-step template boilerplate', () => {
+    const globeMatches = findCourseSections('地球与地球仪 经线 纬线 经纬网')
+    expect(globeMatches.length).toBeGreaterThan(0)
+    for (const sec of globeMatches) {
+      expect(sec.text).not.toContain('概念界定—成因机制—案例验证—应用迁移')
+      expect(sec.text).not.toContain('用 2 句话解释本节最核心的地理机制')
+      if (sec.title === '地球与地球仪') {
+        expect(sec.text).not.toContain('航天员登月')
+      }
+    }
+  })
 })

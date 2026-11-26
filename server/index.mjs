@@ -23,7 +23,7 @@ const distPath = resolve(process.env.ACCOUNT_DIST_PATH || './dist-account')
 app.disable('x-powered-by')
 app.use(cors({ origin: (origin, callback) => callback(null, !origin || allowedOrigins.has(origin)), credentials: true }))
 app.all('/api/auth/*splat', toNodeHandler(auth))
-app.use(express.json({ limit: '16kb' }))
+app.use(express.json({ limit: '64kb' }))
 
 function requireOrigin(req, res, next) {
   if (!allowedOrigins.has(req.get('origin'))) return res.status(403).json({ error: '不允许的来源' })
@@ -168,7 +168,17 @@ app.get('*splat', (_req, res) => {
 })
 
 app.use((error, _req, res, _next) => {
+  const status = Number(error?.status || error?.statusCode)
+  if (error?.type === 'entity.parse.failed' || (error instanceof SyntaxError && status === 400)) {
+    return res.status(400).json({ error: '请求 JSON 格式无效' })
+  }
+  if (error?.type === 'entity.too.large' || status === 413) {
+    return res.status(413).json({ error: '请求内容超出长度限制' })
+  }
   console.error(error)
+  if (status >= 400 && status < 500) {
+    return res.status(status).json({ error: error?.message || '请求无效' })
+  }
   res.status(500).json({ error: '服务暂时不可用' })
 })
 

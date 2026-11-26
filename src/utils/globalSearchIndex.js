@@ -137,7 +137,7 @@ export const EXPERIMENT_INDEX = [
     desc: '有机质层、腐殖质层、淋溶层、淀积层、母质层与母岩结构观察',
     keywords: '东北黑土为什么肥沃 南方红壤为什么偏酸瘦 土壤剖面有哪几层 成土因素 淋溶层 淀积层',
     tags: ['土壤剖面', '黑土与红壤', '成土过程', '淋溶淀积'],
-    route: '/experiments/systems/soil-profile'
+    route: '/experiments/systems/soil-profile-3d'
   },
   {
     id: 'exp-landform-sandbox',
@@ -214,7 +214,7 @@ export const EXPERIMENT_INDEX = [
     desc: '地平圈、子午圈、天赤道、黄道面与不同纬度星空周日旋转规律',
     keywords: '为什么北极星仰角等于当地地理纬度 恒星周日视运动 赤经赤纬 天球坐标',
     tags: ['天球坐标系', '北极星仰角', '周日视运动'],
-    route: '/experiments/systems/celestial-sphere'
+    route: '/earth3d?mode=professional'
   },
   {
     id: 'exp-earth',

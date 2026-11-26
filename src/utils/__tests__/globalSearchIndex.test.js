@@ -2,8 +2,11 @@ import { describe, it, expect } from 'vitest'
 import {
   queryGlobalGeography,
   normalizeSearchQuery,
-  isExactTitleOrConceptMatch
+  isExactTitleOrConceptMatch,
+  EXPERIMENT_INDEX,
+  getAllStaticSearchPools
 } from '../globalSearchIndex.js'
+import { getExperiment } from '../../experiments/catalog.js'
 import {
   normalizeTopicTagName,
   derivePostTags,
@@ -85,6 +88,35 @@ describe('Global Geography Search Index & Wikipedia-style Matching', () => {
   it('limits result count up to default 12 items', () => {
     const results = queryGlobalGeography('地理')
     expect(results.length).toBeLessThanOrEqual(12)
+  })
+
+  it('Q06: every experiment search index route resolves to a valid catalog experiment or standalone 3D sandbox route', () => {
+    const validStandaloneExperimentRoutes = new Set(['/earth3d', '/earth3d?mode=professional', '/disasters', '/map', '/geo'])
+    for (const item of EXPERIMENT_INDEX) {
+      if (item.route.startsWith('/experiments/')) {
+        const parts = item.route.split('/').filter(Boolean)
+        expect(parts).toHaveLength(3)
+        const [, category, expId] = parts
+        const catalogEntry = getExperiment(expId)
+        expect(catalogEntry, `Experiment ${item.id} -> ${item.route} not found in catalog.js`).not.toBeNull()
+        expect(catalogEntry.category).toBe(category)
+      } else {
+        expect(validStandaloneExperimentRoutes.has(item.route), `Unexpected standalone route: ${item.route}`).toBe(true)
+      }
+    }
+
+    const soilResults = queryGlobalGeography('土壤剖面')
+    expect(soilResults[0].id).toBe('exp-soil-profile')
+    expect(soilResults[0].route).toBe('/experiments/systems/soil-profile-3d')
+
+    const celestialResults = queryGlobalGeography('天球坐标')
+    expect(celestialResults[0].id).toBe('exp-celestial')
+    expect(celestialResults[0].route).toBe('/earth3d?mode=professional')
+
+    for (const poolItem of getAllStaticSearchPools()) {
+      expect(typeof poolItem.route).toBe('string')
+      expect(poolItem.route.startsWith('/')).toBe(true)
+    }
   })
 })
 

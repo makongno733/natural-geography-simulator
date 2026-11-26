@@ -8,7 +8,7 @@
     <p v-if="error" class="community-state community-error" role="alert">{{ error }}</p>
     <p v-if="notice" class="community-state" role="status">{{ notice }}</p>
 
-    <template v-else-if="ready">
+    <template v-if="ready">
       <!-- 1. 繁星计划科研课题申请审核（核心新增） -->
       <section class="community-side-block" aria-labelledby="fanxing-apps-heading">
         <div class="section-head-flex">
@@ -19,7 +19,11 @@
           审核通过后，申请人将在课题详情页与个人主页自动看到你填写的<strong>审核留言、课题协作 QQ 群号与起步指南</strong>。
         </p>
 
-        <p v-if="!fanxingApplications.length" class="empty-hint">暂无繁星课题申请记录。</p>
+        <div v-if="fanxingAppsError" class="community-state community-error" role="alert">
+          <p>繁星课题申请记录暂时无法载入：{{ fanxingAppsError }}</p>
+          <button type="button" class="btn-approve" @click="refresh">重试加载</button>
+        </div>
+        <p v-else-if="!fanxingApplications.length" class="empty-hint">暂无繁星课题申请记录。</p>
 
         <article v-for="app in fanxingApplications" :key="app.id" class="community-admin-row fanxing-app-row">
           <div class="row-top-line">
@@ -126,7 +130,11 @@
       <!-- 4. 开放地理科学资源推荐审核 -->
       <section class="community-side-block" aria-labelledby="resources-mod-heading">
         <h2 id="resources-mod-heading">📚 开放地理数据与方法资源审核</h2>
-        <p v-if="!resources.length">暂无用户提交的开放资源申请。</p>
+        <div v-if="resourcesError" class="community-state community-error" role="alert">
+          <p>开放地理资源审核记录暂时无法载入：{{ resourcesError }}</p>
+          <button type="button" class="btn-approve" @click="refresh">重试加载</button>
+        </div>
+        <p v-else-if="!resources.length">暂无用户提交的开放资源申请。</p>
         <article v-for="res in resources" :key="res.id" class="community-admin-row">
           <div class="row-top-line">
             <div>
@@ -181,6 +189,8 @@ const categories = ref([])
 const groups = ref([])
 const resources = ref([])
 const fanxingApplications = ref([])
+const fanxingAppsError = ref('')
+const resourcesError = ref('')
 const reviewInputs = reactive({})
 const newCategory = reactive({ slug: '', name: '', description: '' })
 
@@ -200,19 +210,33 @@ function ensureReviewInputs(apps) {
 
 async function refresh() {
   error.value = ''
-  const [reportData, categoryData, groupData, fanxingData, resourceData] = await Promise.all([
+  const [reportData, categoryData, groupData, fanxingOutcome, resourceOutcome] = await Promise.all([
     apiRequest('/api/community/moderation/reports'),
     apiRequest('/api/community/moderation/categories'),
     apiRequest('/api/community/moderation/groups'),
-    apiRequest('/api/fanxing/moderation/applications').catch(() => ({ applications: [] })),
-    apiRequest('/api/community/moderation/resources').catch(() => ({ resources: [] }))
+    apiRequest('/api/fanxing/moderation/applications')
+      .then(data => ({ ok: true, data }))
+      .catch(err => ({ ok: false, error: err })),
+    apiRequest('/api/community/moderation/resources')
+      .then(data => ({ ok: true, data }))
+      .catch(err => ({ ok: false, error: err }))
   ])
   reports.value = reportData.reports || []
   categories.value = categoryData.categories || []
   groups.value = groupData.groups || []
-  fanxingApplications.value = fanxingData.applications || []
-  resources.value = resourceData.resources || []
-  ensureReviewInputs(fanxingApplications.value)
+  if (fanxingOutcome.ok) {
+    fanxingAppsError.value = ''
+    fanxingApplications.value = fanxingOutcome.data?.applications || []
+    ensureReviewInputs(fanxingApplications.value)
+  } else {
+    fanxingAppsError.value = fanxingOutcome.error?.message || '服务暂不可用，请稍后重试'
+  }
+  if (resourceOutcome.ok) {
+    resourcesError.value = ''
+    resources.value = resourceOutcome.data?.resources || []
+  } else {
+    resourcesError.value = resourceOutcome.error?.message || '服务暂不可用，请稍后重试'
+  }
   ready.value = true
 }
 
