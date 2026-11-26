@@ -1,62 +1,75 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
+set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-cd "${REPO_ROOT}"
-
-STAMP="$(date +%Y%m%d-%H%M%S)"
-
-echo "=== [1/6] 检查源码目录状态 ==="
-if [ -d "${REPO_ROOT}/.git" ]; then
-  echo "检测到 Git 仓库，拉取最新 origin/main..."
-  git fetch origin main
-  git checkout main
-  git pull --ff-only origin main
-else
-  echo "当前目录 (${REPO_ROOT}) 非 Git 仓库，直接使用当前已同步的目录文件构建。"
-fi
-
-echo "=== [2/6] 保存当前镜像回退标签 ==="
-if docker image inspect geo-account:0.1.0 >/dev/null 2>&1; then
-  docker tag geo-account:0.1.0 "geo-account:pre-${STAMP}"
-  echo "已保留旧镜像回退标签: geo-account:pre-${STAMP}"
-fi
-
-echo "=== [3/6] 对活动容器内的 SQLite 数据库执行在线一致性备份 ==="
-BACKUP_DIR="/opt/geo-account-backups"
+cd "${SCRIPT_DIR}/../.."
+COMPOSE=(docker compose -f deploy/account/compose.yaml)
+STAMP="$(date +%Y%m%d-%H%M%S)-$$"
+BACKUP_DIR="${ACCOUNT_BACKUP_DIR:-/opt/geo-account-backups}"
 mkdir -p "${BACKUP_DIR}"
 chmod 700 "${BACKUP_DIR}"
-if docker compose -f deploy/account/compose.yaml ps --status running | grep -q account; then
-  docker compose -f deploy/account/compose.yaml exec -T account node -e '
+LOCK_DIR="${BACKUP_DIR}/.deploy-lock"
+if ! mkdir "${LOCK_DIR}" 2>/dev/null; then echo "另一次部署可能正在进行，请核对 ${LOCK_DIR}。" >&2; exit 1; fi
+trap 'rmdir "${LOCK_DIR}"' EXIT
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  test "$(git branch --show-current)" = main
+  git diff --quiet
+  git diff --cached --quiet
+  git fetch origin main
+  git pull --ff-only origin main
+  export APP_REVISION="$(git rev-parse HEAD)"
+else
+  : "${APP_REVISION:?非 Git 目录须指定 APP_REVISION 为已核对的源码提交号}"
+  export APP_REVISION
+fi
+test -f .env
+old_container="$("${COMPOSE[@]}" ps -q account)"
+old_image=''
+switched=0
+rollback() {
+  local status=$?
+  trap - ERR
+  if [ -n "${old_image}" ]; then
+    docker tag "${old_image}" geo-account:0.1.0 || true
+    if [ "${switched}" = 1 ]; then "${COMPOSE[@]}" up -d --no-build account || true; fi
+  fi
+  echo "部署验收失败，已尝试恢复旧镜像。不会自动还原数据库，以免覆盖新写入；备份在 ${BACKUP_DIR}。" >&2
+  exit "${status}"
+}
+trap rollback ERR
+if [ -n "${old_container}" ]; then
+  old_image="$(docker inspect "${old_container}" --format '{{.Image}}')"
+  docker tag "${old_image}" "geo-account:pre-${STAMP}"
+  "${COMPOSE[@]}" exec -T account node -e '
     import("better-sqlite3").then(async ({ default: Database }) => {
-      const dbPath = process.env.ACCOUNT_DB_PATH || "/var/lib/geo-account/account.sqlite";
-      const db = new Database(dbPath);
+      const db = new Database(process.env.ACCOUNT_DB_PATH || "/var/lib/geo-account/account.sqlite");
       await db.backup("/tmp/account-pre-update.sqlite");
-      const checkDb = new Database("/tmp/account-pre-update.sqlite", { readonly: true });
-      const res = checkDb.pragma("integrity_check", { simple: true });
-      if (res !== "ok") throw new Error("Integrity check failed: " + res);
-      console.log("Online backup integrity_check:", res);
+      const copy = new Database("/tmp/account-pre-update.sqlite", { readonly: true });
+      if (copy.pragma("integrity_check", { simple: true }) !== "ok") throw Error("Backup integrity check failed");
+      console.log("Online backup integrity: ok");
     });
   '
-  CONTAINER_ID="$(docker compose -f deploy/account/compose.yaml ps -q account)"
-  docker cp "${CONTAINER_ID}:/tmp/account-pre-update.sqlite" "${BACKUP_DIR}/account-${STAMP}.sqlite"
+  docker cp "${old_container}:/tmp/account-pre-update.sqlite" "${BACKUP_DIR}/account-${STAMP}.sqlite"
   chmod 600 "${BACKUP_DIR}/account-${STAMP}.sqlite"
-  echo "已保存并通过完整性校验的备份: ${BACKUP_DIR}/account-${STAMP}.sqlite"
 fi
-
-echo "=== [4/6] 构建最新账号与社区服务镜像（含 dist-account 与 src/fanxing/catalog.js） ==="
-docker compose -f deploy/account/compose.yaml build account
-
-echo "=== [5/6] 执行数据库幂等迁移并重启账号容器 ==="
-docker compose -f deploy/account/compose.yaml run --rm --no-deps account node server/migrate.mjs
-docker compose -f deploy/account/compose.yaml up -d account
-
-echo "=== [6/6] 核验本地 127.0.0.1:4100 核心接口 ==="
-sleep 3
-for ep in "/api/health" "/api/config" "/api/community/posts" "/api/community/resources" "/api/fanxing/projects"; do
-  echo "-> 检查 ${ep}"
-  curl -fsS "http://127.0.0.1:4100${ep}" | head -c 240
-  echo ""
+if [ -n "${ACCOUNT_PREBUILT_IMAGE:-}" ]; then
+  docker image inspect "${ACCOUNT_PREBUILT_IMAGE}" >/dev/null
+  docker tag "${ACCOUNT_PREBUILT_IMAGE}" geo-account:0.1.0
+else
+  available_kb="$(df -Pk . | awk 'END {print $4}')"
+  if [ "${available_kb}" -lt "${ACCOUNT_MIN_BUILD_KB:-2097152}" ]; then
+    echo "磁盘空间不足，停止完整构建。请扩容或使用 ACCOUNT_PREBUILT_IMAGE；不会自动删除数据。" >&2
+    false
+  fi
+  "${COMPOSE[@]}" build account
+fi
+"${COMPOSE[@]}" run --rm --no-deps account node server/migrate.mjs
+switched=1
+"${COMPOSE[@]}" up -d --no-build account
+deadline=$((SECONDS + ${ACCOUNT_READY_TIMEOUT:-90}))
+until curl -fsS --max-time 5 --output "${BACKUP_DIR}/ready-${STAMP}.json" http://127.0.0.1:4100/api/ready; do
+  if [ "${SECONDS}" -ge "${deadline}" ]; then echo "等待服务就绪超时。" >&2; false; fi
+  sleep 2
 done
-echo "=== 账号服务更新与接口核验完成（回退镜像: geo-account:pre-${STAMP}） ==="
+# Read complete responses; curl | head can cause SIGPIPE under pipefail.
+"${COMPOSE[@]}" exec -T -e "EXPECTED_APP_REVISION=${APP_REVISION}" account node server/verify-deployment.mjs
+echo "部署与只读业务验收通过：${APP_REVISION}；备份：${BACKUP_DIR}"

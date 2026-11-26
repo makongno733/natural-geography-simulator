@@ -12,6 +12,8 @@ RUN pnpm build:account && pnpm prune --prod
 
 FROM node:22-bookworm-slim
 WORKDIR /app
+ARG APP_REVISION=unknown
+ENV APP_REVISION=$APP_REVISION
 ENV NODE_ENV=production ACCOUNT_BIND=0.0.0.0 ACCOUNT_PORT=4100 ACCOUNT_DIST_PATH=/app/dist-account
 COPY --from=build --chown=node:node /app/package.json ./package.json
 COPY --from=build --chown=node:node /app/server ./server
@@ -21,5 +23,5 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 RUN mkdir -p /var/lib/geo-account && chown node:node /var/lib/geo-account
 USER node
 EXPOSE 4100
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:4100/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
-CMD ["sh", "-c", "node server/migrate.mjs && node server/index.mjs"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:4100/api/ready').then(async r => process.exit(r.ok && (await r.json()).schema === 'ready' ? 0 : 1)).catch(() => process.exit(1))"
+CMD ["node", "server/index.mjs"]

@@ -4,6 +4,7 @@ services:
       context: ../..
       dockerfile: deploy/account/Dockerfile
       args:
+        APP_REVISION: ${APP_REVISION:-unknown}
         VITE_SITE_ORIGIN: https://geo.kongnoma279.com
         VITE_ACCOUNT_ORIGIN: https://account.kongnoma279.com
     image: geo-account:0.1.0
