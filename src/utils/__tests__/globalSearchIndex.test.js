@@ -1,17 +1,38 @@
 import { describe, it, expect } from 'vitest'
-import { queryGlobalGeography } from '../globalSearchIndex.js'
+import {
+  queryGlobalGeography,
+  normalizeSearchQuery,
+  isExactTitleOrConceptMatch
+} from '../globalSearchIndex.js'
+import {
+  normalizeTopicTagName,
+  derivePostTags,
+  deriveHotTopicTags,
+  derivePaperTags
+} from '../topicTags.js'
 
-describe('Global Geography Search Index', () => {
-  it('returns empty array when query is empty', () => {
+describe('Global Geography Search Index & Wikipedia-style Matching', () => {
+  it('returns empty array when query is empty or whitespace', () => {
     expect(queryGlobalGeography('')).toEqual([])
     expect(queryGlobalGeography('   ')).toEqual([])
   })
 
-  it('searches experiments by keyword and ranks experiment first', () => {
+  it('normalizes leading hash signs, extra spaces, and case sensitivity', () => {
+    expect(normalizeSearchQuery('  #热力环流  ')).toBe('热力环流')
+    expect(normalizeSearchQuery('＃DEM   高程')).toBe('DEM 高程')
+    const lowerDem = queryGlobalGeography('dem')
+    const upperDem = queryGlobalGeography('  #DEM  ')
+    expect(lowerDem.length).toBeGreaterThan(0)
+    expect(lowerDem[0].id).toBe(upperDem[0].id)
+  })
+
+  it('flags exact title / core concept matches and ranks experiment first', () => {
     const results = queryGlobalGeography('热力环流')
     expect(results.length).toBeGreaterThan(0)
     expect(results[0].title).toContain('热力环流')
     expect(results[0].category).toBe('地理实验室')
+    expect(results[0].exactMatch).toBe(true)
+    expect(isExactTitleOrConceptMatch(results[0], '热力环流')).toBe(true)
   })
 
   it('matches natural student questions like "海风为什么吹向陆地" and ranks thermal circulation experiment first, followed by textbook', () => {
@@ -36,16 +57,23 @@ describe('Global Geography Search Index', () => {
     expect(solarResults[0].id).toBe('exp-solar')
   })
 
-  it('searches terrain labs by keyword', () => {
-    const results = queryGlobalGeography('DEM')
-    expect(results.length).toBeGreaterThan(0)
-    expect(results.some(r => r.title.includes('DEM') || r.desc.includes('DEM'))).toBe(true)
+  it('searches across Fanxing citizen science projects, DOI literature, and open resources', () => {
+    const fanxingResults = queryGlobalGeography('徐州')
+    expect(fanxingResults.some(r => r.typeKey === 'fanxing' && r.route.includes('/fanxing/xuzhou-land-cover'))).toBe(true)
+
+    const spongeResults = queryGlobalGeography('海绵城市', { limit: 25 })
+    expect(spongeResults.some(r => r.typeKey === 'inquiry')).toBe(true)
+    expect(spongeResults.some(r => r.typeKey === 'curriculum')).toBe(true)
+    expect(spongeResults.some(r => r.typeKey === 'fanxing')).toBe(true)
+
+    const era5Results = queryGlobalGeography('ERA5')
+    expect(era5Results.some(r => r.typeKey === 'resource' && r.route === '/resources')).toBe(true)
   })
 
-  it('searches curriculum by keyword', () => {
-    const results = queryGlobalGeography('必修一')
-    expect(results.length).toBeGreaterThan(0)
-    expect(results.some(r => r.category === '教材与知识库')).toBe(true)
+  it('supports filtering by real content typeKey', () => {
+    const onlyCurriculum = queryGlobalGeography('水循环', { typeFilter: 'curriculum', limit: 20 })
+    expect(onlyCurriculum.length).toBeGreaterThan(0)
+    expect(onlyCurriculum.every(r => r.typeKey === 'curriculum')).toBe(true)
   })
 
   it('does not present sample posts or unrelated non-matching queries as search results', () => {
@@ -54,15 +82,70 @@ describe('Global Geography Search Index', () => {
     expect(queryGlobalGeography('火星极冠冰川消融999')).toEqual([])
   })
 
-  it('limits result count up to 12 items', () => {
+  it('limits result count up to default 12 items', () => {
     const results = queryGlobalGeography('地理')
     expect(results.length).toBeLessThanOrEqual(12)
   })
+})
 
-  it('searches across expanded experiments, junior/senior textbooks, and cosmos topics', () => {
-    expect(queryGlobalGeography('喀斯特').some(r => r.route.includes('landform-sandbox'))).toBe(true)
-    expect(queryGlobalGeography('七年级').some(r => r.route.includes('/初中/'))).toBe(true)
-    expect(queryGlobalGeography('弦理论').some(r => r.route === '/cosmos')).toBe(true)
-    expect(queryGlobalGeography('ERA5').some(r => r.route === '/resources')).toBe(true)
+describe('Structured Homepage Topic Tag Derivation', () => {
+  it('normalizes synonym tags, strips leading hashes, and truncates overly long tag strings', () => {
+    expect(normalizeTopicTagName(' #dem ')).toBe('DEM高程')
+    expect(normalizeTopicTagName('喀斯特')).toBe('喀斯特地貌')
+    expect(normalizeTopicTagName('这是一个超过十八个字符的超长地理测试标签字符串')).toHaveLength(18)
+  })
+
+  it('derives deduplicated tags for community posts from user tags, linked experiments, and verified regions', () => {
+    const post = {
+      title: '关于青藏高原 30m DEM 填洼与水文连通性的探讨',
+      tags: ['dem', 'DEM高程', '水文连通性'],
+      linkedExperiment: 'stream-table',
+      evidenceId: 'ev-urban-sponge'
+    }
+    const tags = derivePostTags(post)
+    const labels = tags.map(t => t.label)
+    expect(labels).toContain('DEM高程')
+    expect(labels.filter(l => l === 'DEM高程')).toHaveLength(1)
+    expect(labels).toContain('流水侵蚀水槽实验')
+    expect(labels).toContain('青藏高原')
+  })
+
+  it('derives accurate event type, discipline, verified region, and source method tags for NASA/USGS events without fabricating locations', () => {
+    const eqTopic = {
+      id: 'sample-usgs-1',
+      title: 'M6.4 地震 · 30 km WSW of Lata, Solomon Islands',
+      tag: '地震',
+      sourceUrl: 'https://earthquake.usgs.gov/earthquakes/eventpage/us123'
+    }
+    const eqTags = deriveHotTopicTags(eqTopic).map(t => t.label)
+    expect(eqTags).toContain('地震监测')
+    expect(eqTags).toContain('构造地质与地震')
+    expect(eqTags).toContain('所罗门群岛')
+    expect(eqTags).toContain('USGS地震台网测报')
+
+    const unknownPlaceEvent = {
+      id: 'eonet-99',
+      title: 'Wildfire 2026',
+      tag: '野火',
+      sourceUrl: 'https://eonet.gsfc.nasa.gov/api/v3/events/EONET_99'
+    }
+    const fireTags = deriveHotTopicTags(unknownPlaceEvent)
+    expect(fireTags.some(t => t.dimension === 'region')).toBe(false)
+    expect(fireTags.map(t => t.label)).toContain('NASA卫星遥感监测')
+  })
+
+  it('derives discipline, dataset/method, and verified region tags for curated DOI papers', () => {
+    const clcdPaper = {
+      doi: '10.5194/essd-13-3907-2021',
+      title: 'The 30 m annual land cover dataset and its dynamics in China from 1990 to 2019 (CLCD)',
+      topic: '遥感与土地覆盖',
+      projectId: 'xuzhou-land-cover',
+      workTypeLabel: '期刊论文（精选文献）'
+    }
+    const tags = derivePaperTags(clcdPaper).map(t => t.label)
+    expect(tags).toContain('遥感与土地覆盖')
+    expect(tags).toContain('CLCD 30m数据集')
+    expect(tags).toContain('中国区域研究')
+    expect(tags).toContain('期刊论文')
   })
 })

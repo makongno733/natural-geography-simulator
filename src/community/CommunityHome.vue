@@ -1,11 +1,117 @@
 <template>
-  <div class="community-page">
+  <div class="community-page" :class="`scheme-${activeDesignTheme}`">
     <section class="community-hero" aria-labelledby="community-title">
       <div class="community-tides" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="community-wrap community-hero-inner">
         <div class="community-intro">
-          <p class="community-hero-badge">地理共同体 · 观察 · 实证 · 讨论</p>
+          <div class="hero-top-pill-row">
+            <p class="community-hero-badge">地理共同体 · 百科词条检索 · 科学实证与学术讨论</p>
+            <span class="scheme-active-indicator">📖 词条检索 × 🔬 实证讨论</span>
+          </div>
           <h1 id="community-title">从一个真实地理问题，开始对照与讨论</h1>
+
+          <!-- 统一维基百科式检索框：输入即展示分类建议（精确词条匹配优先、上下键选择、Enter直达、Esc关闭），兼顾搜讨论与搜全站 -->
+          <div ref="heroSearchBoxRef" class="wiki-hero-search-container">
+            <form
+              class="community-search baroque-search wiki-hero-search-form"
+              role="search"
+              aria-label="搜索地理词条、实验、教材与社区讨论"
+              @submit.prevent="onSearchFormSubmit"
+            >
+              <label class="sr-only" for="community-query">搜索社区讨论与全站地理词条</label>
+              <span class="hero-search-prefix-icon" aria-hidden="true">🔍</span>
+              <input
+                id="community-query"
+                v-model="queryInput"
+                type="search"
+                autocomplete="off"
+                placeholder="输入地理概念、问题或标签（如：热力环流、城市内涝、DEM、喀斯特）…"
+                maxlength="100"
+                role="combobox"
+                aria-autocomplete="list"
+                :aria-expanded="showSearchDropdown && Boolean(queryInput.trim())"
+                aria-controls="hero-wiki-suggestions"
+                @focus="openSearchDropdown"
+                @input="onQueryInputChange"
+                @keydown.down.prevent="moveSuggestionHighlight(1)"
+                @keydown.up.prevent="moveSuggestionHighlight(-1)"
+                @keydown.enter.prevent="onSearchEnterKey"
+                @keydown.esc.prevent="closeSearchDropdown"
+              />
+              <button
+                v-if="queryInput"
+                type="button"
+                class="hero-search-clear-btn"
+                aria-label="清空搜索框"
+                @click="clearHeroQueryInput"
+              >
+                ×
+              </button>
+              <button class="baroque-btn baroque-btn-search" type="submit">搜讨论</button>
+              <button
+                type="button"
+                class="baroque-btn hero-fullsite-submit-btn"
+                title="前往独立全站搜索结果页"
+                @click="goToFullSearchPage()"
+              >
+                全站结果页 ↗
+              </button>
+            </form>
+
+            <!-- 维基百科式实时检索建议下拉面板 -->
+            <div
+              v-if="showSearchDropdown && queryInput.trim()"
+              id="hero-wiki-suggestions"
+              class="wiki-suggestions-dropdown"
+              role="listbox"
+              aria-label="即时搜索建议"
+            >
+              <div class="wiki-dropdown-header">
+                <span class="wiki-dropdown-title">
+                  📖 “<strong>{{ normalizedLiveQuery }}</strong>”即时检索建议
+                </span>
+                <span v-if="liveCommunityLoading" class="wiki-dropdown-status">正在同步社区讨论…</span>
+                <button type="button" class="wiki-dropdown-close" aria-label="关闭建议列表" @click="closeSearchDropdown">
+                  Esc 关闭
+                </button>
+              </div>
+
+              <div v-if="!liveSuggestions.length && !liveCommunityLoading" class="wiki-dropdown-empty">
+                <p>暂未匹配到现成词条，你可以直接检索社区讨论或发起新提问：</p>
+              </div>
+
+              <ul v-else class="wiki-suggestion-list">
+                <li
+                  v-for="(item, idx) in liveSuggestions"
+                  :key="item.id"
+                  role="option"
+                  :aria-selected="suggestionIndex === idx"
+                  class="wiki-suggestion-item"
+                  :class="{ 'is-active': suggestionIndex === idx, 'is-exact': item.exactMatch }"
+                  @mouseenter="suggestionIndex = idx"
+                  @mousedown.prevent="selectSuggestionItem(item)"
+                >
+                  <div class="wsi-top">
+                    <span class="wsi-type-badge" :class="`wsi-type-${item.typeKey}`">{{ item.type }}</span>
+                    <span v-if="item.exactMatch" class="wsi-exact-pill">★ 精确词条直达</span>
+                    <span class="wsi-sub-badge">{{ item.badge }}</span>
+                    <span class="wsi-cat">{{ item.category }}</span>
+                  </div>
+                  <div class="wsi-title">{{ item.title }}</div>
+                  <div class="wsi-desc">{{ item.desc }}</div>
+                </li>
+              </ul>
+
+              <div class="wiki-dropdown-footer">
+                <button type="button" class="wdf-btn wdf-primary" @mousedown.prevent="goToFullSearchPage()">
+                  🔎 查看“{{ normalizedLiveQuery.slice(0, 16) }}”的全部全站结果（支持按分类筛选）→
+                </button>
+                <button type="button" class="wdf-btn" @mousedown.prevent="runSearch()">
+                  💬 仅在本页筛选社区讨论
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- 首屏核心实验直达卡（桌面与 390×844 手机首屏均可一键开始；首页只讲清问题与行动，具体数值进入实验后探索） -->
           <div class="flagship-compare-card" role="region" aria-label="3分钟城市内涝对照实验入口">
@@ -29,18 +135,12 @@
             </div>
           </div>
 
-          <!-- 清楚区分“搜讨论”与“搜全站” -->
-          <form class="community-search baroque-search" role="search" aria-label="搜索社区讨论" @submit.prevent="runSearch">
-            <label class="sr-only" for="community-query">搜索社区讨论</label>
-            <input id="community-query" v-model="queryInput" type="search" placeholder="搜讨论：输入话题、问题或关键词" maxlength="100" />
-            <button class="baroque-btn baroque-btn-search" type="submit">搜讨论</button>
-          </form>
-
           <div class="community-hero-actions" aria-label="次要快捷入口">
             <a class="baroque-btn hero-secondary-btn" href="#compose" @click.prevent="focusCompose">✍️ 发起讨论</a>
             <button type="button" class="baroque-btn hero-global-search-btn" @click="triggerGlobalSearch">
-              🔍 搜全站（实验 / 教材 / 数据）
+              🔍 快捷检索面板 (⌘K)
             </button>
+            <router-link class="baroque-btn hero-secondary-btn" to="/search">🗂 全站分类索引</router-link>
             <router-link class="baroque-btn hero-secondary-btn" to="/learning">📖 教材课程</router-link>
             <router-link class="baroque-btn hero-secondary-btn" to="/resources">📚 资源馆</router-link>
             <router-link class="baroque-btn hero-secondary-btn" to="/groups">👥 找社群</router-link>
@@ -179,9 +279,20 @@
               </a>
             </div>
 
-            <!-- 标签列表 -->
-            <div v-if="post.tags && post.tags.length" class="post-tags-row">
-              <span v-for="t in post.tags" :key="t" class="post-tag-item" @click.stop="filterByTag(t)">#{{ t }}</span>
+            <!-- 结构化话题标签（学科方向 / 地域 / 研究方法 / 用户标签）：点击即可筛选或进入全站检索 -->
+            <div v-if="derivePostTags(post).length" class="post-tags-row" role="list" aria-label="讨论话题标签">
+              <button
+                v-for="tagObj in derivePostTags(post)"
+                :key="tagObj.label"
+                type="button"
+                role="listitem"
+                class="post-tag-item"
+                :class="[`tag-dim-${tagObj.dimension}`, { 'is-active-tag': selectedTag === tagObj.label }]"
+                :title="tagObj.title"
+                @click.stop="filterByTag(tagObj.label)"
+              >
+                #{{ tagObj.label }}
+              </button>
             </div>
 
             <div class="community-post-foot">
@@ -512,6 +623,21 @@
             </div>
             <h4>{{ paper.title }}</h4>
             <p class="topic-clean-summary">作者：{{ paper.authors }} · 关联方向：{{ paper.topic }} · DOI: {{ paper.doi }}</p>
+            <!-- 论文结构化标签（学科方向、研究方法/数据集、研究地域） -->
+            <div class="topic-tags-bar" role="list" aria-label="论文学科与方法标签">
+              <button
+                v-for="tagObj in derivePaperTags(paper)"
+                :key="tagObj.label"
+                type="button"
+                role="listitem"
+                class="post-tag-item"
+                :class="`tag-dim-${tagObj.dimension}`"
+                :title="`检索“${tagObj.query}”相关实验、课题与讨论`"
+                @click="onTopicCardTagClick(tagObj)"
+              >
+                #{{ tagObj.label }}
+              </button>
+            </div>
             <div class="topic-foot">
               <a :href="paper.url" target="_blank" rel="noopener noreferrer">核对 DOI 原文 ↗</a>
               <button type="button" class="topic-link" @click="prefillComposeFromPaper(paper)">
@@ -577,6 +703,22 @@
             <span>💡 {{ buildEventDiscussionQuestion(topic) }}</span>
           </div>
 
+          <!-- 近期地理事件结构化标签（事件类型、学科方向、确证地域、监测来源） -->
+          <div class="topic-tags-bar" role="list" aria-label="近期地理事件标签">
+            <button
+              v-for="tagObj in deriveHotTopicTags(topic)"
+              :key="tagObj.label"
+              type="button"
+              role="listitem"
+              class="post-tag-item"
+              :class="`tag-dim-${tagObj.dimension}`"
+              :title="`按“${tagObj.label}”检索相关地理知识与讨论`"
+              @click="onTopicCardTagClick(tagObj)"
+            >
+              #{{ tagObj.label }}
+            </button>
+          </div>
+
           <button
             v-if="!topic.isSample"
             type="button"
@@ -635,6 +777,22 @@ import { STANDARD_EVIDENCES, getEvidenceById, resolveCommunityEvidence } from '.
 import { getExperimentCatalogStats } from '../experiments/catalog.js'
 import { CURATED_GEO_PAPERS, INITIAL_FANXING_PROJECTS } from '../fanxing/catalog.js'
 import CommunityMiniGlobe from './CommunityMiniGlobe.vue'
+import {
+  derivePostTags,
+  deriveHotTopicTags,
+  derivePaperTags,
+  normalizeTopicTagName
+} from '../utils/topicTags.js'
+import {
+  queryGlobalGeography,
+  normalizeSearchQuery,
+  isExactTitleOrConceptMatch
+} from '../utils/globalSearchIndex.js'
+import { DESIGN_THEMES, activeDesignTheme } from '../utils/designTheme.js'
+
+const currentSchemeInfo = computed(() => {
+  return DESIGN_THEMES.find(s => s.id === activeDesignTheme.value) || DESIGN_THEMES[1]
+})
 
 const fanxingCatalogList = ref([...INITIAL_FANXING_PROJECTS])
 const homeFeaturedPapers = ref([...CURATED_GEO_PAPERS])
@@ -671,6 +829,175 @@ const queryInput = ref('')
 const searchQuery = ref('')
 const selectedCategory = ref(null)
 const selectedTag = ref('')
+const heroSearchBoxRef = ref(null)
+const showSearchDropdown = ref(false)
+const suggestionIndex = ref(-1)
+const liveCommunitySuggestions = ref([])
+const liveCommunityLoading = ref(false)
+let liveSearchTimer = null
+let liveSearchVersion = 0
+
+const normalizedLiveQuery = computed(() => normalizeSearchQuery(queryInput.value))
+
+const liveSuggestions = computed(() => {
+  const q = normalizedLiveQuery.value
+  if (!q) return []
+  const staticHits = queryGlobalGeography(q, { limit: 6 })
+  const seenRoutes = new Set(staticHits.map(s => s.route))
+  const commHits = liveCommunitySuggestions.value.filter(c => !seenRoutes.has(c.route)).slice(0, 3)
+  const merged = [...staticHits, ...commHits]
+  return merged.sort((a, b) => {
+    if (Boolean(a.exactMatch) !== Boolean(b.exactMatch)) {
+      return a.exactMatch ? -1 : 1
+    }
+    return 0
+  }).slice(0, 7)
+})
+
+function openSearchDropdown() {
+  showSearchDropdown.value = true
+}
+
+function closeSearchDropdown() {
+  showSearchDropdown.value = false
+  suggestionIndex.value = -1
+}
+
+function clearHeroQueryInput() {
+  queryInput.value = ''
+  suggestionIndex.value = -1
+  liveCommunitySuggestions.value = []
+}
+
+function onQueryInputChange() {
+  showSearchDropdown.value = true
+  suggestionIndex.value = -1
+  clearTimeout(liveSearchTimer)
+  const q = normalizedLiveQuery.value
+  const version = ++liveSearchVersion
+  liveCommunitySuggestions.value = []
+  if (!q) {
+    liveCommunityLoading.value = false
+    return
+  }
+
+  // 本地演示讨论即时匹配
+  const localPool = [...getLocalDemoPosts(), ...mockPosts]
+  const localMatches = localPool
+    .filter(p => {
+      const hay = `${p.title || ''} ${p.body || ''} ${(p.tags || []).join(' ')}`.toLowerCase()
+      return hay.includes(q.toLowerCase())
+    })
+    .slice(0, 3)
+    .map(p => ({
+      id: `live-comm-${p.id}`,
+      type: p.kind === 'question' ? '讨论 · 问答' : '讨论 · 探讨',
+      typeKey: 'community',
+      badge: p.category || p.categoryName || '学术社区',
+      category: '社区讨论',
+      title: p.title,
+      desc: p.excerpt || (p.body ? String(p.body).replace(/\s+/g, ' ').slice(0, 90) + '…' : ''),
+      exactMatch: isExactTitleOrConceptMatch(p, q),
+      route: `/community/post/${p.id}`
+    }))
+
+  if (!accountEnabled || isDemoMode.value) {
+    liveCommunitySuggestions.value = localMatches
+    return
+  }
+
+  liveCommunityLoading.value = true
+  liveSearchTimer = setTimeout(async () => {
+    try {
+      const res = await apiRequest(`/api/community/posts?${new URLSearchParams({ q })}`, { timeout: 5000 })
+      if (version !== liveSearchVersion) return
+      const remoteHits = (res?.posts || []).slice(0, 3).map(p => ({
+        id: `live-comm-${p.id}`,
+        type: p.kind === 'question' ? '讨论 · 问答' : '讨论 · 探讨',
+        typeKey: 'community',
+        badge: p.category || '学术社区',
+        category: '社区讨论',
+        title: p.title,
+        desc: p.excerpt || '',
+        exactMatch: isExactTitleOrConceptMatch(p, q),
+        route: `/community/post/${p.id}`
+      }))
+      liveCommunitySuggestions.value = remoteHits.length ? remoteHits : localMatches
+    } catch {
+      if (version === liveSearchVersion) {
+        liveCommunitySuggestions.value = localMatches
+      }
+    } finally {
+      if (version === liveSearchVersion) {
+        liveCommunityLoading.value = false
+      }
+    }
+  }, 220)
+}
+
+function moveSuggestionHighlight(step) {
+  if (!showSearchDropdown.value) {
+    showSearchDropdown.value = true
+  }
+  const len = liveSuggestions.value.length
+  if (!len) return
+  if (suggestionIndex.value < 0) {
+    suggestionIndex.value = step > 0 ? 0 : len - 1
+  } else {
+    suggestionIndex.value = (suggestionIndex.value + step + len) % len
+  }
+}
+
+function selectSuggestionItem(item) {
+  closeSearchDropdown()
+  if (item?.route) {
+    router.push(item.route)
+  }
+}
+
+function onSearchEnterKey() {
+  if (showSearchDropdown.value && suggestionIndex.value >= 0 && liveSuggestions.value[suggestionIndex.value]) {
+    selectSuggestionItem(liveSuggestions.value[suggestionIndex.value])
+    return
+  }
+  onSearchFormSubmit()
+}
+
+function onSearchFormSubmit() {
+  closeSearchDropdown()
+  runSearch()
+}
+
+function goToFullSearchPage(customQuery) {
+  const q = normalizeSearchQuery(typeof customQuery === 'string' ? customQuery : queryInput.value)
+  closeSearchDropdown()
+  router.push({
+    path: '/search',
+    query: {
+      ...(q ? { q } : {}),
+      ...(route.query.theme ? { theme: route.query.theme } : {})
+    }
+  })
+}
+
+function onTopicCardTagClick(tagObj) {
+  if (!tagObj) return
+  const q = normalizeSearchQuery(tagObj.query || tagObj.label)
+  router.push({
+    path: '/search',
+    query: {
+      q,
+      ...(route.query.theme ? { theme: route.query.theme } : {})
+    }
+  })
+}
+
+function handleDocumentClickOutside(event) {
+  if (!showSearchDropdown.value) return
+  if (heroSearchBoxRef.value && !heroSearchBoxRef.value.contains(event.target)) {
+    closeSearchDropdown()
+  }
+}
 const kind = ref(route.query.kind === 'question' ? 'question' : '')
 const onlySolved = ref(false)
 const sortMode = ref('newest')
@@ -1028,11 +1355,19 @@ async function loadPosts(append = false) {
     pool = pool.filter(p => p.kind === 'question' && p.accepted_reply_id)
   }
   if (selectedTag.value) {
-    pool = pool.filter(p => p.tags && p.tags.includes(selectedTag.value))
+    const targetTag = normalizeTopicTagName(selectedTag.value).toLowerCase()
+    pool = pool.filter(p => {
+      const allPostTags = derivePostTags(p).map(t => t.label.toLowerCase())
+      return allPostTags.includes(targetTag) || (p.tags && p.tags.some(t => normalizeTopicTagName(t).toLowerCase() === targetTag))
+    })
   }
   if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    pool = pool.filter(p => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q))
+    const q = normalizeSearchQuery(searchQuery.value).toLowerCase()
+    pool = pool.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.body.toLowerCase().includes(q) ||
+      derivePostTags(p).some(t => t.label.toLowerCase().includes(q))
+    )
   }
   if (sortMode.value === 'popular') {
     pool.sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0))
@@ -1074,13 +1409,23 @@ function resetAndLoad() {
   lastPageCount.value = 0
   void loadPosts()
 }
-function runSearch() { searchQuery.value = queryInput.value.trim(); resetAndLoad(); scrollToFeed() }
+function runSearch() {
+  closeSearchDropdown()
+  searchQuery.value = normalizeSearchQuery(queryInput.value)
+  resetAndLoad()
+  scrollToFeed()
+}
 function clearFilters() { queryInput.value = ''; searchQuery.value = ''; selectedCategory.value = null; selectedTag.value = ''; kind.value = ''; onlySolved.value = false; resetAndLoad() }
 function setCategory(id) { selectedCategory.value = selectedCategory.value === id ? null : id; resetAndLoad() }
 function setKind(value) { kind.value = value; if (value === 'discussion') onlySolved.value = false; resetAndLoad() }
 function toggleSolved() { onlySolved.value = !onlySolved.value; if (onlySolved.value) kind.value = 'question'; resetAndLoad() }
 function setSort(mode) { sortMode.value = mode; resetAndLoad() }
-function filterByTag(tag) { selectedTag.value = tag; resetAndLoad() }
+function filterByTag(tag) {
+  const cleanTag = normalizeTopicTagName(tag)
+  selectedTag.value = selectedTag.value === cleanTag ? '' : cleanTag
+  resetAndLoad()
+  scrollToFeed()
+}
 
 function prefillComposeFromTopic(topic) {
   const displayTitle = eventDisplayTitle(topic.title)
@@ -1453,8 +1798,17 @@ async function initCommunity() {
   }
 }
 
-onMounted(initCommunity)
+onMounted(() => {
+  if (typeof document !== 'undefined') {
+    document.addEventListener('mousedown', handleDocumentClickOutside)
+  }
+  void initCommunity()
+})
 onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('mousedown', handleDocumentClickOutside)
+  }
+  clearTimeout(liveSearchTimer)
   if (typeof window !== 'undefined' && typeof window.scrollY === 'number') {
     try { sessionStorage.setItem(HOME_SCROLL_KEY, String(Math.round(window.scrollY))) } catch {}
   }
@@ -1852,7 +2206,7 @@ onBeforeUnmount(() => {
   margin-bottom: 20px;
   background: #10263d;
 }
-.community-intro { max-width: 860px; min-width: 0; }
+.community-intro { position: relative; z-index: 30; max-width: 860px; min-width: 0; }
 .community-hero h1 { font-family: inherit; font-size: clamp(24px, 3.6vw, 38px); margin-bottom: 12px; }
 .community-hero-badge { margin-bottom: 8px; letter-spacing: .04em; }
 .community-lead { margin-bottom: 14px; font-size: 14.5px; line-height: 1.5; }
@@ -1882,7 +2236,8 @@ onBeforeUnmount(() => {
 
 .community-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 25;
   isolation: isolate;
   background: linear-gradient(118deg, #102d3a 8%, #124957 62%, #17646a);
   color: #f7f5ed;
@@ -1902,6 +2257,8 @@ onBeforeUnmount(() => {
 }
 
 .community-hero-right {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2363,25 +2720,313 @@ onBeforeUnmount(() => {
   margin: 0 0 14px;
 }
 
-.post-tags-row {
+.post-tags-row,
+.topic-tags-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .post-tag-item {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  background: var(--bg-soft);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  color: #0c3960;
+  background: #f1f7fc;
+  border: 1px solid #94a3b8;
+  padding: 3px 9px;
+  border-radius: 6px;
   cursor: pointer;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .post-tag-item:hover {
-  color: var(--geo-ocean);
-  background: var(--geo-ocean-surface);
+  color: #ffffff;
+  background: #0f3d68;
+  border-color: #072138;
+}
+
+.post-tag-item.is-active-tag {
+  color: #ffffff;
+  background: #0f3d68;
+  border-color: #072138;
+}
+
+.post-tag-item.tag-dim-region {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+.post-tag-item.tag-dim-region:hover {
+  background: #065f46;
+  color: #ffffff;
+}
+
+.post-tag-item.tag-dim-method {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+.post-tag-item.tag-dim-method:hover {
+  background: #1e40af;
+  color: #ffffff;
+}
+
+.post-tag-item.tag-dim-event {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.post-tag-item.tag-dim-event:hover {
+  background: #92400e;
+  color: #ffffff;
+}
+
+/* 维基百科式即时建议下拉框 */
+.hero-top-pill-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hero-top-pill-row .community-hero-badge {
+  margin-bottom: 0;
+}
+
+.scheme-active-indicator {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #f8fafc;
+}
+
+.wiki-hero-search-container {
+  position: relative;
+  max-width: 780px;
+  margin-bottom: 14px;
+  z-index: 40;
+}
+
+.wiki-hero-search-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  margin-bottom: 0;
+  max-width: 100%;
+}
+
+.wiki-hero-search-form input[type="search"]::-webkit-search-cancel-button,
+.wiki-hero-search-form input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.hero-search-prefix-icon {
+  font-size: 15px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.hero-search-clear-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 0;
+  background: #e2e8f0;
+  color: #1e293b;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.hero-fullsite-submit-btn {
+  background: #f1f5f9;
+  color: #0f233e;
+  border: 1.5px solid #475569;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.hero-fullsite-submit-btn:hover {
+  background: #e2e8f0;
+}
+
+.wiki-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  color: #0f172a;
+  border: 2px solid #0f3d68;
+  border-radius: 12px;
+  box-shadow: 0 18px 42px rgba(7, 19, 34, 0.28);
+  overflow: hidden;
+  z-index: 90;
+}
+
+.wiki-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid #cbd5e1;
+  font-size: 12.5px;
+  color: #334155;
+}
+
+.wiki-dropdown-status {
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.wiki-dropdown-close {
+  border: 1px solid #94a3b8;
+  background: #ffffff;
+  color: #1e293b;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wiki-dropdown-empty {
+  padding: 16px;
+  font-size: 13.5px;
+  color: #334155;
+}
+
+.wiki-dropdown-empty p {
+  margin: 0;
+}
+
+.wiki-suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.wiki-suggestion-item {
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wiki-suggestion-item.is-active {
+  background: #e0f2fe;
+}
+
+.wsi-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wsi-type-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.wsi-type-experiment { background: #e0f2fe; color: #075985; }
+.wsi-type-curriculum { background: #dcfce7; color: #14532d; }
+.wsi-type-inquiry { background: #fef3c7; color: #78350f; }
+.wsi-type-community { background: #ede9fe; color: #5b21b6; }
+.wsi-type-fanxing { background: #fce7f3; color: #831843; }
+.wsi-type-resource { background: #f1f5f9; color: #0f172a; }
+
+.wsi-exact-pill {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #38bdf8;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.wsi-sub-badge {
+  font-size: 11.5px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.wsi-cat {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0c3960;
+}
+
+.wsi-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.wsi-desc {
+  font-size: 12.5px;
+  color: #334155;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wiki-dropdown-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-top: 1px solid #cbd5e1;
+}
+
+.wdf-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #64748b;
+  background: #ffffff;
+  color: #0f233e;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wdf-primary {
+  background: #0f3d68;
+  border-color: #072138;
+  color: #ffffff;
+  flex: 1 1 auto;
 }
 
 .community-post-foot {

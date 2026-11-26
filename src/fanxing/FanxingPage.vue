@@ -1726,5 +1726,8 @@ input, textarea, select {
 
 @media (max-width: 820px) {
   .detail, .form-grid-2 { grid-template-columns: 1fr; }
+  .cards, .lit-grid, .my-apps-grid { grid-template-columns: 1fr; }
+  .lit-search-bar input[type="search"],
+  .lit-filter-select { width: 100%; min-width: 0; }
 }
 </style>

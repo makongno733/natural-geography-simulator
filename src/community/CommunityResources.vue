@@ -482,10 +482,18 @@ onMounted(loadResources)
 
 @media (max-width: 640px) {
   .resources-hero {
-    padding: 30px 20px;
+    padding: 24px 16px;
   }
   .resources-grid {
     grid-template-columns: 1fr;
+  }
+  .resource-card {
+    padding: 18px 16px;
+  }
+  .spec-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 }
 </style>

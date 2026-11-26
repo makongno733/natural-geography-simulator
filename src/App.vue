@@ -1,5 +1,5 @@
 <template>
-  <div class="app-root">
+  <div class="app-root" :class="`theme-${activeDesignTheme}`">
     <!-- 极轻量墨蓝加载指示 -->
     <div class="nav-progress-bar" :class="{ active: navLoading }" aria-hidden="true"></div>
 
@@ -167,6 +167,7 @@ import GlobalCommandPalette from './components/GlobalCommandPalette.vue'
 import UserGuideTour from './components/UserGuideTour.vue'
 import { accountEnabled, accountOrigin, siteOrigin } from './account/config.js'
 import { updatePageSeo } from './utils/seo.js'
+import { activeDesignTheme, syncThemeFromRoute } from './utils/designTheme.js'
 
 const LessonAssistant = defineAsyncComponent(() => import('./assistant/LessonAssistant.vue'))
 
@@ -201,6 +202,10 @@ function rememberReturnPath() {
 function openCmdPalette() {
   cmdPaletteRef.value?.open()
 }
+
+watch(() => route.query, (q) => {
+  syncThemeFromRoute(q)
+}, { immediate: true })
 
 function relaunchTour() {
   guideTourRef.value?.startTour(true)
@@ -255,6 +260,77 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.preview-scheme-bar {
+  background: #0f233e;
+  color: #f8fafc;
+  border-bottom: 1px solid #334155;
+  font-size: 12.5px;
+  z-index: 60;
+}
+
+.preview-scheme-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 6px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preview-scheme-label {
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.preview-scheme-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preview-scheme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background: #1e293b;
+  color: #f1f5f9;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.preview-scheme-btn:hover {
+  background: #334155;
+  border-color: #94a3b8;
+}
+
+.preview-scheme-btn.active {
+  background: #f0f9ff;
+  border-color: #38bdf8;
+  color: #0c3960;
+}
+
+.scheme-badge-mini {
+  font-size: 11px;
+  opacity: 0.85;
+  padding-left: 4px;
+  border-left: 1px solid currentColor;
+}
+
+@media (max-width: 640px) {
+  .preview-scheme-inner {
+    padding: 6px 12px;
+  }
+  .scheme-badge-mini {
+    display: none;
+  }
 }
 
 /* 顶部墨蓝加载进度条 */

@@ -14,6 +14,7 @@ if (accountEnabled && window.location.origin === new URL(accountOrigin).origin &
 
 const TextbookHome = () => import('./textbook/TextbookHome.vue')
 const CommunityHome = () => import('./community/CommunityHome.vue')
+const SearchPage = () => import('./community/SearchPage.vue')
 const CommunityPost = () => import('./community/CommunityPost.vue')
 const CommunityAdmin = () => import('./community/CommunityAdmin.vue')
 const UserProfile = () => import('./community/UserProfile.vue')
@@ -75,6 +76,7 @@ const routes = [
   { path: '/cosmos/chapter/:chapter', name: 'cosmos-chapter', component: CosmosCenter },
   { path: '/cosmos/:pathMatch(.*)*', component: CosmosCenter },
   { path: '/', name: 'home', component: CommunityHome },
+  { path: '/search', name: 'search', component: SearchPage },
   { path: '/community', name: 'community', redirect: to => ({ name: 'home', query: to.query, hash: to.hash }) },
   { path: '/questions', name: 'questions', redirect: to => ({ name: 'home', query: { ...to.query, kind: 'question' }, hash: to.hash || '#community-feed' }) },
   { path: '/resources', name: 'resources', component: CommunityResources },

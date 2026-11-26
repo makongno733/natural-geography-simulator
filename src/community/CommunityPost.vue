@@ -105,9 +105,16 @@
 
         <div class="community-prose detail-body" v-html="renderGeoScholarlyText(post.body)"></div>
 
-        <!-- 标签列表 -->
-        <div v-if="post.tags && post.tags.length" class="detail-tags-list">
-          <span v-for="t in post.tags" :key="t" class="detail-tag-item">#{{ t }}</span>
+        <!-- 结构化标签列表（点击可前往全站检索对应标签） -->
+        <div v-if="derivePostTags(post).length" class="detail-tags-list">
+          <router-link
+            v-for="tagObj in derivePostTags(post)"
+            :key="tagObj.label"
+            :to="{ path: '/search', query: { q: tagObj.query } }"
+            class="detail-tag-item"
+          >
+            #{{ tagObj.label }}
+          </router-link>
         </div>
 
         <!-- 挂载的探究证据卡（明确展示模型名称、条件、两组结果、证据类型、适用边界与「教学仿真／真实观测」说明） -->
@@ -337,6 +344,7 @@ import { mockPosts } from './mockData.js'
 import { toast } from '../utils/toast.js'
 import { renderGeoScholarlyText, GEO_FORMULA_PRESETS } from '../utils/mathFormula.js'
 import { getEvidenceById, resolveCommunityEvidence } from '../inquiry/evidenceCatalog.js'
+import { derivePostTags } from '../utils/topicTags.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -800,13 +808,19 @@ onBeforeUnmount(() => stream?.close())
 }
 
 .detail-tag-item {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
-  background: var(--bg-soft);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
+  background: #f1f7fc;
+  color: #0c3960;
+  border: 1px solid #94a3b8;
+  text-decoration: none;
+}
+
+.detail-tag-item:hover {
+  background: #0f3d68;
+  color: #ffffff;
 }
 
 /* 3D 实验挂载联动卡片 */
@@ -860,7 +874,8 @@ onBeforeUnmount(() => stream?.close())
 
 .detail-interaction-bar {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
   padding-top: 18px;
   border-top: 1px solid var(--border);
 }

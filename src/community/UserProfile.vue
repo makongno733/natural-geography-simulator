@@ -503,7 +503,7 @@ onMounted(async () => {
 @media (max-width: 680px) {
   .profile-header {
     flex-direction: column;
-    padding: 24px 20px;
+    padding: 22px 16px;
     align-items: center;
     text-align: center;
   }
@@ -515,6 +515,11 @@ onMounted(async () => {
   }
   .profile-stats-bar {
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+  .post-header-line {
+    flex-wrap: wrap;
   }
 }
 </style>

@@ -438,3 +438,217 @@
 .evidence-action-link:hover {
   text-decoration: underline;
 }
+
+/* ==========================================================================
+   融合终版设计系统：方案一（百科检索与知识阅读）× 方案二（学术社区与高效讨论）
+   - 首屏（Hero）：采用纸白/极浅石板灰高对比学术工作台底色，左侧为衬线学术主标题、
+     加宽维基百科式词条即时搜索框与 3 分钟城市内涝实证对照卡，右侧保留三维地球观测站；
+   - 主体（Feed & Directory）：采用“左侧 260px 学科分类与实验室目录 + 右侧紧凑学术讨论流”
+     的百科词书结合科研工作台架构；
+   - 卡片（Cards）：4px 学科深海蓝左边框 + 8px 适度圆角 + 衬线/无衬线清晰层级 + 结构化证据条与多维话题标签。
+   ========================================================================== */
+:root,
+[data-geo-theme="hybrid"],
+[data-geo-theme="encyclopedia"],
+[data-geo-theme="academic"] {
+  --bg: #f4f6f9;
+  --bg-soft: #e8eef5;
+  --surface: #ffffff;
+  --border: #94a3b8;
+  --border-strong: #475569;
+  --geo-ocean-deep: #0f172a;
+  --geo-ocean: #0f3d68;
+  --radius-card: 8px;
+  --radius-box: 10px;
+  --radius-sm: 6px;
+}
+
+.community-hero {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+  padding: 24px 0 22px !important;
+}
+
+.community-tides {
+  display: none !important;
+}
+
+.community-hero-badge {
+  color: #0f3d68 !important;
+  letter-spacing: 0.08em;
+}
+
+.scheme-active-indicator {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+  border: 1px solid #7dd3fc !important;
+}
+
+.community-hero h1 {
+  color: #0f172a !important;
+  font-family: Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", serif !important;
+  font-weight: 800 !important;
+  border-bottom: 1.5px solid #cbd5e1;
+  padding-bottom: 10px;
+  margin-bottom: 14px !important;
+}
+
+.wiki-hero-search-container {
+  max-width: 100% !important;
+  margin-bottom: 14px !important;
+}
+
+.wiki-hero-search-form {
+  border: 2px solid #0f3d68 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(15, 61, 104, 0.08) !important;
+}
+
+.wiki-hero-search-form:focus-within {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2) !important;
+}
+
+.flagship-compare-card {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1.5px solid #94a3b8 !important;
+  border-left: 4px solid #0284c7 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.flagship-question {
+  color: #0f172a !important;
+  font-family: Georgia, "Songti SC", "Noto Serif SC", serif !important;
+}
+
+.flagship-desc {
+  color: #334155 !important;
+}
+
+.hero-secondary-btn,
+.hero-global-search-btn {
+  background-color: #ffffff !important;
+  color: #0f233e !important;
+  border: 1.5px solid #64748b !important;
+  border-radius: 6px !important;
+}
+
+.hero-secondary-btn:hover,
+.hero-global-search-btn:hover {
+  background-color: #e0f2fe !important;
+  border-color: #0f3d68 !important;
+  color: #072138 !important;
+}
+
+/* 左目录（学科分类与实验室导航）+ 右主栏（紧凑学术讨论与证据流） */
+.community-layout {
+  grid-template-columns: 265px minmax(0, 1fr) !important;
+  gap: 26px !important;
+  align-items: start;
+}
+
+.community-sidebar {
+  order: -1;
+}
+
+.community-post-card {
+  padding: 18px 22px !important;
+  margin-bottom: 14px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #94a3b8 !important;
+  border-left: 4px solid #0f3d68 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+.community-side-block,
+.hot-topics-bar,
+.hot-topic-card {
+  border-radius: 8px !important;
+  border: 1.5px solid #94a3b8 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+.post-title a,
+.hot-topic-card h4 {
+  font-family: Georgia, "Songti SC", "Noto Serif SC", serif !important;
+  color: #0f233e !important;
+}
+
+.post-title a:hover {
+  color: #0284c7 !important;
+}
+
+@media (max-width: 920px) {
+  .community-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .community-sidebar {
+    order: 0;
+  }
+}
+
+/* ==========================================================================
+   跨页面移动端适配与长标题/DOI/链接防溢出加固
+   ========================================================================== */
+@media (max-width: 560px) {
+  .community-wrap {
+    width: calc(100% - 24px);
+  }
+  .wiki-hero-search-form {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto;
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+  .wiki-hero-search-form .hero-search-prefix-icon {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .wiki-hero-search-form input {
+    grid-column: 2 / 4;
+    grid-row: 1;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 4px 6px !important;
+  }
+  .wiki-hero-search-form .hero-search-clear-btn {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .wiki-hero-search-form .baroque-btn-search {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+  .wiki-hero-search-form .hero-fullsite-submit-btn {
+    grid-column: 3 / 4;
+    grid-row: 2;
+    justify-content: center;
+    text-align: center;
+  }
+  .hot-topics-bar {
+    padding: 16px 14px !important;
+  }
+  .hot-topics-header {
+    flex-wrap: wrap;
+  }
+  .hot-topics-subtitle {
+    margin-left: 0 !important;
+    flex-basis: 100%;
+  }
+  .topic-structured-meta div {
+    grid-template-columns: 92px 1fr !important;
+  }
+  .pes-compare-row {
+    grid-template-columns: 1fr !important;
+  }
+}
